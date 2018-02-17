@@ -1,4 +1,4 @@
-# ledger-ci
+# ledger-ci-test
 
 [![CircleCI](https://circleci.com/gh/jleni/ledger-ci-test.svg?style=svg)](https://circleci.com/gh/jleni/ledger-ci-test)
 

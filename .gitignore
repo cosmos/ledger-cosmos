@@ -34,3 +34,11 @@
 cmake-build-debug/
 
 \.idea/workspace\.xml
+
+\.idea/
+
+src/ledger/bin/
+
+src/ledger/debug/
+
+src/ledger/obj/
