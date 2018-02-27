@@ -7,34 +7,37 @@ handle_config()
     os_string="$(uname -s)"
     case "${os_string}" in
         Linux*)
-            apt-get install libusb-1.0.0
-            apt-get install libudev-dev
+            sudo apt-get install libusb-1.0.0 libudev-dev
+            pip2 install --upgrade setuptools
+            pip2 install -U ledgerblue==0.1.15 ecpy==0.8.2
             ;;
         Darwin*)
-            brew install python3
             brew install libusb
+            pip install --upgrade setuptools --user python
+            pip install -U ledgerblue==0.1.15 ecpy==0.8.2 --user python
             ;;
         *)
             echo "OS not recognized"
             ;;
     esac
 
-    pip3 install ledgerblue==0.1.15
 }
 
-handle_build()
+handle_make()
 {
     # This function works in the scope of the container
     DOCKER_IMAGE=zondax/builder_bolos
-    BOLOS_SDK=/root/project/deps/nanos-secure-sdk
+    BOLOS_SDK=/project/deps/nanos-secure-sdk
     BOLOS_ENV=/opt/bolos
 
     docker run -it --rm \
             -e BOLOS_SDK=${BOLOS_SDK} \
             -e BOLOS_ENV=${BOLOS_ENV} \
-            -v $(pwd):/root/project \
+            -e USERID=$UID \
+            -u `id -u` \
+            -v $(pwd):/project \
             ${DOCKER_IMAGE} \
-            make -C /root/project/src/ledger $1
+            make -C /project/src/ledger $1
 }
 
 handle_load()
@@ -54,7 +57,7 @@ handle_delete()
 }
 
 case "$1" in
-    build)      handle_build;;
+    make)       handle_make $2;;
     config)     handle_config;;
     load)       handle_load;;
     delete)     handle_delete;;
