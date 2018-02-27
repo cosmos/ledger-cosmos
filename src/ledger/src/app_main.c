@@ -17,7 +17,39 @@
 
 #include <os_io_seproxyhal.h>
 #include "os.h"
+#include "ui.h"
 #include "app_main.h"
+
+unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
+
+unsigned char io_event(unsigned char channel) {
+    switch (G_io_seproxyhal_spi_buffer[0]) {
+        case SEPROXYHAL_TAG_FINGER_EVENT: //
+            UX_FINGER_EVENT(G_io_seproxyhal_spi_buffer);
+            break;
+
+        case SEPROXYHAL_TAG_BUTTON_PUSH_EVENT: // for Nano S
+            UX_BUTTON_PUSH_EVENT(G_io_seproxyhal_spi_buffer);
+            break;
+
+        case SEPROXYHAL_TAG_DISPLAY_PROCESSED_EVENT:
+            if (!UX_DISPLAYED())
+                UX_DISPLAYED_EVENT();
+            break;
+
+        case SEPROXYHAL_TAG_TICKER_EVENT:   //
+            break;
+
+            // unknown events are acknowledged
+        default:
+            UX_DEFAULT_EVENT();
+            break;
+    }
+    if (!io_seproxyhal_spi_is_status_sent()) {
+        io_seproxyhal_general_status();
+    }
+    return 1; // DO NOT reset the current APDU transport
+}
 
 unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
     switch (channel & ~(IO_FLAGS)) {
@@ -50,6 +82,7 @@ void app_init()
     io_seproxyhal_init();
     USB_power(0);
     USB_power(1);
+    ui_idle();
 }
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx) {

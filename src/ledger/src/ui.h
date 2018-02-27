@@ -14,29 +14,22 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
+#pragma once
+
+#include "os.h"
+#include "cx.h"
 #include <os_io_seproxyhal.h>
-#include "ui.h"
-#include "app_main.h"
 
-__attribute__((section(".boot"))) int
-main(void) {
-    // exit critical section
-    __asm volatile("cpsie i");
+#define UI_CENTER11PX       BAGL_FONT_OPEN_SANS_REGULAR_11px | BAGL_FONT_ALIGNMENT_CENTER
+#define UI_CENTER11PX_BOLD  BAGL_FONT_OPEN_SANS_EXTRABOLD_11px | BAGL_FONT_ALIGNMENT_CENTER
+#define DEFAULT_FONT        BAGL_FONT_OPEN_SANS_LIGHT_16px | BAGL_FONT_ALIGNMENT_LEFT
 
-    ui_init();
-    os_boot();
+enum UI_STATE {
+    UI_IDLE,
+};
 
-    BEGIN_TRY
-    {
-        TRY
-        {
-            app_init();
-            app_main();
-        }
-        CATCH_OTHER(e)
-        {}
-        FINALLY
-        {}
-    }
-    END_TRY;
-}
+extern enum UI_STATE uiState;
+
+void ui_init(void);
+
+void ui_idle(void);
