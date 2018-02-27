@@ -33,7 +33,7 @@ APP_LOAD_PARAMS = --appFlags 0x00 $(COMMON_LOAD_PARAMS)
 ifeq ($(TARGET_NAME),TARGET_BLUE)
 ICONNAME=app_example_blue.gif
 else
-ICONNAME=app_example_nanos.gif
+ICONNAME=$(CURDIR)/app_example_nanos.gif
 endif
 
 ############
