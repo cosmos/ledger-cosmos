@@ -14,7 +14,7 @@
 #*  limitations under the License.
 #********************************************************************************
 cmake_minimum_required(VERSION 2.8)
-project(ledger-ci)
+project(ledger-ci-base)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_LEGACY_CYGWIN_WIN32 0) # Remove when CMake >= 2.8.4 is required
