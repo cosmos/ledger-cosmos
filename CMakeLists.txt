@@ -23,6 +23,7 @@ add_subdirectory(cmake/gtest)
 
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/jsmn/src
 )
 
 ###############
@@ -36,10 +37,21 @@ file(GLOB_RECURSE APP_SRC
         )
 
 file(GLOB_RECURSE LIB_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/*.c
+        )
+
+file(GLOB_RECURSE JSMN_SRC
+        deps/jsmn/src/jsmn.c
         )
 
 ###############
+# jsmn as a C static lib
+add_library(jsmn STATIC ${JSMN_SRC})
+add_library(JsonParser STATIC ${LIB_SRC})
+target_link_libraries(JsonParser jsmn)
+
+###############
+
 
 include(CTest)
 enable_testing()
@@ -49,7 +61,7 @@ add_executable(tests_example
         ${LIB_SRC}
         )
 
-target_link_libraries(tests_example gtest_main)
+target_link_libraries(tests_example gtest_main jsmn JsonParser)
 add_test(gtest ${PROJECT_BINARY_DIR}/tests_example)
 
 ###############
@@ -59,4 +71,4 @@ add_executable(main_example
         ${APP_SRC}
         )
 
-target_link_libraries(main_example)
+target_link_libraries(main_example jsmn JsonParser)

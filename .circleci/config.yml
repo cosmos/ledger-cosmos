@@ -15,22 +15,24 @@
 #********************************************************************************
 version: 2
 jobs:
-  build_test_xenial:
+  build:
     docker:
       - image: ubuntu:16.04
     steps:
       - run:
           name: Install dependencies
-          command: apt update && apt-get -y install build-essential git sudo wget cmake libssl-dev
+          command: apt update && apt-get -y install build-essential git sudo wget cmake libssl-dev libgmp-dev autoconf libtool
       - checkout
       - run: git submodule update --init --recursive
       - run: cmake . && make
       - run: export GTEST_COLOR=1 && ctest -VV
-  build:
+  build2:
     docker:
       - image: zondax/builder_bolos
     environment:
       - BOLOS_SDK=/root/project/deps/nanos-secure-sdk
+      - JSMN_LIB=/root/project/deps/jsmn
+      - JSON_PARSER_LIB=/root/project/src/lib
       - BOLOS_ENV=/opt/bolos
     steps:
       - checkout
