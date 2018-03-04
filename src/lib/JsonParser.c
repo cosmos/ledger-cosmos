@@ -50,6 +50,14 @@ bool Match(
     return (sizeOkay && strncmp(str, reference, size) == 0);
 }
 
+// Known issues:
+// 1. This function should scan the whole token list only once to get all information
+//    At the moment it's doing slightly more work because in few cases it's moving back as it's scanning
+// 2. The same block of coed is duplicated for inputs and outputs - refactor
+// 3. Parsing logic supports varying number of inputs, outputs and coins. It also allowed to inputs and outputs be
+//    in the stream in the arbitrary positions. It however expects Input and Coin to be in a specific format.
+//    Additional flexibility can be achieved if necessary but at the cost of doing additional string comparisons.
+
 void ParseMessage(
         ParsedMessage* parsedMessage,
         const char* jsonString)
@@ -140,53 +148,9 @@ void ParseMessage(
             parsedJson->CorrectFormat = true;
         }
 
+        // Recursively build token relationships
         ProcessToken(parsedJson, 0, 1);
 
+        // Build SendMsg representation with links to tokens
         ParseMessage(parsedJson, jsonString);
-
-        // Scan, get tokens for inputs and outputs
-        // Scan inputs range, get input tokens, address tokens, coins tokens
-        // Scan outputs range, get output tokens, address tokens, coins tokens
-        //
-
-        /*
-        const char inputsTokenName[] = "inputs";
-        int inputsTokenSize = sizeof(inputsTokenName);
-        parsedJson->InputsTokenIndex = -1;
-
-        const char outputsTokenName[] = "outputs";
-        int outputsTokenSize = sizeof(outputsTokenName);
-        parsedJson->OutputsTokenIndex = -1;
-        for (int i=0; i < parsedJson->NumberOfTokens; i++)
-        {
-            if (parsedJson->InputsTokenIndex != -1 && parsedJson->Tokens[i].size == inputsTokenSize
-                &&
-                strncmp(jsonString + parsedJson->Tokens[i].start, inputsTokenName, inputsTokenSize)) {
-                parsedJson->InputsTokenIndex = i;
-            }
-            else if (parsedJson->OutputsTokenIndex != -1 && parsedJson->Tokens[i].size == outputsTokenSize
-                     &&
-                    strncmp(jsonString + parsedJson->Tokens[i].start, outputsTokenName, outputsTokenSize)) {
-                parsedJson->OutputsTokenIndex = i;
-            }
-            if (parsedJson->OutputsTokenIndex != -1 && parsedJson->InputsTokenIndex != -1){
-                break;
-            }
-        }
-
-        for (int i=0; i < parsedJson->NumberOfTokens; i++) {
-            if (parsedJson->TokensInfo.Parents[i]==parsedJson->InputsTokenIndex){
-                parsedJson->NumberOfInputs++;
-            }
-            if (parsedJson->TokensInfo.Parents[i]==parsedJson->OutputsTokenIndex) {
-                parsedJson->NumberOfOutputs++;
-            }
-        }
-
-       */
-        //Traverse json tokens and for each token:
-        //1. Check if inputs or outputs
-        //2. If inside inputs or outputs, parse array, for each element, expect object, address name, address value, coins array
-        //3. For each coin parse object, denum and amount
-
     }
