@@ -52,13 +52,11 @@ target_link_libraries(JsonParser jsmn)
 
 ###############
 
-
 include(CTest)
 enable_testing()
 
 add_executable(tests_example
-        ${TESTS_SRC}
-        ${LIB_SRC}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/JsonParserTests.cpp
         )
 
 target_link_libraries(tests_example gtest_main jsmn JsonParser)
