@@ -12,7 +12,8 @@
 extern "C" {
 #endif
 
-#define MAX_NUMBER_OF_TOKENS 128
+#define MAX_NUMBER_OF_TOKENS    128
+#define MAX_JSON_DEPTH          10
 
 #define DF_NAME_INDEX                   1 //(string)
 #define V_NAME_INDEX                    3 //(string)
@@ -21,11 +22,11 @@ extern "C" {
 #define INPUTS_VALUE_INDEX              6 //(array)
 
     // Repeated for every input in the inputs array
-    #define INPUT_VALUE_INDEX               7 //(object)
-    #define INPUT_ADDRESS_NAME_INDEX        8 //(string)
-    #define INPUT_ADDRESS_VALUE_INDEX       9 //(string)
-    #define INPUT_COINS_NAME_INDEX          10 //(string)
-    #define INPUT_COINS_VALUE_INDEX         11 //(array)
+    #define INPUT_VALUE_INDEX               (7 * inputIndex) //(object)
+    #define INPUT_ADDRESS_NAME_INDEX        (8 * inputIndex) //(string)
+    #define INPUT_ADDRESS_VALUE_INDEX       (9 * inputIndex) //(string)
+    #define INPUT_COINS_NAME_INDEX          (10 * inputIndex)//(string)
+    #define INPUT_COINS_VALUE_INDEX         (11 * inputIndex) //(array)
 
         // Repeated for every coin in the coins array
         #define INPUT_COIN_INDEX                12 //(object)
@@ -54,67 +55,58 @@ extern "C" {
         #define OUTPUT_COIN_AMOUNT_NAME_INDEX    29 //(string)
         #define OUTPUT_COIN_AMOUNT_VALUE_INDEX   30 //(primitive)
 
+typedef struct
+{
+    int Denum;
+    int Amount;
+} Coin;
+
+typedef struct
+{
+    int Address;
+    Coin Coins[5];
+    int NumberOfCoins;
+} Input;
+
+typedef struct
+{
+    int Address;
+    Coin Coins[5];
+    int NumberOfCoins;
+} Output;
+
+
+typedef struct
+{
+    // Array that holds a list of token that represent
+    // currently traversed token path in json hierarchy
+    int CurrentTraversalPath[MAX_JSON_DEPTH];
+
+    // Array that maps token indices to their corresponding parent indices
+    // For example: parent[3] = 2, means that token with index 2 is a parent of token with index 2
+    int Parents[MAX_NUMBER_OF_TOKENS];
+} TokenInfo;
 
 typedef struct
 {
     bool        CorrectFormat;
     int         NumberOfTokens;
     jsmntok_t   Tokens[MAX_NUMBER_OF_TOKENS];
-    int         NumberOfInuts;
+    TokenInfo   TokensInfo;
+
+    int         NumberOfInputs;
     int         NumberOfOutputs;
-} JsonParserData;
+    Input       Inputs[5];
+    Output      Outputs[5];
+} ParsedMessage;
 
-void ParseJson(JsonParserData* jsonParserData, const char* jsonString);
+void ParseJson(
+        ParsedMessage* parsedJson,
+        const char* jsonString);
 
-static int GetNumberOfInputs(JsonParserData* jsonData)
-{
-    return 0;
-}
-
-static jsmntok_t GetInputAddressToken(JsonParserData* jsonData, int inputNumber)
-{
-    return jsonData->Tokens[0];
-}
-
-static int GetInputNumberOfCoins(JsonParserData* jsonData, int inputNumber)
-{
-    return 0;
-}
-
-static jsmntok_t GetInputCoinDenomToken(JsonParserData* jsonData, int inputNumber, int coinNumber)
-{
-    return jsonData->Tokens[0];
-}
-
-static jsmntok_t GetInputCoinAmountToken(JsonParserData* jsonData, int inputNumber, int coinNumber)
-{
-    return jsonData->Tokens[0];
-}
-
-static int GetNumberOfOutputs(JsonParserData* jsonData)
-{
-    return 0;
-}
-
-static jsmntok_t GetOutputAddressToken(JsonParserData* jsonData, int outputNumber)
-{
-    return jsonData->Tokens[0];
-}
-
-static int GetOutputNumberOfCoints(JsonParserData* jsonData, int outputNumber)
-{
-    return 0;
-}
-
-static jsmntok_t GetOutputCoinDenomToken(JsonParserData* jsonData, int outputNumber, int coinNumber)
-{
-    return jsonData->Tokens[0];
-}
-
-static jsmntok_t GetOutputCoinAmountToken(JsonParserData* jsonData, int outputNumber, int coinNumber)
-{
-    return jsonData->Tokens[0];
-}
+void ProcessToken(ParsedMessage* parsedMessage,
+                  int currentDepth,
+                  int tokenIndex);
 
 #ifdef __cplusplus
 }
