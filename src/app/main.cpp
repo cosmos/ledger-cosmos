@@ -15,8 +15,18 @@
 ********************************************************************************/
 #include <iostream>
 
+
+extern "C"
+{
+#include <lib/JsonParser.h>
+}
+
 int main()
 {
-    std::cout << "Hi!" << std::endl;
+    JsonParserData data;
+    ParseJson(&data, "Topic: \"Hello json world\"");
+
+    std::cout << "Number of found tokens: " << data.NumberOfTokens << std::endl;
+
     return 0;
 }
