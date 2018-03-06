@@ -8,17 +8,15 @@ void ProcessToken(ParsedMessage* parsedMessage,
                   int currentDepth,
                   int tokenIndex)
 {
-    if (tokenIndex >= parsedMessage->NumberOfTokens
-        ||
-        currentDepth < 0)
-    {
+    if (tokenIndex >= parsedMessage->NumberOfTokens || currentDepth < 0) {
         return;
     }
-    if (parsedMessage->Tokens[tokenIndex].start > parsedMessage->Tokens[parsedMessage->TokensInfo.CurrentTraversalPath[currentDepth]].start
+    int rootTokenIndex = parsedMessage->TokensInfo.CurrentTraversalPath[currentDepth];
+    if (parsedMessage->Tokens[tokenIndex].start > parsedMessage->Tokens[rootTokenIndex].start
         &&
-        parsedMessage->Tokens[tokenIndex].end < parsedMessage->Tokens[parsedMessage->TokensInfo.CurrentTraversalPath[currentDepth]].end)
+        parsedMessage->Tokens[tokenIndex].end < parsedMessage->Tokens[rootTokenIndex].end)
     {
-        parsedMessage->TokensInfo.Parents[tokenIndex] = parsedMessage->TokensInfo.CurrentTraversalPath[currentDepth];
+        parsedMessage->TokensInfo.Parents[tokenIndex] = rootTokenIndex;
 
         currentDepth++;
         parsedMessage->TokensInfo.CurrentTraversalPath[currentDepth] = tokenIndex;
@@ -71,62 +69,92 @@ void ParseMessage(
     bool processedInputs = false;
     bool processedOutputs = false;
 
-    for (int i = 0; i < parsedMessage->NumberOfTokens; i++) {
+    int i = 0;
+    while (i < parsedMessage->NumberOfTokens) {
         // Find inputs token
         if (!processedInputs && Match(jsonString, parsedMessage->Tokens[i], inputsTokenName, inputsTokenSize)) {
             int inputsIndex = i + 1;
             parsedMessage->NumberOfInputs = 0;
             // Search for all the inputs
-            for (int j = inputsIndex + 1; j < parsedMessage->NumberOfTokens; j++) {
+            int j = inputsIndex + 1;
+            while (j < parsedMessage->NumberOfTokens) {
                 // Bail out if current token is already outside inputs range
-                if (parsedMessage->Tokens[j].end >= parsedMessage->Tokens[inputsIndex].end) break;
-                // Find the start of a input
+                if (parsedMessage->Tokens[j].end >= parsedMessage->Tokens[inputsIndex].end) {
+                    i = j - 1;
+                    break;
+                }
+                // Parse single input
                 if (parsedMessage->TokensInfo.Parents[j] == inputsIndex) {
                     parsedMessage->Inputs[parsedMessage->NumberOfInputs].Address = j + 2;
                     int coinsIndex = j + 4;
                     parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins = 0;
                     //Search for all the coins
-                    for (int m = coinsIndex + 1; m < parsedMessage->NumberOfTokens; m++) {
+                    int m = coinsIndex + 1;
+                    while (m < parsedMessage->NumberOfTokens) {
                         //Bail out if the current token is already outside coins range
-                        if (parsedMessage->Tokens[m].end >= parsedMessage->Tokens[j].end) break;
+                        if (parsedMessage->Tokens[m].end >= parsedMessage->Tokens[coinsIndex].end) {
+                            j = m - 1;
+                            break;
+                        }
                         // Find the start of a coin
                         if (parsedMessage->TokensInfo.Parents[m] == coinsIndex) {
-                            parsedMessage->Inputs[parsedMessage->NumberOfInputs].Coins[parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins].Denum = m + 2;
-                            parsedMessage->Inputs[parsedMessage->NumberOfInputs].Coins[parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins++].Amount = m + 4;
+                            parsedMessage->Inputs[parsedMessage->NumberOfInputs].Coins[parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins].Denum =
+                                    m + 2;
+                            parsedMessage->Inputs[parsedMessage->NumberOfInputs].Coins[parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins++].Amount =
+                                    m + 4;
                         }
+                        m++;
                     }
+                    parsedMessage->Inputs[parsedMessage->NumberOfInputs].Sequence = j + 2;
                     parsedMessage->NumberOfInputs++;
                 }
+                j++;
             }
             processedInputs = true;
         }
+
+
         if (!processedOutputs && Match(jsonString, parsedMessage->Tokens[i], outputsTokenName, outputsTokenSize)) {
             int outputsIndex = i + 1;
             parsedMessage->NumberOfOutputs = 0;
-            // Search for all the inputs
-            for (int j = outputsIndex + 1; j < parsedMessage->NumberOfTokens; j++) {
+            // Search for all the outputs
+            int j = outputsIndex + 1;
+            while (j < parsedMessage->NumberOfTokens) {
                 // Bail out if current token is already outside inputs range
-                if (parsedMessage->Tokens[j].end >= parsedMessage->Tokens[outputsIndex].end) break;
+                if (parsedMessage->Tokens[j].end >= parsedMessage->Tokens[outputsIndex].end) {
+                    i = j - 1;
+                    break;
+                }
                 // Find the start of a input
                 if (parsedMessage->TokensInfo.Parents[j] == outputsIndex) {
-                    parsedMessage->Outputs[outputsIndex].Address = j + 2;
+                    parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Address = j + 2;
                     int coinsIndex = j + 4;
                     parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins = 0;
                     //Search for all the coins
-                    for (int m = coinsIndex + 1; m < parsedMessage->NumberOfTokens; m++) {
+                    int m = coinsIndex + 1;
+                    while (m < parsedMessage->NumberOfTokens) {
                         //Bail out if the current token is already outside coins range
-                        if (parsedMessage->Tokens[m].end >= parsedMessage->Tokens[j].end) break;
+                        if (parsedMessage->Tokens[m].end >= parsedMessage->Tokens[coinsIndex].end) {
+                            j = m - 1;
+                            break;
+                        }
                         // Find the start of a coin
                         if (parsedMessage->TokensInfo.Parents[m] == coinsIndex) {
-                            parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Coins[parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins].Denum = m + 2;
-                            parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Coins[parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins++].Amount = m + 4;
+                            parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Coins[parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins].Denum =
+                                    m + 2;
+                            parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Coins[parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins++].Amount =
+                                    m + 4;
                         }
+                        m++;
                     }
                     parsedMessage->NumberOfOutputs++;
                 }
+                j++;
             }
             processedOutputs = true;
         }
+
+        i++;
     }
 }
 

@@ -72,6 +72,7 @@ typedef struct
 {
     int Address;
     Coin Coins[MAX_COIN_COUNT];
+    int Sequence;
     int NumberOfCoins;
 } Input;
 
