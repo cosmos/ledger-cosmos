@@ -197,11 +197,17 @@ TEST(JsonParserTest, SimpleObject)
         ParseJson(&parsedMessage, sendMsgSample);
 
         EXPECT_EQ(1, parsedMessage.NumberOfInputs);
-        EXPECT_EQ(1, parsedMessage.NumberOfOutputs);
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Sequence], "1"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Address], "696E707574"));
         EXPECT_EQ(1, parsedMessage.Inputs[0].NumberOfCoins);
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Coins[0].Denum], "atom"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Coins[0].Amount], "10"));
+
+        EXPECT_EQ(1, parsedMessage.NumberOfOutputs);
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[0].Address], "6F7574707574"));
+        EXPECT_EQ(1, parsedMessage.Outputs[0].NumberOfCoins);
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[0].Coins[0].Denum], "atom"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[0].Coins[0].Amount], "10"));
     }
 
     TEST(JsonParserTest, ParseSendMsg_TwoInputsTwoOutputs)
@@ -213,29 +219,43 @@ TEST(JsonParserTest, SimpleObject)
         ParseJson(&parsedMessage, sendMsgSample);
 
         EXPECT_EQ(2, parsedMessage.NumberOfInputs);
-        EXPECT_EQ(2, parsedMessage.NumberOfOutputs);
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Address], "696E707574"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Address], "616E6F74686572696E707574"));
         EXPECT_EQ(1, parsedMessage.Inputs[0].NumberOfCoins);
         EXPECT_EQ(1, parsedMessage.Inputs[1].NumberOfCoins);
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Sequence], "1"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Sequence], "1"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Coins[0].Denum], "atom"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Coins[0].Amount], "10"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Coins[0].Denum], "atom"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Coins[0].Amount], "50"));
+
+        EXPECT_EQ(2, parsedMessage.NumberOfOutputs);
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[0].Address], "6F7574707574"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[1].Address], "616E6F746865726F7574707574"));
+        EXPECT_EQ(1, parsedMessage.Outputs[0].NumberOfCoins);
+        EXPECT_EQ(1, parsedMessage.Outputs[1].NumberOfCoins);
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[0].Coins[0].Denum], "atom"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[0].Coins[0].Amount], "10"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[1].Coins[0].Denum], "atom"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[1].Coins[0].Amount], "50"));
     }
 
     TEST(JsonParserTest, ParseSendMsg_TwoInputsTwoOutputsMultipleCoins)
     {
         ParsedMessage parsedMessage = {0};
         //std::string result = exec("../tools/samples 3 text");
-        const char* sendMsgSample = R"({"_df":"3CAAA78D13BAE0","_v":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10},{"denom":"bitcoin","amount":20}],"sequence":1},{"address":"616E6F74686572696E707574","coins":[{"denom":"atom","amount":50},{"denom":"bitcoin","amount":60},{"denom":"ethereum","amount":70}],"sequence":1}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10},{"denom":"bitcoint","amount":20}]},{"address":"616E6F746865726F7574707574","coins":[{"denom":"atom","amount":50},{"denom":"bitcoint","amount":60},{"denom":"ethereum","amount":70}]}]}})";
+        const char* sendMsgSample = R"({"_df":"3CAAA78D13BAE0","_v":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10},{"denom":"bitcoin","amount":20}],"sequence":1},{"address":"616E6F74686572696E707574","coins":[{"denom":"atom","amount":50},{"denom":"bitcoin","amount":60},{"denom":"ethereum","amount":70}],"sequence":17}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":11},{"denom":"bitcoint","amount":21}]},{"address":"616E6F746865726F7574707574","coins":[{"denom":"atom","amount":51},{"denom":"bitcoint","amount":61},{"denom":"ethereum","amount":71}]}]}})";
 
         ParseJson(&parsedMessage, sendMsgSample);
 
         EXPECT_EQ(2, parsedMessage.NumberOfInputs);
-        EXPECT_EQ(2, parsedMessage.NumberOfOutputs);
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Address], "696E707574"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Address], "616E6F74686572696E707574"));
         EXPECT_EQ(2, parsedMessage.Inputs[0].NumberOfCoins);
         EXPECT_EQ(3, parsedMessage.Inputs[1].NumberOfCoins);
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Sequence], "1"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Sequence], "17"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Coins[0].Denum], "atom"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Coins[0].Amount], "10"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Coins[1].Denum], "bitcoin"));
@@ -246,5 +266,21 @@ TEST(JsonParserTest, SimpleObject)
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Coins[1].Amount], "60"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Coins[2].Denum], "ethereum"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Coins[2].Amount], "70"));
+
+        EXPECT_EQ(2, parsedMessage.NumberOfOutputs);
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[0].Address], "6F7574707574"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[1].Address], "616E6F746865726F7574707574"));
+        EXPECT_EQ(2, parsedMessage.Outputs[0].NumberOfCoins);
+        EXPECT_EQ(3, parsedMessage.Outputs[1].NumberOfCoins);
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[0].Coins[0].Denum], "atom"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[0].Coins[0].Amount], "11"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[0].Coins[1].Denum], "bitcoint")); // typo on purpose
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[0].Coins[1].Amount], "21"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[1].Coins[0].Denum], "atom"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[1].Coins[0].Amount], "51"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[1].Coins[1].Denum], "bitcoint")); // typo on purpose
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[1].Coins[1].Amount], "61"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[1].Coins[2].Denum], "ethereum"));
+        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Outputs[1].Coins[2].Amount], "71"));
     }
 }
