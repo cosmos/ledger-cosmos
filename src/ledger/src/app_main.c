@@ -19,6 +19,7 @@
 #include "os.h"
 #include "ui.h"
 #include "app_main.h"
+#include "JsonParser.h"
 
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
@@ -85,7 +86,7 @@ void app_init()
     ui_idle();
 }
 
-void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx) {
+void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     uint16_t sw = 0;
 
     BEGIN_TRY {
@@ -113,10 +114,47 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx) {
                     sw = 0x6800 | (e & 0x7FF);
                     break;
             }
+
+            int position = 0;
+
+#define USE_BUFFER_SENT_FROM_PYTHON 0
+#if USE_BUFFER_SENT_FROM_PYTHON
+            static char message[1000] = {0};
+
+            for (uint32_t i=0; i < rx-2; i++) {
+                message[position] = G_io_apdu_buffer[OFFSET_INS + position + 1];
+                position++;
+            }
+            int last = position - 1;
+            message[last] = '\0';
+#endif
+
+            ParsedMessage parsedMessage = {0};
+            const char* sendMsgSample = "{\"_df\":\"3CAAA78D13BAE0\",\"_v\":{\"inputs\":[{\"address\":\"696E707574\",\"coins\":[{\"denom\":\"atom\",\"amount\":10}],\"sequence\":1}],\"outputs\":[{\"address\":\"6F7574707574\",\"coins\":[{\"denom\":\"atom\",\"amount\":10}]}]}}";
+
+#if USE_BUFFER_SENT_FROM_PYTHON
+            ParseJson(&parsedMessage, message);
+#else
+            ParseJson(&parsedMessage, sendMsgSample);
+#endif
+
+            position = 0;
             // Unexpected exception => report
-            G_io_apdu_buffer[*tx] = sw >> 8;
-            G_io_apdu_buffer[*tx + 1] = sw;
-            *tx += 2;
+            G_io_apdu_buffer[*tx + position++] = 0x90;
+            G_io_apdu_buffer[*tx + position++] = 0x00;
+
+            //for (uint32_t i=0; i < rx-2; i++) {
+                //G_io_apdu_buffer[*tx+position] = message[position-1];
+                //position++;
+            //}
+            G_io_apdu_buffer[*tx+position++] = parsedMessage.NumberOfInputs;
+            G_io_apdu_buffer[*tx+position++] = parsedMessage.NumberOfOutputs;
+            G_io_apdu_buffer[*tx+position++] = parsedMessage.NumberOfTokens;
+            G_io_apdu_buffer[*tx+position++] = rx;
+            G_io_apdu_buffer[*tx+position++] = 0x90;
+            G_io_apdu_buffer[*tx+position++] = 0x00;
+
+            *tx += position;
         }
         FINALLY {
         }
@@ -141,7 +179,7 @@ void app_main() {
 
                 if (rx == 0) THROW(0x6982);
 
-                handleApdu(&flags, &tx);
+                handleApdu(&flags, &tx, rx);
             }
             CATCH_OTHER(e);
             {
