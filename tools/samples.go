@@ -15,9 +15,9 @@ func PrintSampleFunc(message bank.SendMsg, output string) {
 	res := message.GetSignBytes()
 
 	if output == "binary" {
-		fmt.Println(res)
+		fmt.Print(res)
 	} else if output == "text" {
-		fmt.Println(string(res))
+		fmt.Print(string(res))
 	}
 }
 

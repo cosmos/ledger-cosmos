@@ -18,11 +18,18 @@ def send(cmd, params=[]):
         for p in params:
             cmd_str = cmd_str + "{0:02x}".format(p)
 
+        print(binascii.unhexlify(cmd_str))
         return dongle.exchange(binascii.unhexlify(cmd_str))
+
     except CommException as e:
         print("COMMEXC: ", e)
     except Exception as e:
         print("COMMEXC: ", e)
 
 
-send(1)
+import subprocess
+json = subprocess.check_output(['./samples', '0', 'text'])
+buffer = []
+for j in json:
+    buffer.append(ord(j))
+send(1, buffer)
