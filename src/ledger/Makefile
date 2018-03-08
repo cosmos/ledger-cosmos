@@ -19,6 +19,9 @@
 ifeq ($(BOLOS_SDK),)
 $(error BOLOS_SDK is not set)
 endif
+
+SCRIPT_LD:=$(CURDIR)/script.ld
+
 include $(BOLOS_SDK)/Makefile.defines
 
 # Main app configuration
@@ -94,10 +97,10 @@ SDK_SOURCE_PATH += lib_stusb lib_stusb_impl
 all: default
 
 load: all
-	python2 -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
+	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
 delete:
-	python2 -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
+	python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
 
 # Import generic rules from the SDK
 
