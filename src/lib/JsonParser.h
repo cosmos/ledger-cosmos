@@ -13,9 +13,9 @@ extern "C" {
 #endif
 
 #define MAX_NUMBER_OF_TOKENS    128
-#define MAX_JSON_DEPTH          10
-#define MAX_INPUT_OUTPUT_COUNT  5
-#define MAX_COIN_COUNT          5
+#define MAX_JSON_DEPTH          5
+#define MAX_INPUT_OUTPUT_COUNT  2
+#define MAX_COIN_COUNT          2
 
 // List of JSON element in SendMsg (begin)
 // TODO: Remove it

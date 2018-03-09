@@ -18,6 +18,7 @@
 #include "ui.h"
 #include "app_main.h"
 
+
 __attribute__((section(".boot"))) int
 main(void) {
     // exit critical section

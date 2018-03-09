@@ -32,4 +32,5 @@ json = subprocess.check_output(['./samples', '0', 'text'])
 buffer = []
 for j in json:
     buffer.append(ord(j))
+print(len(buffer))
 send(1, buffer)
