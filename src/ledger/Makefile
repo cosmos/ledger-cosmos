@@ -89,7 +89,7 @@ LDLIBS   += -lm -lgcc -lc
 
 ##########################
 
-APP_SOURCE_PATH += src
+APP_SOURCE_PATH += src $(JSMN_LIB)/src $(JSON_PARSER_LIB)
 SDK_SOURCE_PATH += lib_stusb lib_stusb_impl
 
 #include $(BOLOS_SDK)/Makefile.glyphs
