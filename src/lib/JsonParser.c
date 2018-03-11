@@ -15,8 +15,8 @@ bool Match(
 }
 
 // Known issues:
-// 2. The same block of code is duplicated for inputs and outputs - it needs some refactoring
-// 3. Parsing logic supports varying number of inputs, outputs and coins. It also allowed to inputs and outputs be
+// 1. The same block of code is duplicated for inputs and outputs - it needs some refactoring
+// 2. Parsing logic supports varying number of inputs, outputs and coins. It also allowed to inputs and outputs be
 //    in the stream in the arbitrary positions. It however expects Input and Coin to be in a specific format.
 //    Additional flexibility can be achieved if necessary but at the cost of doing additional string comparisons.
 
