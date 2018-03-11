@@ -24,7 +24,7 @@ def send(cmd, params=[]):
             for p in chunk:
                 cmd_str = cmd_str + "{0:02x}".format(p)
 
-            print(binascii.unhexlify(cmd_str))
+            print("Sending message: " + binascii.unhexlify(cmd_str))
             dongle.exchange(binascii.unhexlify(cmd_str))
 
         except CommException as e:
