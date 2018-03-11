@@ -31,5 +31,5 @@ enum UI_STATE {
 extern enum UI_STATE uiState;
 
 void ui_init(void);
-
 void ui_idle(void);
+void ui_display_text(void);

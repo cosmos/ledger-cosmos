@@ -1,41 +1,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <jsmn.h>
-//#include <c++/v1/array>
 #include "JsonParser.h"
-
-void ProcessToken(ParsedMessage* parsedMessage,
-                  int currentDepth,
-                  int tokenIndex)
-{
-    if (tokenIndex >= parsedMessage->NumberOfTokens || currentDepth < 0) {
-        return;
-    }
-    int rootTokenIndex = parsedMessage->TokensInfo.CurrentTraversalPath[currentDepth];
-    if (parsedMessage->Tokens[tokenIndex].start > parsedMessage->Tokens[rootTokenIndex].start
-        &&
-        parsedMessage->Tokens[tokenIndex].end < parsedMessage->Tokens[rootTokenIndex].end)
-    {
-        parsedMessage->TokensInfo.Parents[tokenIndex] = rootTokenIndex;
-
-        currentDepth++;
-        parsedMessage->TokensInfo.CurrentTraversalPath[currentDepth] = tokenIndex;
-
-        ProcessToken(
-                parsedMessage,
-                currentDepth,
-                tokenIndex + 1);
-    }
-    else
-    {
-        currentDepth--;
-
-        ProcessToken(
-                parsedMessage,
-                currentDepth,
-                tokenIndex);
-    }
-}
 
 bool Match(
         const char* jsonString,
@@ -49,15 +15,19 @@ bool Match(
 }
 
 // Known issues:
-// 1. This function should scan the whole token list only once to get all information
-//    At the moment it's doing slightly more work because in few cases it's moving back as it's scanning
-// 2. The same block of coed is duplicated for inputs and outputs - refactor
+// 2. The same block of code is duplicated for inputs and outputs - it needs some refactoring
 // 3. Parsing logic supports varying number of inputs, outputs and coins. It also allowed to inputs and outputs be
 //    in the stream in the arbitrary positions. It however expects Input and Coin to be in a specific format.
 //    Additional flexibility can be achieved if necessary but at the cost of doing additional string comparisons.
 
+bool IsChild(int potentialChildIndex, int parentIndex, jsmntok_t* tokens)
+{
+    return (tokens[potentialChildIndex].start > tokens[parentIndex].start)
+        && (tokens[potentialChildIndex].end < tokens[parentIndex].end);
+}
+
 void ParseMessage(
-        ParsedMessage* parsedMessage,
+        parsed_json_t* parsedMessage,
         const char* jsonString)
 {
     const char inputsTokenName[] = "inputs";
@@ -71,86 +41,80 @@ void ParseMessage(
 
     int i = 0;
     while (i < parsedMessage->NumberOfTokens) {
-        // Find inputs token
+        if (parsedMessage->Tokens[i].type == JSMN_UNDEFINED){
+            break;
+        }
+        // Parse inputs array
         if (!processedInputs && Match(jsonString, parsedMessage->Tokens[i], inputsTokenName, inputsTokenSize)) {
-            int inputsIndex = i + 1;
+            int inputsArrayIndex = i + 1;
             parsedMessage->NumberOfInputs = 0;
-            // Search for all the inputs
-            int j = inputsIndex + 1;
-            while (j < parsedMessage->NumberOfTokens) {
-                // Bail out if current token is already outside inputs range
-                if (parsedMessage->Tokens[j].end >= parsedMessage->Tokens[inputsIndex].end) {
-                    i = j - 1;
-                    break;
-                }
+
+            // Parse input
+            int inputIndex = inputsArrayIndex + 1;
+            while (IsChild(inputIndex, inputsArrayIndex, parsedMessage->Tokens)) {
+
                 // Parse single input
-                if (parsedMessage->TokensInfo.Parents[j] == inputsIndex) {
-                    parsedMessage->Inputs[parsedMessage->NumberOfInputs].Address = j + 2;
-                    int coinsIndex = j + 4;
-                    parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins = 0;
-                    //Search for all the coins
-                    int m = coinsIndex + 1;
-                    while (m < parsedMessage->NumberOfTokens) {
-                        //Bail out if the current token is already outside coins range
-                        if (parsedMessage->Tokens[m].end >= parsedMessage->Tokens[coinsIndex].end) {
-                            j = m - 1;
-                            break;
-                        }
-                        // Find the start of a coin
-                        if (parsedMessage->TokensInfo.Parents[m] == coinsIndex) {
-                            parsedMessage->Inputs[parsedMessage->NumberOfInputs].Coins[parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins].Denum =
-                                    m + 2;
-                            parsedMessage->Inputs[parsedMessage->NumberOfInputs].Coins[parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins++].Amount =
-                                    m + 4;
-                        }
-                        m++;
-                    }
-                    parsedMessage->Inputs[parsedMessage->NumberOfInputs].Sequence = j + 2;
-                    parsedMessage->NumberOfInputs++;
+                parsedMessage->Inputs[parsedMessage->NumberOfInputs].Address = inputIndex + 2;
+
+                // Parse Coins array
+                int coinsArrayIndex = inputIndex + 4;
+                parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins = 0;
+
+                // Parse Coin
+                int coinIndex = coinsArrayIndex + 1;
+                while (IsChild(coinIndex, coinsArrayIndex, parsedMessage->Tokens)) {
+
+                    parsedMessage->Inputs[parsedMessage->NumberOfInputs].Coins[parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins].Denum =
+                            coinIndex + 2;
+
+                    parsedMessage->Inputs[parsedMessage->NumberOfInputs].Coins[parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins++].Amount =
+                            coinIndex + 4;
+
+                    coinIndex += 5;
                 }
-                j++;
+
+                parsedMessage->Inputs[parsedMessage->NumberOfInputs].Sequence = coinIndex + 1;
+                parsedMessage->NumberOfInputs++;
+
+                inputIndex = coinIndex + 2;
             }
+            i = inputIndex - 1;
             processedInputs = true;
         }
 
-
+        // Parse outputs array
         if (!processedOutputs && Match(jsonString, parsedMessage->Tokens[i], outputsTokenName, outputsTokenSize)) {
-            int outputsIndex = i + 1;
+            int outputsArrayIndex = i + 1;
             parsedMessage->NumberOfOutputs = 0;
-            // Search for all the outputs
-            int j = outputsIndex + 1;
-            while (j < parsedMessage->NumberOfTokens) {
-                // Bail out if current token is already outside inputs range
-                if (parsedMessage->Tokens[j].end >= parsedMessage->Tokens[outputsIndex].end) {
-                    i = j - 1;
-                    break;
+
+            // Parse output
+            int outputIndex = outputsArrayIndex + 1;
+            while (IsChild(outputIndex, outputsArrayIndex, parsedMessage->Tokens)) {
+
+                // Parse single input
+                parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Address = outputIndex + 2;
+
+                // Parse Coins array
+                int coinsArrayIndex = outputIndex + 4;
+                parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins = 0;
+
+                // Parse Coin
+                int coinIndex = coinsArrayIndex + 1;
+                while (IsChild(coinIndex, coinsArrayIndex, parsedMessage->Tokens)) {
+
+                    parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Coins[parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins].Denum =
+                            coinIndex + 2;
+
+                    parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Coins[parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins++].Amount =
+                            coinIndex + 4;
+
+                    coinIndex += 5;
                 }
-                // Find the start of a input
-                if (parsedMessage->TokensInfo.Parents[j] == outputsIndex) {
-                    parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Address = j + 2;
-                    int coinsIndex = j + 4;
-                    parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins = 0;
-                    //Search for all the coins
-                    int m = coinsIndex + 1;
-                    while (m < parsedMessage->NumberOfTokens) {
-                        //Bail out if the current token is already outside coins range
-                        if (parsedMessage->Tokens[m].end >= parsedMessage->Tokens[coinsIndex].end) {
-                            j = m - 1;
-                            break;
-                        }
-                        // Find the start of a coin
-                        if (parsedMessage->TokensInfo.Parents[m] == coinsIndex) {
-                            parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Coins[parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins].Denum =
-                                    m + 2;
-                            parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Coins[parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins++].Amount =
-                                    m + 4;
-                        }
-                        m++;
-                    }
-                    parsedMessage->NumberOfOutputs++;
-                }
-                j++;
+
+                parsedMessage->NumberOfOutputs++;
+                outputIndex = coinIndex;
             }
+            i = outputIndex - 1;
             processedOutputs = true;
         }
 
@@ -158,7 +122,7 @@ void ParseMessage(
     }
 }
 
-    void ParseJson(ParsedMessage *parsedJson, const char *jsonString) {
+    void ParseJson(parsed_json_t *parsedJson, const char *jsonString) {
         jsmn_parser parser;
         jsmn_init(&parser);
 
@@ -175,9 +139,6 @@ void ParseMessage(
             parsedJson->Tokens[0].type != JSMN_OBJECT) {
             parsedJson->CorrectFormat = true;
         }
-
-        // Recursively build token relationships
-        ProcessToken(parsedJson, 0, 1);
 
         // Build SendMsg representation with links to tokens
         ParseMessage(parsedJson, jsonString);

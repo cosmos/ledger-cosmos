@@ -23,7 +23,7 @@ extern "C"
 
 int main()
 {
-    ParsedMessage data;
+    parsed_json_t data;
     ParseJson(&data, "Topic: \"Hello json world\"");
 
     std::cout << "Number of found tokens: " << data.NumberOfTokens << std::endl;
