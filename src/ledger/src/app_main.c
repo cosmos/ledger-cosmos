@@ -98,6 +98,9 @@ void process_json(volatile uint32_t *tx, uint32_t rx)
     int packageIndex = G_io_apdu_buffer[OFFSET_PCK_INDEX];
     int packageCount = G_io_apdu_buffer[OFFSET_PCK_COUNT];
 
+    if (packageIndex == 1) {
+        json_buffer_write_pos = 0;
+    }
     os_memmove(json_buffer + json_buffer_write_pos, &(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA + 1);
     json_buffer_write_pos += (rx - OFFSET_DATA + 1);
     json_buffer [json_buffer_write_pos] = '\0';
