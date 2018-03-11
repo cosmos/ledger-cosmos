@@ -129,6 +129,7 @@ void process_json(volatile uint32_t *tx, uint32_t rx)
         G_io_apdu_buffer[*tx + position++] = parsed_json.NumberOfTokens;
         G_io_apdu_buffer[*tx + position++] = rx;
 
+#if SEND_STACK_INFORMATION
         G_io_apdu_buffer[*tx + position++] = (stackStartAddress & 0xFF000000) >> 24;
         G_io_apdu_buffer[*tx + position++] = (stackStartAddress & 0x00FF0000) >> 16;
         G_io_apdu_buffer[*tx + position++] = (stackStartAddress & 0x0000FF00) >> 8;
@@ -140,6 +141,7 @@ void process_json(volatile uint32_t *tx, uint32_t rx)
         G_io_apdu_buffer[*tx + position++] = (currentStackAddress & 0x00FF0000) >> 16;
         G_io_apdu_buffer[*tx + position++] = (currentStackAddress & 0x0000FF00) >> 8;
         G_io_apdu_buffer[*tx + position++] = (currentStackAddress & 0x000000FF);
+#endif
     }
     *tx += position;
 }
