@@ -20,24 +20,13 @@
 #include "ui.h"
 #include "app_main.h"
 
+char json_buffer[1000];
+uint32_t json_buffer_write_pos;
+uint32_t json_buffer_size;
 
-volatile uint32_t stackStartAddress = 0;
-volatile uint32_t maxUsedStackSize = 0;
+volatile uint32_t stackStartAddress;
 parsed_json_t parsed_json;
-
-void update_stack_info()
-{
-    int dummyData = 0;
-    if (stackStartAddress == 0) {
-        stackStartAddress = (uint32_t)&dummyData;
-    }
-    else {
-        uint32_t currentUsedStackSize = (uint32_t)&dummyData - stackStartAddress;
-        if (currentUsedStackSize > maxUsedStackSize) {
-            maxUsedStackSize = currentUsedStackSize;
-        }
-    }
-}
+parsed_json_t parsed_json;
 
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
@@ -106,36 +95,50 @@ void app_init()
 
 void process_json(volatile uint32_t *tx, uint32_t rx)
 {
-    update_stack_info();
+    int packageIndex = G_io_apdu_buffer[OFFSET_PCK_INDEX];
+    int packageCount = G_io_apdu_buffer[OFFSET_PCK_COUNT];
 
-    G_io_apdu_buffer[rx - 1] = '\0';
-    char* msg = (char*)&(G_io_apdu_buffer[OFFSET_INS + 1]);
-
-    os_memset((void*)&parsed_json, 0, sizeof(parsed_json_t));
-    ParseJson(&parsed_json, msg);
-    update_stack_info();
-
-    //const char* sendMsgSample = "{\"_df\":\"3CAAA78D13BAE0\",\"_v\":{\"inputs\":[{\"address\":\"696E707574\",\"coins\":[{\"denom\":\"atom\",\"amount\":10}],\"sequence\":1}],\"outputs\":[{\"address\":\"6F7574707574\",\"coins\":[{\"denom\":\"atom\",\"amount\":10}]}]}}";
-    // ParseJson(&parsedMessage, sendMsgSample);
+    os_memmove(json_buffer + json_buffer_write_pos, &(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA + 1);
+    json_buffer_write_pos += (rx - OFFSET_DATA + 1);
+    json_buffer [json_buffer_write_pos] = '\0';
 
     int position = 0;
-    G_io_apdu_buffer[*tx+position++] = parsed_json.NumberOfInputs;
-    G_io_apdu_buffer[*tx+position++] = parsed_json.NumberOfOutputs;
-    G_io_apdu_buffer[*tx+position++] = parsed_json.NumberOfTokens;
-    G_io_apdu_buffer[*tx+position++] = rx;
 
-    G_io_apdu_buffer[*tx+position++] = maxUsedStackSize & 0xFF000000 >> 24;
-    G_io_apdu_buffer[*tx+position++] = maxUsedStackSize & 0x00FF0000 >> 16;
-    G_io_apdu_buffer[*tx+position++] = maxUsedStackSize & 0x0000FF00 >> 8;
-    G_io_apdu_buffer[*tx+position++] = maxUsedStackSize & 0x000000FF;
+    if (packageIndex != packageCount) {
+        G_io_apdu_buffer[*tx + position++] = packageIndex;
+        G_io_apdu_buffer[*tx + position++] = packageCount;
+        G_io_apdu_buffer[*tx + position++] = (rx - OFFSET_DATA + 1);
+    }
+    else
+    {
+        os_memset((void *) &parsed_json, 0, sizeof(parsed_json_t));
+        ParseJson(&parsed_json, json_buffer);
 
+        //const char* sendMsgSample = "{\"_df\":\"3CAAA78D13BAE0\",\"_v\":{\"inputs\":[{\"address\":\"696E707574\",\"coins\":[{\"denom\":\"atom\",\"amount\":10}],\"sequence\":1}],\"outputs\":[{\"address\":\"6F7574707574\",\"coins\":[{\"denom\":\"atom\",\"amount\":10}]}]}}";
+        // ParseJson(&parsedMessage, sendMsgSample);
+
+        G_io_apdu_buffer[*tx + position++] = packageIndex;
+        G_io_apdu_buffer[*tx + position++] = packageCount;
+        G_io_apdu_buffer[*tx + position++] = json_buffer_write_pos;
+
+        G_io_apdu_buffer[*tx + position++] = parsed_json.NumberOfInputs;
+        G_io_apdu_buffer[*tx + position++] = parsed_json.NumberOfOutputs;
+        G_io_apdu_buffer[*tx + position++] = parsed_json.NumberOfTokens;
+        G_io_apdu_buffer[*tx + position++] = rx;
+
+        G_io_apdu_buffer[*tx + position++] = (stackStartAddress & 0xFF000000) >> 24;
+        G_io_apdu_buffer[*tx + position++] = (stackStartAddress & 0x00FF0000) >> 16;
+        G_io_apdu_buffer[*tx + position++] = (stackStartAddress & 0x0000FF00) >> 8;
+        G_io_apdu_buffer[*tx + position++] = (stackStartAddress & 0x000000FF);
+
+        int data = 0;
+        uint32_t currentStackAddress = (uint32_t) & data;
+        G_io_apdu_buffer[*tx + position++] = (currentStackAddress & 0xFF000000) >> 24;
+        G_io_apdu_buffer[*tx + position++] = (currentStackAddress & 0x00FF0000) >> 16;
+        G_io_apdu_buffer[*tx + position++] = (currentStackAddress & 0x0000FF00) >> 8;
+        G_io_apdu_buffer[*tx + position++] = (currentStackAddress & 0x000000FF);
+    }
     *tx += position;
-
-    //memcpy(input_address,
-    //       msg + parsedMessage.Tokens[parsedMessage.Inputs[0].Address].start,
-    //       parsedMessage.Tokens[parsedMessage.Inputs[0].Address].end - parsedMessage.Tokens[parsedMessage.Inputs[0].Address].start);
-
-    //UX_DISPLAY(bagl_ui_input_address, NULL);
 }
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
@@ -186,7 +189,10 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 void app_main() {
     volatile uint32_t rx = 0, tx = 0, flags = 0;
 
-    update_stack_info();
+    json_buffer_write_pos = 0;
+    json_buffer_size = 0;
+
+    stackStartAddress = (uint32_t)&rx;
 
     for (;;) {
         volatile uint16_t sw = 0;
