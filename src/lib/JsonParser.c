@@ -1,6 +1,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #include <jsmn.h>
+//#include <c++/v1/array>
 #include "JsonParser.h"
 
 bool Match(
@@ -122,24 +123,24 @@ void ParseMessage(
     }
 }
 
-    void ParseJson(parsed_json_t *parsedJson, const char *jsonString) {
-        jsmn_parser parser;
-        jsmn_init(&parser);
+void ParseJson(parsed_json_t *parsedJson, const char *jsonString) {
+    jsmn_parser parser;
+    jsmn_init(&parser);
 
-        parsedJson->NumberOfTokens = jsmn_parse(
-                &parser,
-                jsonString,
-                strlen(jsonString),
-                parsedJson->Tokens,
-                MAX_NUMBER_OF_TOKENS);
+    parsedJson->NumberOfTokens = jsmn_parse(
+            &parser,
+            jsonString,
+            strlen(jsonString),
+            parsedJson->Tokens,
+            MAX_NUMBER_OF_TOKENS);
 
-        parsedJson->CorrectFormat = false;
-        if (parsedJson->NumberOfTokens >= 1
-            &&
-            parsedJson->Tokens[0].type != JSMN_OBJECT) {
-            parsedJson->CorrectFormat = true;
-        }
-
-        // Build SendMsg representation with links to tokens
-        ParseMessage(parsedJson, jsonString);
+    parsedJson->CorrectFormat = false;
+    if (parsedJson->NumberOfTokens >= 1
+        &&
+        parsedJson->Tokens[0].type != JSMN_OBJECT) {
+        parsedJson->CorrectFormat = true;
     }
+
+    // Build SendMsg representation with links to tokens
+    ParseMessage(parsedJson, jsonString);
+}

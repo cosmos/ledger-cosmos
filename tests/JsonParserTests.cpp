@@ -132,6 +132,57 @@ TEST(JsonParserTest, SimpleObject)
         EXPECT_TRUE(parserData.Tokens[9].type == jsmntype_t::JSMN_PRIMITIVE);
     }
 
+    TEST(JsonParserTest, ParentMapping)
+    {
+        ParsedMessage parserData = {0};
+        ParseJson(&parserData, "{vote : "
+                "{ "
+                "\"name\" : \"value\", "
+                "\"keys\" : [{\"key1\" : \"value1\", \"total\":123 },"
+                            "{\"key2\" : \"value2\", \"total\":160 },"
+                            "{\"key3\" : \"value3\", \"total\":165 }]"
+                "}}");
+
+        // root                 [0]
+        // vote(key)            [1]
+        // vote(value)          [2]
+        //      name(key)       [3]
+        //      value(value)    [4]
+        //      keys(key)       [5]
+        //      keys(value)     [6] array
+        //          keys(object)[7]
+        //                  key1[8]
+        //                value1[9]
+        //                 total[10]
+        //                   123[11]
+        //          keys(object)[12]
+        //                  key2[13]
+        //                value2[14]
+        //                 total[15]
+        //                   160[16]
+        //          keys(object)[17]
+        //                  key3[18]
+        //                value3[19]
+        //                 total[20]
+        //                   165[21]
+
+        //ProcessToken(&parserData, 0, 1);
+
+        // Find how many children have token with index 3 i.e. keys
+
+        int parentIndexToMatch = 6;
+        int count = 0;
+        for (int i=0; i < parserData.NumberOfTokens;i++)
+        {
+            if (parserData.TokensInfo.Parents[i]==parentIndexToMatch)
+            {
+                count++;
+            }
+        }
+        EXPECT_EQ(count, 3);
+
+    }
+
     static bool Compare(const char* input, jsmntok_t inputToken, const char* reference)
     {
         return strncmp(input + inputToken.start, reference, inputToken.end - inputToken.start) == 0;
