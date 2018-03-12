@@ -1,5 +1,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+#include <jsmn.h>
 #include "JsonParser.h"
 
 void ParseJson(JsonParserData* jsonParserData, const char* jsonString)
@@ -14,4 +15,6 @@ void ParseJson(JsonParserData* jsonParserData, const char* jsonString)
     {
         jsonParserData->CorrectFormat = true;
     }
+
+    // TODO Add logic to get number of input and outputs and find relative indices for all the nodes
 }

@@ -25,7 +25,7 @@ func ParseArgs(numberOfSamples int) (int, string, int) {
 	argsWithoutProg := os.Args[1:]
 	if len(argsWithoutProg) < 2 {
 		fmt.Println("Not enought arguments")
-		fmt.Printf("USAGE: samples SampleNumber[0-%d] OutputType[\"binary|text\"]\n", numberOfSamples)
+		fmt.Printf("USAGE: samples SampleNumber[0-%d] OutputType[\"binary|text\"]\n", numberOfSamples-1)
 
 		return 0, "", -1
 	}
@@ -47,7 +47,9 @@ func ParseArgs(numberOfSamples int) (int, string, int) {
 }
 
 func GetMessages() ([]bank.SendMsg) {
-	return []bank.SendMsg{
+	return []bank.SendMsg {
+
+		// Simple address, 1 input, 1 output
 		bank.SendMsg{
 			Inputs: []bank.Input{
 				{
@@ -64,6 +66,7 @@ func GetMessages() ([]bank.SendMsg) {
 			},
 		},
 
+		// Real public key, 1 input, 1 output
 		bank.SendMsg{
 			Inputs: []bank.Input{
 				{
@@ -79,6 +82,58 @@ func GetMessages() ([]bank.SendMsg) {
 				},
 			},
 		},
+
+		// Simple address, 2 inputs, 2 outputs
+        bank.SendMsg{
+            Inputs: []bank.Input{
+                {
+                    Address:  crypto.Address([]byte("input")),
+                    Coins:    sdk.Coins{{"atom", 10}},
+                    Sequence: 1,
+                },
+                {
+                    Address:  crypto.Address([]byte("anotherinput")),
+                    Coins:    sdk.Coins{{"atom", 50}},
+                    Sequence: 1,
+                },
+            },
+            Outputs: []bank.Output{
+                {
+                    Address: crypto.Address([]byte("output")),
+                    Coins:   sdk.Coins{{"atom", 10}},
+                },
+                {
+                    Address: crypto.Address([]byte("anotheroutput")),
+                    Coins:   sdk.Coins{{"atom", 50}},
+                },
+            },
+        },
+
+        // Simple address, 2 inputs, 2 outputs, 2 coins
+        bank.SendMsg{
+            Inputs: []bank.Input{
+                {
+                    Address:  crypto.Address([]byte("input")),
+                    Coins:    sdk.Coins{{"atom", 10},{"bitcoint", 20}},
+                    Sequence: 1,
+                },
+                {
+                    Address:  crypto.Address([]byte("anotherinput")),
+                    Coins:    sdk.Coins{{"atom", 50},{"bitcoint", 60},{"ethereum", 70}},
+                    Sequence: 1,
+                },
+            },
+            Outputs: []bank.Output{
+                {
+                    Address: crypto.Address([]byte("output")),
+                    Coins:    sdk.Coins{{"atom", 10},{"bitcoint", 20}},
+                },
+                {
+                    Address: crypto.Address([]byte("anotheroutput")),
+                    Coins:    sdk.Coins{{"atom", 50},{"bitcoint", 60},{"ethereum", 70}},
+                },
+            },
+        },
 	}
 }
 
