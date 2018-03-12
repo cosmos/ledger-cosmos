@@ -44,8 +44,12 @@ handle_make()
     DOCKER_IMAGE=zondax/builder_bolos
     BOLOS_SDK=/project/deps/nanos-secure-sdk
     BOLOS_ENV=/opt/bolos
+    JSMN_LIB=/project/deps/jsmn
+    JSON_PARSER_LIB=/project/src/lib
 
     docker run -it --rm \
+            -e JSMN_LIB=${JSMN_LIB} \
+            -e JSON_PARSER_LIB=${JSON_PARSER_LIB} \
             -e BOLOS_SDK=${BOLOS_SDK} \
             -e BOLOS_ENV=${BOLOS_ENV} \
             -u `id -u` \

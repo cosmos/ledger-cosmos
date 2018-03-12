@@ -28,7 +28,7 @@ namespace
 
 TEST(JsonParserTest, Empty)
 {
-    ParsedMessage parserData = {0};
+    parsed_json_t parserData = {0};
     ParseJson(&parserData, "");
 
     EXPECT_FALSE(parserData.CorrectFormat);
@@ -37,7 +37,7 @@ TEST(JsonParserTest, Empty)
 
 TEST(JsonParserTest, SinglePrimitive)
 {
-    ParsedMessage parserData = {0};
+    parsed_json_t parserData = {0};
     ParseJson(&parserData, "EMPTY");
 
     EXPECT_TRUE(parserData.CorrectFormat);
@@ -47,7 +47,7 @@ TEST(JsonParserTest, SinglePrimitive)
 
 TEST(JsonParserTest, KeyValuePrimitives)
 {
-    ParsedMessage parserData = {0};
+    parsed_json_t parserData = {0};
     ParseJson(&parserData, "KEY : VALUE");
 
     EXPECT_TRUE(parserData.CorrectFormat);
@@ -58,7 +58,7 @@ TEST(JsonParserTest, KeyValuePrimitives)
 
 TEST(JsonParserTest, SingleString)
 {
-    ParsedMessage parserData = {0};
+    parsed_json_t parserData = {0};
     ParseJson(&parserData, "\"EMPTY\"");
 
     EXPECT_TRUE(parserData.CorrectFormat);
@@ -68,7 +68,7 @@ TEST(JsonParserTest, SingleString)
 
 TEST(JsonParserTest, KeyValueStrings)
 {
-    ParsedMessage parserData = {0};
+    parsed_json_t parserData = {0};
     ParseJson(&parserData, "\"KEY\" : \"VALUE\"");
 
     EXPECT_TRUE(parserData.CorrectFormat);
@@ -79,7 +79,7 @@ TEST(JsonParserTest, KeyValueStrings)
 
 TEST(JsonParserTest, SimpleArray)
 {
-    ParsedMessage parserData = {0};
+    parsed_json_t parserData = {0};
     ParseJson(&parserData, "LIST : [1, 2, 3, 4]");
 
     EXPECT_TRUE(parserData.CorrectFormat);
@@ -94,7 +94,7 @@ TEST(JsonParserTest, SimpleArray)
 
 TEST(JsonParserTest, MixedArray)
 {
-    ParsedMessage parserData = {0};
+    parsed_json_t parserData = {0};
     ParseJson(&parserData, "LIST : [1, \"Text\", 3, \"Another text\"]");
 
     EXPECT_TRUE(parserData.CorrectFormat);
@@ -109,7 +109,7 @@ TEST(JsonParserTest, MixedArray)
 
 TEST(JsonParserTest, SimpleObject)
 {
-        ParsedMessage parserData = {0};
+        parsed_json_t parserData = {0};
         ParseJson(&parserData, "vote : "
                 "{ "
                 "\"key\" : \"value\", "
@@ -190,7 +190,7 @@ TEST(JsonParserTest, SimpleObject)
 
     TEST(JsonParserTest, ParseSendMsg_SingleInputSingleOutput)
     {
-        ParsedMessage parsedMessage = {0};
+        parsed_json_t parsedMessage = {0};
         //std::string result = exec("../tools/samples 0 text");
         const char* sendMsgSample = R"({"_df":"3CAAA78D13BAE0","_v":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}],"sequence":1}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]}]}})";
 
@@ -212,7 +212,7 @@ TEST(JsonParserTest, SimpleObject)
 
     TEST(JsonParserTest, ParseSendMsg_TwoInputsTwoOutputs)
     {
-        ParsedMessage parsedMessage = {0};
+        parsed_json_t parsedMessage = {0};
         //std::string result = exec("../tools/samples 2 text");
         const char* sendMsgSample = R"({"_df":"3CAAA78D13BAE0","_v":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}],"sequence":1},{"address":"616E6F74686572696E707574","coins":[{"denom":"atom","amount":50}],"sequence":1}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]},{"address":"616E6F746865726F7574707574","coins":[{"denom":"atom","amount":50}]}]}})";
 
@@ -243,7 +243,7 @@ TEST(JsonParserTest, SimpleObject)
 
     TEST(JsonParserTest, ParseSendMsg_TwoInputsTwoOutputsMultipleCoins)
     {
-        ParsedMessage parsedMessage = {0};
+        parsed_json_t parsedMessage = {0};
         //std::string result = exec("../tools/samples 3 text");
         const char* sendMsgSample = R"({"_df":"3CAAA78D13BAE0","_v":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10},{"denom":"bitcoin","amount":20}],"sequence":1},{"address":"616E6F74686572696E707574","coins":[{"denom":"atom","amount":50},{"denom":"bitcoin","amount":60},{"denom":"ethereum","amount":70}],"sequence":17}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":11},{"denom":"bitcoint","amount":21}]},{"address":"616E6F746865726F7574707574","coins":[{"denom":"atom","amount":51},{"denom":"bitcoint","amount":61},{"denom":"ethereum","amount":71}]}]}})";
 
