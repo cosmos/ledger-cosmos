@@ -33,34 +33,33 @@ typedef unsigned char byte;
 #define MAX_INPUT_OUTPUT_COUNT  2
 #define MAX_COIN_COUNT          3
 
-// Part of the SendMsg struct
+// Coin part of the SendMsg struct
 typedef struct
 {
-    byte Denum;
-    byte Amount;
+    byte Denum;     //< index that points to Denum token in parsed json
+    byte Amount;    //< index that points to Amount token in parsed json
 } Coin;
 
-// Part of the SendMsg struct
+// Input part of the SendMsg struct
 typedef struct
 {
-    byte Address;
+    byte Address;               //< index that points to Denum token in parsed json
     Coin Coins[MAX_COIN_COUNT];
-    byte Sequence;
+    byte Sequence;              //< index that points to Sequence token in parsed json
     byte NumberOfCoins;
 } Input;
 
-// Part of the SendMsg struct
+// Output part of the SendMsg struct
 typedef struct
 {
-    byte Address;
+    byte Address;               //< index that points to Address in parsed json
     Coin Coins[MAX_COIN_COUNT];
     byte NumberOfCoins;
 } Output;
 
-// Main structure that carries all the parsed data including:
-//  - found tokens
-//  - parent-child relationships between tokens
-//  - SendMsg structure representation with links to tokens
+// Context that keeps all the parsed data together. That includes:
+//  - parsed json tokens
+//  - re-created SendMsg struct with indices pointing to tokens in parsed json
 typedef struct
 {
     // Tokens
