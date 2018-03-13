@@ -107,8 +107,7 @@ TEST(JsonParserTest, MixedArray)
     EXPECT_TRUE(parserData.Tokens[5].type == jsmntype_t::JSMN_STRING);
 }
 
-TEST(JsonParserTest, SimpleObject)
-{
+TEST(JsonParserTest, SimpleObject) {
         parsed_json_t parserData = {0};
         ParseJson(&parserData, "vote : "
                 "{ "
