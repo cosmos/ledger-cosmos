@@ -26,7 +26,6 @@ uint32_t json_buffer_size;
 
 volatile uint32_t stackStartAddress;
 parsed_json_t parsed_json;
-parsed_json_t parsed_json;
 
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
