@@ -1,4 +1,5 @@
 /*******************************************************************************
+*   (c) 2016 Ledger
 *   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,9 +24,10 @@
 #define OFFSET_PCK_INDEX 2  //< Package index offset
 #define OFFSET_PCK_COUNT 3  //< Package count offset
 #define OFFSET_DATA      4  //< Data offset
+#define JSON_BUFFER_SIZE 1000
 
 extern parsed_json_t parsed_json;
-extern char json_buffer[1000];
+extern char json_buffer[JSON_BUFFER_SIZE];
 
 extern uint32_t json_buffer_write_pos;
 extern uint32_t json_buffer_size;
