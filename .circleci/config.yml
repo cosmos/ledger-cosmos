@@ -28,7 +28,7 @@ jobs:
       - run: export GTEST_COLOR=1 && ctest -VV
   build:
     docker:
-      - image: zondax/builder_bolos
+      - image: zondax/ledger-docker-bolos
     environment:
       - BOLOS_SDK=/root/project/deps/nanos-secure-sdk
       - BOLOS_ENV=/opt/bolos
