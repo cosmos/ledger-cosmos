@@ -30,10 +30,10 @@ bool Match(
 }
 
 // Known issues:
-// 1. The same block of code is duplicated for inputs and outputs - it needs some refactoring
-// 2. Parsing logic supports varying number of inputs, outputs and coins. It also allowed to inputs and outputs be
-//    in the stream in the arbitrary positions. It however expects Input and Coin to be in a specific format.
-//    Additional flexibility can be achieved if necessary but at the cost of doing additional string comparisons.
+// 1. The same block of code is duplicated for inputs and outputs - this could be further refactored
+// 2. Parsing logic supports a varying number of inputs, outputs and coins. Input and output arrays can be
+//    found at random positions in the stream - offsets are not hardcoded. Internal layouts of individual
+//    inputs and outputs are however hardcoded and must not change. 
 
 bool IsChild(int potentialChildIndex, int parentIndex, jsmntok_t* tokens)
 {
