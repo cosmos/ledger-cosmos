@@ -137,24 +137,24 @@ void ParseMessage(
     }
 }
 
-void ParseJson(parsed_json_t *parsedJson, const char *jsonString) {
-    jsmn_parser parser;
-    jsmn_init(&parser);
+    void ParseJson(parsed_json_t *parsedJson, const char *jsonString) {
+        jsmn_parser parser;
+        jsmn_init(&parser);
 
-    parsedJson->NumberOfTokens = jsmn_parse(
-            &parser,
-            jsonString,
-            strlen(jsonString),
-            parsedJson->Tokens,
-            MAX_NUMBER_OF_TOKENS);
+        parsedJson->NumberOfTokens = jsmn_parse(
+                &parser,
+                jsonString,
+                strlen(jsonString),
+                parsedJson->Tokens,
+                MAX_NUMBER_OF_TOKENS);
 
-    parsedJson->CorrectFormat = false;
-    if (parsedJson->NumberOfTokens >= 1
-        &&
-        parsedJson->Tokens[0].type != JSMN_OBJECT) {
-        parsedJson->CorrectFormat = true;
+        parsedJson->CorrectFormat = false;
+        if (parsedJson->NumberOfTokens >= 1
+            &&
+            parsedJson->Tokens[0].type != JSMN_OBJECT) {
+            parsedJson->CorrectFormat = true;
+        }
+
+        // Build SendMsg representation with links to tokens
+        ParseMessage(parsedJson, jsonString);
     }
-
-    // Build SendMsg representation with links to tokens
-    ParseMessage(parsedJson, jsonString);
-}

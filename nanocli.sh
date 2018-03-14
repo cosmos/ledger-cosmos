@@ -23,13 +23,13 @@ handle_config()
     case "${os_string}" in
         Linux*)
             sudo apt-get install libusb-1.0.0 libudev-dev
-            pip2 install --upgrade setuptools
-            pip2 install -U ledgerblue==0.1.15 ecpy==0.8.2
+            pip install --upgrade setuptools
+            pip install -U ledgerblue ecpy==0.8.2
             ;;
         Darwin*)
             brew install libusb
             pip install --upgrade setuptools --user python
-            pip install -U ledgerblue==0.1.15 ecpy==0.8.2 --user python
+            pip install -U --no-cache ledgerblue ecpy==0.8.2 --user python
             ;;
         *)
             echo "OS not recognized"
@@ -41,7 +41,7 @@ handle_config()
 handle_make()
 {
     # This function works in the scope of the container
-    DOCKER_IMAGE=zondax/builder_bolos
+    DOCKER_IMAGE=zondax/ledger-docker-bolos
     BOLOS_SDK=/project/deps/nanos-secure-sdk
     BOLOS_ENV=/opt/bolos
     JSMN_LIB=/project/deps/jsmn
