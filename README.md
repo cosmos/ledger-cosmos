@@ -1,5 +1,3 @@
-# test-ci
+# ledger-cosmos
 
-[![CircleCI](https://circleci.com/gh/jleni/test-ci.svg?style=svg&circle-token=10bd6231dfc952ec8a49cda3299f9ecd3b717504)](https://circleci.com/gh/jleni/test-ci)
-
-This is a basic example project using cmake / google test / CircleCI workflows / Bolos
+[![CircleCI](https://circleci.com/gh/ZondaX/ledger-cosmos.svg?style=svg&circle-token=fdea2c93e42c201822ca76fe617258f3a5b3709a)](https://circleci.com/gh/ZondaX/ledger-cosmos)

@@ -30,11 +30,11 @@ static const bagl_element_t bagl_ui_idle_nanos[] =
     },
     {
         {BAGL_LABELINE, 0x02, 0, 12, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, UI_CENTER11PX, 0},
-        "Hello", 0, 0, 0, NULL, NULL, NULL,
+        "Tendermint", 0, 0, 0, NULL, NULL, NULL,
     },
     {
         {BAGL_LABELINE, 0x02, 0, 23, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, UI_CENTER11PX, 0},
-        "World", 0, 0, 0, NULL, NULL, NULL,
+        "Cosmos Demo", 0, 0, 0, NULL, NULL, NULL,
     },
     {
         {BAGL_ICON, 0x00, 3, 12, 7,   7,  0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_ICON_CROSS},

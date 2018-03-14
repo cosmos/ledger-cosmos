@@ -116,9 +116,6 @@ void process_json(volatile uint32_t *tx, uint32_t rx)
         os_memset((void *) &parsed_json, 0, sizeof(parsed_json_t));
         ParseJson(&parsed_json, json_buffer);
 
-        //const char* sendMsgSample = "{\"_df\":\"3CAAA78D13BAE0\",\"_v\":{\"inputs\":[{\"address\":\"696E707574\",\"coins\":[{\"denom\":\"atom\",\"amount\":10}],\"sequence\":1}],\"outputs\":[{\"address\":\"6F7574707574\",\"coins\":[{\"denom\":\"atom\",\"amount\":10}]}]}}";
-        // ParseJson(&parsedMessage, sendMsgSample);
-
         G_io_apdu_buffer[*tx + position++] = packageIndex;
         G_io_apdu_buffer[*tx + position++] = packageCount;
         G_io_apdu_buffer[*tx + position++] = json_buffer_write_pos;
