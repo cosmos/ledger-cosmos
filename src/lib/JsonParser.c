@@ -1,7 +1,21 @@
-// Distributed under the MIT software license, see the accompanying
-// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+/*******************************************************************************
+*   (c) 2016 Ledger
+*   (c) 2018 ZondaX GmbH
+*
+*  Licensed under the Apache License, Version 2.0 (the "License");
+*  you may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*      http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+********************************************************************************/
+
 #include <jsmn.h>
-//#include <c++/v1/array>
 #include "JsonParser.h"
 
 bool Match(
@@ -16,10 +30,10 @@ bool Match(
 }
 
 // Known issues:
-// 1. The same block of code is duplicated for inputs and outputs - it needs some refactoring
-// 2. Parsing logic supports varying number of inputs, outputs and coins. It also allowed to inputs and outputs be
-//    in the stream in the arbitrary positions. It however expects Input and Coin to be in a specific format.
-//    Additional flexibility can be achieved if necessary but at the cost of doing additional string comparisons.
+// 1. The same block of code is duplicated for inputs and outputs - this could be further refactored
+// 2. Parsing logic supports a varying number of inputs, outputs and coins. Input and output arrays can be
+//    found at random positions in the stream - offsets are not hardcoded. Internal layouts of individual
+//    inputs and outputs are however hardcoded and must not change. 
 
 bool IsChild(int potentialChildIndex, int parentIndex, jsmntok_t* tokens)
 {
