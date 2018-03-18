@@ -26,10 +26,22 @@
 
 enum UI_STATE {
     UI_IDLE,
+    UI_WAITING_FOR_DATA,
+    UI_TRANSACTION
 };
 
 extern enum UI_STATE uiState;
 
+void ui_update_transaction_info(const char* inputAddress,
+                                int addressSize,
+                                const char* inputCoinName,
+                                int coinNameSize,
+                                const char* inputCoinAmount,
+                                int coinAmountSize);
 void ui_init(void);
 void ui_idle(void);
-void ui_display_text(void);
+void ui_wait_for_data(unsigned int ignored);
+void ui_display_transaction(unsigned int ignored);
+void menu_transaction_display_input_address(unsigned int ignored);
+void menu_transaction_display_input_coin_name(unsigned int ignored);
+void menu_transaction_display_input_coin_amount(unsigned int ignored);

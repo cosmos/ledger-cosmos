@@ -40,6 +40,19 @@ unsigned char io_event(unsigned char channel) {
             break;
 
         case SEPROXYHAL_TAG_DISPLAY_PROCESSED_EVENT:
+//            if ((uiState == UI_TEXT) &&
+//                (os_seph_features() &
+//                 SEPROXYHAL_TAG_SESSION_START_EVENT_FEATURE_SCREEN_BIG)) {
+//                if (!display_text_part()) {
+//                    ui_approval();
+//                } else {
+//                    UX_REDISPLAY();
+//                }
+//            } else {
+//                UX_DISPLAYED_EVENT();
+//            }
+//            break;
+
             if (!UX_DISPLAYED())
                 UX_DISPLAYED_EVENT();
             break;
@@ -92,7 +105,7 @@ void app_init()
     ui_idle();
 }
 
-void process_json(volatile uint32_t *tx, uint32_t rx)
+bool process_json(volatile uint32_t *tx, uint32_t rx)
 {
     int packageIndex = G_io_apdu_buffer[OFFSET_PCK_INDEX];
     int packageCount = G_io_apdu_buffer[OFFSET_PCK_COUNT];
@@ -140,6 +153,32 @@ void process_json(volatile uint32_t *tx, uint32_t rx)
 #endif
     }
     *tx += position;
+
+    return packageIndex == packageCount;
+}
+
+void update_transaction_info(volatile uint32_t *tx, uint32_t rx) {
+    const char* addressPtr = json_buffer + parsed_json.Tokens[parsed_json.Inputs[0].Address].start;
+    int addressSize = parsed_json.Tokens[parsed_json.Inputs[0].Address].end -
+               parsed_json.Tokens[parsed_json.Inputs[0].Address].start;
+
+    //int position = 0;
+    //G_io_apdu_buffer[*tx + position++] = size;
+
+    int coinNameSize = parsed_json.Tokens[parsed_json.Inputs[0].Coins[0].Denum].end -
+                        parsed_json.Tokens[parsed_json.Inputs[0].Coins[0].Denum].start;
+    const char* coinNamePtr = json_buffer + parsed_json.Tokens[parsed_json.Inputs[0].Coins[0].Denum].start;
+
+    //G_io_apdu_buffer[*tx + position++] = size;
+
+    int coinAmountSize =   parsed_json.Tokens[parsed_json.Inputs[0].Coins[0].Amount].end -
+                            parsed_json.Tokens[parsed_json.Inputs[0].Coins[0].Amount].start;
+    const char* coinAmountPtr = json_buffer + parsed_json.Tokens[parsed_json.Inputs[0].Coins[0].Amount].start;
+
+    ui_update_transaction_info(addressPtr, addressSize, coinNamePtr, coinNameSize, coinAmountPtr, coinAmountSize);
+    //inputCoinAmount[size+1] = '\0';
+    //G_io_apdu_buffer[*tx + position++] = size;
+    //*tx += position;
 }
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
@@ -154,8 +193,28 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
             switch (G_io_apdu_buffer[OFFSET_INS]) {
                 case 1:
-                    process_json(tx, rx);
-                    THROW(0x9000);
+                    if (process_json(tx, rx))
+                    {
+                        update_transaction_info(tx, rx);
+                        //io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, *tx);
+                        ui_display_transaction(0);
+                        *flags |= IO_ASYNCH_REPLY;
+                    }
+                    else {
+                        THROW(0x9000);
+                    }
+                    break;
+                case 2:
+                    //update_transaction_info(tx, rx);
+                    //THROW(0x9000);
+
+                    update_transaction_info(tx, rx);
+                    //io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, *tx);
+                    ui_display_transaction(0);
+
+                    *flags |= IO_ASYNCH_REPLY;
+
+                    //THROW(0x9000);
                     break;
 
                 default:
