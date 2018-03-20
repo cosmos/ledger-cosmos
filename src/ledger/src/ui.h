@@ -26,10 +26,16 @@
 
 enum UI_STATE {
     UI_IDLE,
+    UI_TRANSACTION
 };
 
 extern enum UI_STATE uiState;
 
+typedef int (*UpdateTxDataPtr)(char*,int,char*,int,int);
+void SetUpdateTxDataPtr(UpdateTxDataPtr ptr);
+
 void ui_init(void);
-void ui_idle(void);
-void ui_display_text(void);
+void ui_idle(unsigned int ignored);
+void ui_wait_for_data(unsigned int ignored);
+void ui_display_transaction(unsigned int ignored);
+void update_transaction_page_info();

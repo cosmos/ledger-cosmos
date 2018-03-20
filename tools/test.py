@@ -52,7 +52,7 @@ def main():
     try:
         dongle = getDongle(True)
 
-        json = get_test_message()
+        json =  get_test_message()
 
         buffer = []
         for j in json:
