@@ -159,7 +159,7 @@ void reject(unsigned int unused)
 const ux_menu_entry_t menu_transaction_info[] = {
         {NULL, start_transaction_info_display, 0, NULL, "View transaction", NULL, 0, 0},
         {NULL, sign_transaction, 0, NULL, "Sign transaction", NULL, 0, 0},
-        {NULL,  ui_idle, 1, &C_icon_back, "Reject", NULL, 60, 40},
+        {NULL, reject, 0, &C_icon_back, "Reject", NULL, 60, 40},
         UX_MENU_END
 };
 

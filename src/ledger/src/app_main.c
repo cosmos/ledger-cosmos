@@ -316,8 +316,10 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
 void reject_transaction()
 {
+    G_io_apdu_buffer[0] = 0x90;
+    G_io_apdu_buffer[1] = 0x00;
+    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
     ui_idle(0);
-    THROW(0x9000);
 }
 
 void app_main() {
