@@ -26,14 +26,5 @@
 #define OFFSET_DATA      4  //< Data offset
 #define JSON_BUFFER_SIZE 1000
 
-extern parsed_json_t parsed_json;
-extern char json_buffer[JSON_BUFFER_SIZE];
-
-extern uint32_t json_buffer_write_pos;
-extern uint32_t json_buffer_size;
-
-extern volatile uint32_t stackStartAddress;
-
 void app_init();
-
 void app_main();

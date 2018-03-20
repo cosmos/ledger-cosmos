@@ -31,8 +31,13 @@ enum UI_STATE {
 
 extern enum UI_STATE uiState;
 
+// Callback for updating transaction UI
 typedef int (*UpdateTxDataPtr)(char*,int,char*,int,int);
-void SetUpdateTxDataPtr(UpdateTxDataPtr ptr);
+void set_update_transaction_ui_data_callback(UpdateTxDataPtr ptr);
+
+// Callback for rejecting current transaction
+typedef void (*RejectPtr)();
+void set_reject_transaction_callback(RejectPtr ptr);
 
 void ui_init(void);
 void ui_idle(unsigned int ignored);
