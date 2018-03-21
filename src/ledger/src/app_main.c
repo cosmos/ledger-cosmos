@@ -20,18 +20,34 @@
 #include "ui.h"
 #include "app_main.h"
 
-char json_buffer[1000];
+parsed_json_t parsed_json;
+char json_buffer[JSON_BUFFER_SIZE];
 uint32_t json_buffer_write_pos;
 uint32_t json_buffer_size;
 
+#if SEND_STACK_INFORMATION
 volatile uint32_t stackStartAddress;
-parsed_json_t parsed_json;
+#endif
 
-int UpdateTxData(char* title,
-                 int titleSize,
-                 char* value,
-                 int valueSize,
-                 int currentPage)
+// Updates text of the title and value parameters
+// based on the information from the parsed_json.
+// parsed_json is split into displayable elements
+// in this order:
+// - for each input:
+//      - input address
+//      - for each input coin
+//          - coin name
+//          - coin amount
+// - for each output
+//      - output address
+//      - for each output coin
+//          - coin name
+//          - coin amount
+int update_transaction_ui_data (char* title,
+                                int titleSize,
+                                char* value,
+                                int valueSize,
+                                int currentPage)
 {
     int pageIndex = 0;
     for (int i=0; i < parsed_json.NumberOfInputs; i++)
@@ -261,7 +277,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                 case 1:
                     if (process_json(tx, rx))
                     {
-                        ui_display_transaction(UpdateTxData(0, 0, 0, 0, -1));
+                        ui_display_transaction(update_transaction_ui_data(0, 0, 0, 0, -1));
                         *flags |= IO_ASYNCH_REPLY;
                     }
                     else {
@@ -298,14 +314,25 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     END_TRY;
 }
 
+void reject_transaction()
+{
+    G_io_apdu_buffer[0] = 0x90;
+    G_io_apdu_buffer[1] = 0x00;
+    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
+    ui_idle(0);
+}
+
 void app_main() {
     volatile uint32_t rx = 0, tx = 0, flags = 0;
 
     json_buffer_write_pos = 0;
     json_buffer_size = 0;
 
+#if SEND_STACK_INFORMATION
     stackStartAddress = (uint32_t)&rx;
-    SetUpdateTxDataPtr(&UpdateTxData);
+#endif
+    set_update_transaction_ui_data_callback(&update_transaction_ui_data);
+    set_reject_transaction_callback(&reject_transaction);
 
     for (;;) {
         volatile uint16_t sw = 0;

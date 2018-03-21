@@ -26,10 +26,17 @@ volatile char transactionDataValue[32];
 int transactionDetailsCurrentPage;
 int transactionDetailsPageCount;
 
-UpdateTxDataPtr updateTxDataPtr = 0;
-void SetUpdateTxDataPtr(UpdateTxDataPtr ptr)
+UpdateTxDataPtr updateTxDataPtr = NULL;
+RejectPtr rejectPtr = NULL;
+
+void set_update_transaction_ui_data_callback(UpdateTxDataPtr ptr)
 {
     updateTxDataPtr = ptr;
+}
+
+void set_reject_transaction_callback(RejectPtr ptr)
+{
+    rejectPtr = ptr;
 }
 
 const ux_menu_entry_t menu_main[];
@@ -142,10 +149,17 @@ void sign_transaction(unsigned int unused)
     UX_DISPLAY(bagl_ui_sign_transaction, NULL);
 }
 
+void reject(unsigned int unused)
+{
+    if (rejectPtr != NULL){
+        rejectPtr();
+    }
+}
+
 const ux_menu_entry_t menu_transaction_info[] = {
         {NULL, start_transaction_info_display, 0, NULL, "View transaction", NULL, 0, 0},
         {NULL, sign_transaction, 0, NULL, "Sign transaction", NULL, 0, 0},
-        {NULL,  ui_idle, 1, &C_icon_back, "Reject", NULL, 60, 40},
+        {NULL, reject, 0, &C_icon_back, "Reject", NULL, 60, 40},
         UX_MENU_END
 };
 
@@ -181,7 +195,9 @@ void ui_idle(unsigned int ignored)
 
 void ui_display_transaction(unsigned int numberOfTransactionPages)
 {
-    transactionDetailsPageCount = numberOfTransactionPages;
+    if (numberOfTransactionPages != 0) {
+        transactionDetailsPageCount = numberOfTransactionPages;
+    }
     uiState = UI_TRANSACTION;
     UX_MENU_DISPLAY(0, menu_transaction_info, NULL);
 }
