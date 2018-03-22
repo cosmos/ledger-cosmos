@@ -278,6 +278,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     if (process_json(tx, rx))
                     {
                         ui_display_transaction(update_transaction_ui_data(0, 0, 0, 0, -1));
+
                         *flags |= IO_ASYNCH_REPLY;
                     }
                     else {

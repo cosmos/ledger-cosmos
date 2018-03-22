@@ -15,16 +15,63 @@
 *  limitations under the License.
 ********************************************************************************/
 #include <string.h>
+#include <stdio.h>
 #include "ui.h"
 #include "glyphs.h"
+#include "ui_templates.h"
 
 ux_state_t ux;
 enum UI_STATE uiState;
 
 volatile char transactionDataName[32];
 volatile char transactionDataValue[32];
+volatile char pageInfo[10];
+
 int transactionDetailsCurrentPage;
 int transactionDetailsPageCount;
+
+void start_transaction_info_display(unsigned int unused);
+void sign_transaction(unsigned int unused);
+void reject(unsigned int unused);
+
+const ux_menu_entry_t menu_main[];
+const ux_menu_entry_t menu_about[];
+
+const ux_menu_entry_t menu_transaction_info[] = {
+    {NULL, start_transaction_info_display, 0, NULL, "View transaction", NULL, 0, 0},
+    {NULL, sign_transaction, 0, NULL, "Sign transaction", NULL, 0, 0},
+    {NULL, reject, 0, &C_icon_back, "Reject", NULL, 60, 40},
+    UX_MENU_END
+};
+
+const ux_menu_entry_t menu_main[] = {
+    {NULL, NULL, 0, &C_icon_tendermint, "Tendermint", "Cosmos Demo", 33, 12},
+    {menu_about, NULL, 0, NULL, "About", NULL, 0, 0},
+    {NULL, os_sched_exit, 0, &C_icon_dashboard, "Quit app", NULL, 50, 29},
+    UX_MENU_END
+};
+
+const ux_menu_entry_t menu_about[] = {
+    {NULL, NULL, 0, NULL, "Version", APPVERSION, 0, 0},
+    {menu_main, NULL, 2, &C_icon_back, "Back", NULL, 61, 40},
+    UX_MENU_END
+};
+
+static const bagl_element_t bagl_ui_sign_transaction[] = {
+    UI_FillRectangle(0, 0, 128, 32, 0x000000, 0xFFFFFF),
+    UI_LabelLine(0, 12, 128, 11, 0xFFFFFF, 0x000000, "Sign transaction"),
+    UI_LabelLine(0, 23, 128, 11, 0xFFFFFF, 0x000000, "Not implemented yet"),
+    UI_Icon(3, 32 / 2 - 4, 7, 7, BAGL_GLYPH_ICON_CROSS),
+};
+
+static const bagl_element_t bagl_ui_transaction_info[] = {
+    UI_FillRectangle(0, 0, 128, 32, 0x000000, 0xFFFFFF),
+    UI_Icon(0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT),
+    UI_Icon(128-7, 0, 7, 7, BAGL_GLYPH_ICON_RIGHT),
+    UI_LabelLine(0, 8, 128, 11, 0xFFFFFF, 0x000000,(const char*)pageInfo),
+    UI_LabelLine(0, 21, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataName),
+    UI_LabelLine(0, 32, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataValue),
+};
 
 UpdateTxDataPtr updateTxDataPtr = NULL;
 RejectPtr rejectPtr = NULL;
@@ -39,32 +86,9 @@ void set_reject_transaction_callback(RejectPtr ptr)
     rejectPtr = ptr;
 }
 
-const ux_menu_entry_t menu_main[];
-
-// {{type, userid, x, y, width, height, stroke, radius, fill, fgcolor, bgcolor, font_id, icon_id},
-//   text, touch_area_brim, overfgcolor,  overbgcolor, tap, out, over, },
-static const bagl_element_t bagl_ui_sign_transaction[] =
-{
-    {
-        {BAGL_RECTANGLE, 0x00, 0, 0, 128, 32, 0, 0, BAGL_FILL, 0x000000, 0xFFFFFF, 0, 0},
-        NULL, 0, 0, 0, NULL, NULL, NULL,
-    },
-    {
-        {BAGL_LABELINE, 0x02, 0, 12, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, UI_CENTER11PX, 0},
-        "Sign transaction", 0, 0, 0, NULL, NULL, NULL,
-    },
-    {
-        {BAGL_LABELINE, 0x02, 0, 23, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, UI_CENTER11PX, 0},
-        "Not implemented yet", 0, 0, 0, NULL, NULL, NULL,
-    },
-    {
-        {BAGL_ICON, 0x00, 3, 12, 7,   7,  0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_ICON_CROSS},
-        NULL, 0, 0, 0, NULL, NULL, NULL,
-    },
-};
-
 static unsigned int bagl_ui_sign_transaction_button(unsigned int button_mask,
-                                                    unsigned int button_mask_counter) {
+                                                    unsigned int button_mask_counter)
+{
     switch (button_mask) {
         default:
             ui_display_transaction(0);
@@ -72,37 +96,14 @@ static unsigned int bagl_ui_sign_transaction_button(unsigned int button_mask,
     return 0;
 }
 
-// {{type, userid, x, y, width, height, stroke, radius, fill, fgcolor, bgcolor, font_id, icon_id},
-//   text, touch_area_brim, overfgcolor,  overbgcolor, tap, out, over, },
-static const bagl_element_t bagl_ui_transaction_info[] =
-{
-    {
-        {BAGL_RECTANGLE, 0x00, 0, 0, 128, 32, 0, 0, BAGL_FILL, 0x000000, 0xFFFFFF, 0, 0},
-        NULL, 0, 0, 0, NULL, NULL, NULL,
-    },
-    {
-        {BAGL_LABELINE, 0x02, 0, 12, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, UI_CENTER11PX, 0},
-        (const char*)transactionDataName, 0, 0, 0, NULL, NULL, NULL,
-    },
-    {
-        {BAGL_LABELINE, 0x02, 0, 23, 128, 11, 0, 0, 0, 0xFFFFFF, 0x000000, UI_CENTER11PX, 0},
-        (const char*)transactionDataValue, 0, 0, 0, NULL, NULL, NULL,
-    },
-    {
-        {BAGL_ICON, 0x00, 3, 15, 7,   7,  0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_ICON_LEFT},
-        NULL, 0, 0, 0, NULL, NULL, NULL,
-    },
-    {
-        {BAGL_ICON, 0x00, 100, 15, 7,   7,  0, 0, 0, 0xFFFFFF, 0x000000, 0, BAGL_GLYPH_ICON_RIGHT},
-        NULL, 0, 0, 0, NULL, NULL, NULL,
-    },
-};
-
-
 static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
                                                     unsigned int button_mask_counter)
 {
     switch (button_mask) {
+        case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
+            ui_display_transaction(0);
+            break;
+
         case BUTTON_EVT_RELEASED | BUTTON_LEFT:
             if (transactionDetailsCurrentPage > 0) {
                 transactionDetailsCurrentPage--;
@@ -141,6 +142,8 @@ void update_transaction_page_info()
                     (char*)transactionDataValue,
                     sizeof(transactionDataValue),
                     transactionDetailsCurrentPage);
+
+    snprintf((char*)pageInfo, sizeof(pageInfo), "%d/%d", transactionDetailsCurrentPage+1, transactionDetailsPageCount);
 }
 
 void sign_transaction(unsigned int unused)
@@ -151,30 +154,10 @@ void sign_transaction(unsigned int unused)
 
 void reject(unsigned int unused)
 {
-    if (rejectPtr != NULL){
+    if (rejectPtr != NULL) {
         rejectPtr();
     }
 }
-
-const ux_menu_entry_t menu_transaction_info[] = {
-        {NULL, start_transaction_info_display, 0, NULL, "View transaction", NULL, 0, 0},
-        {NULL, sign_transaction, 0, NULL, "Sign transaction", NULL, 0, 0},
-        {NULL, reject, 0, &C_icon_back, "Reject", NULL, 60, 40},
-        UX_MENU_END
-};
-
-const ux_menu_entry_t menu_about[] = {
-        {NULL, NULL, 0, NULL, "Version", APPVERSION, 0, 0},
-        {menu_main, NULL, 2, &C_icon_back, "Back", NULL, 61, 40},
-        UX_MENU_END
-};
-
-const ux_menu_entry_t menu_main[] = {
-        {NULL, NULL, 0, &C_icon_tendermint, "Tendermint", "Cosmos Demo", 33, 12},
-        {menu_about, NULL, 0, NULL, "About", NULL, 0, 0},
-        {NULL, os_sched_exit, 0, &C_icon_dashboard, "Quit app", NULL, 50, 29},
-        UX_MENU_END
-};
 
 void io_seproxyhal_display(const bagl_element_t *element)
 {
