@@ -31,14 +31,13 @@
 *.out
 *.app
 
+# OS related files
+.DS_Store
+
+# Others
 cmake-build-debug/
-
 \.idea/workspace\.xml
-
 \.idea/
-
 src/ledger/bin/
-
 src/ledger/debug/
-
 src/ledger/obj/
