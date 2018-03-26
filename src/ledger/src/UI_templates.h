@@ -16,11 +16,11 @@
 ********************************************************************************/
 #pragma once
 
-#define UI_FillRectangle(x, y, w, h, fgcolor, bgcolor)      \
+#define UI_FillRectangle(id, x, y, w, h, fgcolor, bgcolor)  \
 {                                                           \
     {                                                       \
         BAGL_RECTANGLE, /* type     */                      \
-        0x00,           /* usedid   */                      \
+        id,           /* usedid   */                        \
         x,              /* x        */                      \
         y,              /* y        */                      \
         w,              /* width    */                      \
@@ -42,38 +42,38 @@
         NULL,   /* over             */                      \
 }
 
-#define UI_LabelLine(x, y, w, h, fgcolor, bgcolor, text)    \
-{                                                           \
-    {                                                       \
-        BAGL_LABELINE, /* type     */                       \
-        0x00,           /* usedid   */                      \
-        x,              /* x        */                      \
-        y,              /* y        */                      \
-        w,              /* width    */                      \
-        h,              /* height   */                      \
-        0,              /* stroke   */                      \
-        0,              /* radius   */                      \
-        0,              /* fill     */                      \
-        fgcolor,        /* fgcolor  */                      \
-        bgcolor,        /* bgcolor  */                      \
-        UI_CENTER11PX,  /* font_id  */                      \
-        0               /* icon_id  */                      \
-    },                                                      \
-        text,   /* text             */                      \
-        0,      /* touch_area_brim  */                      \
-        0,      /* overfgcolor      */                      \
-        0,      /* overbgcolor      */                      \
-        NULL,   /* tap              */                      \
-        NULL,   /* out              */                      \
-        NULL,   /* over             */                      \
+#define UI_LabelLine(id, x, y, w, h, fgcolor, bgcolor, text)    \
+{                                                               \
+    {                                                           \
+        BAGL_LABELINE, /* type     */                           \
+        id,           /* usedid   */                            \
+        x,              /* x        */                          \
+        y,              /* y        */                          \
+        w,              /* width    */                          \
+        h,              /* height   */                          \
+        0,              /* stroke   */                          \
+        0,              /* radius   */                          \
+        0,              /* fill     */                          \
+        fgcolor,        /* fgcolor  */                          \
+        bgcolor,        /* bgcolor  */                          \
+        UI_CENTER11PX,  /* font_id  */                          \
+        0               /* icon_id  */                          \
+    },                                                          \
+        text,   /* text             */                          \
+        0,      /* touch_area_brim  */                          \
+        0,      /* overfgcolor      */                          \
+        0,      /* overbgcolor      */                          \
+        NULL,   /* tap              */                          \
+        NULL,   /* out              */                          \
+        NULL,   /* over             */                          \
 }
 
 
-#define UI_Icon(x, y, w, h, icon)                           \
+#define UI_Icon(id, x, y, w, h, icon)                       \
 {                                                           \
     {                                                       \
         BAGL_ICON,      /* type     */                      \
-        0x00,           /* usedid   */                      \
+        id,           /* usedid   */                        \
         x,              /* x        */                      \
         y,              /* y        */                      \
         w,              /* width    */                      \
