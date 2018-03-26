@@ -23,11 +23,17 @@
 #define UI_CENTER11PX       BAGL_FONT_OPEN_SANS_REGULAR_11px | BAGL_FONT_ALIGNMENT_CENTER
 #define UI_CENTER11PX_BOLD  BAGL_FONT_OPEN_SANS_EXTRABOLD_11px | BAGL_FONT_ALIGNMENT_CENTER
 #define DEFAULT_FONT        BAGL_FONT_OPEN_SANS_LIGHT_16px | BAGL_FONT_ALIGNMENT_LEFT
+#define MAX_CHARS_PER_LINE 10
 
 enum UI_STATE {
     UI_IDLE,
     UI_TRANSACTION
 };
+
+extern unsigned int ux_step;
+extern unsigned int ux_step_count;
+extern unsigned int ux_total_size;
+extern unsigned int ux_direction;
 
 extern enum UI_STATE uiState;
 
@@ -42,5 +48,5 @@ void set_reject_transaction_callback(RejectPtr ptr);
 void ui_init(void);
 void ui_idle(unsigned int ignored);
 void ui_wait_for_data(unsigned int ignored);
-void ui_display_transaction(unsigned int ignored);
+void display_transaction_menu(unsigned int ignored);
 void update_transaction_page_info();

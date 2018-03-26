@@ -43,6 +43,7 @@ volatile uint32_t stackStartAddress;
 //      - for each output coin
 //          - coin name
 //          - coin amount
+
 int update_transaction_ui_data (char* title,
                                 int titleSize,
                                 char* value,
@@ -55,11 +56,16 @@ int update_transaction_ui_data (char* title,
         if (currentPage == pageIndex) {
             os_memmove((char *) title, "Input address", sizeof("Input address"));
 
-            int addressSize =   parsed_json.Tokens[parsed_json.Inputs[i].Address].end -
+            unsigned int addressSize =   parsed_json.Tokens[parsed_json.Inputs[i].Address].end -
                                 parsed_json.Tokens[parsed_json.Inputs[i].Address].start;
+
+            ux_total_size = addressSize;
             const char* addressPtr = json_buffer + parsed_json.Tokens[parsed_json.Inputs[i].Address].start;
-            os_memmove((char *) value, addressPtr, addressSize);
-            value[addressSize] = '\0';
+
+            if (ux_step < addressSize) {
+                os_memmove((char *) value, addressPtr + ux_step, addressSize < MAX_CHARS_PER_LINE ? addressSize : MAX_CHARS_PER_LINE);
+                value[addressSize] = '\0';
+            }
             return pageIndex;
         }
         pageIndex++;
@@ -95,11 +101,15 @@ int update_transaction_ui_data (char* title,
         if (currentPage == pageIndex) {
             os_memmove((char *) title, "Output address", sizeof("Output address"));
 
-            int addressSize =   parsed_json.Tokens[parsed_json.Outputs[i].Address].end -
+            unsigned int addressSize =   parsed_json.Tokens[parsed_json.Outputs[i].Address].end -
                                 parsed_json.Tokens[parsed_json.Outputs[i].Address].start;
             const char* addressPtr = json_buffer + parsed_json.Tokens[parsed_json.Outputs[i].Address].start;
-            os_memmove((char *) value, addressPtr, addressSize);
-            value[addressSize] = '\0';
+            ux_total_size = addressSize;
+
+            if (ux_step < addressSize) {
+                os_memmove((char *) value, addressPtr + ux_step, addressSize < MAX_CHARS_PER_LINE ? addressSize : MAX_CHARS_PER_LINE);
+                value[addressSize] = '\0';
+            }
             return pageIndex;
         }
         pageIndex++;
@@ -164,6 +174,30 @@ unsigned char io_event(unsigned char channel) {
             break;
 
         case SEPROXYHAL_TAG_TICKER_EVENT:   //
+            UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {
+                    if (UX_ALLOWED) {
+                        if (ux_step_count) {
+                            // prepare next screen
+                            if (ux_direction == 0) {
+                                if (ux_step < (ux_step_count - 1)) {
+                                    ux_step++;
+                                }
+                                else {
+                                    ux_direction = 1;
+                                }
+                            }
+                            else {
+                                if (ux_step > 0) {
+                                    ux_step--;
+                                } else {
+                                    ux_direction = 0;
+                                }
+                            }
+                            // redisplay screen
+                            UX_REDISPLAY();
+                        }
+                    }
+            });
             break;
 
             // unknown events are acknowledged
@@ -275,9 +309,8 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
             switch (G_io_apdu_buffer[OFFSET_INS]) {
                 case 1:
-                    if (process_json(tx, rx))
-                    {
-                        ui_display_transaction(update_transaction_ui_data(0, 0, 0, 0, -1));
+                    if (process_json(tx, rx)) {
+                        display_transaction_menu(update_transaction_ui_data(0, 0, 0, 0, -1));
 
                         *flags |= IO_ASYNCH_REPLY;
                     }
