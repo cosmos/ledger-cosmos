@@ -182,6 +182,57 @@ void update_transaction_page_info()
 
 void sign_transaction(unsigned int unused)
 {
+    cx_sha256_t sha2;
+    uint8_t hashMessage[32];
+    cx_sha256_init(&sha2);
+
+    uint8_t workBuffer[100] = {0};
+    int dataLength = sizeof(workBuffer);
+    cx_hash((cx_hash_t *)&sha2, 0, workBuffer, dataLength, NULL);
+    cx_hash((cx_hash_t *)&sha2, CX_LAST, workBuffer, 0, hashMessage);
+
+    uint8_t pathLength;
+
+    //uint8_t bip32Bufer[] = "44'/60'/0'/0";
+    uint32_t bip32Path[] = {44, 60, 0, 0};
+    pathLength = 4;
+
+    uint8_t privateKeyData[32];
+    uint8_t signature[100];
+    uint8_t signatureLength;
+    cx_ecfp_private_key_t privateKey;
+
+    os_perso_derive_node_bip32(
+            CX_CURVE_256K1,
+            bip32Path,
+            pathLength,
+            privateKeyData,
+            NULL);
+
+    cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &privateKey);
+    os_memset(privateKeyData, 0, sizeof(privateKeyData));
+
+//#if CX_APILEVEL >= 8
+//    unsigned int info = 0;
+//    signatureLength =
+//        cx_ecdsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA256,
+//                      tmpCtx.transactionContext.hash,
+//                      sizeof(tmpCtx.transactionContext.hash), signature, &info);
+//    if (info & CX_ECCINFO_PARITY_ODD) {
+//        signature[0] |= 0x01;
+//    }
+//#else
+    unsigned int info = 0;
+    signatureLength =
+            cx_ecdsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA256,
+                          hashMessage,
+                          sizeof(hashMessage),
+                          signature,
+                          &info);
+//#endif
+    os_memset(&privateKey, 0, sizeof(privateKey));
+
+
     UNUSED(unused);
     UX_DISPLAY(bagl_ui_sign_transaction, NULL);
 }
