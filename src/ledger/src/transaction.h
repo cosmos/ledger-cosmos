@@ -27,7 +27,11 @@ void transaction_append(
         unsigned char* buffer,
         uint32_t length);
 
+// Returns size of the raw json transaction buffer
 uint32_t transaction_get_buffer_length();
+
+// Returns the raw json transaction buffer
+uint8_t* transaction_get_buffer();
 
 // Parse json message stored in transaction buffer
 // This function should be called as soon as full buffer data is loaded.

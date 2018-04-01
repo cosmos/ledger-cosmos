@@ -20,30 +20,29 @@
 
 #define SIGNATURE_LENGTH 100
 #define DERIVATION_PATH_MAX_DEPTH 10
-
 uint8_t signature[SIGNATURE_LENGTH];
-uint8_t length = 0;
-uint32_t bip32_derivation_path[DERIVATION_PATH_MAX_DEPTH];
+uint32_t length = 0;
+uint32_t bip32_derivation_path[5];
 uint8_t bip32_derivation_path_length;
-uint32_t default_bip32_derivation_path[] = {44, 60, 0, 0};
 
 void signature_reset()
 {
     os_memset((void*)signature, 0, sizeof(signature));
     length = 0;
-    os_memset((void*)bip32_derivation_path, 0, sizeof(bip32_derivation_path));
-    signature_set_derivation_path(
-            default_bip32_derivation_path,
-            (sizeof(default_bip32_derivation_path) / default_bip32_derivation_path[0]));
+    bip32_derivation_path[0] = 44;
+    bip32_derivation_path[1] = 60;
+    bip32_derivation_path[2] = 0;
+    bip32_derivation_path[3] = 0;
+    bip32_derivation_path_length = 4;
 }
 
 void signature_set_derivation_path(uint32_t* path, uint32_t path_size)
 {
-    os_memmove(bip32_derivation_path, path, path_size * sizeof(path[0]));
+    os_memmove(bip32_derivation_path, path, path_size*sizeof(path[0]));
     bip32_derivation_path_length = path_size;
 }
 
-void signature_create(uint8_t* message, uint16_t message_length)
+int signature_create(uint8_t* message, uint16_t message_length)
 {
     cx_sha256_t sha2;
     uint8_t hashMessage[32];
@@ -66,14 +65,16 @@ void signature_create(uint8_t* message, uint16_t message_length)
     os_memset(privateKeyData, 0, sizeof(privateKeyData));
 
     unsigned int info = 0;
-    length =
-            cx_ecdsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA256,
+    length = cx_ecdsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA256,
                           hashMessage,
                           sizeof(hashMessage),
                           signature,
                           &info);
 
     os_memset(&privateKey, 0, sizeof(privateKey));
+
+    // TODO review error handling
+    return 1;
 }
 
 uint8_t* signature_get()
@@ -81,7 +82,7 @@ uint8_t* signature_get()
     return signature;
 }
 
-uint16_t signature_length()
+uint32_t signature_length()
 {
     return length;
 }

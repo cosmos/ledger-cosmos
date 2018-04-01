@@ -39,12 +39,17 @@ extern enum UI_STATE view_uiState;
 //------ Delegates definitions
 typedef int (*delegate_update_transaction_info)(char*,char*,int);
 typedef void (*delegate_reject_transaction)();
+typedef void (*delegate_sign_transaction)();
 
 //------ Event handlers
 void view_add_update_transaction_info_event_handler(delegate_update_transaction_info delegate);
 void view_add_reject_transaction_event_handler(delegate_reject_transaction delegate);
+void view_add_sign_transaction_event_handler(delegate_sign_transaction delegate);
 
 //------ Common functions (TODO review)
 void view_init(void);
 void view_idle(unsigned int ignored);
 void view_display_transaction_menu(unsigned int ignored);
+void view_display_signing_success();
+void view_display_signing_error();
+

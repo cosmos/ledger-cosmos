@@ -42,7 +42,7 @@ int transactionDetailsCurrentPage;
 int transactionDetailsPageCount;
 
 void start_transaction_info_display(unsigned int unused);
-void sign_transaction(unsigned int unused);
+void view_sign_transaction(unsigned int unused);
 void reject(unsigned int unused);
 
 //------ View elements
@@ -51,7 +51,7 @@ const ux_menu_entry_t menu_about[];
 
 const ux_menu_entry_t menu_transaction_info[] = {
     {NULL, start_transaction_info_display, 0, NULL, "View transaction", NULL, 0, 0},
-    {NULL, sign_transaction, 0, NULL, "Sign transaction", NULL, 0, 0},
+    {NULL, view_sign_transaction, 0, NULL, "Sign transaction", NULL, 0, 0},
     {NULL, reject, 0, &C_icon_back, "Reject", NULL, 60, 40},
     UX_MENU_END
 };
@@ -89,6 +89,7 @@ static const bagl_element_t bagl_ui_transaction_info[] = {
 //------ Event handlers
 delegate_update_transaction_info event_handler_update_transaction_info = NULL;
 delegate_reject_transaction event_handler_reject_transaction = NULL;
+delegate_sign_transaction event_handler_sign_transaction = NULL;
 
 void view_add_update_transaction_info_event_handler(delegate_update_transaction_info delegate)
 {
@@ -98,6 +99,11 @@ void view_add_update_transaction_info_event_handler(delegate_update_transaction_
 void view_add_reject_transaction_event_handler(delegate_reject_transaction delegate)
 {
     event_handler_reject_transaction = delegate;
+}
+
+void view_add_sign_transaction_event_handler(delegate_sign_transaction delegate)
+{
+    event_handler_sign_transaction = delegate;
 }
 // ------ Event handlers
 
@@ -192,10 +198,16 @@ void update_transaction_page_info()
     }
 }
 
-void sign_transaction(unsigned int unused)
+void view_sign_transaction(unsigned int unused)
 {
     UNUSED(unused);
-    UX_DISPLAY(bagl_ui_sign_transaction, NULL);
+
+    if (event_handler_sign_transaction != NULL) {
+        event_handler_sign_transaction();
+    }
+    else {
+        UX_DISPLAY(bagl_ui_sign_transaction, NULL);
+    }
 }
 
 void reject(unsigned int unused)
@@ -229,4 +241,16 @@ void view_display_transaction_menu(unsigned int numberOfTransactionPages)
     }
     view_uiState = UI_TRANSACTION;
     UX_MENU_DISPLAY(0, menu_transaction_info, NULL);
+}
+
+void view_display_signing_success()
+{
+    // TODO Add view
+    view_idle(0);
+}
+
+void view_display_signing_error()
+{
+    // TODO Add view
+    view_idle(0);
 }

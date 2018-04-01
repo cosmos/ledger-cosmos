@@ -24,7 +24,7 @@ void signature_reset();
 void signature_set_derivation_path(uint32_t* path, uint32_t path_size);
 
 // Creates signature of the message using (...TODO)
-void signature_create(
+int signature_create(
         uint8_t* message,
         uint16_t message_length);
 
@@ -32,4 +32,4 @@ void signature_create(
 uint8_t* signature_get();
 
 // Returns last created signature's length
-uint16_t signature_length();
+uint32_t signature_length();

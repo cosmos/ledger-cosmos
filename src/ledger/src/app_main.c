@@ -226,6 +226,27 @@ void reject_transaction()
     view_idle(0);
 }
 
+void sign_transaction()
+{
+    signature_reset();
+    if (signature_create(transaction_get_buffer(), transaction_get_buffer_length())) {
+
+        uint8_t* signature = signature_get();
+        uint32_t length = signature_length();
+        os_memmove(G_io_apdu_buffer, signature, length);
+        //int length  =0;
+        //G_io_apdu_buffer[length++] = 0xff;
+        //G_io_apdu_buffer[length++] = 0xff;
+        G_io_apdu_buffer[length] = 0x90;
+        G_io_apdu_buffer[length+1] = 0x00;
+        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length+2);
+        view_display_signing_success();
+    } else {
+        view_display_signing_error();
+    }
+
+}
+
 void app_main()
 {
     volatile uint32_t rx = 0, tx = 0, flags = 0;
@@ -236,6 +257,7 @@ void app_main()
 
     view_add_update_transaction_info_event_handler(&transaction_get_info);
     view_add_reject_transaction_event_handler(&reject_transaction);
+    view_add_sign_transaction_event_handler(&sign_transaction);
 
     for (;;) {
         volatile uint16_t sw = 0;
