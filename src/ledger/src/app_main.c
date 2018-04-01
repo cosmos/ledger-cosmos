@@ -229,14 +229,14 @@ void reject_transaction()
 void sign_transaction()
 {
     signature_reset();
+    // TODO This function is not working yet
+    // Hashing works fine but after that ledger hangs.
+    // Investigation pending...
     if (signature_create(transaction_get_buffer(), transaction_get_buffer_length())) {
 
         uint8_t* signature = signature_get();
         uint32_t length = signature_length();
         os_memmove(G_io_apdu_buffer, signature, length);
-        //int length  =0;
-        //G_io_apdu_buffer[length++] = 0xff;
-        //G_io_apdu_buffer[length++] = 0xff;
         G_io_apdu_buffer[length] = 0x90;
         G_io_apdu_buffer[length+1] = 0x00;
         io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length+2);
