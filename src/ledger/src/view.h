@@ -18,7 +18,6 @@
 
 #include "os.h"
 #include "cx.h"
-#include <os_io_seproxyhal.h>
 
 #define UI_CENTER11PX       BAGL_FONT_OPEN_SANS_REGULAR_11px | BAGL_FONT_ALIGNMENT_CENTER
 #define UI_CENTER11PX_BOLD  BAGL_FONT_OPEN_SANS_EXTRABOLD_11px | BAGL_FONT_ALIGNMENT_CENTER
@@ -30,23 +29,22 @@ enum UI_STATE {
     UI_TRANSACTION
 };
 
-extern unsigned int ux_step;
-extern unsigned int ux_step_count;
-extern unsigned int ux_total_size;
-extern unsigned int ux_direction;
+//------ Public data (TODO review)
+extern unsigned int view_scrolling_step;
+extern unsigned int view_scrolling_step_count;
+extern unsigned int view_scrolling_total_size;
+extern unsigned int view_scrolling_direction;
+extern enum UI_STATE view_uiState;
 
-extern enum UI_STATE uiState;
+//------ Delegates definitions
+typedef int (*delegate_update_transaction_info)(char*,char*,int);
+typedef void (*delegate_reject_transaction)();
 
-// Callback for updating transaction UI
-typedef int (*UpdateTxDataPtr)(char*,int,char*,int,int);
-void set_update_transaction_ui_data_callback(UpdateTxDataPtr ptr);
+//------ Event handlers
+void view_add_update_transaction_info_event_handler(delegate_update_transaction_info delegate);
+void view_add_reject_transaction_event_handler(delegate_reject_transaction delegate);
 
-// Callback for rejecting current transaction
-typedef void (*RejectPtr)();
-void set_reject_transaction_callback(RejectPtr ptr);
-
-void ui_init(void);
-void ui_idle(unsigned int ignored);
-void ui_wait_for_data(unsigned int ignored);
-void display_transaction_menu(unsigned int ignored);
-void update_transaction_page_info();
+//------ Common functions (TODO review)
+void view_init(void);
+void view_idle(unsigned int ignored);
+void view_display_transaction_menu(unsigned int ignored);

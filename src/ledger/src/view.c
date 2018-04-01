@@ -14,19 +14,25 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-#include <string.h>
-#include <stdio.h>
-#include "ui.h"
+
+#include "view.h"
+#include "view_templates.h"
+
 #include "glyphs.h"
-#include "ui_templates.h"
 #include "bagl.h"
 
+#include <string.h>
+#include <stdio.h>
+
 ux_state_t ux;
-enum UI_STATE uiState;
-unsigned int ux_step = 0;
-unsigned int ux_step_count = 0;
-unsigned int ux_total_size = 0;
-unsigned int ux_direction = 0;
+enum UI_STATE view_uiState;
+
+void update_transaction_page_info();
+
+unsigned int view_scrolling_step = 0;
+unsigned int view_scrolling_step_count = 0;
+unsigned int view_scrolling_total_size = 0;
+unsigned int view_scrolling_direction = 0;
 
 volatile char transactionDataName[32];
 volatile char transactionDataValue[32];
@@ -39,6 +45,7 @@ void start_transaction_info_display(unsigned int unused);
 void sign_transaction(unsigned int unused);
 void reject(unsigned int unused);
 
+//------ View elements
 const ux_menu_entry_t menu_main[];
 const ux_menu_entry_t menu_about[];
 
@@ -77,26 +84,30 @@ static const bagl_element_t bagl_ui_transaction_info[] = {
     UI_LabelLine(2, 0, 21, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataName),
     UI_LabelLine(3, 0, 32, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataValue),
 };
+//------ View elements
 
-UpdateTxDataPtr updateTxDataPtr = NULL;
-RejectPtr rejectPtr = NULL;
+//------ Event handlers
+delegate_update_transaction_info event_handler_update_transaction_info = NULL;
+delegate_reject_transaction event_handler_reject_transaction = NULL;
 
-void set_update_transaction_ui_data_callback(UpdateTxDataPtr ptr)
+void view_add_update_transaction_info_event_handler(delegate_update_transaction_info delegate)
 {
-    updateTxDataPtr = ptr;
+    event_handler_update_transaction_info = delegate;
 }
 
-void set_reject_transaction_callback(RejectPtr ptr)
+void view_add_reject_transaction_event_handler(delegate_reject_transaction delegate)
 {
-    rejectPtr = ptr;
+    event_handler_reject_transaction = delegate;
 }
+// ------ Event handlers
+
 
 static unsigned int bagl_ui_sign_transaction_button(unsigned int button_mask,
                                                     unsigned int button_mask_counter)
 {
     switch (button_mask) {
         default:
-            display_transaction_menu(0);
+            view_display_transaction_menu(0);
     }
     return 0;
 }
@@ -106,25 +117,20 @@ const bagl_element_t* ui_transaction_info_prepro(const bagl_element_t *element) 
     if (element->component.userid == 0) {
         update_transaction_page_info();
 
-        if (ux_total_size > MAX_CHARS_PER_LINE) {
-            ux_step_count = ux_total_size - MAX_CHARS_PER_LINE;
-            if (ux_step == 0 || ux_step == ux_step_count-1)   {
+        if (view_scrolling_total_size > MAX_CHARS_PER_LINE) {
+            view_scrolling_step_count = view_scrolling_total_size - MAX_CHARS_PER_LINE;
+            if (view_scrolling_step == 0 || view_scrolling_step == view_scrolling_step_count-1)   {
                 UX_CALLBACK_SET_INTERVAL(2000);
             }
             else {
                 UX_CALLBACK_SET_INTERVAL(500);
             }
         } else {
-            ux_step_count = 0;
+            view_scrolling_step_count = 0;
         }
     }
 
     return element;
-}
-
-void display_transaction_info()
-{
-
 }
 
 static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
@@ -132,28 +138,28 @@ static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
 {
     switch (button_mask) {
         case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
-            display_transaction_menu(0);
+            view_display_transaction_menu(0);
             break;
 
         case BUTTON_EVT_RELEASED | BUTTON_LEFT:
             if (transactionDetailsCurrentPage > 0) {
                 transactionDetailsCurrentPage--;
-                ux_step = 0;
-                ux_direction = 0;
+                view_scrolling_step = 0;
+                view_scrolling_direction = 0;
                 UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
             } else {
-                display_transaction_menu(0);
+                view_display_transaction_menu(0);
             }
 
             break;
         case BUTTON_EVT_RELEASED | BUTTON_RIGHT:
             if (transactionDetailsCurrentPage < transactionDetailsPageCount - 1) {
                 transactionDetailsCurrentPage++;
-                ux_step = 0;
-                ux_direction = 0;
+                view_scrolling_step = 0;
+                view_scrolling_direction = 0;
                 UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
             } else {
-                display_transaction_menu(0);
+                view_display_transaction_menu(0);
             }
             break;
     }
@@ -164,83 +170,38 @@ void start_transaction_info_display(unsigned int unused)
 {
     UNUSED(unused);
     transactionDetailsCurrentPage = 0;
-    ux_step = 0;
-    ux_direction = 0;
+    view_scrolling_step = 0;
+    view_scrolling_direction = 0;
     UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
 }
 
 void update_transaction_page_info()
 {
-    updateTxDataPtr((char*)transactionDataName,
-                    sizeof(transactionDataName),
-                    (char*)transactionDataValue,
-                    sizeof(transactionDataValue),
-                    transactionDetailsCurrentPage);
+    if (event_handler_update_transaction_info != NULL) {
+        event_handler_update_transaction_info(
+                (char *) transactionDataName,
+                (char *) transactionDataValue,
+                transactionDetailsCurrentPage);
 
-    snprintf((char*)pageInfo, sizeof(pageInfo), "%d/%d", transactionDetailsCurrentPage+1, transactionDetailsPageCount);
+        snprintf(
+                (char *) pageInfo,
+                sizeof(pageInfo),
+                "%d/%d",
+                transactionDetailsCurrentPage + 1,
+                transactionDetailsPageCount);
+    }
 }
 
 void sign_transaction(unsigned int unused)
 {
-    cx_sha256_t sha2;
-    uint8_t hashMessage[32];
-    cx_sha256_init(&sha2);
-
-    uint8_t workBuffer[100] = {0};
-    int dataLength = sizeof(workBuffer);
-    cx_hash((cx_hash_t *)&sha2, 0, workBuffer, dataLength, NULL);
-    cx_hash((cx_hash_t *)&sha2, CX_LAST, workBuffer, 0, hashMessage);
-
-    uint8_t pathLength;
-
-    //uint8_t bip32Bufer[] = "44'/60'/0'/0";
-    uint32_t bip32Path[] = {44, 60, 0, 0};
-    pathLength = 4;
-
-    uint8_t privateKeyData[32];
-    uint8_t signature[100];
-    uint8_t signatureLength;
-    cx_ecfp_private_key_t privateKey;
-
-    os_perso_derive_node_bip32(
-            CX_CURVE_256K1,
-            bip32Path,
-            pathLength,
-            privateKeyData,
-            NULL);
-
-    cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &privateKey);
-    os_memset(privateKeyData, 0, sizeof(privateKeyData));
-
-//#if CX_APILEVEL >= 8
-//    unsigned int info = 0;
-//    signatureLength =
-//        cx_ecdsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA256,
-//                      tmpCtx.transactionContext.hash,
-//                      sizeof(tmpCtx.transactionContext.hash), signature, &info);
-//    if (info & CX_ECCINFO_PARITY_ODD) {
-//        signature[0] |= 0x01;
-//    }
-//#else
-    unsigned int info = 0;
-    signatureLength =
-            cx_ecdsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA256,
-                          hashMessage,
-                          sizeof(hashMessage),
-                          signature,
-                          &info);
-//#endif
-    os_memset(&privateKey, 0, sizeof(privateKey));
-
-
     UNUSED(unused);
     UX_DISPLAY(bagl_ui_sign_transaction, NULL);
 }
 
 void reject(unsigned int unused)
 {
-    if (rejectPtr != NULL) {
-        rejectPtr();
+    if (event_handler_reject_transaction != NULL) {
+        event_handler_reject_transaction();
     }
 }
 
@@ -249,23 +210,23 @@ void io_seproxyhal_display(const bagl_element_t *element)
     io_seproxyhal_display_default((bagl_element_t *) element);
 }
 
-void ui_init(void)
+void view_init(void)
 {
     UX_INIT();
-    uiState = UI_IDLE;
+    view_uiState = UI_IDLE;
 }
 
-void ui_idle(unsigned int ignored)
+void view_idle(unsigned int ignored)
 {
-    uiState = UI_IDLE;
+    view_uiState = UI_IDLE;
     UX_MENU_DISPLAY(0, menu_main, NULL);
 }
 
-void display_transaction_menu(unsigned int numberOfTransactionPages)
+void view_display_transaction_menu(unsigned int numberOfTransactionPages)
 {
     if (numberOfTransactionPages != 0) {
         transactionDetailsPageCount = numberOfTransactionPages;
     }
-    uiState = UI_TRANSACTION;
+    view_uiState = UI_TRANSACTION;
     UX_MENU_DISPLAY(0, menu_transaction_info, NULL);
 }
