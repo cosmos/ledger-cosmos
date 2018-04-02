@@ -14,31 +14,22 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-#include "app_main.h"
-#include "view.h"
+#pragma once
+#include "os.h"
 
-#include <os_io_seproxyhal.h>
+// Clears last signature and resets derivation path to the default value
+void signature_reset();
 
+// Sets the derivation path used to retrieve private key
+void signature_set_derivation_path(uint32_t* path, uint32_t path_size);
 
-__attribute__((section(".boot"))) int
-main(void) {
-    // exit critical section
-    __asm volatile("cpsie i");
+// Creates signature of the message using (...TODO)
+int signature_create(
+        uint8_t* message,
+        uint16_t message_length);
 
-    view_init();
-    os_boot();
+// Returns last created signature
+uint8_t* signature_get();
 
-    BEGIN_TRY
-    {
-        TRY
-        {
-            app_init();
-            app_main();
-        }
-        CATCH_OTHER(e)
-        {}
-        FINALLY
-        {}
-    }
-    END_TRY;
-}
+// Returns last created signature's length
+uint32_t signature_length();
