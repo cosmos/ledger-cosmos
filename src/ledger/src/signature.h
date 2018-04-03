@@ -24,6 +24,9 @@ void signature_reset();
 void signature_set_derivation_path(uint32_t* path, uint32_t path_size);
 
 // Creates signature of the message using (...TODO)
+// @return
+// *   1 if signature is verified
+// *   0 is signature is not verified
 int signature_create(
         uint8_t* message,
         uint16_t message_length);

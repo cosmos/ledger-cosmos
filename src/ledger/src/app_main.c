@@ -242,6 +242,9 @@ void sign_transaction()
         io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length+2);
         view_display_signing_success();
     } else {
+        G_io_apdu_buffer[0] = 0x90;
+        G_io_apdu_buffer[1] = 0x00;
+        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
         view_display_signing_error();
     }
 
