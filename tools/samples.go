@@ -75,7 +75,7 @@ func GetMessages() ([]bank.SendMsg) {
 				{
 					Address:  crypto.Address([]byte("input")),
 					Coins:    sdk.Coins{{"atom", 10}},
-					Sequence: 1,
+					//Sequence: 1,
 				},
 			},
 			Outputs: []bank.Output{
@@ -92,7 +92,7 @@ func GetMessages() ([]bank.SendMsg) {
 				{
 					Address:  crypto.Address(crypto.GenPrivKeyEd25519().PubKey().Bytes()),
 					Coins:    sdk.Coins{{"atom", 1000000}},
-					Sequence: 1,
+					//Sequence: 1,
 				},
 			},
 			Outputs: []bank.Output{
@@ -109,12 +109,12 @@ func GetMessages() ([]bank.SendMsg) {
                 {
                     Address:  crypto.Address([]byte("input")),
                     Coins:    sdk.Coins{{"atom", 10}},
-                    Sequence: 1,
+                    //Sequence: 1,
                 },
                 {
                     Address:  crypto.Address([]byte("anotherinput")),
                     Coins:    sdk.Coins{{"atom", 50}},
-                    Sequence: 1,
+                    //Sequence: 1,
                 },
             },
             Outputs: []bank.Output{
@@ -135,12 +135,12 @@ func GetMessages() ([]bank.SendMsg) {
                 {
                     Address:  crypto.Address([]byte("input")),
                     Coins:    sdk.Coins{{"atom", 10},{"bitcoint", 20}},
-                    Sequence: 1,
+                    //Sequence: 1,
                 },
                 {
                     Address:  crypto.Address([]byte("anotherinput")),
                     Coins:    sdk.Coins{{"atom", 50},{"bitcoint", 60},{"ethereum", 70}},
-                    Sequence: 1,
+                    //Sequence: 1,
                 },
             },
             Outputs: []bank.Output{
@@ -156,8 +156,6 @@ func GetMessages() ([]bank.SendMsg) {
         },
 	}
 }
-
-
 
 func main() {
 

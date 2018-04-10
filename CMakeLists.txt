@@ -41,7 +41,7 @@ file(GLOB_RECURSE LIB_SRC
         )
 
 file(GLOB_RECURSE JSMN_SRC
-        deps/jsmn/src/jsmn.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/jsmn/src/jsmn.c
         )
 
 ###############
