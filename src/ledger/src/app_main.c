@@ -228,11 +228,10 @@ void reject_transaction()
 
 void sign_transaction()
 {
-    signature_reset();
     // TODO This function is not working yet
     // Hashing works fine but after that ledger hangs.
     // Investigation pending...
-    if (signature_create(transaction_get_buffer(), transaction_get_buffer_length())) {
+    if (signature_create_SECP256K1(transaction_get_buffer(), transaction_get_buffer_length())) {
 
         uint8_t* signature = signature_get();
         uint32_t length = signature_length();

@@ -88,12 +88,12 @@ void ParseMessage(
                     coinIndex += 5;
                 }
 
-                parsedMessage->Inputs[parsedMessage->NumberOfInputs].Sequence = coinIndex + 1;
+                //parsedMessage->Inputs[parsedMessage->NumberOfInputs].Sequence = coinIndex + 1;
                 parsedMessage->NumberOfInputs++;
 
-                inputIndex = coinIndex + 2;
+                inputIndex = coinIndex;
             }
-            i = inputIndex - 1;
+            i = inputIndex;
             processedInputs = true;
         }
 

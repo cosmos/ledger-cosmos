@@ -45,7 +45,7 @@ typedef struct
 {
     byte Address;               //< index that points to Denum token in parsed json
     Coin Coins[MAX_COIN_COUNT];
-    byte Sequence;              //< index that points to Sequence token in parsed json
+    //byte Sequence;              //< index that points to Sequence token in parsed json
     byte NumberOfCoins;
 } Input;
 

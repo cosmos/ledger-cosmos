@@ -154,12 +154,12 @@ TEST(JsonParserTest, SimpleObject) {
     {
         parsed_json_t parsedMessage = {0};
         //std::string result = exec("../tools/samples 0 text");
-        const char* sendMsgSample = R"({"_df":"3CAAA78D13BAE0","_v":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}],"sequence":1}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]}]}})";
+        const char* sendMsgSample = R"({"_df":"3CAAA78D13BAE0","_v":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}]}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]}]}})";
 
         ParseJson(&parsedMessage, sendMsgSample);
 
         EXPECT_EQ(1, parsedMessage.NumberOfInputs);
-        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Sequence], "1"));
+        //EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Sequence], "1"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Address], "696E707574"));
         EXPECT_EQ(1, parsedMessage.Inputs[0].NumberOfCoins);
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Coins[0].Denum], "atom"));
@@ -176,7 +176,7 @@ TEST(JsonParserTest, SimpleObject) {
     {
         parsed_json_t parsedMessage = {0};
         //std::string result = exec("../tools/samples 2 text");
-        const char* sendMsgSample = R"({"_df":"3CAAA78D13BAE0","_v":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}],"sequence":1},{"address":"616E6F74686572696E707574","coins":[{"denom":"atom","amount":50}],"sequence":1}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]},{"address":"616E6F746865726F7574707574","coins":[{"denom":"atom","amount":50}]}]}})";
+        const char* sendMsgSample = R"({"_df":"3CAAA78D13BAE0","_v":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}]},{"address":"616E6F74686572696E707574","coins":[{"denom":"atom","amount":50}]}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]},{"address":"616E6F746865726F7574707574","coins":[{"denom":"atom","amount":50}]}]}})";
 
         ParseJson(&parsedMessage, sendMsgSample);
 
@@ -185,8 +185,8 @@ TEST(JsonParserTest, SimpleObject) {
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Address], "616E6F74686572696E707574"));
         EXPECT_EQ(1, parsedMessage.Inputs[0].NumberOfCoins);
         EXPECT_EQ(1, parsedMessage.Inputs[1].NumberOfCoins);
-        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Sequence], "1"));
-        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Sequence], "1"));
+        //EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Sequence], "1"));
+        //EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Sequence], "1"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Coins[0].Denum], "atom"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Coins[0].Amount], "10"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Coins[0].Denum], "atom"));
@@ -207,7 +207,7 @@ TEST(JsonParserTest, SimpleObject) {
     {
         parsed_json_t parsedMessage = {0};
         //std::string result = exec("../tools/samples 3 text");
-        const char* sendMsgSample = R"({"_df":"3CAAA78D13BAE0","_v":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10},{"denom":"bitcoin","amount":20}],"sequence":1},{"address":"616E6F74686572696E707574","coins":[{"denom":"atom","amount":50},{"denom":"bitcoin","amount":60},{"denom":"ethereum","amount":70}],"sequence":17}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":11},{"denom":"bitcoint","amount":21}]},{"address":"616E6F746865726F7574707574","coins":[{"denom":"atom","amount":51},{"denom":"bitcoint","amount":61},{"denom":"ethereum","amount":71}]}]}})";
+        const char* sendMsgSample = R"({"_df":"3CAAA78D13BAE0","_v":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10},{"denom":"bitcoin","amount":20}]},{"address":"616E6F74686572696E707574","coins":[{"denom":"atom","amount":50},{"denom":"bitcoin","amount":60},{"denom":"ethereum","amount":70}]}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":11},{"denom":"bitcoint","amount":21}]},{"address":"616E6F746865726F7574707574","coins":[{"denom":"atom","amount":51},{"denom":"bitcoint","amount":61},{"denom":"ethereum","amount":71}]}]}})";
 
         ParseJson(&parsedMessage, sendMsgSample);
 
@@ -216,8 +216,8 @@ TEST(JsonParserTest, SimpleObject) {
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Address], "616E6F74686572696E707574"));
         EXPECT_EQ(2, parsedMessage.Inputs[0].NumberOfCoins);
         EXPECT_EQ(3, parsedMessage.Inputs[1].NumberOfCoins);
-        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Sequence], "1"));
-        EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Sequence], "17"));
+        //EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Sequence], "1"));
+        //EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[1].Sequence], "17"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Coins[0].Denum], "atom"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Coins[0].Amount], "10"));
         EXPECT_TRUE( Compare(sendMsgSample, parsedMessage.Tokens[parsedMessage.Inputs[0].Coins[1].Denum], "bitcoin"));
