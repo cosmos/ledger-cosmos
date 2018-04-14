@@ -25,9 +25,10 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	crypto "github.com/tendermint/go-crypto" // You have to manually switch to develop branch
-	sdk "github.com/cosmos/cosmos-sdk/types" // You have to manually switch to adrian/tx_encoding branch
-	"github.com/cosmos/cosmos-sdk/x/bank"    // You have to manually switch to adrian/tx_encoding branch
+	crypto "github.com/tendermint/go-crypto" 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	"github.com/zondax/ledger-goclient"
 )
 
 func PrintSampleFunc(message bank.SendMsg, output string) {
@@ -160,13 +161,15 @@ func GetMessages() ([]bank.SendMsg) {
 func main() {
 
 	messages := GetMessages()
-
-	// Parse the args
-	sampleIndex, sampleOutput, returnCode := ParseArgs(len(messages))
-	if returnCode != 0 {
-		os.Exit(returnCode)
+	ledger, err := ledger_goclient.FindLedger()
+	if err != nil {
+		fmt.Print(err.Error())
+	} else {
+		signedMsg, err := ledger.Sign(messages[0].GetSignBytes())
+		if err == nil {
+			fmt.Printf("Signed msg:%x", signedMsg)
+		} else {
+			fmt.Print("Error while signing the transaction")
+		}
 	}
-
-	// Print the selected sample
-	PrintSampleFunc(messages[sampleIndex], sampleOutput)
 }
