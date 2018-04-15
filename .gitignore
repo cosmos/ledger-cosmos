@@ -41,3 +41,5 @@ cmake-build-debug/
 src/ledger/bin/
 src/ledger/debug/
 src/ledger/obj/
+src/goclient/vendor
+pkg/
