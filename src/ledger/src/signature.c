@@ -43,6 +43,8 @@ void signature_reset_ED25519()
 {
     os_memset((void*)signature, 0, sizeof(signature));
     length = 0;
+    // FIXME: This is just experimenting with stack overflow restrictions.
+    // It is not appropriate to mix BIP32 with ED25519
     // derivation path = 44'/60'/0'/0'/0'
     bip32_derivation_path[0] = 0x80000000 | 44 ;
     bip32_derivation_path[1] = 0x80000000 | 60;
