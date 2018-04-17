@@ -134,23 +134,23 @@ func GetMessages() ([]bank.SendMsg) {
             Inputs: []bank.Input{
                 {
                     Address:  crypto.Address([]byte("input")),
-                    Coins:    sdk.Coins{{"atom", 10},{"bitcoint", 20}},
+                    Coins:    sdk.Coins{{"atom", 10},{"bitcoin", 20}},
                     //Sequence: 1,
                 },
                 {
                     Address:  crypto.Address([]byte("anotherinput")),
-                    Coins:    sdk.Coins{{"atom", 50},{"bitcoint", 60},{"ethereum", 70}},
+                    Coins:    sdk.Coins{{"atom", 50},{"bitcoin", 60},{"ethereum", 70}},
                     //Sequence: 1,
                 },
             },
             Outputs: []bank.Output{
                 {
                     Address: crypto.Address([]byte("output")),
-                    Coins:    sdk.Coins{{"atom", 10},{"bitcoint", 20}},
+                    Coins:    sdk.Coins{{"atom", 10},{"bitcoin", 20}},
                 },
                 {
                     Address: crypto.Address([]byte("anotheroutput")),
-                    Coins:    sdk.Coins{{"atom", 50},{"bitcoint", 60},{"ethereum", 70}},
+                    Coins:    sdk.Coins{{"atom", 50},{"bitcoin", 60},{"ethereum", 70}},
                 },
             },
         },
@@ -167,7 +167,7 @@ func main() {
 	} else {
 		fmt.Printf("Ledger Found\n")
 
-		transactionData := messages[0].GetSignBytes()
+		transactionData := messages[2].GetSignBytes()
 
 		fmt.Printf("Waiting for signature..\n")
 		signedMsg, err := ledger.Sign(transactionData)
