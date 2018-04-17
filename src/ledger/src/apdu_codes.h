@@ -1,5 +1,4 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
 *   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,19 +13,21 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
+
 #pragma once
+#include "inttypes.h"
 
-#include "apdu_codes.h"
+// Based on ISO7816
 
-#define CLA 0x80
-#define OFFSET_CLA       0
-#define OFFSET_INS       1  //< Instruction offset
-#define OFFSET_PCK_INDEX 2  //< Package index offset
-#define OFFSET_PCK_COUNT 3  //< Package count offset
-#define OFFSET_DATA      4  //< Data offset
+#define APDU_CODE_OK                        0x9000
+#define APDU_CODE_EXECUTION_ERROR           0x6400
+#define APDU_CODE_COMMAND_NOT_ALLOWED       0x6986
+#define APDU_CODE_INS_NOT_SUPPORTED         0x6D00
+#define APDU_CODE_CLA_NOT_SUPPORTED         0x6E00
+#define APDU_CODE_UNKNOWN                   0x6F00
 
-#define INS_GET_VERSION  0
-#define INS_SIGN         1
-
-void app_init();
-void app_main();
+inline void set_code(uint8_t *buffer, uint8_t offset, uint16_t value)
+{
+    *(buffer + offset) = (uint8_t)(value >> 8);
+    *(buffer + offset + 1) = (uint8_t)(value & 0xFF);
+}

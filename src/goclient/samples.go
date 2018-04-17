@@ -158,17 +158,24 @@ func GetMessages() ([]bank.SendMsg) {
 }
 
 func main() {
-
 	messages := GetMessages()
 	ledger, err := ledger_goclient.FindLedger()
+
 	if err != nil {
+		fmt.Printf("Ledger NOT Found\n")
 		fmt.Print(err.Error())
 	} else {
-		signedMsg, err := ledger.Sign(messages[0].GetSignBytes())
+		fmt.Printf("Ledger Found\n")
+
+		transactionData := messages[0].GetSignBytes()
+
+		fmt.Printf("Waiting for signature..\n")
+		signedMsg, err := ledger.Sign(transactionData)
+
 		if err == nil {
-			fmt.Printf("Signed msg:%x", signedMsg)
+			fmt.Printf("Signed msg: %x", signedMsg)
 		} else {
-			fmt.Print("Error while signing the transaction")
+			fmt.Printf("Error: %s", err)
 		}
 	}
 }

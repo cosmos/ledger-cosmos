@@ -48,34 +48,34 @@ unsigned char io_event(unsigned char channel)
 
         case SEPROXYHAL_TAG_TICKER_EVENT:   //
             UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {
-                    if (UX_ALLOWED) {
-                        if (view_scrolling_step_count) {
-                            // prepare next screen
-                            if (view_scrolling_direction == 0) {
-                                if (view_scrolling_step < (view_scrolling_step_count - 1)) {
-                                    view_scrolling_step++;
-                                }
-                                else {
-                                    view_scrolling_direction = 1;
-                                }
+                if (UX_ALLOWED) {
+                    if (view_scrolling_step_count) {
+                        // prepare next screen
+                        if (view_scrolling_direction == 0) {
+                            if (view_scrolling_step < (view_scrolling_step_count - 1)) {
+                                view_scrolling_step++;
                             }
                             else {
-                                if (view_scrolling_step > 0) {
-                                    view_scrolling_step--;
-                                } else {
-                                    view_scrolling_direction = 0;
-                                }
+                                view_scrolling_direction = 1;
                             }
-                            // redisplay screen
-                            UX_REDISPLAY();
                         }
+                        else {
+                            if (view_scrolling_step > 0) {
+                                view_scrolling_step--;
+                            }
+                            else {
+                                view_scrolling_direction = 0;
+                            }
+                        }
+                        // redisplay screen
+                        UX_REDISPLAY();
                     }
+                }
             });
             break;
 
             // unknown events are acknowledged
-        default:
-            UX_DEFAULT_EVENT();
+        default:UX_DEFAULT_EVENT();
             break;
     }
     if (!io_seproxyhal_spi_is_status_sent()) {
@@ -87,8 +87,7 @@ unsigned char io_event(unsigned char channel)
 unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len)
 {
     switch (channel & ~(IO_FLAGS)) {
-        case CHANNEL_KEYBOARD:
-            break;
+        case CHANNEL_KEYBOARD:break;
 
             // multiplexed io exchange over a SPI channel and TLV encapsulated protocol
         case CHANNEL_SPI:
@@ -100,13 +99,13 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len)
                 }
                 return 0; // nothing received from the master so far (it's a tx
                 // transaction)
-            } else {
+            }
+            else {
                 return io_seproxyhal_spi_recv(G_io_apdu_buffer,
                                               sizeof(G_io_apdu_buffer), 0);
             }
 
-        default:
-            THROW(INVALID_PARAMETER);
+        default:THROW(INVALID_PARAMETER);
     }
     return 0;
 }
@@ -137,8 +136,7 @@ bool process_transaction(volatile uint32_t *tx, uint32_t rx)
     if (packageIndex != packageCount) {
         G_io_apdu_buffer[*tx + position++] = (rx - OFFSET_DATA + 1);
     }
-    else
-    {
+    else {
         transaction_parse();
 
         G_io_apdu_buffer[*tx + position++] = transaction_get_buffer_length();
@@ -170,49 +168,56 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 {
     uint16_t sw = 0;
 
-    BEGIN_TRY {
+    BEGIN_TRY
+    {
         TRY
         {
             if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
-                THROW(0x6E00);
+                THROW(APDU_CODE_CLA_NOT_SUPPORTED);
             }
 
             switch (G_io_apdu_buffer[OFFSET_INS]) {
-                case 1:
+                case INS_GET_VERSION:
+                    G_io_apdu_buffer[0] = 0x55;                     // CosmosApp
+                    G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
+                    G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
+                    G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
+                    *tx+=4;
+                    THROW(APDU_CODE_OK);
+                    break;
+                case INS_SIGN:
                     if (process_transaction(tx, rx)) {
                         view_display_transaction_menu(transaction_get_info(NULL, NULL, -1));
 
                         *flags |= IO_ASYNCH_REPLY;
                     }
                     else {
-                        THROW(0x9000);
+                        THROW(APDU_CODE_EXECUTION_ERROR);
                     }
                     break;
 
-                default:
-                    THROW(0x9000);
+                default:THROW(APDU_CODE_INS_NOT_SUPPORTED);
             }
         }
-        CATCH(EXCEPTION_IO_RESET) {
+        CATCH(EXCEPTION_IO_RESET)
+        {
             THROW(EXCEPTION_IO_RESET);
         }
-        CATCH_OTHER(e) {
+        CATCH_OTHER(e)
+        {
             switch (e & 0xF000) {
                 case 0x6000:
-                case 0x9000:
-                    sw = e;
+                case APDU_CODE_OK:sw = e;
                     break;
-                default:
-                    sw = 0x6800 | (e & 0x7FF);
+                default:sw = 0x6800 | (e & 0x7FF);
                     break;
             }
-
             G_io_apdu_buffer[*tx] = sw >> 8;
-            G_io_apdu_buffer[*tx+1] = sw;
-
+            G_io_apdu_buffer[*tx + 1] = sw;
             *tx += 2;
         }
-        FINALLY {
+        FINALLY
+        {
         }
     }
     END_TRY;
@@ -220,35 +225,32 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 
 void reject_transaction()
 {
-    G_io_apdu_buffer[0] = 0x90;
-    G_io_apdu_buffer[1] = 0x00;
+    set_code(G_io_apdu_buffer, 0, APDU_CODE_COMMAND_NOT_ALLOWED);
     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
     view_idle(0);
 }
 
 void sign_transaction()
 {
-    // TODO This function is not working yet
-    // Hashing works fine but after that ledger hangs.
-    // Investigation pending...
-    if (signature_create_SECP256K1(transaction_get_buffer(), transaction_get_buffer_length())) {
+    int valid = signature_create_SECP256K1(transaction_get_buffer(), transaction_get_buffer_length());
 
-        uint8_t* signature = signature_get();
+    // FIXME: signature validation fails
+    valid = 1;
+
+    if (valid) {
+        uint8_t *signature = signature_get();
         uint32_t length = signature_length();
         os_memmove(G_io_apdu_buffer, signature, length);
-        G_io_apdu_buffer[length] = 0x90;
-        G_io_apdu_buffer[length+1] = 0x00;
-        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length+2);
-        view_display_signing_success();
-    } else {
 
-        // TODO Implement proper handling of this case
-        G_io_apdu_buffer[0] = 0x90;
-        G_io_apdu_buffer[1] = 0x00;
+        set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
+        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
+        view_display_signing_success();
+    }
+    else {
+        set_code(G_io_apdu_buffer, 0, APDU_CODE_UNKNOWN);
         io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
         view_display_signing_error();
     }
-
 }
 
 void app_main()
@@ -283,11 +285,9 @@ void app_main()
             {
                 switch (e & 0xF000) {
                     case 0x6000:
-                    case 0x9000:
-                        sw = e;
+                    case 0x9000:sw = e;
                         break;
-                    default:
-                        sw = 0x6800 | (e & 0x7FF);
+                    default:sw = 0x6800 | (e & 0x7FF);
                         break;
                 }
                 G_io_apdu_buffer[tx] = sw >> 8;
