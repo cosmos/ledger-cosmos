@@ -159,6 +159,8 @@ func GetMessages() ([]bank.SendMsg) {
 
 func main() {
 	messages := GetMessages()
+	transactionData := messages[2].GetSignBytes()
+
 	ledger, err := ledger_goclient.FindLedger()
 
 	if err != nil {
@@ -167,7 +169,8 @@ func main() {
 	} else {
 		fmt.Printf("Ledger Found\n")
 
-		transactionData := messages[2].GetSignBytes()
+		// TODO: Ledger object should return app version number
+		// TODO: Check that version is supported, etc.
 
 		fmt.Printf("Waiting for signature..\n")
 		signedMsg, err := ledger.Sign(transactionData)
