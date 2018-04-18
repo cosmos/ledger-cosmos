@@ -235,7 +235,7 @@ void sign_transaction()
     int valid = signature_create_SECP256K1(transaction_get_buffer(), transaction_get_buffer_length());
 
     // FIXME: signature validation fails, check stack overflow, etc.
-    valid = 1;
+    //valid = 1;
 
     if (valid) {
         uint8_t *signature = signature_get();
