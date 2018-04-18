@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #*******************************************************************************
 #*   (c) 2018 ZondaX GmbH
 #*
@@ -13,9 +14,8 @@
 #*  See the License for the specific language governing permissions and
 #*  limitations under the License.
 #********************************************************************************
-#!/usr/bin/env bash
 
-SCRIPT_DIR=$(cd `dirname $0` && pwd)
+SCRIPT_DIR=$(cd $(dirname $0) && pwd)
 
 handle_config()
 {
@@ -48,7 +48,7 @@ handle_make()
     docker run -it --rm \
             -e BOLOS_SDK=${BOLOS_SDK} \
             -e BOLOS_ENV=${BOLOS_ENV} \
-            -u `id -u` \
+            -u $(id -u) \
             -v $(pwd):/project \
             ${DOCKER_IMAGE} \
             make -C /project/src/ledger $1
