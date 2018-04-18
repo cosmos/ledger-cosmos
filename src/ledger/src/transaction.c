@@ -18,7 +18,7 @@
 #include "transaction.h"
 #include "view.h"
 
-#define TRANSACTION_JSON_BUFFER_SIZE 900
+#define TRANSACTION_JSON_BUFFER_SIZE 650
 
 parsed_json_t parsed_transaction;
 char transaction_buffer[TRANSACTION_JSON_BUFFER_SIZE];

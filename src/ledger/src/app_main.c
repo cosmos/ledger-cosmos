@@ -277,7 +277,7 @@ void app_main()
                 rx = io_exchange(CHANNEL_APDU | flags, rx);
                 flags = 0;
 
-                if (rx == 0) THROW(0x6982);
+                if (rx == 0) THROW(APDU_CODE_EMPTY_BUFFER);
 
                 handleApdu(&flags, &tx, rx);
             }
