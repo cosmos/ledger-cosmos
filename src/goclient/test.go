@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	crypto "github.com/tendermint/go-crypto" 
+	"github.com/tendermint/go-crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/zondax/ledger-goclient"
@@ -67,14 +67,13 @@ func ParseArgs(numberOfSamples int) (int, string, int) {
 }
 
 func GetMessages() ([]bank.SendMsg) {
-	return []bank.SendMsg {
-
+	return []bank.SendMsg{
 		// Simple address, 1 input, 1 output
 		bank.SendMsg{
 			Inputs: []bank.Input{
 				{
-					Address:  crypto.Address([]byte("input")),
-					Coins:    sdk.Coins{{"atom", 10}},
+					Address: crypto.Address([]byte("input")),
+					Coins:   sdk.Coins{{"atom", 10}},
 					//Sequence: 1,
 				},
 			},
@@ -90,8 +89,8 @@ func GetMessages() ([]bank.SendMsg) {
 		bank.SendMsg{
 			Inputs: []bank.Input{
 				{
-					Address:  crypto.Address(crypto.GenPrivKeyEd25519().PubKey().Bytes()),
-					Coins:    sdk.Coins{{"atom", 1000000}},
+					Address: crypto.Address(crypto.GenPrivKeyEd25519().PubKey().Bytes()),
+					Coins:   sdk.Coins{{"atom", 1000000}},
 					//Sequence: 1,
 				},
 			},
@@ -104,56 +103,56 @@ func GetMessages() ([]bank.SendMsg) {
 		},
 
 		// Simple address, 2 inputs, 2 outputs
-        bank.SendMsg{
-            Inputs: []bank.Input{
-                {
-                    Address:  crypto.Address([]byte("input")),
-                    Coins:    sdk.Coins{{"atom", 10}},
-                    //Sequence: 1,
-                },
-                {
-                    Address:  crypto.Address([]byte("anotherinput")),
-                    Coins:    sdk.Coins{{"atom", 50}},
-                    //Sequence: 1,
-                },
-            },
-            Outputs: []bank.Output{
-                {
-                    Address: crypto.Address([]byte("output")),
-                    Coins:   sdk.Coins{{"atom", 10}},
-                },
-                {
-                    Address: crypto.Address([]byte("anotheroutput")),
-                    Coins:   sdk.Coins{{"atom", 50}},
-                },
-            },
-        },
+		bank.SendMsg{
+			Inputs: []bank.Input{
+				{
+					Address: crypto.Address([]byte("input")),
+					Coins:   sdk.Coins{{"atom", 10}},
+					//Sequence: 1,
+				},
+				{
+					Address: crypto.Address([]byte("anotherinput")),
+					Coins:   sdk.Coins{{"atom", 50}},
+					//Sequence: 1,
+				},
+			},
+			Outputs: []bank.Output{
+				{
+					Address: crypto.Address([]byte("output")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+				{
+					Address: crypto.Address([]byte("anotheroutput")),
+					Coins:   sdk.Coins{{"atom", 50}},
+				},
+			},
+		},
 
-        // Simple address, 2 inputs, 2 outputs, 2 coins
-        bank.SendMsg{
-            Inputs: []bank.Input{
-                {
-                    Address:  crypto.Address([]byte("input")),
-                    Coins:    sdk.Coins{{"atom", 10},{"bitcoin", 20}},
-                    //Sequence: 1,
-                },
-                {
-                    Address:  crypto.Address([]byte("anotherinput")),
-                    Coins:    sdk.Coins{{"atom", 50},{"bitcoin", 60},{"ethereum", 70}},
-                    //Sequence: 1,
-                },
-            },
-            Outputs: []bank.Output{
-                {
-                    Address: crypto.Address([]byte("output")),
-                    Coins:    sdk.Coins{{"atom", 10},{"bitcoin", 20}},
-                },
-                {
-                    Address: crypto.Address([]byte("anotheroutput")),
-                    Coins:    sdk.Coins{{"atom", 50},{"bitcoin", 60},{"ethereum", 70}},
-                },
-            },
-        },
+		// Simple address, 2 inputs, 2 outputs, 2 coins
+		bank.SendMsg{
+			Inputs: []bank.Input{
+				{
+					Address: crypto.Address([]byte("input")),
+					Coins:   sdk.Coins{{"atom", 10}, {"bitcoin", 20}},
+					//Sequence: 1,
+				},
+				{
+					Address: crypto.Address([]byte("anotherinput")),
+					Coins:   sdk.Coins{{"atom", 50}, {"bitcoin", 60}, {"ethereum", 70}},
+					//Sequence: 1,
+				},
+			},
+			Outputs: []bank.Output{
+				{
+					Address: crypto.Address([]byte("output")),
+					Coins:   sdk.Coins{{"atom", 10}, {"bitcoin", 20}},
+				},
+				{
+					Address: crypto.Address([]byte("anotheroutput")),
+					Coins:   sdk.Coins{{"atom", 50}, {"bitcoin", 60}, {"ethereum", 70}},
+				},
+			},
+		},
 	}
 }
 
@@ -167,7 +166,13 @@ func main() {
 		fmt.Printf("Ledger NOT Found\n")
 		fmt.Print(err.Error())
 	} else {
-		fmt.Printf("Ledger Found\n")
+		version, err := ledger.GetVersion()
+		if err != nil {
+			fmt.Printf("Could not get version. Error: %s", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Ledger. Version %d.%d.%d\n", version.Major, version.Minor, version.Patch)
 
 		// TODO: Ledger object should return app version number
 		// TODO: Check that version is supported, etc.

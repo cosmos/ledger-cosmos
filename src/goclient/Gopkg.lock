@@ -11,7 +11,7 @@
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "2be2f12b358dc57d70b8f501b00be450192efbc3"
+  revision = "675abc5df3c5531bc741b56a765e35623459da6d"
 
 [[projects]]
   name = "github.com/cosmos/cosmos-sdk"
@@ -159,7 +159,7 @@
   branch = "master"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
-  revision = "4eeb77e693f8123b4302aeb57e0f03c0954b8938"
+  revision = "99d20298b53479a682f629c3caa41ab01b84b33b"
 
 [[projects]]
   branch = "master"
@@ -187,7 +187,7 @@
     "lex/httplex",
     "trace"
   ]
-  revision = "8d16fa6dc9a85c1cd3ed24ad08ff21cf94f10888"
+  revision = "d41e8174641f662c5a2d1c7a5f9e828788eb8706"
 
 [[projects]]
   name = "golang.org/x/text"
