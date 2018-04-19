@@ -15,7 +15,7 @@
 #********************************************************************************
 #!/usr/bin/env bash
 
-SCRIPT_DIR=$(cd `dirname $0` && pwd)
+SCRIPT_DIR=$(cd $(dirname $0) && pwd)
 
 handle_config()
 {
@@ -54,7 +54,7 @@ handle_make()
             -e JSON_PARSER_LIB=${JSON_PARSER_LIB} \
             -e BOLOS_SDK=${BOLOS_SDK} \
             -e BOLOS_ENV=${BOLOS_ENV} \
-            -u `id -u` \
+            -u $(id -u) \
             -v $(pwd):/project \
             ${DOCKER_IMAGE} \
             make -C /project/src/ledger $1

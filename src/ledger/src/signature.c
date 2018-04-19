@@ -62,14 +62,14 @@ void signature_set_derivation_path(uint32_t* path, uint32_t path_size)
 
 int signature_create_SECP256K1(uint8_t* message, uint16_t message_length) {
     cx_sha256_t sha256;
-    uint8_t hashMessage[32];
+    uint8_t digest[32];
 
     signature_reset_SECP256K1();
 
     cx_sha256_init(&sha256);
 
-    cx_hash((cx_hash_t *) &sha256, 0, message, message_length, NULL);
-    cx_hash((cx_hash_t *) &sha256, CX_LAST, message, 0, hashMessage);
+    cx_hash((cx_hash_t *) &sha256, 0, message, message_length, NULL, sizeof(digest));
+    cx_hash((cx_hash_t *) &sha256, CX_LAST, message, 0, digest, sizeof(digest));
 
     uint8_t privateKeyData[32];
     cx_ecfp_private_key_t privateKey;
@@ -100,9 +100,10 @@ int signature_create_SECP256K1(uint8_t* message, uint16_t message_length) {
     length = cx_ecdsa_sign(&privateKey,
                            CX_RND_RFC6979 | CX_LAST,
                            CX_SHA256,
-                           hashMessage,
-                           sizeof(hashMessage),
+                           digest,
+                           sizeof(digest),
                            signature,
+                           sizeof(signature),
                            &info);
 
     if (info & CX_ECCINFO_PARITY_ODD) {
@@ -113,22 +114,22 @@ int signature_create_SECP256K1(uint8_t* message, uint16_t message_length) {
     return cx_ecdsa_verify(&publicKey,
                            CX_LAST,
                            CX_SHA256,
-                           hashMessage,
-                           sizeof(hashMessage),
+                           digest,
+                           sizeof(digest),
                            (unsigned char*)signature,
                            length);
 }
 
 int signature_create_ED25519(uint8_t* message, uint16_t message_length) {
     cx_sha512_t sha512;
-    uint8_t hashMessage[64];
+    uint8_t digest[64];
 
     signature_reset_ED25519();
 
     cx_sha512_init(&sha512);
 
-    cx_hash((cx_hash_t *) &sha512, 0, message, message_length, NULL);
-    cx_hash((cx_hash_t *) &sha512, CX_LAST, message, 0, hashMessage);
+    cx_hash((cx_hash_t *) &sha512, 0, message, message_length, NULL, sizeof(digest));
+    cx_hash((cx_hash_t *) &sha512, CX_LAST, message, 0, digest, sizeof(digest));
 
     uint8_t privateKeyData[32];
     cx_ecfp_private_key_t privateKey;
@@ -159,11 +160,12 @@ int signature_create_ED25519(uint8_t* message, uint16_t message_length) {
     length = cx_eddsa_sign(&privateKey,
                            0,
                            CX_SHA512,
-                           hashMessage,
-                           sizeof(hashMessage),
+                           digest,
+                           sizeof(digest),
                            NULL,
                            0,
                            signature,
+                           sizeof(signature),
                            &info);
 
     if (info & CX_ECCINFO_PARITY_ODD) {
@@ -174,8 +176,8 @@ int signature_create_ED25519(uint8_t* message, uint16_t message_length) {
     return cx_eddsa_verify(&publicKey,
                            0,
                            CX_SHA512,
-                           hashMessage,
-                           sizeof(hashMessage),
+                           digest,
+                           sizeof(digest),
                            NULL,
                            0,
                            (unsigned char*)signature,
