@@ -29,7 +29,7 @@ include $(BOLOS_SDK)/Makefile.defines
 APPNAME = "COSMOS"
 APPVERSION_M=0
 APPVERSION_N=0
-APPVERSION_P=2
+APPVERSION_P=4
 APP_LOAD_PARAMS = --appFlags 0x00 $(COMMON_LOAD_PARAMS)
 
 #prepare hsm generation

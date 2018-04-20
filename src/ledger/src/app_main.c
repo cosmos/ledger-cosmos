@@ -23,10 +23,6 @@
 #include <os_io_seproxyhal.h>
 #include <os.h>
 
-#if SEND_STACK_INFORMATION
-volatile uint32_t stackStartAddress;
-#endif
-
 
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
@@ -118,7 +114,7 @@ void app_init()
     view_idle(0);
 }
 
-bool process_transaction(volatile uint32_t *tx, uint32_t rx)
+bool process_chunk(volatile uint32_t *tx, uint32_t rx)
 {
     int packageIndex = G_io_apdu_buffer[OFFSET_PCK_INDEX];
     int packageCount = G_io_apdu_buffer[OFFSET_PCK_COUNT];
@@ -126,42 +122,21 @@ bool process_transaction(volatile uint32_t *tx, uint32_t rx)
     if (packageIndex == 1) {
         transaction_reset();
     }
-    transaction_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA + 1);
 
-    int position = 0;
-
-    G_io_apdu_buffer[*tx + position++] = packageIndex;
-    G_io_apdu_buffer[*tx + position++] = packageCount;
-
-    if (packageIndex != packageCount) {
-        G_io_apdu_buffer[*tx + position++] = (rx - OFFSET_DATA + 1);
-    }
-    else {
-        transaction_parse();
-
-        G_io_apdu_buffer[*tx + position++] = transaction_get_buffer_length();
-        G_io_apdu_buffer[*tx + position++] = transaction_get_parsed()->NumberOfInputs;
-        G_io_apdu_buffer[*tx + position++] = transaction_get_parsed()->NumberOfOutputs;
-        G_io_apdu_buffer[*tx + position++] = transaction_get_parsed()->NumberOfTokens;
-        G_io_apdu_buffer[*tx + position++] = rx;
-
-#if SEND_STACK_INFORMATION
-        G_io_apdu_buffer[*tx + position++] = (stackStartAddress & 0xFF000000) >> 24;
-        G_io_apdu_buffer[*tx + position++] = (stackStartAddress & 0x00FF0000) >> 16;
-        G_io_apdu_buffer[*tx + position++] = (stackStartAddress & 0x0000FF00) >> 8;
-        G_io_apdu_buffer[*tx + position++] = (stackStartAddress & 0x000000FF);
-
-        int data = 0;
-        uint32_t currentStackAddress = (uint32_t) & data;
-        G_io_apdu_buffer[*tx + position++] = (currentStackAddress & 0xFF000000) >> 24;
-        G_io_apdu_buffer[*tx + position++] = (currentStackAddress & 0x00FF0000) >> 16;
-        G_io_apdu_buffer[*tx + position++] = (currentStackAddress & 0x0000FF00) >> 8;
-        G_io_apdu_buffer[*tx + position++] = (currentStackAddress & 0x000000FF);
-#endif
-    }
-    *tx += position;
+    transaction_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
 
     return packageIndex == packageCount;
+}
+
+bool process_transaction(volatile uint32_t *tx, uint32_t rx)
+{
+    bool ready = process_chunk(tx, rx);
+
+    if (ready) {
+        transaction_parse();
+    }
+
+    return ready;
 }
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
@@ -177,14 +152,14 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
             }
 
             switch (G_io_apdu_buffer[OFFSET_INS]) {
-                case INS_GET_VERSION:
-                    G_io_apdu_buffer[0] = 0x55;                     // CosmosApp
+                case INS_GET_VERSION:G_io_apdu_buffer[0] = 0x55;                     // CosmosApp
                     G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
                     G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
                     G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
-                    *tx+=4;
+                    *tx += 4;
                     THROW(APDU_CODE_OK);
                     break;
+
                 case INS_SIGN:
                     if (process_transaction(tx, rx)) {
                         view_display_transaction_menu(transaction_get_info(NULL, NULL, -1));
@@ -194,6 +169,58 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     else {
                         THROW(APDU_CODE_OK);
                     }
+                    break;
+
+                case INS_HASH:
+                    if (process_chunk(tx, rx)) {
+                        uint8_t message_digest[CX_SHA256_SIZE];
+
+                        cx_hash_sha256(transaction_get_buffer(),
+                                       transaction_get_buffer_length(),
+                                       message_digest,
+                                       CX_SHA256_SIZE);
+
+                        os_memmove(G_io_apdu_buffer, message_digest, CX_SHA256_SIZE);
+                        *tx += 32;
+                    }
+                    THROW(APDU_CODE_OK);
+                    break;
+
+                case INS_GET_PUBLIC_KEY:
+                    // TODO: return public key and show in the screen
+                    THROW(APDU_CODE_OK);
+                    break;
+
+                case INS_ECHO:
+                    if (process_chunk(tx, rx)) {
+                        uint32_t maxlen = transaction_get_buffer_length();
+                        if (maxlen > 64)
+                            maxlen = 64;
+
+                        os_memmove(G_io_apdu_buffer,
+                                   transaction_get_buffer(),
+                                   maxlen);
+                        *tx += maxlen;
+                    }
+                    THROW(APDU_CODE_OK);
+                    break;
+
+                case INS_GET_PUBLIC_KEY_DUMMY:
+                {
+                    // Start with hardcoded private key
+                    uint8_t privateKeyData[32];
+                    memset(privateKeyData, 0, 32);
+
+                    // Generate public key
+                    cx_ecfp_public_key_t publicKey;
+                    cx_ecfp_init_public_key(CX_CURVE_256R1, NULL, 0, &publicKey);
+                    cx_ecfp_generate_pair(CX_CURVE_256K1, &publicKey, &privateKeyData, 1);
+
+                    os_memmove(G_io_apdu_buffer, publicKey.W, 65);
+                    tx += 65;
+
+                    THROW(APDU_CODE_OK);
+                }
                     break;
 
                 default:THROW(APDU_CODE_INS_NOT_SUPPORTED);
@@ -232,10 +259,10 @@ void reject_transaction()
 
 void sign_transaction()
 {
+    // TODO: Signature could be in the stack and moved to the apdu_buffer
     int valid = signature_create_SECP256K1(transaction_get_buffer(), transaction_get_buffer_length());
 
-    // FIXME: signature validation fails, check stack overflow, etc.
-    valid = 1;
+    //valid = 1;
 
     if (valid) {
         uint8_t *signature = signature_get();
@@ -257,10 +284,6 @@ void app_main()
 {
     volatile uint32_t rx = 0, tx = 0, flags = 0;
 
-#if SEND_STACK_INFORMATION
-    stackStartAddress = (uint32_t)&rx;
-#endif
-
     view_add_update_transaction_info_event_handler(&transaction_get_info);
     view_add_reject_transaction_event_handler(&reject_transaction);
     view_add_sign_transaction_event_handler(&sign_transaction);
@@ -277,7 +300,7 @@ void app_main()
                 rx = io_exchange(CHANNEL_APDU | flags, rx);
                 flags = 0;
 
-                if (rx == 0) THROW(0x6982);
+                if (rx == 0) THROW(APDU_CODE_EMPTY_BUFFER);
 
                 handleApdu(&flags, &tx, rx);
             }

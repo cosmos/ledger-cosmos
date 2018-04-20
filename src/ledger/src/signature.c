@@ -18,78 +18,46 @@
 
 #include "cx.h"
 
+//
 #define SIGNATURE_LENGTH 100
 #define DERIVATION_PATH_MAX_DEPTH 10
+
 uint8_t signature[SIGNATURE_LENGTH];
+
 uint32_t length = 0;
-uint32_t bip32_derivation_path[DERIVATION_PATH_MAX_DEPTH];
-uint8_t bip32_derivation_path_length;
 
-void signature_reset_SECP256K1()
+// derivation path = 44'/60'/0'/0/0
+const uint32_t bip32_derivation_path[] =
+    {
+        0x80000000 | 44,
+        0x80000000 | 60,
+        0x80000000 | 0,
+        0x80000000 | 0,
+        0x80000000 | 0
+    };
+
+int signature_create_SECP256K1(uint8_t *message, uint16_t message_length)
 {
-    os_memset((void*)signature, 0, sizeof(signature));
-    length = 0;
-    // derivation path = 44'/60'/0'/0/0
-    bip32_derivation_path[0] = 0x80000000 | 44 ;
-    bip32_derivation_path[1] = 0x80000000 | 60;
-    bip32_derivation_path[2] = 0x80000000 | 0;
-    bip32_derivation_path[3] = 0;
-    bip32_derivation_path[4] = 0;
-    bip32_derivation_path_length = 5;
-}
+    uint8_t message_digest[CX_SHA256_SIZE];
+    cx_hash_sha256(message, message_length, message_digest, CX_SHA256_SIZE);
 
-
-void signature_reset_ED25519()
-{
-    os_memset((void*)signature, 0, sizeof(signature));
-    length = 0;
-    // FIXME: This is just experimenting with stack overflow restrictions.
-    // It is not appropriate to mix BIP32 with ED25519
-    // derivation path = 44'/60'/0'/0'/0'
-    bip32_derivation_path[0] = 0x80000000 | 44 ;
-    bip32_derivation_path[1] = 0x80000000 | 60;
-    bip32_derivation_path[2] = 0x80000000 | 0;
-    bip32_derivation_path[3] = 0x80000000 | 0;
-    bip32_derivation_path[4] = 0x80000000 | 0;
-    bip32_derivation_path_length = 5;
-}
-
-void signature_set_derivation_path(uint32_t* path, uint32_t path_size)
-{
-    os_memmove(bip32_derivation_path, path, path_size*sizeof(path[0]));
-    bip32_derivation_path_length = path_size;
-}
-
-int signature_create_SECP256K1(uint8_t* message, uint16_t message_length) {
-    cx_sha256_t sha256;
-    uint8_t digest[32];
-
-    signature_reset_SECP256K1();
-
-    cx_sha256_init(&sha256);
-
-    cx_hash((cx_hash_t *) &sha256, 0, message, message_length, NULL, sizeof(digest));
-    cx_hash((cx_hash_t *) &sha256, CX_LAST, message, 0, digest, sizeof(digest));
-
+    // Generate keys
     uint8_t privateKeyData[32];
-    cx_ecfp_private_key_t privateKey;
-    cx_ecfp_public_key_t publicKey;
-
     os_perso_derive_node_bip32(
-            CX_CURVE_256K1,
-            bip32_derivation_path,
-            bip32_derivation_path_length,
-            privateKeyData,
-            NULL);
+        CX_CURVE_256K1,
+        bip32_derivation_path,
+        sizeof(bip32_derivation_path) / sizeof(uint32_t),
+        privateKeyData,
+        NULL);
 
+    cx_ecfp_private_key_t privateKey;
     cx_ecfp_init_private_key(
-            CX_CURVE_256K1,
-            privateKeyData,
-            32,
-            &privateKey);
+        CX_CURVE_256K1,
+        privateKeyData,
+        32,
+        &privateKey);
 
-    os_memset(privateKeyData, 0, sizeof(privateKeyData));
-
+    cx_ecfp_public_key_t publicKey;
     cx_ecfp_generate_pair(CX_CURVE_256K1,
                           &publicKey,
                           &privateKey,
@@ -97,11 +65,16 @@ int signature_create_SECP256K1(uint8_t* message, uint16_t message_length) {
 
     unsigned int info = 0;
 
+    // reset signature
+    os_memset((void *) signature, 0, sizeof(signature));
+    length = 0;
+
+    // sign
     length = cx_ecdsa_sign(&privateKey,
                            CX_RND_RFC6979 | CX_LAST,
                            CX_SHA256,
-                           digest,
-                           sizeof(digest),
+                           message_digest,
+                           sizeof(message_digest),
                            signature,
                            sizeof(signature),
                            &info);
@@ -114,77 +87,75 @@ int signature_create_SECP256K1(uint8_t* message, uint16_t message_length) {
     return cx_ecdsa_verify(&publicKey,
                            CX_LAST,
                            CX_SHA256,
-                           digest,
-                           sizeof(digest),
-                           (unsigned char*)signature,
+                           message_digest,
+                           sizeof(message_digest),
+                           (unsigned char *) signature,
                            length);
 }
 
-int signature_create_ED25519(uint8_t* message, uint16_t message_length) {
-    cx_sha512_t sha512;
-    uint8_t digest[64];
-
-    signature_reset_ED25519();
-
-    cx_sha512_init(&sha512);
-
-    cx_hash((cx_hash_t *) &sha512, 0, message, message_length, NULL, sizeof(digest));
-    cx_hash((cx_hash_t *) &sha512, CX_LAST, message, 0, digest, sizeof(digest));
-
-    uint8_t privateKeyData[32];
-    cx_ecfp_private_key_t privateKey;
-    cx_ecfp_public_key_t publicKey;
-
-    os_perso_derive_node_bip32(
-            CX_CURVE_Ed25519,
-            bip32_derivation_path,
-            bip32_derivation_path_length,
-            privateKeyData,
-            NULL);
-
-    cx_ecfp_init_private_key(
-            CX_CURVE_Ed25519,
-            privateKeyData,
-            32,
-            &privateKey);
-
-    os_memset(privateKeyData, 0, sizeof(privateKeyData));
-
-    cx_ecfp_generate_pair(CX_CURVE_Ed25519,
-                          &publicKey,
-                          &privateKey,
-                          1);
-
-    unsigned int info = 0;
-
-    length = cx_eddsa_sign(&privateKey,
-                           0,
-                           CX_SHA512,
-                           digest,
-                           sizeof(digest),
-                           NULL,
-                           0,
-                           signature,
-                           sizeof(signature),
-                           &info);
-
-    if (info & CX_ECCINFO_PARITY_ODD) {
-        signature[0] = 0x01;
-    }
-    os_memset(&privateKey, 0, sizeof(privateKey));
-
-    return cx_eddsa_verify(&publicKey,
-                           0,
-                           CX_SHA512,
-                           digest,
-                           sizeof(digest),
-                           NULL,
-                           0,
-                           (unsigned char*)signature,
-                           length);
+int signature_create_ED25519(uint8_t *message, uint16_t message_length)
+{
+//    uint8_t message_digest[CX_SHA512_SIZE];
+//    cx_hash_sha512(message, message_length, message_digest, CX_SHA512_SIZE);
+//
+//    // Reset signature
+//    os_memset((void *) signature, 0, sizeof(signature));
+//    length = 0;
+//
+//    uint8_t privateKeyData[32];
+//    cx_ecfp_private_key_t privateKey;
+//    cx_ecfp_public_key_t publicKey;
+//
+//    os_perso_derive_node_bip32(
+//        CX_CURVE_Ed25519,
+//        bip32_derivation_path,
+//        sizeof(bip32_derivation_path) / sizeof(uint32_t),
+//        privateKeyData,
+//        NULL);
+//
+//    cx_ecfp_init_private_key(
+//        CX_CURVE_Ed25519,
+//        privateKeyData,
+//        32,
+//        &privateKey);
+//
+//    os_memset(privateKeyData, 0, sizeof(privateKeyData));
+//
+//    cx_ecfp_generate_pair(CX_CURVE_Ed25519,
+//                          &publicKey,
+//                          &privateKey,
+//                          1);
+//
+//    unsigned int info = 0;
+//
+//    length = cx_eddsa_sign(&privateKey,
+//                           0,
+//                           CX_SHA512,
+//                           message_digest,
+//                           sizeof(message_digest),
+//                           NULL,
+//                           0,
+//                           signature,
+//                           sizeof(signature),
+//                           &info);
+//
+//    if (info & CX_ECCINFO_PARITY_ODD) {
+//        signature[0] = 0x01;
+//    }
+//    os_memset(&privateKey, 0, sizeof(privateKey));
+//
+//    return cx_eddsa_verify(&publicKey,
+//                           0,
+//                           CX_SHA512,
+//                           message_digest,
+//                           sizeof(message_digest),
+//                           NULL,
+//                           0,
+//                           (unsigned char *) signature,
+//                           length);
 }
 
-uint8_t* signature_get()
+uint8_t *signature_get()
 {
     return signature;
 }

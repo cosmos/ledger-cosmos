@@ -18,25 +18,28 @@
 #include "transaction.h"
 #include "view.h"
 
-#define TRANSACTION_JSON_BUFFER_SIZE 900
+#define TRANSACTION_JSON_BUFFER_SIZE 650
 
 parsed_json_t parsed_transaction;
+
 char transaction_buffer[TRANSACTION_JSON_BUFFER_SIZE];
+
 uint32_t transaction_buffer_current_position = 0;
-uint32_t transaction_buffer_total_size = 0;
 
 void transaction_reset()
 {
-    transaction_buffer_total_size = 0;
     transaction_buffer_current_position = 0;
-    os_memset((void*)&parsed_transaction, 0, sizeof(parsed_json_t));
+    os_memset((void *) &parsed_transaction, 0, sizeof(parsed_json_t));
 }
 
-void transaction_append(unsigned char* buffer, uint32_t length)
+void transaction_append(unsigned char *buffer, uint32_t length)
 {
+    // TODO: Limit appending to TRANSACTION_JSON_BUFFER_SIZE
     os_memmove(transaction_buffer + transaction_buffer_current_position, buffer, length);
     transaction_buffer_current_position += length;
-    transaction_buffer [transaction_buffer_current_position] = '\0';
+
+    // Zero terminate the buffer
+    transaction_buffer[transaction_buffer_current_position+1] = '\0';
 }
 
 uint32_t transaction_get_buffer_length()
@@ -44,62 +47,61 @@ uint32_t transaction_get_buffer_length()
     return transaction_buffer_current_position;
 }
 
-uint8_t* transaction_get_buffer()
+uint8_t *transaction_get_buffer()
 {
-    return (uint8_t*)transaction_buffer;
+    return (uint8_t *) transaction_buffer;
 }
 
 void transaction_parse()
 {
     ParseJson(&parsed_transaction, transaction_buffer);
+    // TODO: Verify is valid. Sorted / whitespaces, etc.
 }
 
-parsed_json_t* transaction_get_parsed()
+parsed_json_t *transaction_get_parsed()
 {
     return &parsed_transaction;
 }
 
 int transaction_get_info(
-        char* name,
-        char* value,
-        int index)
+    char *name,
+    char *value,
+    int index)
 {
-    int currentIndex= 0;
-    for (int i=0; i < parsed_transaction.NumberOfInputs; i++)
-    {
+    int currentIndex = 0;
+    for (int i = 0; i < parsed_transaction.NumberOfInputs; i++) {
         if (index == currentIndex) {
             os_memmove((char *) name, "Input address", sizeof("Input address"));
 
             unsigned int addressSize =
-                    parsed_transaction.Tokens[parsed_transaction.Inputs[i].Address].end -
+                parsed_transaction.Tokens[parsed_transaction.Inputs[i].Address].end -
                     parsed_transaction.Tokens[parsed_transaction.Inputs[i].Address].start;
 
             view_scrolling_total_size = addressSize;
-            const char* addressPtr =
-                    transaction_buffer +
+            const char *addressPtr =
+                transaction_buffer +
                     parsed_transaction.Tokens[parsed_transaction.Inputs[i].Address].start;
 
             if (view_scrolling_step < addressSize) {
                 os_memmove(
-                        (char *) value,
-                        addressPtr + view_scrolling_step,
-                        addressSize < MAX_CHARS_PER_LINE ? addressSize : MAX_CHARS_PER_LINE);
+                    (char *) value,
+                    addressPtr + view_scrolling_step,
+                    addressSize < MAX_CHARS_PER_LINE ? addressSize : MAX_CHARS_PER_LINE);
                 value[addressSize] = '\0';
             }
             return currentIndex;
         }
         currentIndex++;
-        for (int j=0; j < parsed_transaction.Inputs[i].NumberOfCoins; j++)
-        {
+        for (int j = 0; j < parsed_transaction.Inputs[i].NumberOfCoins; j++) {
             if (index == currentIndex) {
                 os_memmove((char *) name, "Coin", sizeof("Coin"));
 
                 int coinSize =
-                        parsed_transaction.Tokens[parsed_transaction.Inputs[i].Coins[j].Denum].end -
+                    parsed_transaction.Tokens[parsed_transaction.Inputs[i].Coins[j].Denum].end -
                         parsed_transaction.Tokens[parsed_transaction.Inputs[i].Coins[j].Denum].start;
 
-                const char* coinPtr =
-                        transaction_buffer +
+                const char *coinPtr =
+                    transaction_buffer +
                         parsed_transaction.Tokens[parsed_transaction.Inputs[i].Coins[j].Denum].start;
 
                 os_memmove((char *) value, coinPtr, coinSize);
@@ -111,11 +113,11 @@ int transaction_get_info(
                 os_memmove((char *) name, "Amount", sizeof("Amount"));
 
                 int coinAmountSize =
-                        parsed_transaction.Tokens[parsed_transaction.Inputs[i].Coins[j].Amount].end -
+                    parsed_transaction.Tokens[parsed_transaction.Inputs[i].Coins[j].Amount].end -
                         parsed_transaction.Tokens[parsed_transaction.Inputs[i].Coins[j].Amount].start;
 
-                const char* coinAmountPtr =
-                        transaction_buffer +
+                const char *coinAmountPtr =
+                    transaction_buffer +
                         parsed_transaction.Tokens[parsed_transaction.Inputs[i].Coins[j].Amount].start;
 
                 os_memmove((char *) value, coinAmountPtr, coinAmountSize);
@@ -125,42 +127,40 @@ int transaction_get_info(
             currentIndex++;
         }
     }
-    for (int i=0; i < parsed_transaction.NumberOfOutputs; i++)
-    {
+    for (int i = 0; i < parsed_transaction.NumberOfOutputs; i++) {
         if (index == currentIndex) {
             os_memmove((char *) name, "Output address", sizeof("Output address"));
 
             unsigned int addressSize =
-                    parsed_transaction.Tokens[parsed_transaction.Outputs[i].Address].end -
+                parsed_transaction.Tokens[parsed_transaction.Outputs[i].Address].end -
                     parsed_transaction.Tokens[parsed_transaction.Outputs[i].Address].start;
 
-            const char* addressPtr =
-                    transaction_buffer +
+            const char *addressPtr =
+                transaction_buffer +
                     parsed_transaction.Tokens[parsed_transaction.Outputs[i].Address].start;
 
             view_scrolling_total_size = addressSize;
 
             if (view_scrolling_step < addressSize) {
                 os_memmove(
-                        (char *) value,
-                        addressPtr + view_scrolling_step,
-                        addressSize < MAX_CHARS_PER_LINE ? addressSize : MAX_CHARS_PER_LINE);
+                    (char *) value,
+                    addressPtr + view_scrolling_step,
+                    addressSize < MAX_CHARS_PER_LINE ? addressSize : MAX_CHARS_PER_LINE);
                 value[addressSize] = '\0';
             }
             return currentIndex;
         }
         currentIndex++;
-        for (int j=0; j < parsed_transaction.Outputs[i].NumberOfCoins; j++)
-        {
+        for (int j = 0; j < parsed_transaction.Outputs[i].NumberOfCoins; j++) {
             if (index == currentIndex) {
                 os_memmove((char *) name, "Coin", sizeof("Coin"));
 
                 int coinSize =
-                        parsed_transaction.Tokens[parsed_transaction.Outputs[i].Coins[j].Denum].end -
+                    parsed_transaction.Tokens[parsed_transaction.Outputs[i].Coins[j].Denum].end -
                         parsed_transaction.Tokens[parsed_transaction.Outputs[i].Coins[j].Denum].start;
 
-                const char* coinPtr =
-                        transaction_buffer +
+                const char *coinPtr =
+                    transaction_buffer +
                         parsed_transaction.Tokens[parsed_transaction.Outputs[i].Coins[j].Denum].start;
 
                 os_memmove((char *) value, coinPtr, coinSize);
@@ -172,11 +172,11 @@ int transaction_get_info(
                 os_memmove((char *) name, "Amount", sizeof("Amount"));
 
                 int coinAmountSize =
-                        parsed_transaction.Tokens[parsed_transaction.Outputs[i].Coins[j].Amount].end -
+                    parsed_transaction.Tokens[parsed_transaction.Outputs[i].Coins[j].Amount].end -
                         parsed_transaction.Tokens[parsed_transaction.Outputs[i].Coins[j].Amount].start;
 
-                const char* coinAmountPtr =
-                        transaction_buffer +
+                const char *coinAmountPtr =
+                    transaction_buffer +
                         parsed_transaction.Tokens[parsed_transaction.Outputs[i].Coins[j].Amount].start;
 
                 os_memmove((char *) value, coinAmountPtr, coinAmountSize);
