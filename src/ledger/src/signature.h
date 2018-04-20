@@ -17,33 +17,24 @@
 #pragma once
 #include "os.h"
 
-// Clears last signature and resets derivation path to the default value for SECP256K1
-void signature_reset_SECP256K1();
-
-// Clears last signature and resets derivation path to the default value for ED25519
-void signature_reset_ED25519();
-
-// Sets the derivation path used to retrieve private key
-void signature_set_derivation_path(uint32_t* path, uint32_t path_size);
-
 // Creates signature of the message using (...TODO)
 // @return
 // *   1 if signature is verified
 // *   0 is signature is not verified
 int signature_create_SECP256K1(
-        uint8_t* message,
-        uint16_t message_length);
+    uint8_t *message,
+    uint16_t message_length);
 
 // Creates signature of the message using (...TODO)
 // @return
 // *   1 if signature is verified
 // *   0 is signature is not verified
 int signature_create_ED25519(
-        uint8_t* message,
-        uint16_t message_length);
+    uint8_t *message,
+    uint16_t message_length);
 
 // Returns last created signature
-uint8_t* signature_get();
+uint8_t *signature_get();
 
 // Returns last created signature's length
 uint32_t signature_length();

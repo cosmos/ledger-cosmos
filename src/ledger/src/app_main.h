@@ -18,15 +18,21 @@
 
 #include "apdu_codes.h"
 
-#define CLA 0x80
-#define OFFSET_CLA       0
-#define OFFSET_INS       1  //< Instruction offset
-#define OFFSET_PCK_INDEX 2  //< Package index offset
-#define OFFSET_PCK_COUNT 3  //< Package count offset
-#define OFFSET_DATA      4  //< Data offset
+#define CLA                         0x80
 
-#define INS_GET_VERSION  0
-#define INS_SIGN         1
+#define OFFSET_CLA                  0
+#define OFFSET_INS                  1  //< Instruction offset
+#define OFFSET_PCK_INDEX            2  //< Package index offset
+#define OFFSET_PCK_COUNT            3  //< Package count offset
+#define OFFSET_DATA                 4  //< Data offset
+
+#define INS_GET_VERSION             0
+#define INS_SIGN                    1
+#define INS_HASH                    2
+#define INS_GET_PUBLIC_KEY          3
+
+#define INS_ECHO                    99
+#define INS_GET_PUBLIC_KEY_DUMMY   100
 
 void app_init();
 void app_main();
