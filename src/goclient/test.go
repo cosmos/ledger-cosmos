@@ -287,7 +287,7 @@ func main() {
 		messages := GetMessages()
 		transactionData := messages[0].GetSignBytes()
 		fmt.Printf("messages[0] checksum: %d\n", get_checksum(transactionData));
-		signedMsg, err := ledger.Sign(transactionData)
+		signedMsg, err := ledger.SignQuick(transactionData)
 
 		if err == nil {
 			fmt.Printf("Signed msg: %x\n", signedMsg)
@@ -303,7 +303,7 @@ func main() {
 		transactionData = messages[1].GetSignBytes()
 		fmt.Printf("messages[1] checksum: %d\n", get_checksum(transactionData));
 
-		signedMsg, err = ledger.Sign(transactionData)
+		signedMsg, err = ledger.SignQuick(transactionData)
 
 		if err == nil {
 			fmt.Printf("Signed msg: %x\n", signedMsg)
@@ -318,7 +318,7 @@ func main() {
 		transactionData = messages[2].GetSignBytes()
 		fmt.Printf("messages[2] checksum: %d\n", get_checksum(transactionData));
 
-		signedMsg, err = ledger.Sign(transactionData)
+		signedMsg, err = ledger.SignQuick(transactionData)
 
 		if err == nil {
 			fmt.Printf("Signed msg: %x\n", signedMsg)

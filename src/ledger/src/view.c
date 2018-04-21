@@ -203,7 +203,7 @@ void view_sign_transaction(unsigned int unused)
     UNUSED(unused);
 
     if (event_handler_sign_transaction != NULL) {
-        event_handler_sign_transaction(0);
+        event_handler_sign_transaction();
     }
     else {
         UX_DISPLAY(bagl_ui_sign_transaction, NULL);

@@ -167,12 +167,18 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 
                         transaction_parse();
 
+                        unsigned int length = 0;
                         // Skip UI and validation
-                        sign_transaction(1);
+                        sign_secp256k1(
+                                transaction_get_buffer(),
+                                transaction_get_buffer_length(),
+                                G_io_apdu_buffer,
+                                IO_APDU_BUFFER_SIZE,
+                                &length);
+
+                        *tx += length;
                     }
-                    else {
-                        THROW(APDU_CODE_OK);
-                    }
+                    THROW(APDU_CODE_OK);
                     break;
 
                 case INS_HASH:
@@ -277,7 +283,7 @@ void reject_transaction()
     view_idle(0);
 }
 
-void sign_transaction(unsigned char quick_mode)
+void sign_transaction()
 {
     unsigned int length = 0;
     int valid = sign_secp256k1(
@@ -287,17 +293,14 @@ void sign_transaction(unsigned char quick_mode)
             IO_APDU_BUFFER_SIZE,
             &length);
 
-    if (quick_mode || valid) {
+    if (valid) {
         //uint8_t *signature = get_response_buffer();
         //uint32_t length = get_response_buffer_length();
         //os_memmove(G_io_apdu_buffer, signature, length);
 
         set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
-
-        if (!quick_mode) {
-            io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
-            view_display_signing_success();
-        }
+        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
+        view_display_signing_success();
     }
     else {
         set_code(G_io_apdu_buffer, 0, APDU_CODE_UNKNOWN);

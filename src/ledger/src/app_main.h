@@ -37,4 +37,3 @@
 
 void app_init();
 void app_main();
-void sign_transaction(unsigned char quick_mode);

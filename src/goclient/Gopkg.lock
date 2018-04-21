@@ -159,7 +159,7 @@
   branch = "master"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
-  revision = "91c5ac4b1689ba6be1aa989fe39cfeced3f3d327"
+  revision = "22a206ea0eb2be49a40249fa76278f8958a4ab98"
 
 [[projects]]
   branch = "master"
