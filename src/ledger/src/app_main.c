@@ -139,6 +139,16 @@ bool process_transaction(volatile uint32_t *tx, uint32_t rx)
     return ready;
 }
 
+uint32_t getChecksum(uint8_t* buffer, unsigned int length)
+{
+    uint32_t checksum = 0;
+    for (unsigned int i = 0; i < length; i++)
+    {
+        checksum += buffer[i];
+    }
+    return checksum;
+}
+
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 {
     uint16_t sw = 0;
@@ -187,20 +197,25 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     break;
 
                 case INS_GET_PUBLIC_KEY:
-                    // TODO: return public key and show in the screen
+                    generate_public_key_from_bip();
+
+                    os_memmove(G_io_apdu_buffer,
+                               get_response_buffer(),
+                               get_response_buffer_length());
+                    *tx += get_response_buffer_length();
                     THROW(APDU_CODE_OK);
                     break;
 
                 case INS_ECHO:
                     if (process_chunk(tx, rx)) {
-                        uint32_t maxlen = transaction_get_buffer_length();
-                        if (maxlen > 64)
-                            maxlen = 64;
 
-                        os_memmove(G_io_apdu_buffer,
-                                   transaction_get_buffer(),
-                                   maxlen);
-                        *tx += maxlen;
+                        uint32_t checksum = getChecksum(transaction_get_buffer(), transaction_get_buffer_length());
+
+                        G_io_apdu_buffer[0] = (checksum >> 24) & 255;
+                        G_io_apdu_buffer[1] = (checksum >> 16) & 255;
+                        G_io_apdu_buffer[2] = (checksum >> 8) & 255;
+                        G_io_apdu_buffer[3] = (checksum & 255);
+                        *tx += 4;
                     }
                     THROW(APDU_CODE_OK);
                     break;
@@ -213,11 +228,19 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 
                     // Generate public key
                     cx_ecfp_public_key_t publicKey;
+                    cx_ecfp_private_key_t privateKey;
+
+                    cx_ecfp_init_private_key(
+                            CX_CURVE_256K1,
+                            privateKeyData,
+                            32,
+                            &privateKey);
+
                     cx_ecfp_init_public_key(CX_CURVE_256R1, NULL, 0, &publicKey);
-                    cx_ecfp_generate_pair(CX_CURVE_256K1, &publicKey, &privateKeyData, 1);
+                    cx_ecfp_generate_pair(CX_CURVE_256K1, &publicKey, &privateKey, 1);
 
                     os_memmove(G_io_apdu_buffer, publicKey.W, 65);
-                    tx += 65;
+                    *tx += 65;
 
                     THROW(APDU_CODE_OK);
                 }
@@ -260,13 +283,13 @@ void reject_transaction()
 void sign_transaction()
 {
     // TODO: Signature could be in the stack and moved to the apdu_buffer
-    int valid = signature_create_SECP256K1(transaction_get_buffer(), transaction_get_buffer_length());
+    int valid = generate_signature_SECP256K1(transaction_get_buffer(), transaction_get_buffer_length());
 
     //valid = 1;
 
     if (valid) {
-        uint8_t *signature = signature_get();
-        uint32_t length = signature_length();
+        uint8_t *signature = get_response_buffer();
+        uint32_t length = get_response_buffer_length();
         os_memmove(G_io_apdu_buffer, signature, length);
 
         set_code(G_io_apdu_buffer, length, APDU_CODE_OK);

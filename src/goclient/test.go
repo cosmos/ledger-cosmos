@@ -157,6 +157,14 @@ func GetMessages() ([]bank.SendMsg) {
 	}
 }
 
+func get_checksum(buffer []byte) uint64 {
+	var checksum uint64 = 0
+	for _, element := range buffer {
+		checksum += uint64(element)
+	}
+	return checksum
+}
+
 func main() {
 	ledger, err := ledger_goclient.FindLedger()
 
@@ -177,12 +185,38 @@ func main() {
 
 		fmt.Printf("Ledger. Version %d.%d.%d\n", version.Major, version.Minor, version.Patch)
 
-		fmt.Printf("\n************ Echo\n")
+		fmt.Printf("\n************ Short Echo\n")
 
 		input := []byte{0x56}
-		expected := []byte{0x56}
+		expected := []byte{0x0, 0x0, 0x0, 0x56}
 
 		answer, err := ledger.Echo(input)
+		if err == nil {
+			if !bytes.Equal(answer, expected) {
+				fmt.Fprintf(os.Stderr, "unexpected response: %x, expected: %x\n", answer, expected)
+				os.Exit(1)
+			}
+		} else {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("\n************ Chunked Echo\n")
+
+		input = make([]byte, 500)
+		for i := 0; i < 500; i++ {
+			input[i] = byte(i%100)
+		}
+		fmt.Fprintf(os.Stderr, "Input checksum: %d\n", get_checksum(input))
+
+		inputChecksum := get_checksum(input)
+		expected = make([]byte, 4)
+		expected[0] = byte((inputChecksum >> 24) & 255)
+		expected[1] = byte((inputChecksum >> 16) & 255)
+		expected[2] = byte((inputChecksum >> 8) & 255)
+		expected[3] = byte(inputChecksum & 255)
+
+		answer, err = ledger.Echo(input)
 		if err == nil {
 			if !bytes.Equal(answer, expected) {
 				fmt.Fprintf(os.Stderr, "unexpected response: %x\n", answer)
@@ -229,30 +263,74 @@ func main() {
 			os.Exit(1)
 		}
 
-		fmt.Printf("\n************ GetPK\n")
+		//fmt.Printf("\n************ GetPK\n")
+		//
+		//input = []byte{0x56, 0x57, 0x58}
+		//expected = crypto.Sha256(input)
+		//
+		//answer, err = ledger.GetPKDummy()
+		//if err == nil {
+		//	if !bytes.Equal(answer, expected) {
+		//		fmt.Fprintf(os.Stderr, "unexpected response: %x\n", answer)
+		//		os.Exit(1)
+		//	}
+		//} else {
+		//	fmt.Printf("Error: %s\n", err)
+		//	os.Exit(1)
+		//}
 
-		input = []byte{0x56, 0x57, 0x58}
-		expected = crypto.Sha256(input)
+		fmt.Printf("\n************ GetPublicKey\n")
 
-		answer, err = ledger.GetPKDummy()
+		answer, err = ledger.GetPublicKey()
+
 		if err == nil {
-			if !bytes.Equal(answer, expected) {
-				fmt.Fprintf(os.Stderr, "unexpected response: %x\n", answer)
-				os.Exit(1)
+			fmt.Printf("Public key for the derivation path 44'/60'/0'/0/0 equals %s\n", answer)
+		} else {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
 			}
+
+		fmt.Printf("\n************ Waiting for signature message 1..\n")
+
+		messages := GetMessages()
+		transactionData := messages[0].GetSignBytes()
+		fmt.Printf("messages[0] checksum: %d\n", get_checksum(transactionData));
+		signedMsg, err := ledger.Sign(transactionData)
+
+		if err == nil {
+			fmt.Printf("Signed msg: %x\n", signedMsg)
+			fmt.Printf("Signed msg checksum: %d\n", get_checksum(signedMsg));
+
 		} else {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
 		}
 
-		fmt.Printf("Waiting for signature..\n")
+		fmt.Printf("\n************ Waiting for signature message 2..\n")
 
-		messages := GetMessages()
-		transactionData := messages[0].GetSignBytes()
-		signedMsg, err := ledger.Sign(transactionData)
+		transactionData = messages[1].GetSignBytes()
+		fmt.Printf("messages[1] checksum: %d\n", get_checksum(transactionData));
+
+		signedMsg, err = ledger.Sign(transactionData)
 
 		if err == nil {
 			fmt.Printf("Signed msg: %x\n", signedMsg)
+			fmt.Printf("Signed msg checksum: %d\n", get_checksum(signedMsg));
+		} else {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("\n************ Waiting for signature message 3..\n")
+
+		transactionData = messages[2].GetSignBytes()
+		fmt.Printf("messages[2] checksum: %d\n", get_checksum(transactionData));
+
+		signedMsg, err = ledger.Sign(transactionData)
+
+		if err == nil {
+			fmt.Printf("Signed msg: %x\n", signedMsg)
+			fmt.Printf("Signed msg checksum: %d\n", get_checksum(signedMsg));
 		} else {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)

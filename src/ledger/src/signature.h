@@ -21,7 +21,7 @@
 // @return
 // *   1 if signature is verified
 // *   0 is signature is not verified
-int signature_create_SECP256K1(
+int generate_signature_SECP256K1(
     uint8_t *message,
     uint16_t message_length);
 
@@ -29,12 +29,14 @@ int signature_create_SECP256K1(
 // @return
 // *   1 if signature is verified
 // *   0 is signature is not verified
-int signature_create_ED25519(
+int generate_signature_ED25519(
     uint8_t *message,
     uint16_t message_length);
 
+void generate_public_key_from_bip();
+
 // Returns last created signature
-uint8_t *signature_get();
+uint8_t* get_response_buffer();
 
 // Returns last created signature's length
-uint32_t signature_length();
+unsigned int get_response_buffer_length();
