@@ -188,7 +188,7 @@ func main() {
 		fmt.Printf("\n************ Short Echo\n")
 
 		input := []byte{0x56}
-		expected := []byte{0x0, 0x0, 0x0, 0x56}
+		expected := []byte{0x56}
 
 		answer, err := ledger.Echo(input)
 		if err == nil {
@@ -207,18 +207,10 @@ func main() {
 		for i := 0; i < 500; i++ {
 			input[i] = byte(i%100)
 		}
-		fmt.Fprintf(os.Stderr, "Input checksum: %d\n", get_checksum(input))
-
-		inputChecksum := get_checksum(input)
-		expected = make([]byte, 4)
-		expected[0] = byte((inputChecksum >> 24) & 255)
-		expected[1] = byte((inputChecksum >> 16) & 255)
-		expected[2] = byte((inputChecksum >> 8) & 255)
-		expected[3] = byte(inputChecksum & 255)
 
 		answer, err = ledger.Echo(input)
 		if err == nil {
-			if !bytes.Equal(answer, expected) {
+			if !bytes.Equal(answer, input[:64]) {
 				fmt.Fprintf(os.Stderr, "unexpected response: %x\n", answer)
 				os.Exit(1)
 			}
@@ -284,11 +276,11 @@ func main() {
 		answer, err = ledger.GetPublicKey()
 
 		if err == nil {
-			fmt.Printf("Public key for the derivation path 44'/60'/0'/0/0 equals %s\n", answer)
+			fmt.Printf("Public key for the derivation path 44'/60'/0'/0/0 equals %x\n", answer)
 		} else {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
-			}
+		}
 
 		fmt.Printf("\n************ Waiting for signature message 1..\n")
 

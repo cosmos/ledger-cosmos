@@ -128,27 +128,6 @@ bool process_chunk(volatile uint32_t *tx, uint32_t rx)
     return packageIndex == packageCount;
 }
 
-bool process_transaction(volatile uint32_t *tx, uint32_t rx)
-{
-    bool ready = process_chunk(tx, rx);
-
-    if (ready) {
-        transaction_parse();
-    }
-
-    return ready;
-}
-
-uint32_t getChecksum(uint8_t* buffer, unsigned int length)
-{
-    uint32_t checksum = 0;
-    for (unsigned int i = 0; i < length; i++)
-    {
-        checksum += buffer[i];
-    }
-    return checksum;
-}
-
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 {
     uint16_t sw = 0;
@@ -171,10 +150,25 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     break;
 
                 case INS_SIGN:
-                    if (process_transaction(tx, rx)) {
+                    if (process_chunk(tx, rx)) {
+
+                        transaction_parse();
                         view_display_transaction_menu(transaction_get_info(NULL, NULL, -1));
 
                         *flags |= IO_ASYNCH_REPLY;
+                    }
+                    else {
+                        THROW(APDU_CODE_OK);
+                    }
+                    break;
+
+                case INS_SIGN_QUICK:
+                    if (process_chunk(tx, rx)) {
+
+                        transaction_parse();
+
+                        // Skip UI and validation
+                        sign_transaction(1);
                     }
                     else {
                         THROW(APDU_CODE_OK);
@@ -196,26 +190,29 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
                     break;
 
-                case INS_GET_PUBLIC_KEY:
-                    generate_public_key_from_bip();
+                case INS_GET_PUBLIC_KEY: {
+                    unsigned int length = 0;
 
-                    os_memmove(G_io_apdu_buffer,
-                               get_response_buffer(),
-                               get_response_buffer_length());
-                    *tx += get_response_buffer_length();
+                    generate_public_key(
+                            G_io_apdu_buffer,
+                            IO_APDU_BUFFER_SIZE,
+                            &length);
+
+                    *tx += length;
                     THROW(APDU_CODE_OK);
                     break;
+                }
 
                 case INS_ECHO:
                     if (process_chunk(tx, rx)) {
+                        uint32_t maxlen = transaction_get_buffer_length();
+                        if (maxlen > 64) {
+                            maxlen = 64;
+                        }
 
-                        uint32_t checksum = getChecksum(transaction_get_buffer(), transaction_get_buffer_length());
+                        os_memmove(G_io_apdu_buffer, transaction_get_buffer(), maxlen);
 
-                        G_io_apdu_buffer[0] = (checksum >> 24) & 255;
-                        G_io_apdu_buffer[1] = (checksum >> 16) & 255;
-                        G_io_apdu_buffer[2] = (checksum >> 8) & 255;
-                        G_io_apdu_buffer[3] = (checksum & 255);
-                        *tx += 4;
+                        *tx += maxlen;
                     }
                     THROW(APDU_CODE_OK);
                     break;
@@ -280,21 +277,27 @@ void reject_transaction()
     view_idle(0);
 }
 
-void sign_transaction()
+void sign_transaction(unsigned char quick_mode)
 {
-    // TODO: Signature could be in the stack and moved to the apdu_buffer
-    int valid = generate_signature_SECP256K1(transaction_get_buffer(), transaction_get_buffer_length());
+    unsigned int length = 0;
+    int valid = sign_secp256k1(
+            transaction_get_buffer(),
+            transaction_get_buffer_length(),
+            G_io_apdu_buffer,
+            IO_APDU_BUFFER_SIZE,
+            &length);
 
-    //valid = 1;
-
-    if (valid) {
-        uint8_t *signature = get_response_buffer();
-        uint32_t length = get_response_buffer_length();
-        os_memmove(G_io_apdu_buffer, signature, length);
+    if (quick_mode || valid) {
+        //uint8_t *signature = get_response_buffer();
+        //uint32_t length = get_response_buffer_length();
+        //os_memmove(G_io_apdu_buffer, signature, length);
 
         set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
-        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
-        view_display_signing_success();
+
+        if (!quick_mode) {
+            io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
+            view_display_signing_success();
+        }
     }
     else {
         set_code(G_io_apdu_buffer, 0, APDU_CODE_UNKNOWN);

@@ -30,9 +30,11 @@
 #define INS_SIGN                    1
 #define INS_HASH                    2
 #define INS_GET_PUBLIC_KEY          3
+#define INS_SIGN_QUICK              4
 
 #define INS_ECHO                    99
 #define INS_GET_PUBLIC_KEY_DUMMY   100
 
 void app_init();
 void app_main();
+void sign_transaction(unsigned char quick_mode);

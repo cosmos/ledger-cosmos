@@ -22,10 +22,12 @@
 #define APDU_CODE_OK                        0x9000
 #define APDU_CODE_EXECUTION_ERROR           0x6400
 #define APDU_CODE_EMPTY_BUFFER              0x6982
+#define APDU_CODE_OUTPUT_BUFFER_TOO_SMALL   0x6983
 #define APDU_CODE_COMMAND_NOT_ALLOWED       0x6986
 #define APDU_CODE_INS_NOT_SUPPORTED         0x6D00
 #define APDU_CODE_CLA_NOT_SUPPORTED         0x6E00
 #define APDU_CODE_UNKNOWN                   0x6F00
+
 
 inline void set_code(uint8_t *buffer, uint8_t offset, uint16_t value)
 {

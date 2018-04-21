@@ -17,26 +17,54 @@
 #pragma once
 #include "os.h"
 
-// Creates signature of the message using (...TODO)
-// @return
-// *   1 if signature is verified
-// *   0 is signature is not verified
-int generate_signature_SECP256K1(
-    uint8_t *message,
-    uint16_t message_length);
+/**
+ * Sign a message according to ECDSA specification.
+ *
+ * @param [in] message
+ *   A raw message to be signed. Signature will be generated for the hash of the message.
+ *
+ * @param [in] message_length
+ *   Length of the message.
+ *
+ * @param [in|out] signature
+ *  A buffer where signature will be stored. Buffer must be created outside this function
+ *  and need to have enough capacity to store the whole signature.
+ *
+ *  @param [in] signature_capacity
+ *  The capacity of the signature buffer.
+ *
+ * @param [in|out] signature_length
+ *   The length of the signature will be stored in that parameter.
+ *
+ * @return
+ *   1 if signature is verified
+ *   0 is signarure is not verified
+ */
+int sign_secp256k1(
+    const uint8_t *message,
+    unsigned int message_length,
+    uint8_t* signature,
+    unsigned int signature_capacity,
+    unsigned int* signature_length);
 
-// Creates signature of the message using (...TODO)
-// @return
-// *   1 if signature is verified
-// *   0 is signature is not verified
-int generate_signature_ED25519(
-    uint8_t *message,
-    uint16_t message_length);
-
-void generate_public_key_from_bip();
-
-// Returns last created signature
-uint8_t* get_response_buffer();
-
-// Returns last created signature's length
-unsigned int get_response_buffer_length();
+/**
+ * Generate public key from the derivation path based on BIP32
+ *
+ * @param [in|out] public_key
+ *   A buffer where public key will be stored.
+ *   Buffer must be created outside this function
+ *   and have enough capacity to store public key.
+ *
+ * @param [in] public_key_capacity
+ *   The capacity of the public key buffer.
+ *
+ * @param [in|out] public_key_length
+ *   The length of the public key will be stored in that parameter.
+ *
+ * @throws
+ *  APDU_CODE_OUTPUT_BUFFER_TOO_SMALL when capacity of the buffer is too small.
+ */
+void generate_public_key(
+        uint8_t* public_key,
+        unsigned int public_key_capacity,
+        unsigned int* public_key_length);
