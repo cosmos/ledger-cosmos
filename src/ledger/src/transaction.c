@@ -21,7 +21,7 @@
 // TODO: We are currently limited by amount of SRAM (4K)
 // In order to parse longer messages we may have to consider moving
 // this buffer to FLASH
-#define TRANSACTION_JSON_BUFFER_SIZE 750
+#define TRANSACTION_JSON_BUFFER_SIZE 650
 
 parsed_json_t parsed_transaction;
 

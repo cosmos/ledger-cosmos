@@ -1,2 +1,2 @@
-go build test.go
-./test
+go build goclient.go
+./goclient
