@@ -29,77 +29,44 @@ const uint32_t bip32_derivation_path[] =
         0x80000000 | 0
 };
 
-void generate_public_key(
-        uint8_t* public_key,
-        unsigned int public_key_capacity,
-        unsigned int* public_key_length)
-{
-    // Generate keys
-    uint8_t privateKeyData[32];
-    os_perso_derive_node_bip32(
-            CX_CURVE_256K1,
-            bip32_derivation_path,
-            sizeof(bip32_derivation_path) / sizeof(uint32_t),
-            privateKeyData,
-            NULL);
-
-    cx_ecfp_private_key_t privateKey;
-    cx_ecfp_init_private_key(
-            CX_CURVE_256K1,
-            privateKeyData,
-            32,
-            &privateKey);
-
-    cx_ecfp_public_key_t publicKey;
-    cx_ecfp_generate_pair(CX_CURVE_256K1,
-                          &publicKey,
-                          &privateKey,
-                          1);
-
-    if (public_key_capacity < sizeof(publicKey.W) || public_key_length == NULL)
-    {
-        THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
-    }
-    os_memmove(public_key, publicKey.W, sizeof(publicKey.W));
-    *public_key_length = sizeof(publicKey.W);
-}
-
 int sign_secp256k1(
         const uint8_t* message,
         unsigned int message_length,
         uint8_t* signature,
         unsigned int signature_capacity,
-        unsigned int* signature_length)
+        unsigned int* signature_length,
+        cx_ecfp_private_key_t* privateKey)
 {
     uint8_t message_digest[CX_SHA256_SIZE];
     cx_hash_sha256(message, message_length, message_digest, CX_SHA256_SIZE);
 
-    // Generate keys
-    uint8_t privateKeyData[32];
-    os_perso_derive_node_bip32(
-        CX_CURVE_256K1,
-        bip32_derivation_path,
-        sizeof(bip32_derivation_path) / sizeof(uint32_t),
-        privateKeyData,
-        NULL);
+    if (privateKey == NULL) {
+        uint8_t privateKeyData[32];
+        os_perso_derive_node_bip32(
+                CX_CURVE_256K1,
+                bip32_derivation_path,
+                sizeof(bip32_derivation_path) / sizeof(uint32_t),
+                privateKeyData,
+                NULL);
 
-    cx_ecfp_private_key_t privateKey;
-    cx_ecfp_init_private_key(
-        CX_CURVE_256K1,
-        privateKeyData,
-        32,
-        &privateKey);
+        cx_ecfp_private_key_t privateKey;
+        cx_ecfp_init_private_key(
+                CX_CURVE_256K1,
+                privateKeyData,
+                32,
+                &privateKey);
+    }
 
     cx_ecfp_public_key_t publicKey;
     cx_ecfp_generate_pair(CX_CURVE_256K1,
                           &publicKey,
-                          &privateKey,
+                          privateKey,
                           1);
 
     unsigned int info = 0;
 
     *signature_length = cx_ecdsa_sign(
-            &privateKey,
+            privateKey,
             CX_RND_RFC6979 | CX_LAST,
             CX_SHA256,
             message_digest,
@@ -112,7 +79,7 @@ int sign_secp256k1(
         signature[0] |= 0x01;
     }
 
-    os_memset(&privateKey, 0, sizeof(privateKey));
+    os_memset(privateKey, 0, sizeof(*privateKey));
 
     return cx_ecdsa_verify(
             &publicKey,

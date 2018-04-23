@@ -36,35 +36,17 @@
  * @param [in|out] signature_length
  *   The length of the signature will be stored in that parameter.
  *
+ * @param [in] privateKey
+ *   An optional private key. If NULL is passed then private key will be derived using BIP32.
+ *
  * @return
  *   1 if signature is verified
- *   0 is signarure is not verified
+ *   0 is signature is not verified
  */
 int sign_secp256k1(
     const uint8_t *message,
     unsigned int message_length,
     uint8_t* signature,
     unsigned int signature_capacity,
-    unsigned int* signature_length);
-
-/**
- * Generate public key from the derivation path based on BIP32
- *
- * @param [in|out] public_key
- *   A buffer where public key will be stored.
- *   Buffer must be created outside this function
- *   and have enough capacity to store public key.
- *
- * @param [in] public_key_capacity
- *   The capacity of the public key buffer.
- *
- * @param [in|out] public_key_length
- *   The length of the public key will be stored in that parameter.
- *
- * @throws
- *  APDU_CODE_OUTPUT_BUFFER_TOO_SMALL when capacity of the buffer is too small.
- */
-void generate_public_key(
-        uint8_t* public_key,
-        unsigned int public_key_capacity,
-        unsigned int* public_key_length);
+    unsigned int* signature_length,
+    cx_ecfp_private_key_t* privateKey);
