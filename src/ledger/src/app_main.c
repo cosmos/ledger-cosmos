@@ -162,19 +162,31 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     }
                     break;
 
-                case INS_SIGN_QUICK:
+                case INS_SIGN_TEST:
                     if (process_chunk(tx, rx)) {
 
-                        transaction_parse();
-
                         unsigned int length = 0;
+
+                        // Hardcoded private key
+                        uint8_t privateKeyData[32];
+                        memset(privateKeyData, 0, 32);
+
+                        cx_ecfp_private_key_t privateKey;
+
+                        cx_ecfp_init_private_key(
+                                CX_CURVE_256K1,
+                                privateKeyData,
+                                32,
+                                &privateKey);
+
                         // Skip UI and validation
                         sign_secp256k1(
                                 transaction_get_buffer(),
                                 transaction_get_buffer_length(),
                                 G_io_apdu_buffer,
                                 IO_APDU_BUFFER_SIZE,
-                                &length);
+                                &length,
+                                &privateKey);
 
                         *tx += length;
                     }
@@ -196,20 +208,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
                     break;
 
-                case INS_GET_PUBLIC_KEY: {
-                    unsigned int length = 0;
-
-                    generate_public_key(
-                            G_io_apdu_buffer,
-                            IO_APDU_BUFFER_SIZE,
-                            &length);
-
-                    *tx += length;
-                    THROW(APDU_CODE_OK);
-                    break;
-                }
-
-                case INS_ECHO:
+                case INS_ECHO_TEST:
                     if (process_chunk(tx, rx)) {
                         uint32_t maxlen = transaction_get_buffer_length();
                         if (maxlen > 64) {
@@ -223,7 +222,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
                     break;
 
-                case INS_GET_PUBLIC_KEY_DUMMY:
+                case INS_GET_PUBLIC_KEY_TEST:
                 {
                     // Start with hardcoded private key
                     uint8_t privateKeyData[32];
@@ -291,13 +290,10 @@ void sign_transaction()
             transaction_get_buffer_length(),
             G_io_apdu_buffer,
             IO_APDU_BUFFER_SIZE,
-            &length);
+            &length,
+            NULL);
 
     if (valid) {
-        //uint8_t *signature = get_response_buffer();
-        //uint32_t length = get_response_buffer_length();
-        //os_memmove(G_io_apdu_buffer, signature, length);
-
         set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
         io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
         view_display_signing_success();
