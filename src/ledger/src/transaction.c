@@ -17,6 +17,7 @@
 
 #include "transaction.h"
 #include "view.h"
+#include "apdu_codes.h"
 
 // TODO: We are currently limited by amount of SRAM (4K)
 // In order to parse longer messages we may have to consider moving
