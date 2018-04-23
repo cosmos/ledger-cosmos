@@ -80,7 +80,7 @@ int signature_create_SECP256K1(uint8_t *message, uint16_t message_length)
                            &info);
 
     if (info & CX_ECCINFO_PARITY_ODD) {
-        signature[0] = 0x01;
+        signature[0] |= 0x01;
     }
     os_memset(&privateKey, 0, sizeof(privateKey));
 
@@ -140,7 +140,7 @@ int signature_create_ED25519(uint8_t *message, uint16_t message_length)
 //                           &info);
 //
 //    if (info & CX_ECCINFO_PARITY_ODD) {
-//        signature[0] = 0x01;
+//        signature[0] |= 0x01;
 //    }
 //    os_memset(&privateKey, 0, sizeof(privateKey));
 //
