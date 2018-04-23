@@ -238,7 +238,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                             32,
                             &privateKey);
 
-                    cx_ecfp_init_public_key(CX_CURVE_256R1, NULL, 0, &publicKey);
+                    //cx_ecfp_init_public_key(CX_CURVE_256K1, NULL, 0, &publicKey);
                     cx_ecfp_generate_pair(CX_CURVE_256K1, &publicKey, &privateKey, 1);
 
                     os_memmove(G_io_apdu_buffer, publicKey.W, 65);

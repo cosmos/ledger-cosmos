@@ -35,12 +35,14 @@ int sign_secp256k1(
         uint8_t* signature,
         unsigned int signature_capacity,
         unsigned int* signature_length,
-        cx_ecfp_private_key_t* privateKey)
+        cx_ecfp_private_key_t* optPrivateKey)
 {
     uint8_t message_digest[CX_SHA256_SIZE];
     cx_hash_sha256(message, message_length, message_digest, CX_SHA256_SIZE);
 
-    if (privateKey == NULL) {
+    cx_ecfp_private_key_t privateKey;
+    if (optPrivateKey == NULL) {
+
         uint8_t privateKeyData[32];
         os_perso_derive_node_bip32(
                 CX_CURVE_256K1,
@@ -49,24 +51,25 @@ int sign_secp256k1(
                 privateKeyData,
                 NULL);
 
-        cx_ecfp_private_key_t privateKey;
         cx_ecfp_init_private_key(
                 CX_CURVE_256K1,
                 privateKeyData,
                 32,
                 &privateKey);
+    } else {
+        privateKey = *optPrivateKey;
     }
 
     cx_ecfp_public_key_t publicKey;
     cx_ecfp_generate_pair(CX_CURVE_256K1,
                           &publicKey,
-                          privateKey,
+                          &privateKey,
                           1);
 
     unsigned int info = 0;
 
     *signature_length = cx_ecdsa_sign(
-            privateKey,
+            &privateKey,
             CX_RND_RFC6979 | CX_LAST,
             CX_SHA256,
             message_digest,
@@ -79,7 +82,7 @@ int sign_secp256k1(
         signature[0] |= 0x01;
     }
 
-    os_memset(privateKey, 0, sizeof(*privateKey));
+    os_memset(&privateKey, 0, sizeof(privateKey));
 
     return cx_ecdsa_verify(
             &publicKey,

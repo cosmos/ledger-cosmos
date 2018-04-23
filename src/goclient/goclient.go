@@ -157,15 +157,6 @@ func GetMessages() ([]bank.SendMsg) {
 	}
 }
 
-
-func get_checksum(buffer []byte) uint64 {
-	var checksum uint64 = 0
-	for _, element := range buffer {
-		checksum += uint64(element)
-	}
-	return checksum
-}
-
 func main() {
 	ledger, err := ledger_goclient.FindLedger()
 
@@ -254,28 +245,12 @@ func main() {
 			os.Exit(1)
 		}
 
-		//fmt.Printf("\n************ GetPK\n")
-		//
-		//input = []byte{0x56, 0x57, 0x58}
-		//expected = crypto.Sha256(input)
-		//
-		//answer, err = ledger.GetPKDummy()
-		//if err == nil {
-		//	if !bytes.Equal(answer, expected) {
-		//		fmt.Fprintf(os.Stderr, "unexpected response: %x\n", answer)
-		//		os.Exit(1)
-		//	}
-		//} else {
-		//	fmt.Printf("Error: %s\n", err)
-		//	os.Exit(1)
-		//}
+		fmt.Printf("\n************ GetTestPublicKey\n")
 
-		fmt.Printf("\n************ GetPublicKey\n")
-
-		pubKey, err := ledger.GetPublicKey()
+		pubKey, err := ledger.GetTestPublicKey()
 
 		if err == nil {
-			fmt.Printf("Public key for the derivation path 44'/60'/0'/0/0 equals %x\n", pubKey)
+			fmt.Printf("TestPublicKey equals %x\n", pubKey)
 		} else {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
@@ -285,12 +260,10 @@ func main() {
 
 		messages := GetMessages()
 		transactionData := messages[0].GetSignBytes()
-		fmt.Printf("messages[0] checksum: %d\n", get_checksum(transactionData));
 		signedMsg, err := ledger.Sign(transactionData)
 
 		if err == nil {
 			fmt.Printf("Signed msg: %x\n", signedMsg)
-			fmt.Printf("Signed msg checksum: %d\n", get_checksum(signedMsg));
 
 		} else {
 			fmt.Printf("Error: %s\n", err)
@@ -300,13 +273,10 @@ func main() {
 		fmt.Printf("\n************ Waiting for signature message 2..\n")
 
 		transactionData = messages[1].GetSignBytes()
-		fmt.Printf("messages[1] checksum: %d\n", get_checksum(transactionData));
-
 		signedMsg, err = ledger.Sign(transactionData)
 
 		if err == nil {
 			fmt.Printf("Signed msg: %x\n", signedMsg)
-			fmt.Printf("Signed msg checksum: %d\n", get_checksum(signedMsg));
 		} else {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)
@@ -315,13 +285,10 @@ func main() {
 		fmt.Printf("\n************ Waiting for signature message 3..\n")
 
 		transactionData = messages[2].GetSignBytes()
-		fmt.Printf("messages[2] checksum: %d\n", get_checksum(transactionData));
-
 		signedMsg, err = ledger.Sign(transactionData)
 
 		if err == nil {
 			fmt.Printf("Signed msg: %x\n", signedMsg)
-			fmt.Printf("Signed msg checksum: %d\n", get_checksum(signedMsg));
 		} else {
 			fmt.Printf("Error: %s\n", err)
 			os.Exit(1)

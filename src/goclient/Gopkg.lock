@@ -24,6 +24,12 @@
   version = "v0.14.1"
 
 [[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
+
+[[projects]]
   name = "github.com/go-kit/kit"
   packages = [
     "log",
@@ -95,6 +101,18 @@
   version = "v0.8.0"
 
 [[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
+  version = "v1.2.1"
+
+[[projects]]
   branch = "master"
   name = "github.com/syndtr/goleveldb"
   packages = [
@@ -152,14 +170,14 @@
     "db",
     "log"
   ]
-  revision = "2e24b64fc121dcdf1cabceab8dc2f7257675483c"
-  version = "v0.8.1"
+  revision = "d94e312673e16a11ea55d742cefb3e331228f898"
+  version = "v0.8.2"
 
 [[projects]]
   branch = "master"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
-  revision = "22a206ea0eb2be49a40249fa76278f8958a4ab98"
+  revision = "d0ca9cb0ae9ab61c9b92365ca2b3a629cd3a0ce7"
 
 [[projects]]
   branch = "master"
@@ -172,7 +190,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "e73bf333ef8920dbb52ad18d4bd38ad9d9bc76d7"
+  revision = "2b6c08872f4b66da917bb4ce98df4f0307330f78"
 
 [[projects]]
   branch = "master"
@@ -243,6 +261,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2781169ec6aa778ef69fbe2be795018f2a12734eb97b16c6ae53e15e9c9e6c80"
+  inputs-digest = "88b6c1be7eddfb74cf48a689ec750bb6d4c2dec489a89b006c2788bf4a05e632"
   solver-name = "gps-cdcl"
   solver-version = 1
