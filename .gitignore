@@ -43,3 +43,4 @@ src/ledger/debug/
 src/ledger/obj/
 src/goclient/vendor
 pkg/
+src/goclient/goclient

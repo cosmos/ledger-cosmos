@@ -26,6 +26,7 @@ import (
 	"bytes"
 	"testing"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 //---------------------------------------------------------------
@@ -33,9 +34,14 @@ import (
 //---------------------------------------------------------------
 func Get_Ledger(t *testing.T) (ledger *ledger_goclient.Ledger) {
 	ledger, err := ledger_goclient.FindLedger()
-	assert.Nil(t, err, "Detected error, err: %s\n", err)
-	assert.NotNil(t, ledger, "Ledger is null")
+
+	require.Nil(t, err, "Detected error, err: %s\n", err)
+	require.NotNil(t, ledger, "Ledger is null")
 	return ledger
+}
+
+func Test_ListDevices(t *testing.T) {
+	ledger_goclient.ListDevices()
 }
 
 func Test_FindLedger(t *testing.T) {
@@ -44,8 +50,9 @@ func Test_FindLedger(t *testing.T) {
 
 func Test_LedgerVersion(t *testing.T) {
 	ledger := Get_Ledger(t)
+	ledger.Logging = true
 	version, err := ledger.GetVersion()
-	assert.Nil(t, err, "Detected error")
+	require.Nil(t, err, "Detected error")
 	assert.Equal(t, version.AppId, uint8(0x55), "Wrong AppId version")
 	assert.Equal(t, version.Major, uint8(0x0), "Wrong Major version")
 	assert.Equal(t, version.Minor, uint8(0x0), "Wrong Minor version")
@@ -54,12 +61,13 @@ func Test_LedgerVersion(t *testing.T) {
 
 func Test_LedgerShortEcho(t *testing.T) {
 	ledger := Get_Ledger(t)
+	ledger.Logging = true
 
 	input := []byte{0x56}
 	expected := []byte{0x56}
 
 	answer, err := ledger.Echo(input)
-	assert.Nil(t, err, "Detected error, err: %s\n", err)
+	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.True(
 		t,
 		bytes.Equal(answer, expected),
@@ -68,12 +76,13 @@ func Test_LedgerShortEcho(t *testing.T) {
 
 func Test_LedgerEchoChunks(t *testing.T) {
 	ledger := Get_Ledger(t)
+	ledger.Logging = true
 
 	input := []byte{0x56}
 	expected := []byte{0x56}
 
 	answer, err := ledger.Echo(input)
-	assert.Nil(t, err, "Detected error, err: %s\n", err)
+	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.True(
 		t,
 		bytes.Equal(answer, expected),
@@ -94,11 +103,13 @@ func Test_LedgerEchoChunks(t *testing.T) {
 
 func Test_LedgerSHA256(t *testing.T) {
 	ledger := Get_Ledger(t)
+	ledger.Logging = true
+
 	input := []byte{0x56, 0x57, 0x58}
 	expected := crypto.Sha256(input)
 	answer, err := ledger.Hash(input)
 
-	assert.Nil(t, err, "Detected error, err: %s\n", err)
+	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.True(
 		t,
 		bytes.Equal(answer, expected),
@@ -107,6 +118,8 @@ func Test_LedgerSHA256(t *testing.T) {
 
 func Test_LedgerSHA256Chunks(t *testing.T) {
 	ledger := Get_Ledger(t)
+	ledger.Logging = true
+
 	const input_size = 600
 	input := make([]byte, input_size)
 	for i := 0; i < input_size; i++ {
@@ -115,7 +128,7 @@ func Test_LedgerSHA256Chunks(t *testing.T) {
 	expected := crypto.Sha256(input)
 	answer, err := ledger.Hash(input)
 
-	assert.Nil(t, err, "Detected error, err: %s\n", err)
+	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.True(
 		t,
 		bytes.Equal(answer, expected),
@@ -124,9 +137,11 @@ func Test_LedgerSHA256Chunks(t *testing.T) {
 
 func Test_LedgerPublicKey(t *testing.T) {
 	ledger := Get_Ledger(t)
+	ledger.Logging = true
+
 	pubKey, err := ledger.GetTestPublicKey()
 
-	assert.Nil(t, err, "Detected error, err: %s\n", err)
+	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.Equal(
 		t,
 		len(pubKey),

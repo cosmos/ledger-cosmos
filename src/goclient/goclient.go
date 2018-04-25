@@ -28,7 +28,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/zondax/ledger-goclient"
-	"bytes"
 )
 
 func PrintSampleFunc(message bank.SendMsg, output string) {
@@ -165,96 +164,6 @@ func main() {
 		fmt.Print(err.Error())
 	} else {
 		ledger.Logging = true
-
-		fmt.Printf("\n************ Version\n")
-		version, err := ledger.GetVersion()
-		if err != nil {
-			fmt.Printf("Could not get version. Error: %s", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("Ledger. Version %d.%d.%d\n", version.Major, version.Minor, version.Patch)
-
-		fmt.Printf("\n************ Short Echo\n")
-
-		input := []byte{0x56}
-		expected := []byte{0x56}
-
-		answer, err := ledger.Echo(input)
-		if err == nil {
-			if !bytes.Equal(answer, expected) {
-				fmt.Fprintf(os.Stderr, "unexpected response: %x, expected: %x\n", answer, expected)
-				os.Exit(1)
-			}
-		} else {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("\n************ Chunked Echo\n")
-
-		input = make([]byte, 500)
-		for i := 0; i < 500; i++ {
-			input[i] = byte(i%100)
-		}
-
-		answer, err = ledger.Echo(input)
-		if err == nil {
-			if !bytes.Equal(answer, input[:64]) {
-				fmt.Fprintf(os.Stderr, "unexpected response: %x\n", answer)
-				os.Exit(1)
-			}
-		} else {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("\n************ SHA256\n")
-
-		input = []byte{0x56, 0x57, 0x58}
-		expected = crypto.Sha256(input)
-
-		answer, err = ledger.Hash(input)
-		if err == nil {
-			if !bytes.Equal(answer, expected) {
-				fmt.Fprintf(os.Stderr, "unexpected response: %x\n", answer)
-				os.Exit(1)
-			}
-		} else {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("\n************ SHA256 for chunks\n")
-
-		const input_size = 600
-		input = make([]byte, input_size)
-		for i := 0; i < input_size; i++ {
-			input[i] = byte(i%100)
-		}
-		expected = crypto.Sha256(input)
-
-		answer, err = ledger.Hash(input)
-		if err == nil {
-			if !bytes.Equal(answer, expected) {
-				fmt.Fprintf(os.Stderr, "unexpected response: %x\n", answer)
-				os.Exit(1)
-			}
-		} else {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("\n************ GetTestPublicKey\n")
-
-		pubKey, err := ledger.GetTestPublicKey()
-
-		if err == nil {
-			fmt.Printf("TestPublicKey equals %x\n", pubKey)
-		} else {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
-		}
 
 		fmt.Printf("\n************ Waiting for signature message 1..\n")
 
