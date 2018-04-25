@@ -23,32 +23,44 @@
 #include <os_io_seproxyhal.h>
 #include <os.h>
 
+#include <string.h>
+
+#ifdef TESTING_ENABLED
+// Generate using always the same private data
+// to allow for reproducible results
+const uint8_t privateKeyDataTest[] = {
+        0x75, 0x56, 0x0e, 0x4d, 0xde, 0xa0, 0x63, 0x05,
+        0xc3, 0x6e, 0x2e, 0xb5, 0xf7, 0x2a, 0xca, 0x71,
+        0x2d, 0x13, 0x4c, 0xc2, 0xa0, 0x59, 0xbf, 0xe8,
+        0x7e, 0x9b, 0x5d, 0x55, 0xbf, 0x81, 0x3b, 0xd4
+};
+#endif
 
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
 unsigned char io_event(unsigned char channel)
 {
     switch (G_io_seproxyhal_spi_buffer[0]) {
-        case SEPROXYHAL_TAG_FINGER_EVENT: //
-            UX_FINGER_EVENT(G_io_seproxyhal_spi_buffer);
-            break;
+    case SEPROXYHAL_TAG_FINGER_EVENT: //
+        UX_FINGER_EVENT(G_io_seproxyhal_spi_buffer);
+        break;
 
-        case SEPROXYHAL_TAG_BUTTON_PUSH_EVENT: // for Nano S
-            UX_BUTTON_PUSH_EVENT(G_io_seproxyhal_spi_buffer);
-            break;
+    case SEPROXYHAL_TAG_BUTTON_PUSH_EVENT: // for Nano S
+        UX_BUTTON_PUSH_EVENT(G_io_seproxyhal_spi_buffer);
+        break;
 
-        case SEPROXYHAL_TAG_DISPLAY_PROCESSED_EVENT:
-            if (!UX_DISPLAYED())
-                UX_DISPLAYED_EVENT();
-            break;
+    case SEPROXYHAL_TAG_DISPLAY_PROCESSED_EVENT:
+        if (!UX_DISPLAYED())
+            UX_DISPLAYED_EVENT();
+        break;
 
-        case SEPROXYHAL_TAG_TICKER_EVENT:   //
-            UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {
+    case SEPROXYHAL_TAG_TICKER_EVENT:   //
+        UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {
                 if (UX_ALLOWED) {
                     if (view_scrolling_step_count) {
                         // prepare next screen
-                        if (view_scrolling_direction == 0) {
-                            if (view_scrolling_step < (view_scrolling_step_count - 1)) {
+                        if (view_scrolling_direction==0) {
+                            if (view_scrolling_step<(view_scrolling_step_count-1)) {
                                 view_scrolling_step++;
                             }
                             else {
@@ -56,7 +68,7 @@ unsigned char io_event(unsigned char channel)
                             }
                         }
                         else {
-                            if (view_scrolling_step > 0) {
+                            if (view_scrolling_step>0) {
                                 view_scrolling_step--;
                             }
                             else {
@@ -67,12 +79,12 @@ unsigned char io_event(unsigned char channel)
                         UX_REDISPLAY();
                     }
                 }
-            });
-            break;
+        });
+        break;
 
-            // unknown events are acknowledged
-        default:UX_DEFAULT_EVENT();
-            break;
+        // unknown events are acknowledged
+    default:UX_DEFAULT_EVENT();
+        break;
     }
     if (!io_seproxyhal_spi_is_status_sent()) {
         io_seproxyhal_general_status();
@@ -83,25 +95,25 @@ unsigned char io_event(unsigned char channel)
 unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len)
 {
     switch (channel & ~(IO_FLAGS)) {
-        case CHANNEL_KEYBOARD:break;
+    case CHANNEL_KEYBOARD:break;
 
-            // multiplexed io exchange over a SPI channel and TLV encapsulated protocol
-        case CHANNEL_SPI:
-            if (tx_len) {
-                io_seproxyhal_spi_send(G_io_apdu_buffer, tx_len);
+        // multiplexed io exchange over a SPI channel and TLV encapsulated protocol
+    case CHANNEL_SPI:
+        if (tx_len) {
+            io_seproxyhal_spi_send(G_io_apdu_buffer, tx_len);
 
-                if (channel & IO_RESET_AFTER_REPLIED) {
-                    reset();
-                }
-                return 0; // nothing received from the master so far (it's a tx
-                // transaction)
+            if (channel & IO_RESET_AFTER_REPLIED) {
+                reset();
             }
-            else {
-                return io_seproxyhal_spi_recv(G_io_apdu_buffer,
-                                              sizeof(G_io_apdu_buffer), 0);
-            }
+            return 0; // nothing received from the master so far (it's a tx
+            // transaction)
+        }
+        else {
+            return io_seproxyhal_spi_recv(G_io_apdu_buffer,
+                    sizeof(G_io_apdu_buffer), 0);
+        }
 
-        default:THROW(INVALID_PARAMETER);
+    default:THROW(INVALID_PARAMETER);
     }
     return 0;
 }
@@ -114,21 +126,21 @@ void app_init()
     view_idle(0);
 }
 
-bool process_chunk(volatile uint32_t *tx, uint32_t rx)
+bool process_chunk(volatile uint32_t* tx, uint32_t rx)
 {
     int packageIndex = G_io_apdu_buffer[OFFSET_PCK_INDEX];
     int packageCount = G_io_apdu_buffer[OFFSET_PCK_COUNT];
 
-    if (packageIndex == 1) {
+    if (packageIndex==1) {
         transaction_reset();
     }
 
-    transaction_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
+    transaction_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx-OFFSET_DATA);
 
-    return packageIndex == packageCount;
+    return packageIndex==packageCount;
 }
 
-void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
+void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
 {
     uint16_t sw = 0;
 
@@ -136,30 +148,82 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
     {
         TRY
         {
-            if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
+            if (G_io_apdu_buffer[OFFSET_CLA]!=CLA) {
                 THROW(APDU_CODE_CLA_NOT_SUPPORTED);
             }
 
             switch (G_io_apdu_buffer[OFFSET_INS]) {
-                case INS_GET_VERSION:G_io_apdu_buffer[0] = 0x55;                     // CosmosApp
-                    G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
-                    G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
-                    G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
-                    *tx += 4;
+            case INS_GET_VERSION: {
+#ifdef TESTING_ENABLED
+                G_io_apdu_buffer[0] = 0xFF;
+#else
+                G_io_apdu_buffer[0] = 0x55;
+#endif
+                G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
+                G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
+                G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
+                *tx += 4;
+                THROW(APDU_CODE_OK);
+                break;
+            }
+
+            case INS_PUBLIC_KEY: {
+                // TODO: This is only temporary, retrieve from apdu buffer
+                const uint32_t bip32_derivation_path[] =
+                        {
+                                0x80000000 | 44,
+                                0x80000000 | 60,
+                                0x80000000 | 0,
+                                0x80000000 | 0,
+                                0x80000000 | 0
+                        };
+
+                // apply path
+                uint8_t privateKeyData[32];
+                bip32_private(
+                        bip32_derivation_path, sizeof(bip32_derivation_path)/sizeof(uint32_t),
+                        privateKeyData
+                );
+
+                // Generate public key
+                cx_ecfp_public_key_t publicKey;
+                cx_ecfp_private_key_t privateKey;
+
+                keys_secp256k1(&publicKey, &privateKey, privateKeyData);
+
+                os_memmove(G_io_apdu_buffer, publicKey.W, 65);
+                *tx += 65;
+
+                THROW(APDU_CODE_OK);
+            }
+
+            case INS_SIGN:
+                if (process_chunk(tx, rx)) {
+
+                    transaction_parse();
+                    view_display_transaction_menu(transaction_get_info(NULL, NULL, -1));
+
+                    *flags |= IO_ASYNCH_REPLY;
+                }
+                else {
                     THROW(APDU_CODE_OK);
-                    break;
+                }
+                break;
 
-                case INS_SIGN:
+#ifdef TESTING_ENABLED
+                case INS_HASH_TEST:
                     if (process_chunk(tx, rx)) {
+                        uint8_t message_digest[CX_SHA256_SIZE];
 
-                        transaction_parse();
-                        view_display_transaction_menu(transaction_get_info(NULL, NULL, -1));
+                        cx_hash_sha256(transaction_get_buffer(),
+                                       transaction_get_buffer_length(),
+                                       message_digest,
+                                       CX_SHA256_SIZE);
 
-                        *flags |= IO_ASYNCH_REPLY;
+                        os_memmove(G_io_apdu_buffer, message_digest, CX_SHA256_SIZE);
+                        *tx += 32;
                     }
-                    else {
-                        THROW(APDU_CODE_OK);
-                    }
+                    THROW(APDU_CODE_OK);
                     break;
 
                 case INS_SIGN_TEST:
@@ -167,17 +231,10 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 
                         unsigned int length = 0;
 
-                        // Hardcoded private key
-                        uint8_t privateKeyData[32];
-                        memset(privateKeyData, 0, 32);
-
+                        // Generate keys
+                        cx_ecfp_public_key_t publicKey;
                         cx_ecfp_private_key_t privateKey;
-
-                        cx_ecfp_init_private_key(
-                                CX_CURVE_256K1,
-                                privateKeyData,
-                                32,
-                                &privateKey);
+                        keys_secp256k1(&publicKey, &privateKey, privateKeyDataTest );
 
                         // Skip UI and validation
                         sign_secp256k1(
@@ -193,53 +250,12 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
                     break;
 
-                case INS_HASH:
-                    if (process_chunk(tx, rx)) {
-                        uint8_t message_digest[CX_SHA256_SIZE];
-
-                        cx_hash_sha256(transaction_get_buffer(),
-                                       transaction_get_buffer_length(),
-                                       message_digest,
-                                       CX_SHA256_SIZE);
-
-                        os_memmove(G_io_apdu_buffer, message_digest, CX_SHA256_SIZE);
-                        *tx += 32;
-                    }
-                    THROW(APDU_CODE_OK);
-                    break;
-
-                case INS_ECHO_TEST:
-                    if (process_chunk(tx, rx)) {
-                        uint32_t maxlen = transaction_get_buffer_length();
-                        if (maxlen > 64) {
-                            maxlen = 64;
-                        }
-
-                        os_memmove(G_io_apdu_buffer, transaction_get_buffer(), maxlen);
-
-                        *tx += maxlen;
-                    }
-                    THROW(APDU_CODE_OK);
-                    break;
-
-                case INS_GET_PUBLIC_KEY_TEST:
+                case INS_PUBLIC_KEY_TEST:
                 {
-                    // Start with hardcoded private key
-                    uint8_t privateKeyData[32];
-                    memset(privateKeyData, 0, 32);
-
                     // Generate public key
                     cx_ecfp_public_key_t publicKey;
                     cx_ecfp_private_key_t privateKey;
-
-                    cx_ecfp_init_private_key(
-                            CX_CURVE_256K1,
-                            privateKeyData,
-                            32,
-                            &privateKey);
-
-                    //cx_ecfp_init_public_key(CX_CURVE_256K1, NULL, 0, &publicKey);
-                    cx_ecfp_generate_pair(CX_CURVE_256K1, &publicKey, &privateKey, 1);
+                    keys_secp256k1(&publicKey, &privateKey, privateKeyDataTest );
 
                     os_memmove(G_io_apdu_buffer, publicKey.W, 65);
                     *tx += 65;
@@ -247,8 +263,9 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
                 }
                     break;
+#endif
 
-                default:THROW(APDU_CODE_INS_NOT_SUPPORTED);
+            default:THROW(APDU_CODE_INS_NOT_SUPPORTED);
             }
         }
         CATCH(EXCEPTION_IO_RESET)
@@ -258,14 +275,14 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
         CATCH_OTHER(e)
         {
             switch (e & 0xF000) {
-                case 0x6000:
-                case APDU_CODE_OK:sw = e;
-                    break;
-                default:sw = 0x6800 | (e & 0x7FF);
-                    break;
+            case 0x6000:
+            case APDU_CODE_OK:sw = e;
+                break;
+            default:sw = 0x6800 | (e & 0x7FF);
+                break;
             }
             G_io_apdu_buffer[*tx] = sw >> 8;
-            G_io_apdu_buffer[*tx + 1] = sw;
+            G_io_apdu_buffer[*tx+1] = sw;
             *tx += 2;
         }
         FINALLY
@@ -295,7 +312,7 @@ void sign_transaction()
 
     if (valid) {
         set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
-        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
+        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length+2);
         view_display_signing_success();
     }
     else {
@@ -325,25 +342,25 @@ void app_main()
                 rx = io_exchange(CHANNEL_APDU | flags, rx);
                 flags = 0;
 
-                if (rx == 0) THROW(APDU_CODE_EMPTY_BUFFER);
+                if (rx==0) THROW(APDU_CODE_EMPTY_BUFFER);
 
                 handleApdu(&flags, &tx, rx);
             }
             CATCH_OTHER(e);
             {
                 switch (e & 0xF000) {
-                    case 0x6000:
-                    case 0x9000:sw = e;
-                        break;
-                    default:sw = 0x6800 | (e & 0x7FF);
-                        break;
+                case 0x6000:
+                case 0x9000:sw = e;
+                    break;
+                default:sw = 0x6800 | (e & 0x7FF);
+                    break;
                 }
                 G_io_apdu_buffer[tx] = sw >> 8;
-                G_io_apdu_buffer[tx + 1] = sw;
+                G_io_apdu_buffer[tx+1] = sw;
                 tx += 2;
             }
             FINALLY;
-            {}
+            { }
         }
         END_TRY;
     }

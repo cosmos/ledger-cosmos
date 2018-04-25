@@ -17,6 +17,16 @@
 #pragma once
 #include "os.h"
 
+void bip32_private(
+        const uint32_t* bip32_path,
+        size_t bip32_len,
+        uint8_t privateKeyData[32]);
+
+void keys_secp256k1(
+        cx_ecfp_public_key_t* publicKey,
+        cx_ecfp_private_key_t* privateKey,
+        const uint8_t privateKeyData[32]);
+
 /**
  * Sign a message according to ECDSA specification.
  *
@@ -44,9 +54,9 @@
  *   0 is signature is not verified
  */
 int sign_secp256k1(
-    const uint8_t *message,
-    unsigned int message_length,
-    uint8_t* signature,
-    unsigned int signature_capacity,
-    unsigned int* signature_length,
-    cx_ecfp_private_key_t* privateKey);
+        const uint8_t* message,
+        unsigned int message_length,
+        uint8_t* signature,
+        unsigned int signature_capacity,
+        unsigned int* signature_length,
+        cx_ecfp_private_key_t* privateKey);
