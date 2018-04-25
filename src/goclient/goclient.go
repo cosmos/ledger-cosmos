@@ -28,7 +28,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/zondax/ledger-goclient"
-	"bytes"
 )
 
 func PrintSampleFunc(message bank.SendMsg, output string) {
@@ -90,14 +89,14 @@ func GetMessages() ([]bank.SendMsg) {
 		bank.SendMsg{
 			Inputs: []bank.Input{
 				{
-					Address: crypto.Address(crypto.GenPrivKeyEd25519().PubKey().Bytes()),
+					Address: crypto.Address(crypto.GenPrivKeySecp256k1().PubKey().Bytes()),
 					Coins:   sdk.Coins{{"atom", 1000000}},
 					//Sequence: 1,
 				},
 			},
 			Outputs: []bank.Output{
 				{
-					Address: crypto.Address(crypto.GenPrivKeyEd25519().PubKey().Bytes()),
+					Address: crypto.Address(crypto.GenPrivKeySecp256k1().PubKey().Bytes()),
 					Coins:   sdk.Coins{{"atom", 1000000}},
 				},
 			},
@@ -160,96 +159,42 @@ func GetMessages() ([]bank.SendMsg) {
 func main() {
 	ledger, err := ledger_goclient.FindLedger()
 
-	// TOOD: convert this to tests?
-
 	if err != nil {
 		fmt.Printf("Ledger NOT Found\n")
 		fmt.Print(err.Error())
 	} else {
 		ledger.Logging = true
 
-		fmt.Printf("\n************ Version\n")
-		version, err := ledger.GetVersion()
-		if err != nil {
-			fmt.Printf("Could not get version. Error: %s", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("Ledger. Version %d.%d.%d\n", version.Major, version.Minor, version.Patch)
-
-		fmt.Printf("\n************ Echo\n")
-
-		input := []byte{0x56}
-		expected := []byte{0x56}
-
-		answer, err := ledger.Echo(input)
-		if err == nil {
-			if !bytes.Equal(answer, expected) {
-				fmt.Fprintf(os.Stderr, "unexpected response: %x\n", answer)
-				os.Exit(1)
-			}
-		} else {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("\n************ SHA256\n")
-
-		input = []byte{0x56, 0x57, 0x58}
-		expected = crypto.Sha256(input)
-
-		answer, err = ledger.Hash(input)
-		if err == nil {
-			if !bytes.Equal(answer, expected) {
-				fmt.Fprintf(os.Stderr, "unexpected response: %x\n", answer)
-				os.Exit(1)
-			}
-		} else {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("\n************ SHA256 for chunks\n")
-
-		const input_size = 600
-		input = make([]byte, input_size)
-		for i := 0; i < input_size; i++ {
-			input[i] = byte(i%100)
-		}
-		expected = crypto.Sha256(input)
-
-		answer, err = ledger.Hash(input)
-		if err == nil {
-			if !bytes.Equal(answer, expected) {
-				fmt.Fprintf(os.Stderr, "unexpected response: %x\n", answer)
-				os.Exit(1)
-			}
-		} else {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("\n************ GetPK\n")
-
-		input = []byte{0x56, 0x57, 0x58}
-		expected = crypto.Sha256(input)
-
-		answer, err = ledger.GetPKDummy()
-		if err == nil {
-			if !bytes.Equal(answer, expected) {
-				fmt.Fprintf(os.Stderr, "unexpected response: %x\n", answer)
-				os.Exit(1)
-			}
-		} else {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("Waiting for signature..\n")
+		fmt.Printf("\n************ Waiting for signature message 1..\n")
 
 		messages := GetMessages()
 		transactionData := messages[0].GetSignBytes()
 		signedMsg, err := ledger.Sign(transactionData)
+
+		if err == nil {
+			fmt.Printf("Signed msg: %x\n", signedMsg)
+
+		} else {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("\n************ Waiting for signature message 2..\n")
+
+		transactionData = messages[1].GetSignBytes()
+		signedMsg, err = ledger.Sign(transactionData)
+
+		if err == nil {
+			fmt.Printf("Signed msg: %x\n", signedMsg)
+		} else {
+			fmt.Printf("Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("\n************ Waiting for signature message 3..\n")
+
+		transactionData = messages[2].GetSignBytes()
+		signedMsg, err = ledger.Sign(transactionData)
 
 		if err == nil {
 			fmt.Printf("Signed msg: %x\n", signedMsg)

@@ -17,24 +17,46 @@
 #pragma once
 #include "os.h"
 
-// Creates signature of the message using (...TODO)
-// @return
-// *   1 if signature is verified
-// *   0 is signature is not verified
-int signature_create_SECP256K1(
-    uint8_t *message,
-    uint16_t message_length);
+void bip32_private(
+        const uint32_t* bip32_path,
+        size_t bip32_len,
+        uint8_t privateKeyData[32]);
 
-// Creates signature of the message using (...TODO)
-// @return
-// *   1 if signature is verified
-// *   0 is signature is not verified
-int signature_create_ED25519(
-    uint8_t *message,
-    uint16_t message_length);
+void keys_secp256k1(
+        cx_ecfp_public_key_t* publicKey,
+        cx_ecfp_private_key_t* privateKey,
+        const uint8_t privateKeyData[32]);
 
-// Returns last created signature
-uint8_t *signature_get();
-
-// Returns last created signature's length
-uint32_t signature_length();
+/**
+ * Sign a message according to ECDSA specification.
+ *
+ * @param [in] message
+ *   A raw message to be signed. Signature will be generated for the hash of the message.
+ *
+ * @param [in] message_length
+ *   Length of the message.
+ *
+ * @param [in|out] signature
+ *  A buffer where signature will be stored. Buffer must be created outside this function
+ *  and need to have enough capacity to store the whole signature.
+ *
+ *  @param [in] signature_capacity
+ *  The capacity of the signature buffer.
+ *
+ * @param [in|out] signature_length
+ *   The length of the signature will be stored in that parameter.
+ *
+ * @param [in] privateKey
+ *   An optional private key. If NULL is passed then private key will be derived using BIP32.
+ *
+ * @return
+ *   1 if signature is verified
+ *   0 is signature is not verified
+ */
+int sign_secp256k1(
+        const uint8_t* message,
+        unsigned int message_length,
+        uint8_t* signature,
+        unsigned int signature_capacity,
+        unsigned int* signature_length,
+        cx_ecfp_private_key_t* privateKey);

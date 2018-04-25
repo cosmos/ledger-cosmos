@@ -17,7 +17,11 @@
 
 #include "transaction.h"
 #include "view.h"
+#include "apdu_codes.h"
 
+// TODO: We are currently limited by amount of SRAM (4K)
+// In order to parse longer messages we may have to consider moving
+// this buffer to FLASH
 #define TRANSACTION_JSON_BUFFER_SIZE 650
 
 parsed_json_t parsed_transaction;
@@ -34,7 +38,9 @@ void transaction_reset()
 
 void transaction_append(unsigned char *buffer, uint32_t length)
 {
-    // TODO: Limit appending to TRANSACTION_JSON_BUFFER_SIZE
+    if (transaction_buffer_current_position + length >= TRANSACTION_JSON_BUFFER_SIZE) {
+        THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
+    }
     os_memmove(transaction_buffer + transaction_buffer_current_position, buffer, length);
     transaction_buffer_current_position += length;
 

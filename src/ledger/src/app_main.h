@@ -27,12 +27,12 @@
 #define OFFSET_DATA                 4  //< Data offset
 
 #define INS_GET_VERSION             0
-#define INS_SIGN                    1
-#define INS_HASH                    2
-#define INS_GET_PUBLIC_KEY          3
+#define INS_PUBLIC_KEY              1
+#define INS_SIGN                    2
 
-#define INS_ECHO                    99
-#define INS_GET_PUBLIC_KEY_DUMMY   100
+#define INS_HASH_TEST               99
+#define INS_PUBLIC_KEY_TEST         100
+#define INS_SIGN_TEST               101
 
 void app_init();
 void app_main();
