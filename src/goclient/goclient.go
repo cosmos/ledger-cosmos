@@ -25,6 +25,7 @@ import (
 	"os"
 	"strconv"
 	"github.com/tendermint/go-crypto"
+	secp256k1 "github.com/btcsuite/btcd/btcec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/zondax/ledger-goclient"
@@ -160,47 +161,49 @@ func main() {
 	ledger, err := ledger_goclient.FindLedger()
 
 	if err != nil {
-		fmt.Printf("Ledger NOT Found\n")
-		fmt.Print(err.Error())
+		fmt.Printf("Error: %s", err.Error())
+		fmt.Printf("\nUSB devices found:\n")
+		ledger_goclient.ListDevices()
 	} else {
 		ledger.Logging = true
-
-		fmt.Printf("\n************ Waiting for signature message 1..\n")
-
 		messages := GetMessages()
-		transactionData := messages[0].GetSignBytes()
-		signedMsg, err := ledger.Sign(transactionData)
 
-		if err == nil {
-			fmt.Printf("Signed msg: %x\n", signedMsg)
+		for i := 0; i< len(messages); i++ {
+			fmt.Printf("\nMessage %d - Please Sign..\n", i)
+			message := messages[i].GetSignBytes()
 
-		} else {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
-		}
+			signature, err := ledger.Sign(message)
+			if err != nil {
+				fmt.Printf("[Sign] Error: %s\n", err)
+				os.Exit(1)
+			}
 
-		fmt.Printf("\n************ Waiting for signature message 2..\n")
+			pubKey, err := ledger.GetPublicKey()
 
-		transactionData = messages[1].GetSignBytes()
-		signedMsg, err = ledger.Sign(transactionData)
+			if err != nil {
+				fmt.Errorf("[GetPK] Error: %s\n", err)
+				os.Exit(1)
+			}
 
-		if err == nil {
-			fmt.Printf("Signed msg: %x\n", signedMsg)
-		} else {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
-		}
+			pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
+			if err != nil {
+				fmt.Errorf("[ParsePK] Error: %s\n", err)
+				os.Exit(1)
+			}
 
-		fmt.Printf("\n************ Waiting for signature message 3..\n")
+			sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
+			if err != nil {
+				fmt.Errorf("[ParseSig] Error: %s\n", err)
+				os.Exit(1)
+			}
 
-		transactionData = messages[2].GetSignBytes()
-		signedMsg, err = ledger.Sign(transactionData)
+			verified := sig__.Verify(crypto.Sha256(message), pub__)
+			if !verified {
+				fmt.Errorf("[VerifySig] Error verifying signature\n", err)
+				os.Exit(1)
+			}
 
-		if err == nil {
-			fmt.Printf("Signed msg: %x\n", signedMsg)
-		} else {
-			fmt.Printf("Error: %s\n", err)
-			os.Exit(1)
+			fmt.Printf("Message %d - Valid signature\n", i)
 		}
 	}
 }
