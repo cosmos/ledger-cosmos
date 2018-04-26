@@ -70,20 +70,20 @@ int sign_secp256k1(
             signature_capacity,
             &info);
 
-//    if (info & CX_ECCINFO_PARITY_ODD) {
-//        signature[0] |= 0x01;
-//    }
+    // FIXME
+    //    if (info & CX_ECCINFO_PARITY_ODD) {
+    //        signature[0] |= 0x01;
+    //    }
+    //    return cx_ecdsa_verify(
+    //            &publicKey,
+    //            CX_LAST,
+    //            CX_SHA256,
+    //            message_digest,
+    //            sizeof(message_digest),
+    //            (unsigned char*) signature,
+    //            *signature_length);
 
     return 1;
-
-//    return cx_ecdsa_verify(
-//            &publicKey,
-//            CX_LAST,
-//            CX_SHA256,
-//            message_digest,
-//            sizeof(message_digest),
-//            (unsigned char*) signature,
-//            *signature_length);
 }
 
 #ifdef ed25519
