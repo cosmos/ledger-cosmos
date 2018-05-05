@@ -36,41 +36,31 @@ const uint8_t privateKeyDataTest[] = {
 };
 #endif
 
-// TODO: This is only temporary, retrieve from apdu buffer
-const uint32_t bip32_derivation_path[] =
-        {
-                0x80000000 | 44,
-                0x80000000 | 60,
-                0x80000000 | 0,
-                0x80000000 | 0,
-                0x80000000 | 0
-        };
-
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
 unsigned char io_event(unsigned char channel)
 {
     switch (G_io_seproxyhal_spi_buffer[0]) {
-    case SEPROXYHAL_TAG_FINGER_EVENT: //
-        UX_FINGER_EVENT(G_io_seproxyhal_spi_buffer);
-        break;
+        case SEPROXYHAL_TAG_FINGER_EVENT: //
+            UX_FINGER_EVENT(G_io_seproxyhal_spi_buffer);
+            break;
 
-    case SEPROXYHAL_TAG_BUTTON_PUSH_EVENT: // for Nano S
-        UX_BUTTON_PUSH_EVENT(G_io_seproxyhal_spi_buffer);
-        break;
+        case SEPROXYHAL_TAG_BUTTON_PUSH_EVENT: // for Nano S
+            UX_BUTTON_PUSH_EVENT(G_io_seproxyhal_spi_buffer);
+            break;
 
-    case SEPROXYHAL_TAG_DISPLAY_PROCESSED_EVENT:
-        if (!UX_DISPLAYED())
-            UX_DISPLAYED_EVENT();
-        break;
+        case SEPROXYHAL_TAG_DISPLAY_PROCESSED_EVENT:
+            if (!UX_DISPLAYED())
+                UX_DISPLAYED_EVENT();
+            break;
 
-    case SEPROXYHAL_TAG_TICKER_EVENT:   //
-        UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {
+        case SEPROXYHAL_TAG_TICKER_EVENT:   //
+            UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {
                 if (UX_ALLOWED) {
                     if (view_scrolling_step_count) {
                         // prepare next screen
-                        if (view_scrolling_direction==0) {
-                            if (view_scrolling_step<(view_scrolling_step_count-1)) {
+                        if (view_scrolling_direction == 0) {
+                            if (view_scrolling_step < (view_scrolling_step_count - 1)) {
                                 view_scrolling_step++;
                             }
                             else {
@@ -78,7 +68,7 @@ unsigned char io_event(unsigned char channel)
                             }
                         }
                         else {
-                            if (view_scrolling_step>0) {
+                            if (view_scrolling_step > 0) {
                                 view_scrolling_step--;
                             }
                             else {
@@ -89,12 +79,12 @@ unsigned char io_event(unsigned char channel)
                         UX_REDISPLAY();
                     }
                 }
-        });
-        break;
+            });
+            break;
 
-        // unknown events are acknowledged
-    default:UX_DEFAULT_EVENT();
-        break;
+            // unknown events are acknowledged
+        default:UX_DEFAULT_EVENT();
+            break;
     }
     if (!io_seproxyhal_spi_is_status_sent()) {
         io_seproxyhal_general_status();
@@ -105,25 +95,25 @@ unsigned char io_event(unsigned char channel)
 unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len)
 {
     switch (channel & ~(IO_FLAGS)) {
-    case CHANNEL_KEYBOARD:break;
+        case CHANNEL_KEYBOARD:break;
 
-        // multiplexed io exchange over a SPI channel and TLV encapsulated protocol
-    case CHANNEL_SPI:
-        if (tx_len) {
-            io_seproxyhal_spi_send(G_io_apdu_buffer, tx_len);
+            // multiplexed io exchange over a SPI channel and TLV encapsulated protocol
+        case CHANNEL_SPI:
+            if (tx_len) {
+                io_seproxyhal_spi_send(G_io_apdu_buffer, tx_len);
 
-            if (channel & IO_RESET_AFTER_REPLIED) {
-                reset();
+                if (channel & IO_RESET_AFTER_REPLIED) {
+                    reset();
+                }
+                return 0; // nothing received from the master so far (it's a tx
+                // transaction)
             }
-            return 0; // nothing received from the master so far (it's a tx
-            // transaction)
-        }
-        else {
-            return io_seproxyhal_spi_recv(G_io_apdu_buffer,
-                    sizeof(G_io_apdu_buffer), 0);
-        }
+            else {
+                return io_seproxyhal_spi_recv(G_io_apdu_buffer,
+                                              sizeof(G_io_apdu_buffer), 0);
+            }
 
-    default:THROW(INVALID_PARAMETER);
+        default:THROW(INVALID_PARAMETER);
     }
     return 0;
 }
@@ -136,21 +126,39 @@ void app_init()
     view_idle(0);
 }
 
-bool process_chunk(volatile uint32_t* tx, uint32_t rx)
+bool process_chunk(volatile uint32_t *tx, uint32_t rx)
 {
     int packageIndex = G_io_apdu_buffer[OFFSET_PCK_INDEX];
     int packageCount = G_io_apdu_buffer[OFFSET_PCK_COUNT];
 
-    if (packageIndex==1) {
+    if (packageIndex == 1) {
         transaction_reset();
     }
 
-    transaction_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx-OFFSET_DATA);
+    transaction_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
 
-    return packageIndex==packageCount;
+    return packageIndex == packageCount;
 }
 
-void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
+bool extractBip32(uint8_t *bip32_depth, uint8_t bip32_path[40], uint32_t rx, uint32_t offset)
+{
+    if (rx<offset+1)
+    {
+        return 0;
+    }
+
+    uint8_t bip32_depth = G_io_apdu_buffer[offset];
+    if (*rx<offset+1+4*bip32_depth || bip32_depth>=10)
+    {
+        return 0;
+    }
+    uint8_t bip32_path[10*4];
+    memcpy(bip32_path, G_io_apdu_buffer+offset+1, bip32_depth*4);
+
+    return 1;
+}
+
+void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx)
 {
     uint16_t sw = 0;
 
@@ -158,55 +166,62 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
     {
         TRY
         {
-            if (G_io_apdu_buffer[OFFSET_CLA]!=CLA) {
+            if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
                 THROW(APDU_CODE_CLA_NOT_SUPPORTED);
             }
 
             switch (G_io_apdu_buffer[OFFSET_INS]) {
-            case INS_GET_VERSION: {
+                case INS_GET_VERSION: {
 #ifdef TESTING_ENABLED
-                G_io_apdu_buffer[0] = 0xFF;
+                    G_io_apdu_buffer[0] = 0xFF;
 #else
-                G_io_apdu_buffer[0] = 0x55;
+                    G_io_apdu_buffer[0] = 0x55;
 #endif
-                G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
-                G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
-                G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
-                *tx += 4;
-                THROW(APDU_CODE_OK);
-                break;
-            }
-
-            case INS_PUBLIC_KEY: {
-                // apply path
-                uint8_t privateKeyData[32];
-                bip32_private(
-                        bip32_derivation_path, sizeof(bip32_derivation_path)/sizeof(uint32_t),
-                        privateKeyData
-                );
-
-                // Generate keys
-                cx_ecfp_public_key_t publicKey;
-                cx_ecfp_private_key_t privateKey;
-
-                keys_secp256k1(&publicKey, &privateKey, privateKeyData);
-
-                os_memmove(G_io_apdu_buffer, publicKey.W, 65);
-                *tx += 65;
-
-                THROW(APDU_CODE_OK);
-            }
-
-            case INS_SIGN: {
-                if (!process_chunk(tx, rx))
+                    G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
+                    G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
+                    G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
+                    *tx += 4;
                     THROW(APDU_CODE_OK);
+                    break;
+                }
 
-                transaction_parse();
-                view_display_transaction_menu(transaction_get_info(NULL, NULL, -1));
+                case INS_PUBLIC_KEY: {
+                    uint8_t bip32_depth;
+                    uint8_t bip32_path[10*4];
+                    if (!extractBip32(&bip32_depth, bip32_path, rx, 2))
+                    {
+                        THROW(APDU_CODE_DATA_INVALID);
+                    }
 
-                *flags |= IO_ASYNCH_REPLY;
-            }
-                break;
+                    // apply path
+                    uint8_t privateKeyData[32];
+                    bip32_private(
+                        bip32_path, bip32_depth,
+                        privateKeyData
+                    );
+
+                    // Generate keys
+                    cx_ecfp_public_key_t publicKey;
+                    cx_ecfp_private_key_t privateKey;
+
+                    keys_secp256k1(&publicKey, &privateKey, privateKeyData);
+
+                    os_memmove(G_io_apdu_buffer, publicKey.W, 65);
+                    *tx += 65;
+
+                    THROW(APDU_CODE_OK);
+                }
+
+                case INS_SIGN: {
+                    if (!process_chunk(tx, rx))
+                        THROW(APDU_CODE_OK);
+
+                    transaction_parse();
+                    view_display_transaction_menu(transaction_get_info(NULL, NULL, -1));
+
+                    *flags |= IO_ASYNCH_REPLY;
+                }
+                    break;
 
 #ifdef TESTING_ENABLED
                 case INS_HASH_TEST: {
@@ -264,7 +279,7 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                 break;
 #endif
 
-            default:THROW(APDU_CODE_INS_NOT_SUPPORTED);
+                default:THROW(APDU_CODE_INS_NOT_SUPPORTED);
             }
         }
         CATCH(EXCEPTION_IO_RESET)
@@ -274,14 +289,14 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
         CATCH_OTHER(e)
         {
             switch (e & 0xF000) {
-            case 0x6000:
-            case APDU_CODE_OK:sw = e;
-                break;
-            default:sw = 0x6800 | (e & 0x7FF);
-                break;
+                case 0x6000:
+                case APDU_CODE_OK:sw = e;
+                    break;
+                default:sw = 0x6800 | (e & 0x7FF);
+                    break;
             }
             G_io_apdu_buffer[*tx] = sw >> 8;
-            G_io_apdu_buffer[*tx+1] = sw;
+            G_io_apdu_buffer[*tx + 1] = sw;
             *tx += 2;
         }
         FINALLY
@@ -302,8 +317,8 @@ void sign_transaction()
 {
     uint8_t privateKeyData[32];
     bip32_private(
-            bip32_derivation_path, sizeof(bip32_derivation_path)/sizeof(uint32_t),
-            privateKeyData
+        bip32_derivation_path, sizeof(bip32_derivation_path) / sizeof(uint32_t),
+        privateKeyData
     );
 
     // Generate keys
@@ -314,15 +329,15 @@ void sign_transaction()
 
     unsigned int length = 0;
     sign_secp256k1(
-            transaction_get_buffer(),
-            transaction_get_buffer_length(),
-            G_io_apdu_buffer,
-            IO_APDU_BUFFER_SIZE,
-            &length,
-            &privateKey);
+        transaction_get_buffer(),
+        transaction_get_buffer_length(),
+        G_io_apdu_buffer,
+        IO_APDU_BUFFER_SIZE,
+        &length,
+        &privateKey);
 
     set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
-    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length+2);
+    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
     view_display_signing_success();
 }
 
@@ -346,25 +361,25 @@ void app_main()
                 rx = io_exchange(CHANNEL_APDU | flags, rx);
                 flags = 0;
 
-                if (rx==0) THROW(APDU_CODE_EMPTY_BUFFER);
+                if (rx == 0) THROW(APDU_CODE_EMPTY_BUFFER);
 
                 handleApdu(&flags, &tx, rx);
             }
             CATCH_OTHER(e);
             {
                 switch (e & 0xF000) {
-                case 0x6000:
-                case 0x9000:sw = e;
-                    break;
-                default:sw = 0x6800 | (e & 0x7FF);
-                    break;
+                    case 0x6000:
+                    case 0x9000:sw = e;
+                        break;
+                    default:sw = 0x6800 | (e & 0x7FF);
+                        break;
                 }
                 G_io_apdu_buffer[tx] = sw >> 8;
-                G_io_apdu_buffer[tx+1] = sw;
+                G_io_apdu_buffer[tx + 1] = sw;
                 tx += 2;
             }
             FINALLY;
-            { }
+            {}
         }
         END_TRY;
     }

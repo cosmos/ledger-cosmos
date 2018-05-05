@@ -18,7 +18,7 @@
 
 #include "apdu_codes.h"
 
-#define CLA                         0x80
+#define CLA                         0x55
 
 #define OFFSET_CLA                  0
 #define OFFSET_INS                  1  //< Instruction offset
