@@ -172,13 +172,15 @@ func main() {
 			fmt.Printf("\nMessage %d - Please Sign..\n", i)
 			message := messages[i].GetSignBytes()
 
-			signature, err := ledger.Sign(message)
+			path := []uint32{44, 60, 0, 0, 0}
+
+			signature, err := ledger.Sign(path, message)
 			if err != nil {
 				fmt.Printf("[Sign] Error: %s\n", err)
 				os.Exit(1)
 			}
 
-			pubKey, err := ledger.GetPublicKey()
+			pubKey, err := ledger.GetPublicKey(path)
 
 			if err != nil {
 				fmt.Errorf("[GetPK] Error: %s\n", err)

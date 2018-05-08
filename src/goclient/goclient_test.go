@@ -59,7 +59,7 @@ func Test_LedgerVersion(t *testing.T) {
 	assert.Equal(t, uint8(0xFF), version.AppId, "TESTING MODE NOT ENABLED")
 	assert.Equal(t, uint8(0x0), version.Major, "Wrong Major version")
 	assert.Equal(t, uint8(0x0), version.Minor, "Wrong Minor version")
-	assert.Equal(t, uint8(0x5), version.Patch, "Wrong Patch version")
+	assert.Equal(t, uint8(0x6), version.Patch, "Wrong Patch version")
 }
 
 func Test_LedgerSHA256(t *testing.T) {
@@ -100,7 +100,8 @@ func Test_LedgerPublicKeyReal(t *testing.T) {
 	ledger := Get_Ledger(t)
 	ledger.Logging = true
 
-	pubKey, err := ledger.GetPublicKey()
+	path := []uint32{44, 60, 0, 0, 0}
+	pubKey, err := ledger.GetPublicKey(path)
 
 	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.Equal(

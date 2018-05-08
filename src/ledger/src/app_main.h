@@ -16,6 +16,7 @@
 ********************************************************************************/
 #pragma once
 
+#include <stdbool.h>
 #include "apdu_codes.h"
 
 #define CLA                         0x55
@@ -36,3 +37,4 @@
 
 void app_init();
 void app_main();
+bool extractBip32(uint8_t *depth, uint32_t path[10], uint32_t rx, uint32_t offset);

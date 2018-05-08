@@ -17,11 +17,6 @@
 #pragma once
 #include "os.h"
 
-void bip32_private(
-        const uint32_t* bip32_path,
-        size_t bip32_len,
-        uint8_t privateKeyData[32]);
-
 void keys_secp256k1(
         cx_ecfp_public_key_t* publicKey,
         cx_ecfp_private_key_t* privateKey,

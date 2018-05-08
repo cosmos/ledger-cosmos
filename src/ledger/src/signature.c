@@ -19,21 +19,6 @@
 #include "cx.h"
 #include "apdu_codes.h"
 
-#define BIP44_PATH_LEN (5 * sizeof(uin32_t))
-
-void bip32_private(
-        const uint32_t* bip32_path,
-        size_t bip32_len,
-        uint8_t privateKeyData[32])
-{
-    os_perso_derive_node_bip32(
-            CX_CURVE_256K1,
-            bip32_path,
-            bip32_len,
-            privateKeyData,
-            NULL);
-}
-
 void keys_secp256k1(
         cx_ecfp_public_key_t* publicKey,
         cx_ecfp_private_key_t* privateKey,
