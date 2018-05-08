@@ -30,7 +30,7 @@ APPNAME = "COSMOS"
 APPVERSION_M=0
 APPVERSION_N=0
 APPVERSION_P=5
-APP_LOAD_PARAMS = --appFlags 0x00 $(COMMON_LOAD_PARAMS)
+APP_LOAD_PARAMS = --appFlags 0x00 --delete --signApp --signPrivateKey 0130a1c6fa9154cad78d91a8ecbbdbba7e1efbff01840997949130bba5cb38cd $(COMMON_LOAD_PARAMS)
 
 #prepare hsm generation
 ICONNAME=$(CURDIR)/app_cosmos_nanos.gif
@@ -55,6 +55,10 @@ DEFINES   += BLE_SEGMENT_SIZE=32 #max MTU, min 20
 DEFINES   += U2F_MAX_MESSAGE_SIZE=264 #257+5+2
 DEFINES   += UNUSED\(x\)=\(void\)x
 DEFINES   += APPVERSION=\"$(APPVERSION)\"
+
+DEFINES   += HAVE_BOLOS_APP_STACK_CANARY
+DEFINES   += LEDGER_SPECIFIC
+DEFINES   += TESTING_ENABLED
 
 # Compiler, assembler, and linker
 
