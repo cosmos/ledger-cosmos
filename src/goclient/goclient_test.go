@@ -56,10 +56,10 @@ func Test_LedgerVersion(t *testing.T) {
 	ledger.Logging = true
 	version, err := ledger.GetVersion()
 	require.Nil(t, err, "Detected error")
-	assert.Equal(t, version.AppId, uint8(0xFF), "TESTING MODE NOT ENABLED")
-	assert.Equal(t, version.Major, uint8(0x0), "Wrong Major version")
-	assert.Equal(t, version.Minor, uint8(0x0), "Wrong Minor version")
-	assert.Equal(t, version.Patch, uint8(0x5), "Wrong Patch version")
+	assert.Equal(t, uint8(0xFF), version.AppId, "TESTING MODE NOT ENABLED")
+	assert.Equal(t, uint8(0x0), version.Major, "Wrong Major version")
+	assert.Equal(t, uint8(0x0), version.Minor, "Wrong Minor version")
+	assert.Equal(t, uint8(0x5), version.Patch, "Wrong Patch version")
 }
 
 func Test_LedgerSHA256(t *testing.T) {
@@ -73,7 +73,7 @@ func Test_LedgerSHA256(t *testing.T) {
 	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.True(
 		t,
-		bytes.Equal(answer, expected),
+		bytes.Equal(expected, answer),
 		"unexpected response: %x, expected: %x\n", answer, expected)
 }
 
@@ -92,7 +92,7 @@ func Test_LedgerSHA256Chunks(t *testing.T) {
 	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.True(
 		t,
-		bytes.Equal(answer, expected),
+		bytes.Equal(expected, answer),
 		"unexpected response: %x, expected: %x\n", answer, expected)
 }
 
@@ -105,8 +105,8 @@ func Test_LedgerPublicKeyReal(t *testing.T) {
 	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.Equal(
 		t,
-		len(pubKey),
 		65,
+		len(pubKey),
 		"Public key has wrong length: %x, expected length: %x\n", pubKey, 65)
 
 	_, err = secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
@@ -122,8 +122,8 @@ func Test_LedgerPublicKeyTest(t *testing.T) {
 	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.Equal(
 		t,
-		len(pubKey),
 		65,
+		len(pubKey),
 		"Public key has wrong length: %x, expected length: %x\n", pubKey, 65)
 
 	_, err = secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
