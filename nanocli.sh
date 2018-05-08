@@ -17,6 +17,11 @@
 
 SCRIPT_DIR=$(cd $(dirname $0) && pwd)
 
+# PK = 0425966465974196228d1d8a72e3c4cb6b62d6d5b8ffdeeba3af6677551e5413a60c47517e0bee963af31f5606c33a9483e8a6dc102c63bc295691ca05ee2c5d5c
+# SK = 0130a1c6fa9154cad78d91a8ecbbdbba7e1efbff01840997949130bba5cb38cd
+
+# python -m ledgerblue.setupCustomCA --name dev --public 0425966465974196228d1d8a72e3c4cb6b62d6d5b8ffdeeba3af6677551e5413a60c47517e0bee963af31f5606c33a9483e8a6dc102c63bc295691ca05ee2c5d5c --targetId 0x31100003
+
 handle_config()
 {
     os_string="$(uname -s)"
@@ -54,6 +59,27 @@ handle_make()
             make -C /project/src/ledger $1
 }
 
+handle_exec()
+{
+    # This function works in the scope of the container
+    DOCKER_IMAGE=zondax/ledger-docker-bolos
+    BOLOS_SDK=/project/deps/nanos-secure-sdk
+    BOLOS_ENV=/opt/bolos
+
+    docker run -it --rm \
+            -e BOLOS_SDK=${BOLOS_SDK} \
+            -e BOLOS_ENV=${BOLOS_ENV} \
+            -u `id -u` \
+            -v $(pwd):/project \
+            ${DOCKER_IMAGE} \
+            $1
+}
+
+handle_ca()
+{
+    python -m ledgerblue.setupCustomCA --name dev --public 0425966465974196228d1d8a72e3c4cb6b62d6d5b8ffdeeba3af6677551e5413a60c47517e0bee963af31f5606c33a9483e8a6dc102c63bc295691ca05ee2c5d5c --targetId 0x31100003
+}
+
 handle_load()
 {
     # This function works in the scope of the host
@@ -71,12 +97,13 @@ handle_delete()
 }
 
 case "$1" in
+    exec)       handle_exec $2;;
     make)       handle_make $2;;
     config)     handle_config;;
+    ca)         handle_ca;;
     load)       handle_load;;
     delete)     handle_delete;;
-    upgrade)    handle_delete && handle_load;;
     *)
-        echo "ERROR. Valid commands: make, config, load, delete"
+        echo "ERROR. Valid commands: exec, make, config, ca, load, delete"
         ;;
 esac
