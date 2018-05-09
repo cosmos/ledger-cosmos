@@ -38,6 +38,8 @@ const uint8_t privateKeyDataTest[] = {
 
 uint8_t bip32_depth;
 uint32_t bip32_path[10];
+sigtype_t current_sigtype;
+
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
 unsigned char io_event(unsigned char channel)
@@ -141,15 +143,14 @@ bool process_chunk(volatile uint32_t* tx, uint32_t rx, bool getBip32)
     if (packageIndex==1) {
         transaction_reset();
         if (getBip32) {
-            if (!extractBip32(&bip32_depth, bip32_path, rx, 4)) {
+            if (!extractBip32(&bip32_depth, bip32_path, rx, OFFSET_DATA)) {
                 THROW(APDU_CODE_DATA_INVALID);
             }
+            return packageIndex==packageCount;
         }
     }
-    else {
-        transaction_append(&(G_io_apdu_buffer[offset]), rx-offset);
-    }
 
+    transaction_append(&(G_io_apdu_buffer[offset]), rx-offset);
     return packageIndex==packageCount;
 }
 
@@ -196,7 +197,7 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                 break;
             }
 
-            case INS_PUBLIC_KEY: {
+            case INS_PUBLIC_KEY_SECP256K1: {
                 if (!extractBip32(&bip32_depth, bip32_path, rx, 2)) {
                     THROW(APDU_CODE_DATA_INVALID);
                 }
@@ -219,7 +220,43 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                 THROW(APDU_CODE_OK);
             }
 
-            case INS_SIGN: {
+            case INS_PUBLIC_KEY_ED25519: {
+                if (!extractBip32(&bip32_depth, bip32_path, rx, 2)) {
+                    THROW(APDU_CODE_DATA_INVALID);
+                }
+
+                cx_ecfp_public_key_t publicKey;
+                cx_ecfp_private_key_t privateKey;
+                uint8_t privateKeyData[32];
+
+                // Generate keys
+                os_perso_derive_node_bip32(
+                        CX_CURVE_Ed25519,
+                        bip32_path, bip32_depth,
+                        privateKeyData, NULL);
+                keys_ed25519(&publicKey, &privateKey, privateKeyData);
+                memset(privateKeyData, 0, 32);
+
+                os_memmove(G_io_apdu_buffer, publicKey.W, 32);
+                *tx += 32;
+
+                THROW(APDU_CODE_OK);
+            }
+
+            case INS_SIGN_SECP256K1: {
+                current_sigtype = SECP256K1;
+                if (!process_chunk(tx, rx, true))
+                    THROW(APDU_CODE_OK);
+
+                transaction_parse();
+                view_display_transaction_menu(transaction_get_info(NULL, NULL, -1));
+
+                *flags |= IO_ASYNCH_REPLY;
+            }
+                break;
+
+            case INS_SIGN_ED25519: {
+                current_sigtype = ED25519;
                 if (!process_chunk(tx, rx, true))
                     THROW(APDU_CODE_OK);
 
@@ -247,7 +284,20 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                 }
                 break;
 
-                case INS_SIGN_TEST: {
+                case INS_PUBLIC_KEY_SECP256K1_TEST: {
+                    // Generate key
+                    cx_ecfp_public_key_t publicKey;
+                    cx_ecfp_private_key_t privateKey;
+                    keys_secp256k1(&publicKey, &privateKey, privateKeyDataTest );
+
+                    os_memmove(G_io_apdu_buffer, publicKey.W, 65);
+                    *tx += 65;
+
+                    THROW(APDU_CODE_OK);
+                }
+                break;
+
+                case INS_SIGN_SECP256K1_TEST: {
                     if (process_chunk(tx, rx, false)) {
 
                         unsigned int length = 0;
@@ -272,15 +322,40 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                 }
                 break;
 
-                case INS_PUBLIC_KEY_TEST: {
+                case INS_PUBLIC_KEY_ED25519_TEST: {
                     // Generate key
                     cx_ecfp_public_key_t publicKey;
                     cx_ecfp_private_key_t privateKey;
-                    keys_secp256k1(&publicKey, &privateKey, privateKeyDataTest );
+                    keys_ed25519(&publicKey, &privateKey, privateKeyDataTest );
 
-                    os_memmove(G_io_apdu_buffer, publicKey.W, 65);
-                    *tx += 65;
+                    os_memmove(G_io_apdu_buffer, publicKey.W, 32);
+                    *tx += 32;
 
+                    THROW(APDU_CODE_OK);
+                }
+                break;
+
+                case INS_SIGN_ED25519_TEST: {
+                    if (process_chunk(tx, rx, false)) {
+
+                        // Generate keys
+                        cx_ecfp_public_key_t publicKey;
+                        cx_ecfp_private_key_t privateKey;
+                        keys_ed25519(&publicKey, &privateKey, privateKeyDataTest );
+
+                        unsigned int length = 0;
+
+                        // Skip UI and validation
+                        sign_ed25519(
+                                transaction_get_buffer(),
+                                transaction_get_buffer_length(),
+                                G_io_apdu_buffer,
+                                IO_APDU_BUFFER_SIZE,
+                                &length,
+                                &privateKey);
+
+                        *tx += length;
+                    }
                     THROW(APDU_CODE_OK);
                 }
                 break;
@@ -327,32 +402,44 @@ void sign_transaction()
     cx_ecfp_private_key_t privateKey;
     uint8_t privateKeyData[32];
 
-//    const uint32_t bip32_derivation_path[] =
-//            {
-//                    0x80000000 | 44,
-//                    0x80000000 | 60,
-//                    0x80000000 | 0,
-//                    0x80000000 | 0,
-//                    0x80000000 | 0
-//            };
-//    bip32_private(bip32_derivation_path, 5, privateKeyData);
-
-    os_perso_derive_node_bip32(
-            CX_CURVE_256K1,
-            bip32_path, bip32_depth,
-            privateKeyData, NULL);
-
-    keys_secp256k1(&publicKey, &privateKey, privateKeyData);
-    memset(privateKeyData, 0, 32);
-
     unsigned int length = 0;
-    sign_secp256k1(
-            transaction_get_buffer(),
-            transaction_get_buffer_length(),
-            G_io_apdu_buffer,
-            IO_APDU_BUFFER_SIZE,
-            &length,
-            &privateKey);
+    switch(current_sigtype)
+    {
+    case SECP256K1:
+        os_perso_derive_node_bip32(
+                CX_CURVE_256K1,
+                bip32_path, bip32_depth,
+                privateKeyData, NULL);
+
+        keys_secp256k1(&publicKey, &privateKey, privateKeyData);
+        memset(privateKeyData, 0, 32);
+
+        sign_secp256k1(
+                transaction_get_buffer(),
+                transaction_get_buffer_length(),
+                G_io_apdu_buffer,
+                IO_APDU_BUFFER_SIZE,
+                &length,
+                &privateKey);
+        break;
+    case ED25519:
+        os_perso_derive_node_bip32(
+                CX_CURVE_Ed25519,
+                bip32_path, bip32_depth,
+                privateKeyData, NULL);
+
+        keys_ed25519(&publicKey, &privateKey, privateKeyData);
+        memset(privateKeyData, 0, 32);
+
+        sign_ed25519(
+                transaction_get_buffer(),
+                transaction_get_buffer_length(),
+                G_io_apdu_buffer,
+                IO_APDU_BUFFER_SIZE,
+                &length,
+                &privateKey);
+        break;
+    }
 
     set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length+2);

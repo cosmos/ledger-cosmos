@@ -17,6 +17,7 @@
 
 #include "view.h"
 #include "view_templates.h"
+#include "common.h"
 
 #include "glyphs.h"
 #include "bagl.h"
@@ -36,7 +37,7 @@ unsigned int view_scrolling_direction = 0;
 
 volatile char transactionDataName[32];
 volatile char transactionDataValue[32];
-volatile char pageInfo[10];
+volatile char pageInfo[20];
 
 int transactionDetailsCurrentPage;
 int transactionDetailsPageCount;
@@ -189,12 +190,27 @@ void update_transaction_page_info()
                 (char *) transactionDataValue,
                 transactionDetailsCurrentPage);
 
-        snprintf(
-                (char *) pageInfo,
-                sizeof(pageInfo),
-                "%d/%d",
-                transactionDetailsCurrentPage + 1,
-                transactionDetailsPageCount);
+
+        switch (current_sigtype)
+        {
+        case SECP256K1:
+            snprintf(
+                    (char *) pageInfo,
+                    sizeof(pageInfo),
+                    "SECP256K1 - %02d/%02d",
+                    transactionDetailsCurrentPage + 1,
+                    transactionDetailsPageCount);
+            break;
+        case ED25519:
+            snprintf(
+                    (char *) pageInfo,
+                    sizeof(pageInfo),
+                    "ED25519 - %02d/%02d",
+                    transactionDetailsCurrentPage + 1,
+                    transactionDetailsPageCount);
+            break;
+        }
+
     }
 }
 

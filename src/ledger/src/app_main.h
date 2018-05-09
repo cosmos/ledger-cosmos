@@ -18,6 +18,7 @@
 
 #include <stdbool.h>
 #include "apdu_codes.h"
+#include "common.h"
 
 #define CLA                         0x55
 
@@ -28,12 +29,16 @@
 #define OFFSET_DATA                 4  //< Data offset
 
 #define INS_GET_VERSION             0
-#define INS_PUBLIC_KEY              1
-#define INS_SIGN                    2
+#define INS_PUBLIC_KEY_SECP256K1    1
+#define INS_PUBLIC_KEY_ED25519      2
+#define INS_SIGN_SECP256K1          3
+#define INS_SIGN_ED25519            4
 
-#define INS_HASH_TEST               99
-#define INS_PUBLIC_KEY_TEST         100
-#define INS_SIGN_TEST               101
+#define INS_HASH_TEST                   100
+#define INS_PUBLIC_KEY_SECP256K1_TEST   101
+#define INS_PUBLIC_KEY_ED25519_TEST     102
+#define INS_SIGN_SECP256K1_TEST         103
+#define INS_SIGN_ED25519_TEST           104
 
 void app_init();
 void app_main();
