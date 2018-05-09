@@ -61,7 +61,7 @@ uint8_t *transaction_get_buffer()
 void transaction_parse()
 {
     ParseJson(&parsed_transaction, transaction_buffer);
-    // TODO: Verify is valid. Sorted / whitespaces, etc.
+    // FIXME: Verify is valid. Sorted / whitespaces, etc.
 }
 
 parsed_json_t *transaction_get_parsed()

@@ -30,6 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"encoding/hex"
 	"fmt"
+	"github.com/tendermint/ed25519"
 )
 
 //---------------------------------------------------------------
@@ -56,10 +57,10 @@ func Test_LedgerVersion(t *testing.T) {
 	ledger.Logging = true
 	version, err := ledger.GetVersion()
 	require.Nil(t, err, "Detected error")
-	assert.Equal(t, version.AppId, uint8(0xFF), "TESTING MODE NOT ENABLED")
-	assert.Equal(t, version.Major, uint8(0x0), "Wrong Major version")
-	assert.Equal(t, version.Minor, uint8(0x0), "Wrong Minor version")
-	assert.Equal(t, version.Patch, uint8(0x5), "Wrong Patch version")
+	assert.Equal(t, uint8(0xFF), version.AppId, "TESTING MODE NOT ENABLED")
+	assert.Equal(t, uint8(0x0), version.Major, "Wrong Major version")
+	assert.Equal(t, uint8(0x0), version.Minor, "Wrong Minor version")
+	assert.Equal(t, uint8(0x8), version.Patch, "Wrong Patch version")
 }
 
 func Test_LedgerSHA256(t *testing.T) {
@@ -73,7 +74,7 @@ func Test_LedgerSHA256(t *testing.T) {
 	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.True(
 		t,
-		bytes.Equal(answer, expected),
+		bytes.Equal(expected, answer),
 		"unexpected response: %x, expected: %x\n", answer, expected)
 }
 
@@ -92,38 +93,54 @@ func Test_LedgerSHA256Chunks(t *testing.T) {
 	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.True(
 		t,
-		bytes.Equal(answer, expected),
+		bytes.Equal(expected, answer),
 		"unexpected response: %x, expected: %x\n", answer, expected)
 }
 
-func Test_LedgerPublicKeyReal(t *testing.T) {
+func Test_PublicKeySECP256K1(t *testing.T) {
 	ledger := Get_Ledger(t)
 	ledger.Logging = true
 
-	pubKey, err := ledger.GetPublicKey()
+	path := []uint32{44, 60, 0, 0, 0}
+	pubKey, err := ledger.GetPublicKeySECP256K1(path)
 
 	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.Equal(
 		t,
-		len(pubKey),
 		65,
+		len(pubKey),
 		"Public key has wrong length: %x, expected length: %x\n", pubKey, 65)
 
 	_, err = secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
 	require.Nil(t, err, "Error parsing public key err: %s\n", err)
 }
 
-func Test_LedgerPublicKeyTest(t *testing.T) {
+func Test_PublicKeyED25519(t *testing.T) {
 	ledger := Get_Ledger(t)
 	ledger.Logging = true
 
-	pubKey, err := ledger.GetTestPublicKey()
+	path := []uint32{44, 60, 0, 0, 0}
+	pubKey, err := ledger.GetPublicKeyED25519(path)
 
 	require.Nil(t, err, "Detected error, err: %s\n", err)
 	assert.Equal(
 		t,
+		32,
 		len(pubKey),
+		"Public key has wrong length: %x, expected length: %x\n", pubKey, 65)
+}
+
+func Test_FakePublicKeySECP256K1(t *testing.T) {
+	ledger := Get_Ledger(t)
+	ledger.Logging = true
+
+	pubKey, err := ledger.TestGetPublicKeySECP256K1()
+
+	require.Nil(t, err, "Detected error, err: %s\n", err)
+	assert.Equal(
+		t,
 		65,
+		len(pubKey),
 		"Public key has wrong length: %x, expected length: %x\n", pubKey, 65)
 
 	_, err = secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
@@ -136,26 +153,45 @@ func Test_LedgerPublicKeyTest(t *testing.T) {
 	assert.Equal(t, expectedPubKey, pubKey)
 }
 
-func SignAndVerify(t *testing.T, ledger *ledger_goclient.Ledger, message []byte) {
-	signedMsg, err := ledger.SignTest(message)
+func Test_FakePublicKeyED25519(t *testing.T) {
+	ledger := Get_Ledger(t)
+	ledger.Logging = true
+
+	pubKey, err := ledger.TestGetPublicKeyED25519()
+
+	require.Nil(t, err, "Detected error, err: %s\n", err)
+	assert.Equal(
+		t,
+		32,
+		len(pubKey),
+		"Public key has wrong length: %x, expected length: %x\n", pubKey, 32)
+
+	expectedPubKey, err := hex.DecodeString("0421ee8989ab1141b07ed7b92f6eca9c5b722fd04aa1f8268242231d6f3bf4dd")
+	require.Nil(t, err)
+
+	assert.Equal(t, expectedPubKey, pubKey)
+}
+
+func SignAndVerifySECP256K1(t *testing.T, ledger *ledger_goclient.Ledger, message []byte) {
+	signature, err := ledger.TestSignSECP256K1(message)
 	require.Nil(t, err, "Detected error during signing message in ledger, err: %s\n", err)
 
-	pubKey, err := ledger.GetTestPublicKey()
+	pubKey, err := ledger.TestGetPublicKeySECP256K1()
 	require.Nil(t, err, "Detected error getting public key from ledger, err: %s\n", err)
 
 	pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
 	require.Nil(t, err, "Error parsing public key", err)
 
-	fmt.Printf("Size %d\n", len(signedMsg))
+	fmt.Printf("Size %d\n", len(signature))
 
-	sig__, err := secp256k1.ParseDERSignature(signedMsg[:], secp256k1.S256())
-	require.Nil(t, err, "Error parsing ledger's signature using go's secp256k1 library, signedMsd=%x, err: %s\n", signedMsg, err)
+	sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
+	require.Nil(t, err, "Error parsing ledger's signature using go's secp256k1 library, signedMsd=%x, err: %s\n", signature, err)
 
 	verified := sig__.Verify(crypto.Sha256(message), pub__)
-	require.True(t, verified, "Could not verify the signature, signedMsd=%x", signedMsg)
+	require.True(t, verified, "Could not verify the signature=%x", signature)
 }
 
-func Test_LedgerSignAndVerifyMessage_Tiny(t *testing.T) {
+func Test_LedgerSignAndVerifyMessageSECP256K1_Tiny(t *testing.T) {
 	ledger := Get_Ledger(t)
 	ledger.Logging = true
 
@@ -164,35 +200,96 @@ func Test_LedgerSignAndVerifyMessage_Tiny(t *testing.T) {
 		input[i] = byte(i % 255)
 	}
 
-	SignAndVerify(t, ledger, input)
+	SignAndVerifySECP256K1(t, ledger, input)
 }
 
-func Test_LedgerSignAndVerifyMessage_Small(t *testing.T) {
+func Test_LedgerSignAndVerifyMessageSECP256K1_Small(t *testing.T) {
 
 	input := make([]byte, 10)
 	for i := 0; i < 10; i++ {
 		input[i] = byte(i % 255)
 	}
 
-	SignAndVerify(t, Get_Ledger(t), input)
+	SignAndVerifySECP256K1(t, Get_Ledger(t), input)
 }
 
-func Test_LedgerSignAndVerifyMessage_Medium(t *testing.T) {
+func Test_LedgerSignAndVerifyMessageSECP256K1_Medium(t *testing.T) {
 
 	input := make([]byte, 205)
 	for i := 0; i < 205; i++ {
 		input[i] = byte(i % 255)
 	}
 
-	SignAndVerify(t, Get_Ledger(t), input)
+	SignAndVerifySECP256K1(t, Get_Ledger(t), input)
 }
 
-func Test_LedgerSignAndVerifyMessage_Big(t *testing.T) {
+func Test_LedgerSignAndVerifyMessageSECP256K1_Big(t *testing.T) {
 
 	input := make([]byte, 510)
 	for i := 0; i < 510; i++ {
 		input[i] = byte(i % 255)
 	}
 
-	SignAndVerify(t, Get_Ledger(t), input)
+	SignAndVerifySECP256K1(t, Get_Ledger(t), input)
+}
+
+func SignAndVerifyED25519(t *testing.T, ledger *ledger_goclient.Ledger, message []byte) {
+	signature, err := ledger.TestSignED25519(message)
+	require.Nil(t, err, "Detected error during signing message in ledger, err: %s\n", err)
+
+	pubKey, err := ledger.TestGetPublicKeyED25519()
+	require.Nil(t, err, "Detected error getting public key from ledger, err: %s\n", err)
+
+	require.Equal(t, len(pubKey), ed25519.PublicKeySize, "Invalid public key size")
+	require.Equal(t, len(signature), ed25519.SignatureSize, "Invalid signature size")
+
+	var __pub [ed25519.PublicKeySize]byte
+	var __signature [ed25519.SignatureSize]byte
+	copy(__pub[:], pubKey[0:32])
+	copy(__signature[:], signature[0:64])
+
+	require.True(t, ed25519.Verify(&__pub, message, &__signature),
+		"Could not verify the signature=%x", signature)
+}
+
+func Test_LedgerSignAndVerifyMessageED25519_Tiny(t *testing.T) {
+	ledger := Get_Ledger(t)
+	ledger.Logging = true
+
+	input := make([]byte, 1)
+	for i := 0; i < 1; i++ {
+		input[i] = byte(i % 255)
+	}
+
+	SignAndVerifyED25519(t, ledger, input)
+}
+
+func Test_LedgerSignAndVerifyMessageED25519_Small(t *testing.T) {
+
+	input := make([]byte, 10)
+	for i := 0; i < 10; i++ {
+		input[i] = byte(i % 255)
+	}
+
+	SignAndVerifyED25519(t, Get_Ledger(t), input)
+}
+
+func Test_LedgerSignAndVerifyMessageED25519_Medium(t *testing.T) {
+
+	input := make([]byte, 205)
+	for i := 0; i < 205; i++ {
+		input[i] = byte(i % 255)
+	}
+
+	SignAndVerifyED25519(t, Get_Ledger(t), input)
+}
+
+func Test_LedgerSignAndVerifyMessageED25519_Big(t *testing.T) {
+
+	input := make([]byte, 510)
+	for i := 0; i < 510; i++ {
+		input[i] = byte(i % 255)
+	}
+
+	SignAndVerifyED25519(t, Get_Ledger(t), input)
 }

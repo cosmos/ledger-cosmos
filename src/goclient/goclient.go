@@ -29,6 +29,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/zondax/ledger-goclient"
+	"github.com/tendermint/ed25519"
 )
 
 func PrintSampleFunc(message bank.SendMsg, output string) {
@@ -157,6 +158,91 @@ func GetMessages() ([]bank.SendMsg) {
 	}
 }
 
+func testED25519(messages []bank.SendMsg, ledger *ledger_goclient.Ledger) {
+	//// Now the same with ed25519
+	for i := 0; i < len(messages); i++ {
+		fmt.Printf("\nMessage %d - Please Sign..\n", i)
+		message := messages[i].GetSignBytes()
+
+		path := []uint32{44, 60, 0, 0, 0}
+
+		pubKey, err := ledger.GetPublicKeyED25519(path)
+		if err != nil {
+			fmt.Printf("[GetPK] Error: %s\n", err)
+			os.Exit(1)
+		}
+		if len(pubKey) != ed25519.PublicKeySize {
+			fmt.Printf("[Sign] Invalid public key size\n")
+			os.Exit(1)
+		}
+
+		signature, err := ledger.SignED25519(path, message)
+		if err != nil {
+			fmt.Printf("[Sign] Error: %s\n", err)
+			os.Exit(1)
+		}
+		if len(signature) != ed25519.SignatureSize {
+			fmt.Printf("[Sign] Invalid signature size\n")
+			os.Exit(1)
+		}
+
+		var __pub [ed25519.PublicKeySize]byte
+		var __signature [ed25519.SignatureSize]byte
+		copy(__pub[:], pubKey[0:32])
+		copy(__signature[:], signature[0:64])
+
+		verified := ed25519.Verify(&__pub, message, &__signature)
+		if !verified {
+			fmt.Printf("[VerifySig] Error verifying signature\n")
+			os.Exit(1)
+		}
+
+		fmt.Printf("Message %d - Valid signature\n", i)
+	}
+}
+
+func testSECP256K1(messages []bank.SendMsg, ledger *ledger_goclient.Ledger) {
+	for i := 0; i < len(messages); i++ {
+		fmt.Printf("\nMessage %d - Please Sign..\n", i)
+		message := messages[i].GetSignBytes()
+
+		path := []uint32{44, 60, 0, 0, 0}
+
+		signature, err := ledger.SignSECP256K1(path, message)
+		if err != nil {
+			fmt.Printf("[Sign] Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		pubKey, err := ledger.GetPublicKeySECP256K1(path)
+
+		if err != nil {
+			fmt.Printf("[GetPK] Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
+		if err != nil {
+			fmt.Printf("[ParsePK] Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
+		if err != nil {
+			fmt.Printf("[ParseSig] Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		verified := sig__.Verify(crypto.Sha256(message), pub__)
+		if !verified {
+			fmt.Printf("[VerifySig] Error verifying signature\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Message %d - Valid signature\n", i)
+	}
+}
+
 func main() {
 	ledger, err := ledger_goclient.FindLedger()
 
@@ -167,43 +253,9 @@ func main() {
 	} else {
 		ledger.Logging = true
 		messages := GetMessages()
+		testSECP256K1(messages, ledger)
 
-		for i := 0; i< len(messages); i++ {
-			fmt.Printf("\nMessage %d - Please Sign..\n", i)
-			message := messages[i].GetSignBytes()
-
-			signature, err := ledger.Sign(message)
-			if err != nil {
-				fmt.Printf("[Sign] Error: %s\n", err)
-				os.Exit(1)
-			}
-
-			pubKey, err := ledger.GetPublicKey()
-
-			if err != nil {
-				fmt.Errorf("[GetPK] Error: %s\n", err)
-				os.Exit(1)
-			}
-
-			pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
-			if err != nil {
-				fmt.Errorf("[ParsePK] Error: %s\n", err)
-				os.Exit(1)
-			}
-
-			sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
-			if err != nil {
-				fmt.Errorf("[ParseSig] Error: %s\n", err)
-				os.Exit(1)
-			}
-
-			verified := sig__.Verify(crypto.Sha256(message), pub__)
-			if !verified {
-				fmt.Errorf("[VerifySig] Error verifying signature\n", err)
-				os.Exit(1)
-			}
-
-			fmt.Printf("Message %d - Valid signature\n", i)
-		}
+		// FIXME
+		// testED25519(messages, ledger)
 	}
 }

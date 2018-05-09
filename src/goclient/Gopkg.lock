@@ -132,7 +132,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "714f901b98fdb3aa954b4193d8cbd64a28d80cad"
+  revision = "ae970a0732be3a1f5311da86118d37b9f4bd2a5a"
 
 [[projects]]
   name = "github.com/tendermint/abci"
@@ -180,7 +180,7 @@
   branch = "master"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
-  revision = "0eb48e14b06efd0354c2e0e18f15db121c64b9b8"
+  revision = "a242cfad962597a588288f99fa3425a01a820295"
 
 [[projects]]
   branch = "master"
@@ -193,7 +193,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "b0697eccbea9adec5b7ba8008f4c33d98d733388"
+  revision = "21052ae46654ecf18dfdba0f7c12701a1e2b3164"
 
 [[projects]]
   branch = "master"
@@ -205,10 +205,9 @@
     "http2/hpack",
     "idna",
     "internal/timeseries",
-    "lex/httplex",
     "trace"
   ]
-  revision = "5f9ae10d9af5b1c89ae6904293b14b064d4ada23"
+  revision = "f73e4c9ed3b7ebdd5f699a16a880c2b1994e50dd"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -235,7 +234,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "7fd901a49ba6a7f87732eb344f6e3c5b19d1b200"
+  revision = "86e600f69ee4704c6efbf6a2a40a5c10700e76c2"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -264,6 +263,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "60d108e5d05c1b978b4b3ad6ebcf5a644b23f31ab02c04df2c05b836098568e3"
+  inputs-digest = "450d4765966a7180e39e239cd72ac9f07c68f94a1df1aa054989c8df2a70879c"
   solver-name = "gps-cdcl"
   solver-version = 1
