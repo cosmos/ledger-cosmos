@@ -30,7 +30,10 @@ APPNAME = "COSMOS"
 APPVERSION_M=0
 APPVERSION_N=0
 APPVERSION_P=8
-APP_LOAD_PARAMS = --appFlags 0x00 --delete --signApp --signPrivateKey 0130a1c6fa9154cad78d91a8ecbbdbba7e1efbff01840997949130bba5cb38cd $(COMMON_LOAD_PARAMS)
+
+# FIXME: There is currently a problem running ledgerBlue.setupCustomCA which needs to be fixed.
+#APP_LOAD_PARAMS = --appFlags 0x00 --delete --signApp --signPrivateKey 0130a1c6fa9154cad78d91a8ecbbdbba7e1efbff01840997949130bba5cb38cd $(COMMON_LOAD_PARAMS)
+APP_LOAD_PARAMS = --appFlags 0x00 $(COMMON_LOAD_PARAMS)
 
 #prepare hsm generation
 ICONNAME=$(CURDIR)/app_cosmos_nanos.gif
