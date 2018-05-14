@@ -66,7 +66,7 @@ int sign_secp256k1(
             &info);
 
     os_memset(&privateKey, 0, sizeof(privateKey));
-
+#ifdef TESTING_ENABLED
     return cx_ecdsa_verify(
             &publicKey,
             CX_LAST,
@@ -75,6 +75,9 @@ int sign_secp256k1(
             CX_SHA256_SIZE,
             signature,
             *signature_length);
+#else
+    return 1;
+#endif
 }
 
 int sign_ed25519(
@@ -108,6 +111,7 @@ int sign_ed25519(
 
     os_memset(privateKey, 0, sizeof(privateKey));
 
+#ifdef TESTING_ENABLED
     return cx_eddsa_verify(
             &publicKey,
             0,
@@ -118,4 +122,7 @@ int sign_ed25519(
             0,
             signature,
             *signature_length);
+#else
+    return 1;
+#endif
 }
