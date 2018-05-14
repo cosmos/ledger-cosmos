@@ -1,26 +1,58 @@
 # ledger-cosmos
-
 [![CircleCI](https://circleci.com/gh/cosmos/ledger-cosmos/tree/master.svg?style=svg)](https://circleci.com/gh/cosmos/ledger-cosmos/tree/master)
 
-This project is work in progress. Some aspects are subject to change.
+This is a prototype of the ledger app for cosmos-sdk. It is work in progress subject to further modifications and testing.
+
+WARNING: DO NOT USE THIS APP IN A LEDGER WITH FUNDS. 
 
 # Get source
-Apart from cloning, be sure you get all submodules
+Apart from cloning, be sure you get all the submodules, by calling:
 ```
 git submodule update --init --recursive
 ```
+or alternatively using ```fix_submodules.sh``` script which can be found in the tools folder.
 
 # Dependencies
 This project requires ledger firmware 1.4.1
 
 ## Ledger python tools
 
-Ledger firmware 1.4.1 requires, ledgerblue 0.1.17. Unfortunately, the package is still not available in pypi. For this reason, it is necessary to install it directly from source. In most cases, `nanocli.sh` should be able to install all dependencies: 
+Ledger firmware 1.4.1 requires ledgerblue 0.1.17. Unfortunately, the package is still not available in pypi. For this reason, it is necessary to install it directly from source. In most cases, `nanocli.sh` should be able to install all dependencies: 
 
 ```bash
 ./nanocli.sh config
 ```
 It is possible that due to recent changes to the firmware/SDK some additional steps might be required.
+
+This tool requires python 2.7 - it will not run in 3.x versions. 
+In order to check which version you are using run this in your terminal:
+```python --version```
+
+There are different ways of installing python 2.7 side-by-side your existing version:
+
+####a) using anaconda
+
+step 1: ```conda create -n py27 python=2.7 anaconda```
+
+step 2: ```source activate py27```
+
+and then:
+
+step 3: ```source deactivate```
+to switch back to the original environment
+
+####b) using virtualenv:
+
+step1: Download python 2.7 version
+
+step2: ```virtualenv -p {python_location} {env_name}```
+
+step3: ```source env_name/bin/activate```
+
+and then:
+
+step 4: ```deactivate```
+to switch back to the original environment
 
 ## CircleCI CLI
 
