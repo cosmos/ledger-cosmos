@@ -175,6 +175,7 @@ func testTendermintED25519(messages []bank.SendMsg, ledger *ledger_goclient.Ledg
 		message := messages[i].GetSignBytes()
 
 		pubKey := ed25519.MakePublicKey(&privateKey)
+
 		signature := ed25519.Sign(&privateKey, message)
 		verified := ed25519.Verify(pubKey, message, signature)
 		if !verified {
@@ -281,9 +282,12 @@ func main() {
 	} else {
 		ledger.Logging = true
 		messages := GetMessages()
-		//testSECP256K1(messages, ledger)
+
+		// WORKING ONES
+		testSECP256K1(messages, ledger)
+		testTendermintED25519(messages, ledger)
 
 		// FIXME
-		testTendermintED25519(messages, ledger)
+		testED25519(messages, ledger)
 	}
 }
