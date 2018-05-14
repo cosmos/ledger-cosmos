@@ -158,6 +158,34 @@ func GetMessages() ([]bank.SendMsg) {
 	}
 }
 
+func testTendermintED25519(messages []bank.SendMsg, ledger *ledger_goclient.Ledger) {
+	privateKey := [64]byte{
+		0x75, 0x56, 0x0e, 0x4d, 0xde, 0xa0, 0x63, 0x05,
+		0xc3, 0x6e, 0x2e, 0xb5, 0xf7, 0x2a, 0xca, 0x71,
+		0x2d, 0x13, 0x4c, 0xc2, 0xa0, 0x59, 0xbf, 0xe8,
+		0x7e, 0x9b, 0x5d, 0x55, 0xbf, 0x81, 0x3b, 0xd4,
+		0x75, 0x56, 0x0e, 0x4d, 0xde, 0xa0, 0x63, 0x05,
+		0xc3, 0x6e, 0x2e, 0xb5, 0xf7, 0x2a, 0xca, 0x71,
+		0x2d, 0x13, 0x4c, 0xc2, 0xa0, 0x59, 0xbf, 0xe8,
+		0x7e, 0x9b, 0x5d, 0x55, 0xbf, 0x81, 0x3b, 0xd4,
+	}
+
+	for i := 0; i < len(messages); i++ {
+		fmt.Printf("\nMessage %d - Please Sign..\n", i)
+		message := messages[i].GetSignBytes()
+
+		pubKey := ed25519.MakePublicKey(&privateKey)
+		signature := ed25519.Sign(&privateKey, message)
+		verified := ed25519.Verify(pubKey, message, signature)
+		if !verified {
+			fmt.Printf("[VerifySig] Error verifying signature\n")
+			os.Exit(1)
+		}
+
+		fmt.Printf("Message %d - Valid signature\n", i)
+	}
+}
+
 func testED25519(messages []bank.SendMsg, ledger *ledger_goclient.Ledger) {
 	//// Now the same with ed25519
 	for i := 0; i < len(messages); i++ {
@@ -253,9 +281,9 @@ func main() {
 	} else {
 		ledger.Logging = true
 		messages := GetMessages()
-		testSECP256K1(messages, ledger)
+		//testSECP256K1(messages, ledger)
 
 		// FIXME
-		// testED25519(messages, ledger)
+		testTendermintED25519(messages, ledger)
 	}
 }

@@ -29,6 +29,7 @@
 #define APDU_CODE_INS_NOT_SUPPORTED         0x6D00
 #define APDU_CODE_CLA_NOT_SUPPORTED         0x6E00
 #define APDU_CODE_UNKNOWN                   0x6F00
+#define APDU_CODE_SIGN_VERIFY_ERROR         0x6F01
 
 
 inline void set_code(uint8_t *buffer, uint8_t offset, uint16_t value)

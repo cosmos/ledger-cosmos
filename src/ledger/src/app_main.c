@@ -34,6 +34,7 @@ const uint8_t privateKeyDataTest[] = {
         0x2d, 0x13, 0x4c, 0xc2, 0xa0, 0x59, 0xbf, 0xe8,
         0x7e, 0x9b, 0x5d, 0x55, 0xbf, 0x81, 0x3b, 0xd4
 };
+
 #endif
 
 uint8_t bip32_depth;
@@ -403,6 +404,7 @@ void sign_transaction()
     uint8_t privateKeyData[32];
 
     unsigned int length = 0;
+    int result = 0;
     switch(current_sigtype)
     {
     case SECP256K1:
@@ -414,7 +416,7 @@ void sign_transaction()
         keys_secp256k1(&publicKey, &privateKey, privateKeyData);
         memset(privateKeyData, 0, 32);
 
-        sign_secp256k1(
+        result = sign_secp256k1(
                 transaction_get_buffer(),
                 transaction_get_buffer_length(),
                 G_io_apdu_buffer,
@@ -431,7 +433,7 @@ void sign_transaction()
         keys_ed25519(&publicKey, &privateKey, privateKeyData);
         memset(privateKeyData, 0, 32);
 
-        sign_ed25519(
+        result = sign_ed25519(
                 transaction_get_buffer(),
                 transaction_get_buffer_length(),
                 G_io_apdu_buffer,
@@ -441,9 +443,16 @@ void sign_transaction()
         break;
     }
 
-    set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
-    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length+2);
-    view_display_signing_success();
+    if (result == 1) {
+        set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
+        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
+        view_display_signing_success();
+    }
+    else {
+        set_code(G_io_apdu_buffer, length, APDU_CODE_SIGN_VERIFY_ERROR);
+        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
+        view_display_signing_error();
+    }
 }
 
 void app_main()
