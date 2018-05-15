@@ -344,4 +344,35 @@ namespace {
 
         EXPECT_EQ(size, 24) << "Received: " << size << ", expected: 24.";
     }
+
+
+    TEST(JsonParserTest, ParseSignedMsg) {
+        parsed_json_t parsedMessage = {0};
+        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+
+        ParseJson(&parsedMessage, signedMsg);
+
+        char name[100] = {0};
+        char value[100] = {0};
+        unsigned int scrollingSize = 0;
+        unsigned int scrollingStep = 0;
+        unsigned int maxCharsPerLine = 10;
+        int size = SignedMsgGetInfo(name,
+                                    value,
+                                    0,
+                                    &parsedMessage,
+                                    &scrollingSize,
+                                    scrollingStep,
+                                    maxCharsPerLine,
+                                    signedMsg,
+                                    [](void* dst, const void* src, unsigned int size) {
+                                        memcpy(dst, src, (size_t)(size));
+                                    });
+
+        EXPECT_TRUE(strcmp("chain_id", name)==0) << "Received: " << name << ", expected: chain_id";
+        EXPECT_TRUE(strcmp("test-chain-27AkQh", value)==0) << "Received: " << value << ", expected: test-chain-27AkQh";
+
+    }
+
+
 }

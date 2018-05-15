@@ -159,6 +159,27 @@ void ParseJson(parsed_json_t *parsedJson, const char *jsonString) {
     ParseMessage(parsedJson, jsonString);
 }
 
+void ParseSignedMsg(parsed_json_t* parsedMessage, const char* signedMsg)
+{
+    jsmn_parser parser;
+    jsmn_init(&parser);
+
+    parsedMessage->NumberOfTokens = jsmn_parse(
+            &parser,
+            signedMsg,
+            strlen(signedMsg),
+            parsedMessage->Tokens,
+            MAX_NUMBER_OF_TOKENS);
+
+    parsedMessage->CorrectFormat = false;
+    if (parsedMessage->NumberOfTokens >= 1
+        &&
+        parsedMessage->Tokens[0].type != JSMN_OBJECT) {
+        parsedMessage->CorrectFormat = true;
+    }
+
+}
+
 int TransactionMsgGetInfo(
         char *name,
         char *value,
@@ -289,4 +310,31 @@ int TransactionMsgGetInfo(
         }
     }
     return currentIndex;
+}
+
+int SignedMsgGetInfo(
+        char *name,
+        char *value,
+        int index,
+        const parsed_json_t* parsed_message,
+        unsigned int* view_scrolling_total_size,
+        unsigned int view_scrolling_step,
+        unsigned int max_chars_per_line,
+        const char* message,
+        void(*copy)(void* dst, const void* source, unsigned int size))
+{
+    if (index * 2 + 1 < parsed_message->NumberOfTokens) {
+        jsmntok_t start_token = parsed_message->Tokens[1 + index * 2];
+        jsmntok_t end_token = parsed_message->Tokens[1 + index * 2 + 1];
+        copy((char *) name,
+             message + start_token.start,
+             start_token.end - start_token.start);
+        copy((char *) value,
+             message + end_token.start,
+             end_token.end - end_token.start);
+    }
+    else {
+        strcpy(name, "Error");
+        strcpy(value, "Out-of-bounds");
+    }
 }

@@ -96,6 +96,23 @@ int TransactionMsgGetInfo(
         void(*copy)(void* dst, const void* source, unsigned int size));
 
 
+// The main function that parses jsonString and creates a parsed message
+// which contains all the json tokens plus skeleton of SendMsg with links to those tokens
+void ParseSignedMsg(parsed_json_t* parsedMessage, const char* signedMsg);
+
+// Get key/value pairs (name/value) from the signed message based on the
+// index of the key/value pair that will be displayed
+int SignedMsgGetInfo(
+        char *name,
+        char *value,
+        int index,
+        const parsed_json_t* parsed_message,
+        unsigned int* view_scrolling_total_size,
+        unsigned int view_scrolling_step,
+        unsigned int max_chars_per_line,
+        const char* message,
+        void(*copy)(void* dst, const void* source, unsigned int size));
+
 #ifdef __cplusplus
 }
 #endif

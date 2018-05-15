@@ -285,9 +285,9 @@ func main() {
 
 		// WORKING ONES
 		testSECP256K1(messages, ledger)
-		testTendermintED25519(messages, ledger)
+		//testTendermintED25519(messages, ledger)
 
 		// FIXME
-		testED25519(messages, ledger)
+		//testED25519(messages, ledger)
 	}
 }
