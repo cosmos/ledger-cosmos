@@ -312,6 +312,34 @@ int TransactionMsgGetInfo(
     return currentIndex;
 }
 
+int GetTokenIndexForKey(
+        int keyIndex,
+        const parsed_json_t* parsed_message)
+{
+    int currentIndex = 0;
+    int foundKeyIndex = 0;
+    int nextKeyMinPosition = -1;
+    while (currentIndex < parsed_message->NumberOfTokens) {
+
+        // Here we're assuming that json keys are always of JSMN_STRING type
+        if (parsed_message->Tokens[currentIndex].type == JSMN_STRING) {
+            if (parsed_message->Tokens[currentIndex].start > nextKeyMinPosition) {
+
+                // Found the key
+                if (keyIndex == foundKeyIndex) {
+                    return currentIndex;
+                }
+                foundKeyIndex++;
+                // Skip all the value tokens
+                nextKeyMinPosition = parsed_message->Tokens[currentIndex + 1].end;
+            }
+        }
+        currentIndex++;
+    }
+    // Could not find key with that index
+    return -1;
+}
+
 int SignedMsgGetInfo(
         char *name,
         char *value,
@@ -323,15 +351,18 @@ int SignedMsgGetInfo(
         const char* message,
         void(*copy)(void* dst, const void* source, unsigned int size))
 {
-    if (index * 2 + 1 < parsed_message->NumberOfTokens) {
-        jsmntok_t start_token = parsed_message->Tokens[1 + index * 2];
-        jsmntok_t end_token = parsed_message->Tokens[1 + index * 2 + 1];
+    int tokenKeyIndex = GetTokenIndexForKey(index, parsed_message);
+
+    if (tokenKeyIndex != -1) {
+        jsmntok_t key_token = parsed_message->Tokens[tokenKeyIndex];
+        jsmntok_t value_token = parsed_message->Tokens[tokenKeyIndex+1];
         copy((char *) name,
-             message + start_token.start,
-             start_token.end - start_token.start);
+             message + key_token.start,
+             key_token.end - key_token.start);
+
         copy((char *) value,
-             message + end_token.start,
-             end_token.end - end_token.start);
+             message + value_token.start,
+             value_token.end - value_token.start);
     }
     else {
         strcpy(name, "Error");

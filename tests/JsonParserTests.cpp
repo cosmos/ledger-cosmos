@@ -346,7 +346,7 @@ namespace {
     }
 
 
-    TEST(JsonParserTest, ParseSignedMsg) {
+    TEST(JsonParserTest, ParseSignedMsg_index_0) {
         parsed_json_t parsedMessage = {0};
         const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
 
@@ -371,8 +371,141 @@ namespace {
 
         EXPECT_TRUE(strcmp("chain_id", name)==0) << "Received: " << name << ", expected: chain_id";
         EXPECT_TRUE(strcmp("test-chain-27AkQh", value)==0) << "Received: " << value << ", expected: test-chain-27AkQh";
+    }
 
+    TEST(JsonParserTest, ParseSignedMsg_index_1) {
+        parsed_json_t parsedMessage = {0};
+        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+
+        ParseJson(&parsedMessage, signedMsg);
+
+        char name[100] = {0};
+        char value[100] = {0};
+        unsigned int scrollingSize = 0;
+        unsigned int scrollingStep = 0;
+        unsigned int maxCharsPerLine = 10;
+        int size = SignedMsgGetInfo(name,
+                                    value,
+                                    1,
+                                    &parsedMessage,
+                                    &scrollingSize,
+                                    scrollingStep,
+                                    maxCharsPerLine,
+                                    signedMsg,
+                                    [](void* dst, const void* src, unsigned int size) {
+                                        memcpy(dst, src, (size_t)(size));
+                                    });
+
+        EXPECT_TRUE(strcmp("sequences", name)==0) << "Received: " << name << ", expected: sequences";
+        EXPECT_TRUE(strcmp("[1]", value)==0) << "Received: " << value << ", expected: [1]";
+    }
+
+    TEST(JsonParserTest, ParseSignedMsg_index_2) {
+        parsed_json_t parsedMessage = {0};
+        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+
+        ParseJson(&parsedMessage, signedMsg);
+
+        char name[100] = {0};
+        char value[100] = {0};
+        unsigned int scrollingSize = 0;
+        unsigned int scrollingStep = 0;
+        unsigned int maxCharsPerLine = 10;
+        int size = SignedMsgGetInfo(name,
+                                    value,
+                                    2,
+                                    &parsedMessage,
+                                    &scrollingSize,
+                                    scrollingStep,
+                                    maxCharsPerLine,
+                                    signedMsg,
+                                    [](void* dst, const void* src, unsigned int size) {
+                                        memcpy(dst, src, (size_t)(size));
+                                    });
+
+        EXPECT_TRUE(strcmp("fee_bytes", name)==0) << "Received: " << name << ", expected: fee_bytes";
+        EXPECT_TRUE(strcmp("eyJhbW91bnQiOltdLCJnYXMiOjB9", value)==0) << "Received: " << value << ", expected: eyJhbW91bnQiOltdLCJnYXMiOjB9";
     }
 
 
+    TEST(JsonParserTest, ParseSignedMsg_index_3) {
+        parsed_json_t parsedMessage = {0};
+        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+
+        ParseJson(&parsedMessage, signedMsg);
+
+        char name[100] = {0};
+        char value[1000] = {0};
+        unsigned int scrollingSize = 0;
+        unsigned int scrollingStep = 0;
+        unsigned int maxCharsPerLine = 10;
+        int size = SignedMsgGetInfo(name,
+                                    value,
+                                    3,
+                                    &parsedMessage,
+                                    &scrollingSize,
+                                    scrollingStep,
+                                    maxCharsPerLine,
+                                    signedMsg,
+                                    [](void* dst, const void* src, unsigned int size) {
+                                        memcpy(dst, src, (size_t)(size));
+                                    });
+
+        EXPECT_TRUE(strcmp("msg_bytes", name)==0) << "Received: " << name << ", expected: msg_bytes";
+        EXPECT_TRUE(strcmp("eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=", value)==0) << "Received: " << value << ", expected: eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=";
+    }
+
+    TEST(JsonParserTest, ParseSignedMsg_index_4) {
+        parsed_json_t parsedMessage = {0};
+        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+
+        ParseJson(&parsedMessage, signedMsg);
+
+        char name[100] = {0};
+        char value[1000] = {0};
+        unsigned int scrollingSize = 0;
+        unsigned int scrollingStep = 0;
+        unsigned int maxCharsPerLine = 10;
+        int size = SignedMsgGetInfo(name,
+                                    value,
+                                    4,
+                                    &parsedMessage,
+                                    &scrollingSize,
+                                    scrollingStep,
+                                    maxCharsPerLine,
+                                    signedMsg,
+                                    [](void* dst, const void* src, unsigned int size) {
+                                        memcpy(dst, src, (size_t)(size));
+                                    });
+
+        EXPECT_TRUE(strcmp("alt_bytes", name)==0) << "Received: " << name << ", expected: alt_bytes";
+        EXPECT_TRUE(strcmp("null", value)==0) << "Received: " << value << ", expected: null";
+    }
+
+    TEST(JsonParserTest, ParseSignedMsg_index_outside_bounds) {
+        parsed_json_t parsedMessage = {0};
+        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+
+        ParseJson(&parsedMessage, signedMsg);
+
+        char name[100] = {0};
+        char value[1000] = {0};
+        unsigned int scrollingSize = 0;
+        unsigned int scrollingStep = 0;
+        unsigned int maxCharsPerLine = 10;
+        int size = SignedMsgGetInfo(name,
+                                    value,
+                                    5,
+                                    &parsedMessage,
+                                    &scrollingSize,
+                                    scrollingStep,
+                                    maxCharsPerLine,
+                                    signedMsg,
+                                    [](void* dst, const void* src, unsigned int size) {
+                                        memcpy(dst, src, (size_t)(size));
+                                    });
+
+        EXPECT_TRUE(strcmp("Error", name)==0) << "Received: " << name << ", expected: Error";
+        EXPECT_TRUE(strcmp("Out-of-bounds", value)==0) << "Received: " << value << ", expected: Out-of-bounds";
+    }
 }
