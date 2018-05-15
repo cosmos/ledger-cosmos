@@ -82,6 +82,20 @@ void ParseJson(parsed_json_t* parsedMessage, const char* jsonString);
 // This function is called recursively from within ParseJson function
 void ProcessToken(parsed_json_t* parsedMessage, int currentDepth, int tokenIndex);
 
+// Get key/value pairs (name/value) from the transaction message based on the
+// index of the key/value pair that will be displayed
+int TransactionMsgGetInfo(
+        char *name,
+        char *value,
+        int index,
+        const parsed_json_t* parsed_transaction,
+        unsigned int* view_scrolling_total_size,
+        unsigned int view_scrolling_step,
+        unsigned int max_chars_per_line,
+        const char* message,
+        void(*copy)(char* dst, const char* source, unsigned int size));
+
+
 #ifdef __cplusplus
 }
 #endif

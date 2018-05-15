@@ -137,24 +137,156 @@ void ParseMessage(
     }
 }
 
-    void ParseJson(parsed_json_t *parsedJson, const char *jsonString) {
-        jsmn_parser parser;
-        jsmn_init(&parser);
+void ParseJson(parsed_json_t *parsedJson, const char *jsonString) {
+    jsmn_parser parser;
+    jsmn_init(&parser);
 
-        parsedJson->NumberOfTokens = jsmn_parse(
-                &parser,
-                jsonString,
-                strlen(jsonString),
-                parsedJson->Tokens,
-                MAX_NUMBER_OF_TOKENS);
+    parsedJson->NumberOfTokens = jsmn_parse(
+            &parser,
+            jsonString,
+            strlen(jsonString),
+            parsedJson->Tokens,
+            MAX_NUMBER_OF_TOKENS);
 
-        parsedJson->CorrectFormat = false;
-        if (parsedJson->NumberOfTokens >= 1
-            &&
-            parsedJson->Tokens[0].type != JSMN_OBJECT) {
-            parsedJson->CorrectFormat = true;
-        }
-
-        // Build SendMsg representation with links to tokens
-        ParseMessage(parsedJson, jsonString);
+    parsedJson->CorrectFormat = false;
+    if (parsedJson->NumberOfTokens >= 1
+        &&
+        parsedJson->Tokens[0].type != JSMN_OBJECT) {
+        parsedJson->CorrectFormat = true;
     }
+
+    // Build SendMsg representation with links to tokens
+    ParseMessage(parsedJson, jsonString);
+}
+
+int TransactionMsgGetInfo(
+        char *name,
+        char *value,
+        int index,
+        const parsed_json_t* parsed_transaction,
+        unsigned int* view_scrolling_total_size,
+        unsigned int view_scrolling_step,
+        unsigned int max_chars_per_line,
+        const char* message,
+        void(*copy)(char* dst, const char* source, unsigned int size))
+{
+    int currentIndex = 0;
+    for (int i = 0; i < parsed_transaction->NumberOfInputs; i++) {
+        if (index == currentIndex) {
+            copy((char *) name, "Input address", sizeof("Input address"));
+
+            unsigned int addressSize =
+                    parsed_transaction->Tokens[parsed_transaction->Inputs[i].Address].end -
+                    parsed_transaction->Tokens[parsed_transaction->Inputs[i].Address].start;
+
+            *view_scrolling_total_size = addressSize;
+            const char *addressPtr =
+                    message +
+                    parsed_transaction->Tokens[parsed_transaction->Inputs[i].Address].start;
+
+            if (view_scrolling_step < addressSize) {
+                copy(
+                        (char *) value,
+                        addressPtr + view_scrolling_step,
+                        addressSize < max_chars_per_line ? addressSize : max_chars_per_line);
+                value[addressSize] = '\0';
+            }
+            return currentIndex;
+        }
+        currentIndex++;
+        for (int j = 0; j < parsed_transaction->Inputs[i].NumberOfCoins; j++) {
+            if (index == currentIndex) {
+                copy((char *) name, "Coin", sizeof("Coin"));
+
+                int coinSize =
+                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Denum].end -
+                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Denum].start;
+
+                const char *coinPtr =
+                        message +
+                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Denum].start;
+
+                copy((char *) value, coinPtr, coinSize);
+                value[coinSize] = '\0';
+                return currentIndex;
+            }
+            currentIndex++;
+            if (index == currentIndex) {
+                copy((char *) name, "Amount", sizeof("Amount"));
+
+                int coinAmountSize =
+                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Amount].end -
+                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Amount].start;
+
+                const char *coinAmountPtr =
+                        message +
+                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Amount].start;
+
+                copy((char *) value, coinAmountPtr, coinAmountSize);
+                value[coinAmountSize] = '\0';
+                return currentIndex;
+            }
+            currentIndex++;
+        }
+    }
+    for (int i = 0; i < parsed_transaction->NumberOfOutputs; i++) {
+        if (index == currentIndex) {
+            copy((char *) name, "Output address", sizeof("Output address"));
+
+            unsigned int addressSize =
+                    parsed_transaction->Tokens[parsed_transaction->Outputs[i].Address].end -
+                    parsed_transaction->Tokens[parsed_transaction->Outputs[i].Address].start;
+
+            const char *addressPtr =
+                    message +
+                    parsed_transaction->Tokens[parsed_transaction->Outputs[i].Address].start;
+
+            view_scrolling_total_size = addressSize;
+
+            if (view_scrolling_step < addressSize) {
+                copy(
+                        (char *) value,
+                        addressPtr + view_scrolling_step,
+                        addressSize < max_chars_per_line ? addressSize : max_chars_per_line);
+                value[addressSize] = '\0';
+            }
+            return currentIndex;
+        }
+        currentIndex++;
+        for (int j = 0; j < parsed_transaction->Outputs[i].NumberOfCoins; j++) {
+            if (index == currentIndex) {
+                copy((char *) name, "Coin", sizeof("Coin"));
+
+                int coinSize =
+                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Denum].end -
+                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Denum].start;
+
+                const char *coinPtr =
+                        message +
+                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Denum].start;
+
+                copy((char *) value, coinPtr, coinSize);
+                value[coinSize] = '\0';
+                return currentIndex;
+            }
+            currentIndex++;
+            if (index == currentIndex) {
+                copy((char *) name, "Amount", sizeof("Amount"));
+
+                int coinAmountSize =
+                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Amount].end -
+                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Amount].start;
+
+                const char *coinAmountPtr =
+                        message +
+                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Amount].start;
+
+                copy((char *) value, coinAmountPtr, coinAmountSize);
+                value[coinAmountSize] = '\0';
+                return currentIndex;
+            }
+            currentIndex++;
+        }
+    }
+    return currentIndex;
+}
