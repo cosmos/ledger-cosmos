@@ -168,7 +168,7 @@ int TransactionMsgGetInfo(
         unsigned int view_scrolling_step,
         unsigned int max_chars_per_line,
         const char* message,
-        void(*copy)(char* dst, const char* source, unsigned int size))
+        void(*copy)(void* dst, const void* source, unsigned int size))
 {
     int currentIndex = 0;
     for (int i = 0; i < parsed_transaction->NumberOfInputs; i++) {
@@ -241,7 +241,7 @@ int TransactionMsgGetInfo(
                     message +
                     parsed_transaction->Tokens[parsed_transaction->Outputs[i].Address].start;
 
-            view_scrolling_total_size = addressSize;
+            *view_scrolling_total_size = addressSize;
 
             if (view_scrolling_step < addressSize) {
                 copy(

@@ -259,9 +259,10 @@ namespace {
                                           scrollingStep,
                                           maxCharsPerLine,
                                           sendMsgSample,
-                                          [](char *dst, const char *src, unsigned int size) {
-                                              memcpy(dst, src, size);
+                                          [](void* dst, const void* src, unsigned int size) {
+                                              memcpy(dst, src, (size_t)(size));
                                           });
+
         EXPECT_EQ(index, 0) << "Wrong display pair index returned, expected 0, returned " << index;
     }
 
@@ -284,9 +285,10 @@ namespace {
                                           scrollingStep,
                                           maxCharsPerLine,
                                           sendMsgSample,
-                                          [](char* dst, const char* src, unsigned int size) {
-                                              memcpy(dst, src, size);
+                                          [](void* dst, const void* src, unsigned int size) {
+                                              memcpy(dst, src, (size_t)(size));
                                           });
+
         EXPECT_EQ(index, 5) << "Wrong display pair index returned";
     }
 
@@ -309,9 +311,10 @@ namespace {
                                           scrollingStep,
                                           maxCharsPerLine,
                                           sendMsgSample,
-                                          [](char* dst, const char* src, unsigned int size) {
-                                              memcpy(dst, src, size);
+                                          [](void* dst, const void* src, unsigned int size) {
+                                              memcpy(dst, src, (size_t)(size));
                                           });
+
         EXPECT_TRUE(strcmp(name, "Amount")==0) << "Received: " << name << ", expected: Amount.";
         EXPECT_TRUE(strcmp(value, "10")==0) << "Received: " << name << ", expected: 10.";
     }
@@ -335,9 +338,10 @@ namespace {
                                           scrollingStep,
                                           maxCharsPerLine,
                                           sendMsgSample,
-                                          [](char* dst, const char* src, unsigned int size) {
-                                              memcpy(dst, src, size);
-                                          });
+                                         [](void* dst, const void* src, unsigned int size) {
+                                             memcpy(dst, src, (size_t)(size));
+                                         });
+
         EXPECT_EQ(size, 24) << "Received: " << size << ", expected: 24.";
     }
 }

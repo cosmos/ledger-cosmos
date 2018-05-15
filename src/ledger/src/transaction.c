@@ -68,3 +68,24 @@ parsed_json_t *transaction_get_parsed()
 {
     return &parsed_transaction;
 }
+
+// Updates name and value strings with information
+// from transaction's node with the given index
+// Returns index if a node with the given index was found
+// otherwise it returns the total number of available nodes
+// i.e. transaction_get_info(NULL, NULL, -1) returns total number of nodes
+int transaction_get_info(char* name,
+                         char* value,
+                         int index)
+{
+    return TransactionMsgGetInfo(
+            name,
+            value,
+            index,
+            &parsed_transaction,
+            &view_scrolling_total_size,
+            view_scrolling_step,
+            MAX_CHARS_PER_LINE,
+            transaction_buffer,
+            &os_memmove);
+}

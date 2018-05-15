@@ -93,7 +93,7 @@ int TransactionMsgGetInfo(
         unsigned int view_scrolling_step,
         unsigned int max_chars_per_line,
         const char* message,
-        void(*copy)(char* dst, const char* source, unsigned int size));
+        void(*copy)(void* dst, const void* source, unsigned int size));
 
 
 #ifdef __cplusplus
