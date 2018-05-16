@@ -100,7 +100,11 @@ int TransactionMsgGetInfo(
 // which contains all the json tokens plus skeleton of SendMsg with links to those tokens
 void ParseSignedMsg(parsed_json_t* parsedMessage, const char* signedMsg);
 
-// Get key/value pairs (name/value) from the signed message based on the
+// Returns number of key/value elements in the sdk.StdSignMsg
+int SignedMsgGetNumberOfElements(const parsed_json_t* parsed_message,
+                                 const char* message);
+
+// Get key/value pairs (name/value) from the sdk.StdSignMsg based on the
 // index of the key/value pair that will be displayed
 int SignedMsgGetInfo(
         char *name,

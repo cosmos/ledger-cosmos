@@ -28,11 +28,13 @@
 #define OFFSET_PCK_COUNT            3  //< Package count offset
 #define OFFSET_DATA                 4  //< Data offset
 
-#define INS_GET_VERSION             0
-#define INS_PUBLIC_KEY_SECP256K1    1
-#define INS_PUBLIC_KEY_ED25519      2
-#define INS_SIGN_SECP256K1          3
-#define INS_SIGN_ED25519            4
+#define INS_GET_VERSION                 0
+#define INS_PUBLIC_KEY_SECP256K1        1
+#define INS_PUBLIC_KEY_ED25519          2
+#define INS_SIGN_SECP256K1              3
+#define INS_SIGN_ED25519                4
+#define INS_SIGN_SECP256K1_STDSIGNMSG   5
+#define INS_SIGN_ED25519_STDSIGNMSG     6
 
 #define INS_HASH_TEST                   100
 #define INS_PUBLIC_KEY_SECP256K1_TEST   101

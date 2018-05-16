@@ -25,11 +25,12 @@ import (
 	"os"
 	"strconv"
 	"github.com/tendermint/go-crypto"
-	secp256k1 "github.com/btcsuite/btcd/btcec"
+	//secp256k1 "github.com/btcsuite/btcd/btcec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/zondax/ledger-goclient"
 	"github.com/tendermint/ed25519"
+	_ "encoding/hex"
 )
 
 func PrintSampleFunc(message bank.SendMsg, output string) {
@@ -158,6 +159,17 @@ func GetMessages() ([]bank.SendMsg) {
 	}
 }
 
+func GetStdSignMessages() ([]sdk.StdSignMsg) {
+	return []sdk.StdSignMsg{
+
+		sdk.StdSignMsg{
+			ChainID:   "1",
+			Sequences: []int64{2},
+			Fee:       sdk.StdFee{Amount: sdk.Coins{sdk.Coin{Denom: "GBP", Amount: 100}, sdk.Coin{Denom: "GBP", Amount: 100}}, Gas: 2},
+			Msg:       GetMessages()[0],
+		}};
+}
+
 func testTendermintED25519(messages []bank.SendMsg, ledger *ledger_goclient.Ledger) {
 	privateKey := [64]byte{
 		0x75, 0x56, 0x0e, 0x4d, 0xde, 0xa0, 0x63, 0x05,
@@ -234,6 +246,7 @@ func testSECP256K1(messages []bank.SendMsg, ledger *ledger_goclient.Ledger) {
 	for i := 0; i < len(messages); i++ {
 		fmt.Printf("\nMessage %d - Please Sign..\n", i)
 		message := messages[i].GetSignBytes()
+		fmt.Printf("[GetPK] Message: %s", message)
 
 		path := []uint32{44, 60, 0, 0, 0}
 
@@ -243,31 +256,79 @@ func testSECP256K1(messages []bank.SendMsg, ledger *ledger_goclient.Ledger) {
 			os.Exit(1)
 		}
 
-		pubKey, err := ledger.GetPublicKeySECP256K1(path)
+		fmt.Printf("[GetPK] Signature: %s", signature)
 
+		//
+		//pubKey, err := ledger.GetPublicKeySECP256K1(path)
+		//
+		//if err != nil {
+		//	fmt.Printf("[GetPK] Error: %s\n", err)
+		//	os.Exit(1)
+		//}
+		//
+		//pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
+		//if err != nil {
+		//	fmt.Printf("[ParsePK] Error: %s\n", err)
+		//	os.Exit(1)
+		//}
+		//
+		//sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
+		//if err != nil {
+		//	fmt.Printf("[ParseSig] Error: %s\n", err)
+		//	os.Exit(1)
+		//}
+		//
+		//verified := sig__.Verify(crypto.Sha256(message), pub__)
+		//if !verified {
+		//	fmt.Printf("[VerifySig] Error verifying signature\n", err)
+		//	os.Exit(1)
+		//}
+		//
+		//fmt.Printf("Message %d - Valid signature\n", i)
+	}
+}
+
+func testSECP256K1_StdSignMsg(messages []sdk.StdSignMsg, ledger *ledger_goclient.Ledger) {
+	for i := 0; i < len(messages); i++ {
+		fmt.Printf("\nMessage %d - Please Sign..\n", i)
+		message := messages[i].Bytes()
+
+		path := []uint32{44, 60, 0, 0, 0}
+
+		fmt.Printf("[GetPK] Message: %s", message)
+		signature, err := ledger.SignSECP256K1_StdSignMsg(path, message)
 		if err != nil {
-			fmt.Printf("[GetPK] Error: %s\n", err)
+			fmt.Printf("[Sign] Error: %s\n", err)
 			os.Exit(1)
 		}
 
-		pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
-		if err != nil {
-			fmt.Printf("[ParsePK] Error: %s\n", err)
-			os.Exit(1)
-		}
+		fmt.Printf("[GetPK] Signature: %s", signature)
 
-		sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
-		if err != nil {
-			fmt.Printf("[ParseSig] Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		verified := sig__.Verify(crypto.Sha256(message), pub__)
-		if !verified {
-			fmt.Printf("[VerifySig] Error verifying signature\n", err)
-			os.Exit(1)
-		}
-
+		//pubKey, err := ledger.GetPublicKeySECP256K1(path)
+		//
+		//if err != nil {
+		//	fmt.Printf("[GetPK] Error: %s\n", err)
+		//	os.Exit(1)
+		//}
+		//
+		//pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
+		//if err != nil {
+		//	fmt.Printf("[ParsePK] Error: %s\n", err)
+		//	os.Exit(1)
+		//}
+		//
+		//sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
+		//if err != nil {
+		//	fmt.Printf("[ParseSig] Error: %s\n", err)
+		//	os.Exit(1)
+		//}
+		//
+		//verified := sig__.Verify(crypto.Sha256(message), pub__)
+		//if !verified {
+		//	fmt.Printf("[VerifySig] Error verifying signature\n", err)
+		//	os.Exit(1)
+		//}
+		//
 		fmt.Printf("Message %d - Valid signature\n", i)
 	}
 }
@@ -281,13 +342,12 @@ func main() {
 		ledger_goclient.ListDevices()
 	} else {
 		ledger.Logging = true
-		messages := GetMessages()
 
 		// WORKING ONES
-		testSECP256K1(messages, ledger)
-		//testTendermintED25519(messages, ledger)
-
+		//testSECP256K1(GetMessages(), ledger)
+		testSECP256K1_StdSignMsg(GetStdSignMessages(), ledger)
+		//testTendermintED25519(GetMessages(), ledger)
 		// FIXME
-		//testED25519(messages, ledger)
+		//testED25519(GetMessages(), ledger)
 	}
 }

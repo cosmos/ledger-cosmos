@@ -132,7 +132,7 @@
     "leveldb/table",
     "leveldb/util"
   ]
-  revision = "ae970a0732be3a1f5311da86118d37b9f4bd2a5a"
+  revision = "9637fa0b2f0db13c99d899b91007edb7df4610b7"
 
 [[projects]]
   name = "github.com/tendermint/abci"
@@ -180,7 +180,7 @@
   branch = "master"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
-  revision = "5b2fe84d3139027c29bd8f0c054ed9444f8a7622"
+  revision = "3e2146609cdb97894c064d59e9d00accd8c2b1dd"
 
 [[projects]]
   branch = "master"
@@ -193,7 +193,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "94e3fad7f1b4eed4ec147751ad6b4c4d33f00611"
+  revision = "1a580b3eff7814fc9b40602fd35256c63b50f491"
 
 [[projects]]
   branch = "master"

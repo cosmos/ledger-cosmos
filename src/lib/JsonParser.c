@@ -312,6 +312,30 @@ int TransactionMsgGetInfo(
     return currentIndex;
 }
 
+int SignedMsgGetNumberOfElements(const parsed_json_t* parsed_message,
+                                 const char* message)
+{
+    int currentIndex = 0;
+    int foundKeyIndex = 0;
+    int nextKeyMinPosition = -1;
+    while (currentIndex < parsed_message->NumberOfTokens) {
+
+        if (parsed_message->Tokens[currentIndex].type == JSMN_UNDEFINED) break;
+        // Here we're assuming that json keys are always of JSMN_STRING type
+        if (parsed_message->Tokens[currentIndex].type == JSMN_STRING) {
+            if (parsed_message->Tokens[currentIndex].start > nextKeyMinPosition) {
+
+                // Found the key
+                foundKeyIndex++;
+                // Skip all the value tokens
+                nextKeyMinPosition = parsed_message->Tokens[currentIndex + 1].end;
+            }
+        }
+        currentIndex++;
+    }
+    return foundKeyIndex;
+}
+
 int GetTokenIndexForKey(
         int keyIndex,
         const parsed_json_t* parsed_message)
@@ -321,6 +345,7 @@ int GetTokenIndexForKey(
     int nextKeyMinPosition = -1;
     while (currentIndex < parsed_message->NumberOfTokens) {
 
+        if (parsed_message->Tokens[currentIndex].type == JSMN_UNDEFINED) break;
         // Here we're assuming that json keys are always of JSMN_STRING type
         if (parsed_message->Tokens[currentIndex].type == JSMN_STRING) {
             if (parsed_message->Tokens[currentIndex].start > nextKeyMinPosition) {
@@ -336,7 +361,6 @@ int GetTokenIndexForKey(
         }
         currentIndex++;
     }
-    // Could not find key with that index
     return -1;
 }
 
@@ -356,16 +380,33 @@ int SignedMsgGetInfo(
     if (tokenKeyIndex != -1) {
         jsmntok_t key_token = parsed_message->Tokens[tokenKeyIndex];
         jsmntok_t value_token = parsed_message->Tokens[tokenKeyIndex+1];
+
         copy((char *) name,
              message + key_token.start,
              key_token.end - key_token.start);
+        name[key_token.end - key_token.start] = '\0';
 
-        copy((char *) value,
-             message + value_token.start,
-             value_token.end - value_token.start);
+        *view_scrolling_total_size = value_token.end-value_token.start;
+
+        char* value_start_address = message + value_token.start;
+        if (view_scrolling_step < *view_scrolling_total_size) {
+            int size = *view_scrolling_total_size < max_chars_per_line ? *view_scrolling_total_size : max_chars_per_line;
+            copy(
+                    (char *) value,
+                    value_start_address + view_scrolling_step,
+                    size);
+            value[size] = '\0';
+        }
+
+//        copy((char *) value,
+//             message + value_token.start,
+//             value_token.end - value_token.start);
+//        value[value_token.end - value_token.start] = '\0';
     }
     else {
         strcpy(name, "Error");
         strcpy(value, "Out-of-bounds");
     }
+
+    return tokenKeyIndex;
 }

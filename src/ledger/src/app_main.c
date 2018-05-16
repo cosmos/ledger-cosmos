@@ -250,7 +250,9 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
 
                 transaction_parse();
-                view_display_transaction_menu(transaction_get_info(NULL, NULL, -1));
+
+                view_add_update_transaction_info_event_handler(&transaction_msg_get_key_value);
+                view_display_transaction_menu(transaction_msg_get_key_value(NULL, NULL, -1));
 
                 *flags |= IO_ASYNCH_REPLY;
             }
@@ -262,7 +264,40 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
 
                 transaction_parse();
-                view_display_transaction_menu(transaction_get_info(NULL, NULL, -1));
+                view_add_update_transaction_info_event_handler(&transaction_msg_get_key_value);
+                view_display_transaction_menu(transaction_msg_get_key_value(NULL, NULL, -1));
+
+                *flags |= IO_ASYNCH_REPLY;
+            }
+                break;
+
+            case INS_SIGN_SECP256K1_STDSIGNMSG: {
+                current_sigtype = SECP256K1;
+                if (!process_chunk(tx, rx, true))
+                    THROW(APDU_CODE_OK);
+
+                transaction_parse();
+
+                view_add_update_transaction_info_event_handler(&signed_msg_get_key_value);
+                view_display_transaction_menu(SignedMsgGetNumberOfElements(
+                        transaction_get_parsed(),
+                        (const char*)transaction_get_buffer()));
+
+                *flags |= IO_ASYNCH_REPLY;
+            }
+                break;
+
+            case INS_SIGN_ED25519_STDSIGNMSG: {
+                current_sigtype = ED25519;
+                if (!process_chunk(tx, rx, true))
+                    THROW(APDU_CODE_OK);
+
+                transaction_parse();
+
+                view_add_update_transaction_info_event_handler(&signed_msg_get_key_value);
+                view_display_transaction_menu(SignedMsgGetNumberOfElements(
+                        transaction_get_parsed(),
+                        (const char*)transaction_get_buffer()));
 
                 *flags |= IO_ASYNCH_REPLY;
             }
@@ -459,7 +494,6 @@ void app_main()
 {
     volatile uint32_t rx = 0, tx = 0, flags = 0;
 
-    view_add_update_transaction_info_event_handler(&transaction_get_info);
     view_add_reject_transaction_event_handler(&reject_transaction);
     view_add_sign_transaction_event_handler(&sign_transaction);
 
