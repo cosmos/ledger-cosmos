@@ -25,12 +25,11 @@ import (
 	"os"
 	"strconv"
 	"github.com/tendermint/go-crypto"
-	//secp256k1 "github.com/btcsuite/btcd/btcec"
+	secp256k1 "github.com/btcsuite/btcd/btcec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/zondax/ledger-goclient"
 	"github.com/tendermint/ed25519"
-	_ "encoding/hex"
 )
 
 func PrintSampleFunc(message bank.SendMsg, output string) {
@@ -256,35 +255,32 @@ func testSECP256K1(messages []bank.SendMsg, ledger *ledger_goclient.Ledger) {
 			os.Exit(1)
 		}
 
-		fmt.Printf("[GetPK] Signature: %s", signature)
+		pubKey, err := ledger.GetPublicKeySECP256K1(path)
 
-		//
-		//pubKey, err := ledger.GetPublicKeySECP256K1(path)
-		//
-		//if err != nil {
-		//	fmt.Printf("[GetPK] Error: %s\n", err)
-		//	os.Exit(1)
-		//}
-		//
-		//pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
-		//if err != nil {
-		//	fmt.Printf("[ParsePK] Error: %s\n", err)
-		//	os.Exit(1)
-		//}
-		//
-		//sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
-		//if err != nil {
-		//	fmt.Printf("[ParseSig] Error: %s\n", err)
-		//	os.Exit(1)
-		//}
-		//
-		//verified := sig__.Verify(crypto.Sha256(message), pub__)
-		//if !verified {
-		//	fmt.Printf("[VerifySig] Error verifying signature\n", err)
-		//	os.Exit(1)
-		//}
-		//
-		//fmt.Printf("Message %d - Valid signature\n", i)
+		if err != nil {
+			fmt.Printf("[GetPK] Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
+		if err != nil {
+			fmt.Printf("[ParsePK] Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
+		if err != nil {
+			fmt.Printf("[ParseSig] Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		verified := sig__.Verify(crypto.Sha256(message), pub__)
+		if !verified {
+			fmt.Printf("[VerifySig] Error verifying signature\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Message %d - Valid signature\n", i)
 	}
 }
 
@@ -295,40 +291,37 @@ func testSECP256K1_StdSignMsg(messages []sdk.StdSignMsg, ledger *ledger_goclient
 
 		path := []uint32{44, 60, 0, 0, 0}
 
-		fmt.Printf("[GetPK] Message: %s", message)
 		signature, err := ledger.SignSECP256K1_StdSignMsg(path, message)
 		if err != nil {
 			fmt.Printf("[Sign] Error: %s\n", err)
 			os.Exit(1)
 		}
 
-		fmt.Printf("[GetPK] Signature: %s", signature)
+		pubKey, err := ledger.GetPublicKeySECP256K1(path)
 
-		//pubKey, err := ledger.GetPublicKeySECP256K1(path)
-		//
-		//if err != nil {
-		//	fmt.Printf("[GetPK] Error: %s\n", err)
-		//	os.Exit(1)
-		//}
-		//
-		//pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
-		//if err != nil {
-		//	fmt.Printf("[ParsePK] Error: %s\n", err)
-		//	os.Exit(1)
-		//}
-		//
-		//sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
-		//if err != nil {
-		//	fmt.Printf("[ParseSig] Error: %s\n", err)
-		//	os.Exit(1)
-		//}
-		//
-		//verified := sig__.Verify(crypto.Sha256(message), pub__)
-		//if !verified {
-		//	fmt.Printf("[VerifySig] Error verifying signature\n", err)
-		//	os.Exit(1)
-		//}
-		//
+		if err != nil {
+			fmt.Printf("[GetPK] Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
+		if err != nil {
+			fmt.Printf("[ParsePK] Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
+		if err != nil {
+			fmt.Printf("[ParseSig] Error: %s\n", err)
+			os.Exit(1)
+		}
+
+		verified := sig__.Verify(crypto.Sha256(message), pub__)
+		if !verified {
+			fmt.Printf("[VerifySig] Error verifying signature\n", err)
+			os.Exit(1)
+		}
+
 		fmt.Printf("Message %d - Valid signature\n", i)
 	}
 }
@@ -343,11 +336,16 @@ func main() {
 	} else {
 		ledger.Logging = true
 
-		// WORKING ONES
-		//testSECP256K1(GetMessages(), ledger)
+		// WORKING: Sign standard signature message using ledger (SECP256K1)
 		testSECP256K1_StdSignMsg(GetStdSignMessages(), ledger)
+
+		// WORKING: Sign transaction message using ledger (SECP256K1)
+		//testSECP256K1(GetMessages(), ledger)
+
+		// WORKING: Sign transaction message using tendermint sdk (ED25519)
 		//testTendermintED25519(GetMessages(), ledger)
-		// FIXME
+
+		// FIXME, sign transaction message using ledger (ED25519)
 		//testED25519(GetMessages(), ledger)
 	}
 }
