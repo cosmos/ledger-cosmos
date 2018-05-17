@@ -22,17 +22,19 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"strconv"
-	"github.com/tendermint/go-crypto"
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/zondax/ledger-goclient"
+	"github.com/cosmos/cosmos-sdk/x/ibc"
+	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/tendermint/ed25519"
+	"github.com/tendermint/go-crypto"
+	"github.com/zondax/ledger-goclient"
+	"os"
+	"strconv"
 )
 
-func PrintSampleFunc(message bank.SendMsg, output string) {
+func PrintSampleFunc(message bank.MsgSend, output string) {
 
 	res := message.GetSignBytes()
 
@@ -68,10 +70,41 @@ func ParseArgs(numberOfSamples int) (int, string, int) {
 	return sampleIndex, sampleOutput, 0
 }
 
-func GetMessages() ([]bank.SendMsg) {
-	return []bank.SendMsg{
+func GetExampleTxs() []sdk.StdSignMsg {
+	return []sdk.StdSignMsg{
+		sdk.StdSignMsg{"test-chain-1", []int64{1}, sdk.NewStdFee(10000, sdk.Coin{"photon", 5}), bank.MsgSend{
+			Inputs: []bank.Input{
+				{
+					Address: crypto.Address([]byte("input")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+			},
+			Outputs: []bank.Output{
+				{
+					Address: crypto.Address([]byte("output")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+			},
+		}},
+		sdk.StdSignMsg{"test-chain-2", []int64{2}, sdk.NewStdFee(10000, sdk.Coin{"photon", 10}), stake.MsgUnbond{
+			DelegatorAddr: sdk.Address([]byte("delegator")),
+			CandidateAddr: sdk.Address([]byte("candidate")),
+			Shares:        "100",
+		}},
+		sdk.StdSignMsg{"test-chain-3", []int64{3}, sdk.NewStdFee(5000, sdk.Coin{"photon", 25}), ibc.IBCTransferMsg{ibc.IBCPacket{
+			SrcAddr:   sdk.Address([]byte("source")),
+			DestAddr:  sdk.Address([]byte("dest")),
+			Coins:     sdk.Coins{sdk.Coin{"steak", 5}},
+			SrcChain:  "cosmos-hub",
+			DestChain: "peggy",
+		}}},
+	}
+}
+
+func GetMessages() []bank.MsgSend {
+	return []bank.MsgSend{
 		// Simple address, 1 input, 1 output
-		bank.SendMsg{
+		bank.MsgSend{
 			Inputs: []bank.Input{
 				{
 					Address: crypto.Address([]byte("input")),
@@ -88,7 +121,7 @@ func GetMessages() ([]bank.SendMsg) {
 		},
 
 		// Real public key, 1 input, 1 output
-		bank.SendMsg{
+		bank.MsgSend{
 			Inputs: []bank.Input{
 				{
 					Address: crypto.Address(crypto.GenPrivKeySecp256k1().PubKey().Bytes()),
@@ -105,7 +138,7 @@ func GetMessages() ([]bank.SendMsg) {
 		},
 
 		// Simple address, 2 inputs, 2 outputs
-		bank.SendMsg{
+		bank.MsgSend{
 			Inputs: []bank.Input{
 				{
 					Address: crypto.Address([]byte("input")),
@@ -131,7 +164,7 @@ func GetMessages() ([]bank.SendMsg) {
 		},
 
 		// Simple address, 2 inputs, 2 outputs, 2 coins
-		bank.SendMsg{
+		bank.MsgSend{
 			Inputs: []bank.Input{
 				{
 					Address: crypto.Address([]byte("input")),
@@ -158,7 +191,7 @@ func GetMessages() ([]bank.SendMsg) {
 	}
 }
 
-func testED25519(messages []bank.SendMsg, ledger *ledger_goclient.Ledger) {
+func testED25519(messages []bank.MsgSend, ledger *ledger_goclient.Ledger) {
 	//// Now the same with ed25519
 	for i := 0; i < len(messages); i++ {
 		fmt.Printf("\nMessage %d - Please Sign..\n", i)
@@ -201,7 +234,7 @@ func testED25519(messages []bank.SendMsg, ledger *ledger_goclient.Ledger) {
 	}
 }
 
-func testSECP256K1(messages []bank.SendMsg, ledger *ledger_goclient.Ledger) {
+func testSECP256K1(messages []bank.MsgSend, ledger *ledger_goclient.Ledger) {
 	for i := 0; i < len(messages); i++ {
 		fmt.Printf("\nMessage %d - Please Sign..\n", i)
 		message := messages[i].GetSignBytes()
