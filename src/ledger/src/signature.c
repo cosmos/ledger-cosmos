@@ -65,7 +65,19 @@ int sign_secp256k1(
             signature_capacity,
             &info);
 
+    os_memset(&privateKey, 0, sizeof(privateKey));
+#ifdef TESTING_ENABLED
+    return cx_ecdsa_verify(
+            &publicKey,
+            CX_LAST,
+            CX_SHA256,
+            message_digest,
+            CX_SHA256_SIZE,
+            signature,
+            *signature_length);
+#else
     return 1;
+#endif
 }
 
 int sign_ed25519(
@@ -84,14 +96,33 @@ int sign_ed25519(
     cx_ecfp_generate_pair(CX_CURVE_Ed25519, &publicKey, privateKey, 1);
 
     unsigned int info = 0;
+
     *signature_length = cx_eddsa_sign(
             privateKey,
             CX_LAST,
             CX_SHA512,
-            message_digest, CX_SHA512_SIZE,
-            NULL, NULL,
-            signature, signature_capacity,
+            message_digest,
+            CX_SHA512_SIZE,
+            NULL,
+            0,
+            signature,
+            signature_capacity,
             &info);
 
+    os_memset(privateKey, 0, sizeof(privateKey));
+
+#ifdef TESTING_ENABLED
+    return cx_eddsa_verify(
+            &publicKey,
+            0,
+            CX_SHA512,
+            message_digest,
+            CX_SHA512_SIZE,
+            NULL,
+            0,
+            signature,
+            *signature_length);
+#else
     return 1;
+#endif
 }

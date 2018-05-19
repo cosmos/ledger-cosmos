@@ -180,7 +180,7 @@
   branch = "master"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
-  revision = "a242cfad962597a588288f99fa3425a01a820295"
+  revision = "5b2fe84d3139027c29bd8f0c054ed9444f8a7622"
 
 [[projects]]
   branch = "master"
@@ -193,7 +193,7 @@
     "ripemd160",
     "salsa20/salsa"
   ]
-  revision = "21052ae46654ecf18dfdba0f7c12701a1e2b3164"
+  revision = "94e3fad7f1b4eed4ec147751ad6b4c4d33f00611"
 
 [[projects]]
   branch = "master"
@@ -207,7 +207,7 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "f73e4c9ed3b7ebdd5f699a16a880c2b1994e50dd"
+  revision = "2491c5de3490fced2f6cff376127c667efeed857"
 
 [[projects]]
   name = "golang.org/x/text"
