@@ -238,7 +238,16 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                 keys_ed25519(&publicKey, &privateKey, privateKeyData);
                 memset(privateKeyData, 0, 32);
 
-                os_memmove(G_io_apdu_buffer, publicKey.W, 32);
+                // copy public key little endian to big endian
+                unsigned char output[32];
+                for (int i = 0; i < 32; i++) {
+                    output[i] = publicKey.W[64 - i];
+                }
+                if ((publicKey.W[32] & 1) != 0) {
+                    output[31] |= 0x80;
+                }
+
+                os_memmove(G_io_apdu_buffer, output, 32);
                 *tx += 32;
 
                 THROW(APDU_CODE_OK);
@@ -362,9 +371,18 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     // Generate key
                     cx_ecfp_public_key_t publicKey;
                     cx_ecfp_private_key_t privateKey;
-                    keys_ed25519(&publicKey, &privateKey, privateKeyDataTest );
+                    keys_ed25519(&publicKey, &privateKey, privateKeyDataTest);
 
-                    os_memmove(G_io_apdu_buffer, publicKey.W, 32);
+                    // copy public key little endian to big endian
+                    unsigned char output[32];
+                    for (int i = 0; i < 32; i++) {
+                        output[i] = publicKey.W[64 - i];
+                    }
+                    if ((publicKey.W[32] & 1) != 0) {
+                        output[31] |= 0x80;
+                    }
+
+                    os_memmove(G_io_apdu_buffer, output, 32);
                     *tx += 32;
 
                     THROW(APDU_CODE_OK);
