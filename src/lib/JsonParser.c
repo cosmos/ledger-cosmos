@@ -137,24 +137,272 @@ void ParseMessage(
     }
 }
 
-    void ParseJson(parsed_json_t *parsedJson, const char *jsonString) {
-        jsmn_parser parser;
-        jsmn_init(&parser);
+void ParseJson(parsed_json_t *parsedJson, const char *jsonString) {
+    jsmn_parser parser;
+    jsmn_init(&parser);
 
-        parsedJson->NumberOfTokens = jsmn_parse(
-                &parser,
-                jsonString,
-                strlen(jsonString),
-                parsedJson->Tokens,
-                MAX_NUMBER_OF_TOKENS);
+    parsedJson->NumberOfTokens = jsmn_parse(
+            &parser,
+            jsonString,
+            strlen(jsonString),
+            parsedJson->Tokens,
+            MAX_NUMBER_OF_TOKENS);
 
-        parsedJson->CorrectFormat = false;
-        if (parsedJson->NumberOfTokens >= 1
-            &&
-            parsedJson->Tokens[0].type != JSMN_OBJECT) {
-            parsedJson->CorrectFormat = true;
-        }
-
-        // Build SendMsg representation with links to tokens
-        ParseMessage(parsedJson, jsonString);
+    parsedJson->CorrectFormat = false;
+    if (parsedJson->NumberOfTokens >= 1
+        &&
+        parsedJson->Tokens[0].type != JSMN_OBJECT) {
+        parsedJson->CorrectFormat = true;
     }
+
+    // Build SendMsg representation with links to tokens
+    ParseMessage(parsedJson, jsonString);
+}
+
+void ParseSignedMsg(parsed_json_t* parsedMessage, const char* signedMsg)
+{
+    jsmn_parser parser;
+    jsmn_init(&parser);
+
+    parsedMessage->NumberOfTokens = jsmn_parse(
+            &parser,
+            signedMsg,
+            strlen(signedMsg),
+            parsedMessage->Tokens,
+            MAX_NUMBER_OF_TOKENS);
+
+    parsedMessage->CorrectFormat = false;
+    if (parsedMessage->NumberOfTokens >= 1
+        &&
+        parsedMessage->Tokens[0].type != JSMN_OBJECT) {
+        parsedMessage->CorrectFormat = true;
+    }
+
+}
+
+int TransactionMsgGetInfo(
+        char *name,
+        char *value,
+        int index,
+        const parsed_json_t* parsed_transaction,
+        unsigned int* view_scrolling_total_size,
+        unsigned int view_scrolling_step,
+        unsigned int max_chars_per_line,
+        const char* message,
+        void(*copy)(void* dst, const void* source, unsigned int size))
+{
+    int currentIndex = 0;
+    for (int i = 0; i < parsed_transaction->NumberOfInputs; i++) {
+        if (index == currentIndex) {
+            copy((char *) name, "Input address", sizeof("Input address"));
+
+            unsigned int addressSize =
+                    parsed_transaction->Tokens[parsed_transaction->Inputs[i].Address].end -
+                    parsed_transaction->Tokens[parsed_transaction->Inputs[i].Address].start;
+
+            *view_scrolling_total_size = addressSize;
+            const char *addressPtr =
+                    message +
+                    parsed_transaction->Tokens[parsed_transaction->Inputs[i].Address].start;
+
+            if (view_scrolling_step < addressSize) {
+                copy(
+                        (char *) value,
+                        addressPtr + view_scrolling_step,
+                        addressSize < max_chars_per_line ? addressSize : max_chars_per_line);
+                value[addressSize] = '\0';
+            }
+            return currentIndex;
+        }
+        currentIndex++;
+        for (int j = 0; j < parsed_transaction->Inputs[i].NumberOfCoins; j++) {
+            if (index == currentIndex) {
+                copy((char *) name, "Coin", sizeof("Coin"));
+
+                int coinSize =
+                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Denum].end -
+                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Denum].start;
+
+                const char *coinPtr =
+                        message +
+                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Denum].start;
+
+                copy((char *) value, coinPtr, coinSize);
+                value[coinSize] = '\0';
+                return currentIndex;
+            }
+            currentIndex++;
+            if (index == currentIndex) {
+                copy((char *) name, "Amount", sizeof("Amount"));
+
+                int coinAmountSize =
+                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Amount].end -
+                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Amount].start;
+
+                const char *coinAmountPtr =
+                        message +
+                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Amount].start;
+
+                copy((char *) value, coinAmountPtr, coinAmountSize);
+                value[coinAmountSize] = '\0';
+                return currentIndex;
+            }
+            currentIndex++;
+        }
+    }
+    for (int i = 0; i < parsed_transaction->NumberOfOutputs; i++) {
+        if (index == currentIndex) {
+            copy((char *) name, "Output address", sizeof("Output address"));
+
+            unsigned int addressSize =
+                    parsed_transaction->Tokens[parsed_transaction->Outputs[i].Address].end -
+                    parsed_transaction->Tokens[parsed_transaction->Outputs[i].Address].start;
+
+            const char *addressPtr =
+                    message +
+                    parsed_transaction->Tokens[parsed_transaction->Outputs[i].Address].start;
+
+            *view_scrolling_total_size = addressSize;
+
+            if (view_scrolling_step < addressSize) {
+                copy(
+                        (char *) value,
+                        addressPtr + view_scrolling_step,
+                        addressSize < max_chars_per_line ? addressSize : max_chars_per_line);
+                value[addressSize] = '\0';
+            }
+            return currentIndex;
+        }
+        currentIndex++;
+        for (int j = 0; j < parsed_transaction->Outputs[i].NumberOfCoins; j++) {
+            if (index == currentIndex) {
+                copy((char *) name, "Coin", sizeof("Coin"));
+
+                int coinSize =
+                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Denum].end -
+                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Denum].start;
+
+                const char *coinPtr =
+                        message +
+                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Denum].start;
+
+                copy((char *) value, coinPtr, coinSize);
+                value[coinSize] = '\0';
+                return currentIndex;
+            }
+            currentIndex++;
+            if (index == currentIndex) {
+                copy((char *) name, "Amount", sizeof("Amount"));
+
+                int coinAmountSize =
+                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Amount].end -
+                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Amount].start;
+
+                const char *coinAmountPtr =
+                        message +
+                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Amount].start;
+
+                copy((char *) value, coinAmountPtr, coinAmountSize);
+                value[coinAmountSize] = '\0';
+                return currentIndex;
+            }
+            currentIndex++;
+        }
+    }
+    return currentIndex;
+}
+
+int SignedMsgGetNumberOfElements(const parsed_json_t* parsed_message,
+                                 const char* message)
+{
+    int currentIndex = 0;
+    int foundKeyIndex = 0;
+    int nextKeyMinPosition = -1;
+    while (currentIndex < parsed_message->NumberOfTokens) {
+
+        if (parsed_message->Tokens[currentIndex].type == JSMN_UNDEFINED) break;
+        // Here we're assuming that json keys are always of JSMN_STRING type
+        if (parsed_message->Tokens[currentIndex].type == JSMN_STRING) {
+            if (parsed_message->Tokens[currentIndex].start > nextKeyMinPosition) {
+
+                // Found the key
+                foundKeyIndex++;
+                // Skip all the value tokens
+                nextKeyMinPosition = parsed_message->Tokens[currentIndex + 1].end;
+            }
+        }
+        currentIndex++;
+    }
+    return foundKeyIndex;
+}
+
+int GetTokenIndexForKey(
+        int keyIndex,
+        const parsed_json_t* parsed_message)
+{
+    int currentIndex = 0;
+    int foundKeyIndex = 0;
+    int nextKeyMinPosition = -1;
+    while (currentIndex < parsed_message->NumberOfTokens) {
+
+        if (parsed_message->Tokens[currentIndex].type == JSMN_UNDEFINED) break;
+        // Here we're assuming that json keys are always of JSMN_STRING type
+        if (parsed_message->Tokens[currentIndex].type == JSMN_STRING) {
+            if (parsed_message->Tokens[currentIndex].start > nextKeyMinPosition) {
+
+                // Found the key
+                if (keyIndex == foundKeyIndex) {
+                    return currentIndex;
+                }
+                foundKeyIndex++;
+                // Skip all the value tokens
+                nextKeyMinPosition = parsed_message->Tokens[currentIndex + 1].end;
+            }
+        }
+        currentIndex++;
+    }
+    return -1;
+}
+
+int SignedMsgGetInfo(
+        char *name,
+        char *value,
+        int index,
+        const parsed_json_t* parsed_message,
+        unsigned int* view_scrolling_total_size,
+        unsigned int view_scrolling_step,
+        unsigned int max_chars_per_line,
+        const char* message,
+        void(*copy)(void* dst, const void* source, unsigned int size))
+{
+    int tokenKeyIndex = GetTokenIndexForKey(index, parsed_message);
+
+    if (tokenKeyIndex != -1) {
+        jsmntok_t key_token = parsed_message->Tokens[tokenKeyIndex];
+        jsmntok_t value_token = parsed_message->Tokens[tokenKeyIndex+1];
+
+        copy((char *) name,
+             message + key_token.start,
+             key_token.end - key_token.start);
+        name[key_token.end - key_token.start] = '\0';
+
+        *view_scrolling_total_size = value_token.end-value_token.start;
+
+        char* value_start_address = message + value_token.start;
+        if (view_scrolling_step < *view_scrolling_total_size) {
+            int size =
+                    *view_scrolling_total_size < max_chars_per_line ? *view_scrolling_total_size : max_chars_per_line;
+            copy(
+                    (char *) value,
+                    value_start_address + view_scrolling_step,
+                    size);
+            value[size] = '\0';
+        }
+    }
+    else {
+        strcpy(name, "Error");
+        strcpy(value, "Out-of-bounds");
+    }
+
+    return tokenKeyIndex;
+}
