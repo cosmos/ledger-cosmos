@@ -117,6 +117,39 @@ int SignedMsgGetInfo(
         const char* message,
         void(*copy)(void* dst, const void* source, unsigned int size));
 
+//---------------------------------------------
+
+// Parse json to create a token representation
+void json_parse(
+        parsed_json_t* parsed_json,
+        const char* transaction);
+
+// validate transaction json
+// returns 0 if validation is successful
+// returns -1 if validation fails, with error stored in errorMsg
+int json_validate(
+        const char* transaction,
+        char* errorMsg,
+        int errMsgLength);
+
+// read json value for a given name
+int json_get_token(
+        const char* transaction,
+        const parsed_json_t* parsed_transaction,
+        const char* name,
+        int level)
+{
+    return -1;
+}
+
+void json_read_token(
+        const char* transaction,
+        const parsed_json_t* parsed_transaction,
+        int token_index,
+        char* buffer,
+        int buffer_size,
+        int offset);
+
 #ifdef __cplusplus
 }
 #endif

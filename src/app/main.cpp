@@ -18,7 +18,7 @@
 
 extern "C"
 {
-#include <lib/JsonParser.h>
+#include <lib/json_parser.h>
 }
 
 int main()

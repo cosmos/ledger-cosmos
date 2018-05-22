@@ -16,7 +16,7 @@
 ********************************************************************************/
 
 #include "gtest/gtest.h"
-#include "lib/JsonParser.h"
+#include "lib/json_parser.h"
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -24,7 +24,6 @@
 #include <string>
 #include <array>
 #include <jsmn.h>
-#include <lib/JsonParser.h>
 
 namespace {
     std::string exec(const char *cmd) {

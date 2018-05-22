@@ -16,7 +16,7 @@
 ********************************************************************************/
 
 #include <jsmn.h>
-#include "JsonParser.h"
+#include "json_parser.h"
 
 bool Match(
         const char* jsonString,
@@ -388,7 +388,7 @@ int SignedMsgGetInfo(
 
         *view_scrolling_total_size = value_token.end-value_token.start;
 
-        char* value_start_address = message + value_token.start;
+        const char* value_start_address = message + value_token.start;
         if (view_scrolling_step < *view_scrolling_total_size) {
             int size =
                     *view_scrolling_total_size < max_chars_per_line ? *view_scrolling_total_size : max_chars_per_line;
@@ -405,4 +405,58 @@ int SignedMsgGetInfo(
     }
 
     return tokenKeyIndex;
+}
+
+//---------------------------------------------
+
+void json_parse(
+        parsed_json_t* parsed_json,
+        const char* transaction)
+{
+    jsmn_parser parser;
+    jsmn_init(&parser);
+
+    parsedMessage->NumberOfTokens = jsmn_parse(
+            &parser,
+            signedMsg,
+            strlen(signedMsg),
+            parsedMessage->Tokens,
+            MAX_NUMBER_OF_TOKENS);
+
+    parsedMessage->CorrectFormat = false;
+    if (parsedMessage->NumberOfTokens >= 1
+        &&
+        parsedMessage->Tokens[0].type != JSMN_OBJECT) {
+
+        parsedMessage->CorrectFormat = true;
+    }
+}
+
+int json_validate(
+        const char* transaction,
+        char* errorMsg,
+        int errMsgLength)
+{
+    strcpy(errorMsg, "Not implemented.");
+    // Here we make sure that json have correct format according to the spec
+    return -1;
+}
+
+int json_get_token(
+        const char* transaction,
+        const parsed_json_t* parsed_transaction,
+        const char* name)
+{
+    return -1;
+}
+
+void json_read_token(
+        const char* transaction,
+        const parsed_json_t* parsed_transaction,
+        int token_index,
+        char* buffer,
+        int buffer_size,
+        int offset)
+{
+
 }
