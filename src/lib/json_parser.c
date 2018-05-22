@@ -416,19 +416,19 @@ void json_parse(
     jsmn_parser parser;
     jsmn_init(&parser);
 
-    parsedMessage->NumberOfTokens = jsmn_parse(
+    parsed_json->NumberOfTokens = jsmn_parse(
             &parser,
-            signedMsg,
-            strlen(signedMsg),
-            parsedMessage->Tokens,
+            transaction,
+            strlen(transaction),
+            parsed_json->Tokens,
             MAX_NUMBER_OF_TOKENS);
 
-    parsedMessage->CorrectFormat = false;
-    if (parsedMessage->NumberOfTokens >= 1
+    parsed_json->CorrectFormat = false;
+    if (parsed_json->NumberOfTokens >= 1
         &&
-        parsedMessage->Tokens[0].type != JSMN_OBJECT) {
+            parsed_json->Tokens[0].type != JSMN_OBJECT) {
 
-        parsedMessage->CorrectFormat = true;
+        parsed_json->CorrectFormat = true;
     }
 }
 
@@ -442,12 +442,22 @@ int json_validate(
     return -1;
 }
 
-int json_get_token(
+int json_get_child_token(
         const char* transaction,
         const parsed_json_t* parsed_transaction,
-        const char* name)
+        const char* name,
+        int parent_token_index)
 {
     return -1;
+}
+
+int json_get_child_token_by_index(
+        const char* transaction,
+        const parsed_json_t* parsed_transaction,
+        int index,
+        int parent_token_index)
+{
+
 }
 
 void json_read_token(

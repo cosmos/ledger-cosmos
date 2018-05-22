@@ -124,7 +124,7 @@ void json_parse(
         parsed_json_t* parsed_json,
         const char* transaction);
 
-// validate transaction json
+// validate transaction json according to the TXSPEC
 // returns 0 if validation is successful
 // returns -1 if validation fails, with error stored in errorMsg
 int json_validate(
@@ -132,15 +132,19 @@ int json_validate(
         char* errorMsg,
         int errMsgLength);
 
-// read json value for a given name
-int json_get_token(
+// find child token with a given name
+int json_get_child_token(
         const char* transaction,
         const parsed_json_t* parsed_transaction,
         const char* name,
-        int level)
-{
-    return -1;
-}
+        int parent_token_index);
+
+// find child token with a given index
+int json_get_child_token_by_index(
+        const char* transaction,
+        const parsed_json_t* parsed_transaction,
+        int index,
+        int parent_token_index);
 
 void json_read_token(
         const char* transaction,
