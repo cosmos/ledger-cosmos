@@ -154,6 +154,14 @@ void json_read_token(
         int buffer_size,
         int offset);
 
+int array_get_element_count(int array_token_index, const parsed_json_t* parsed_transaction);
+int array_get_element(int array_token_index, int element_index, const parsed_json_t* parsed_transaction);
+
+int object_get_element_count(int object_token_index, const parsed_json_t* parsed_transaction);
+int object_get_key(int object_token_index, int object_element_index, const parsed_json_t* parsed_transaction);
+int object_get_value(int object_token_index, int object_element_index, const parsed_json_t* parsed_transaction);
+int object_get_value(int object_token_index, const char* key_name, const parsed_json_t* parsed_transaction);
+
 #ifdef __cplusplus
 }
 #endif

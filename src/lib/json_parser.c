@@ -448,6 +448,50 @@ int json_get_child_token(
         const char* name,
         int parent_token_index)
 {
+    int level_ends[10] = {0};
+    int current_level = 0;
+
+    // Find child token by scanning all the tokens on the level below parent token
+    int start = parsed_transaction->Tokens[parent_token_index].start;
+    int end = parsed_transaction->Tokens[parent_token_index].end;
+
+    level_ends[current_level] = end;
+    int key_index = parent_token_index + 1;
+    // level 0 = parent's level
+    while (true) {
+        if ((key_index+1) >= parsed_transaction->NumberOfTokens) {
+            return -1;
+        }
+        jsmntok_t current_key_token = parsed_transaction->Tokens[key_index];
+        jsmntok_t current_value_token = parsed_transaction->Tokens[key_index+1];
+
+        if (current_key_token.start <= level_ends[current_level]) {
+            current_level++;
+            level_ends[current_level] = current_value_token.end;
+        }
+        else {
+            while (current_level > 0 && !(current_key_token.start <= level_ends[current_level-1])) {
+                current_level--;
+            }
+            level_ends[current_level] = current_value_token.end;
+        }
+
+        if (current_level == 0) {
+            return -1;
+        }
+
+        // This function only returns results from level 1 i.e. level just below the parent
+        if (current_level == 1) {
+            const char* msg = (char*)(transaction + parsed_transaction->Tokens[key_index].start);
+            if (memcmp(msg, name, strlen(name)) == 0) {
+                // Found the match
+                return key_index;
+            }
+        }
+
+        key_index += 2;
+    }
+
     return -1;
 }
 
@@ -457,7 +501,7 @@ int json_get_child_token_by_index(
         int index,
         int parent_token_index)
 {
-
+    return 0;
 }
 
 void json_read_token(
@@ -470,3 +514,62 @@ void json_read_token(
 {
 
 }
+
+
+int array_get_element_count(int array_index, const parsed_json_t* parsed_transaction)
+{
+    jsmntok_t array_token = parsed_transaction->Tokens[array_index];
+    int token_index = array_index;
+    int element_count = 0;
+    int prev_element_end = array_token.start;
+    while (true) {
+        token_index++;
+        if (token_index >= parsed_transaction->NumberOfTokens) {
+            break;
+        }
+        jsmntok_t current_token = parsed_transaction->Tokens[token_index];
+        if (current_token.start > array_token.end) {
+            break;
+        }
+        if (current_token.start <= prev_element_end) {
+            continue;
+        }
+        prev_element_end = current_token.end;
+        element_count++;
+    }
+
+    return element_count;
+}
+
+int array_get_element(int array_index, int index, const parsed_json_t* parsed_transaction)
+{
+    jsmntok_t array_token = parsed_transaction->Tokens[array_index];
+    int token_index = array_index;
+    int element_count = 0;
+    int prev_element_end = array_token.start;
+    while (true) {
+        token_index++;
+        if (token_index >= parsed_transaction->NumberOfTokens) {
+            break;
+        }
+        jsmntok_t current_token = parsed_transaction->Tokens[token_index];
+        if (current_token.start > array_token.end) {
+            break;
+        }
+        if (current_token.start <= prev_element_end) {
+            continue;
+        }
+        prev_element_end = current_token.end;
+        if (element_count == index) {
+            return token_index;
+        }
+        element_count++;
+    }
+
+    return -1;
+}
+
+int object_get_element_count(int object_token_index, const parsed_json_t* parsed_transaction);
+int object_get_key(int object_token_index, int object_element_index, const parsed_json_t* parsed_transaction);
+int object_get_value(int object_token_index, int object_element_index, const parsed_json_t* parsed_transaction);
+int object_get_value(int object_token_index, const char* key_name, const parsed_json_t* parsed_transaction);
