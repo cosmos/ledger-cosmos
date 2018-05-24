@@ -42,3 +42,7 @@ src/ledger/bin/
 src/ledger/debug/
 
 src/ledger/obj/
+
+src/ledger/pkgdemo/loaddemo\.sh
+
+src/ledger/pkgdemo/app\.hex

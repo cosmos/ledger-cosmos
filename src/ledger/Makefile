@@ -36,7 +36,7 @@ APP_LOAD_PARAMS = --appFlags 0x00 --delete $(COMMON_LOAD_PARAMS)
 
 #prepare hsm generation
 ifeq ($(TARGET_NAME),TARGET_BLUE)
-ICONNAME=app_example_blue.gif
+ICONNAME=$(CURDIR)/app_example_blue.gif
 else
 ICONNAME=$(CURDIR)/app_example_nanos.gif
 endif
@@ -107,6 +107,10 @@ load: all
 
 delete:
 	python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
+
+package: all
+	./pkgdemo.sh ${APPNAME} ${APPVERSION} ${ICONNAME}
+
 
 # Import generic rules from the SDK
 
