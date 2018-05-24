@@ -442,84 +442,11 @@ int json_validate(
     return -1;
 }
 
-int json_get_child_token(
-        const char* transaction,
-        const parsed_json_t* parsed_transaction,
-        const char* name,
-        int parent_token_index)
+int array_get_element_count(int array_token_index,
+                            const parsed_json_t* parsed_transaction)
 {
-    int level_ends[10] = {0};
-    int current_level = 0;
-
-    // Find child token by scanning all the tokens on the level below parent token
-    int start = parsed_transaction->Tokens[parent_token_index].start;
-    int end = parsed_transaction->Tokens[parent_token_index].end;
-
-    level_ends[current_level] = end;
-    int key_index = parent_token_index + 1;
-    // level 0 = parent's level
-    while (true) {
-        if ((key_index+1) >= parsed_transaction->NumberOfTokens) {
-            return -1;
-        }
-        jsmntok_t current_key_token = parsed_transaction->Tokens[key_index];
-        jsmntok_t current_value_token = parsed_transaction->Tokens[key_index+1];
-
-        if (current_key_token.start <= level_ends[current_level]) {
-            current_level++;
-            level_ends[current_level] = current_value_token.end;
-        }
-        else {
-            while (current_level > 0 && !(current_key_token.start <= level_ends[current_level-1])) {
-                current_level--;
-            }
-            level_ends[current_level] = current_value_token.end;
-        }
-
-        if (current_level == 0) {
-            return -1;
-        }
-
-        // This function only returns results from level 1 i.e. level just below the parent
-        if (current_level == 1) {
-            const char* msg = (char*)(transaction + parsed_transaction->Tokens[key_index].start);
-            if (memcmp(msg, name, strlen(name)) == 0) {
-                // Found the match
-                return key_index;
-            }
-        }
-
-        key_index += 2;
-    }
-
-    return -1;
-}
-
-int json_get_child_token_by_index(
-        const char* transaction,
-        const parsed_json_t* parsed_transaction,
-        int index,
-        int parent_token_index)
-{
-    return 0;
-}
-
-void json_read_token(
-        const char* transaction,
-        const parsed_json_t* parsed_transaction,
-        int token_index,
-        char* buffer,
-        int buffer_size,
-        int offset)
-{
-
-}
-
-
-int array_get_element_count(int array_index, const parsed_json_t* parsed_transaction)
-{
-    jsmntok_t array_token = parsed_transaction->Tokens[array_index];
-    int token_index = array_index;
+    jsmntok_t array_token = parsed_transaction->Tokens[array_token_index];
+    int token_index = array_token_index;
     int element_count = 0;
     int prev_element_end = array_token.start;
     while (true) {
@@ -541,10 +468,12 @@ int array_get_element_count(int array_index, const parsed_json_t* parsed_transac
     return element_count;
 }
 
-int array_get_element(int array_index, int index, const parsed_json_t* parsed_transaction)
+int array_get_nth_element(int array_token_index,
+                        int element_index,
+                        const parsed_json_t* parsed_transaction)
 {
-    jsmntok_t array_token = parsed_transaction->Tokens[array_index];
-    int token_index = array_index;
+    jsmntok_t array_token = parsed_transaction->Tokens[array_token_index];
+    int token_index = array_token_index;
     int element_count = 0;
     int prev_element_end = array_token.start;
     while (true) {
@@ -560,7 +489,7 @@ int array_get_element(int array_index, int index, const parsed_json_t* parsed_tr
             continue;
         }
         prev_element_end = current_token.end;
-        if (element_count == index) {
+        if (element_count == element_index) {
             return token_index;
         }
         element_count++;
@@ -569,7 +498,268 @@ int array_get_element(int array_index, int index, const parsed_json_t* parsed_tr
     return -1;
 }
 
-int object_get_element_count(int object_token_index, const parsed_json_t* parsed_transaction);
-int object_get_key(int object_token_index, int object_element_index, const parsed_json_t* parsed_transaction);
-int object_get_value(int object_token_index, int object_element_index, const parsed_json_t* parsed_transaction);
-int object_get_value(int object_token_index, const char* key_name, const parsed_json_t* parsed_transaction);
+int object_get_element_count(int object_token_index,
+                             const parsed_json_t* parsed_transaction)
+{
+    jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
+    int token_index = object_token_index;
+    int element_count = 0;
+    int prev_element_end = object_token.start;
+    while (true) {
+        token_index++;
+        if (token_index >= parsed_transaction->NumberOfTokens) {
+            break;
+        }
+        jsmntok_t key_token = parsed_transaction->Tokens[token_index++];
+        jsmntok_t value_token = parsed_transaction->Tokens[token_index];
+        if (key_token.start > object_token.end) {
+            break;
+        }
+        if (key_token.start <= prev_element_end) {
+            continue;
+        }
+        prev_element_end = value_token.end;
+        element_count++;
+    }
+
+    return element_count;
+}
+
+int object_get_nth_key(int object_token_index,
+                     int object_element_index,
+                     const parsed_json_t* parsed_transaction)
+{
+    jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
+    int token_index = object_token_index;
+    int element_count = 0;
+    int prev_element_end = object_token.start;
+    while (true) {
+        token_index++;
+        if (token_index >= parsed_transaction->NumberOfTokens) {
+            break;
+        }
+        jsmntok_t key_token = parsed_transaction->Tokens[token_index++];
+        jsmntok_t value_token = parsed_transaction->Tokens[token_index];
+        if (key_token.start > object_token.end) {
+            break;
+        }
+        if (key_token.start <= prev_element_end) {
+            continue;
+        }
+        prev_element_end = value_token.end;
+        if (element_count == object_element_index) {
+            return token_index-1;
+        }
+        element_count++;
+    }
+
+    return -1;
+}
+
+int object_get_nth_value(int object_token_index,
+                       int object_element_index,
+                       const parsed_json_t* parsed_transaction)
+{
+    int key_index = object_get_nth_key(object_token_index, object_element_index, parsed_transaction);
+    if (key_index != -1) {
+        return key_index + 1;
+    }
+    return -1;
+}
+
+int object_get_value(int object_token_index,
+                     const char* key_name,
+                     const parsed_json_t* parsed_transaction,
+                     const char* transaction)
+{
+    int length = strlen(key_name);
+    jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
+    int token_index = object_token_index;
+    int element_count = 0;
+    int prev_element_end = object_token.start;
+    while (true) {
+        token_index++;
+        if (token_index >= parsed_transaction->NumberOfTokens) {
+            break;
+        }
+        jsmntok_t key_token = parsed_transaction->Tokens[token_index++];
+        jsmntok_t value_token = parsed_transaction->Tokens[token_index];
+        if (key_token.start > object_token.end) {
+            break;
+        }
+        if (key_token.start <= prev_element_end) {
+            continue;
+        }
+        prev_element_end = value_token.end;
+        if (memcmp(key_name, (char*)(transaction + key_token.start), length) == 0) {
+            return token_index;
+        }
+    }
+
+    return -1;
+}
+
+void display_value(
+        char* value,
+        int token_index,
+        int* current_item_index,
+        int item_index_to_display,
+        const parsed_json_t* parsed_transaction,
+        unsigned int* view_scrolling_total_size, // output
+        unsigned int view_scrolling_step, // input
+        unsigned int max_chars_per_line, // input
+        const char* transaction, // input
+        void(*copy)(void* dst, const void* source, unsigned int size)) {
+
+    *current_item_index = *current_item_index + 1;
+    if (*current_item_index == item_index_to_display) {
+
+        *view_scrolling_total_size =
+                parsed_transaction->Tokens[token_index].end - parsed_transaction->Tokens[token_index].start;
+
+        const char* address_ptr = transaction + parsed_transaction->Tokens[token_index].start;
+        if (view_scrolling_step < *view_scrolling_total_size) {
+            int size =
+                    *view_scrolling_total_size < max_chars_per_line ? *view_scrolling_total_size : max_chars_per_line;
+            copy(value, address_ptr + view_scrolling_step, size);
+            value[size] = '\0';
+        }
+    }
+}
+
+void display_key(
+        char* key,
+        int token_index,
+        const parsed_json_t* parsed_transaction,
+        unsigned int max_chars_per_line, // input
+        const char* transaction, // input
+        void(*copy)(void* dst, const void* source, unsigned int size))
+{
+    int key_size = transaction + parsed_transaction->Tokens[token_index].end - transaction + parsed_transaction->Tokens[token_index].start;
+    const char* address_ptr = transaction + parsed_transaction->Tokens[token_index].start;
+    int size = key_size < max_chars_per_line ? key_size : max_chars_per_line;
+    copy(key, address_ptr, size);
+    key[size] = '\0';
+}
+
+void display_arbitrary_item(
+        char* key, // output
+        char* value, // output
+        int token_index, // input
+        int* current_item_index, // input
+        int level, // input
+        int item_index_to_display, //input
+        const parsed_json_t* parsed_transaction, // input
+        unsigned int* view_scrolling_total_size, // output
+        unsigned int view_scrolling_step, // input
+        unsigned int max_chars_per_line, // input
+        const char* transaction, // input
+        void(*copy)(void* dst, const void* source, unsigned int size))
+{
+//    if level == 2
+//    show value as json-encoded string
+//    else
+//    switch typeof(json) {
+//        case object:
+//            for (key, value) in object:
+//                    show key
+//                    display(value, level + 1)
+//        case array:
+//            for element in array:
+//        display(element, level + 1)
+//        otherwise:
+//        show value as json-encoded string
+//    }
+    if (level == 2) {
+        display_value(
+                value,
+                token_index,
+                current_item_index,
+                item_index_to_display,
+                parsed_transaction,
+                view_scrolling_total_size,
+                view_scrolling_step,
+                max_chars_per_line,
+                transaction,
+                copy);
+    }
+    else {
+        switch (parsed_transaction->Tokens[token_index].type) {
+            case JSMN_STRING:
+                display_value(
+                        value,
+                        token_index,
+                        current_item_index,
+                        item_index_to_display,
+                        parsed_transaction,
+                        view_scrolling_total_size,
+                        view_scrolling_step,
+                        max_chars_per_line,
+                        transaction,
+                        copy);
+                break;
+            case JSMN_PRIMITIVE:
+                display_value(
+                        value,
+                        token_index,
+                        current_item_index,
+                        item_index_to_display,
+                        parsed_transaction,
+                        view_scrolling_total_size,
+                        view_scrolling_step,
+                        max_chars_per_line,
+                        transaction,
+                        copy);
+                break;
+            case JSMN_OBJECT: {
+                int el_count = object_get_element_count(token_index, parsed_transaction);
+                for (int i = 0; i < el_count; ++i) {
+                    int key_index = object_get_nth_key(token_index, i, parsed_transaction);
+                    int value_index = object_get_nth_value(token_index, i, parsed_transaction);
+                    display_key(
+                            key,
+                            key_index,
+                            parsed_transaction,
+                            max_chars_per_line,
+                            transaction,
+                            copy);
+
+                    display_arbitrary_item(
+                            key,
+                            value,
+                            value_index,
+                            current_item_index,
+                            level + 1,
+                            item_index_to_display,
+                            parsed_transaction,
+                            view_scrolling_total_size,
+                            view_scrolling_step,
+                            max_chars_per_line,
+                            transaction,
+                            copy);
+                }
+                break;
+            }
+            case JSMN_ARRAY: {
+                int el_count = array_get_element_count(token_index, parsed_transaction);
+                for (int i = 0; i < el_count; ++i) {
+                    int element_index = array_get_nth_element(token_index, i, parsed_transaction);
+                    display_value(
+                            key,
+                            element_index,
+                            current_item_index,
+                            item_index_to_display,
+                            parsed_transaction,
+                            view_scrolling_total_size,
+                            view_scrolling_step,
+                            max_chars_per_line,
+                            transaction,
+                            copy);
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
+}

@@ -74,7 +74,7 @@ namespace {
         parsed_json_t parsed_json;
         json_parse(&parsed_json, transaction);
 
-        int token_index = array_get_element(2, 1, &parsed_json);
+        int token_index = array_get_nth_element(2, 1, &parsed_json);
         EXPECT_EQ(token_index, 8) << "Wrong token index returned";
         EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_OBJECT) << "Wrong token type returned";
     }
@@ -86,7 +86,7 @@ namespace {
         parsed_json_t parsed_json;
         json_parse(&parsed_json, transaction);
 
-        int token_index = array_get_element(2, 5, &parsed_json);
+        int token_index = array_get_nth_element(2, 5, &parsed_json);
         EXPECT_EQ(token_index, 8) << "Wrong token index returned";
         EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_PRIMITIVE) << "Wrong token type returned";
     }
@@ -98,7 +98,7 @@ namespace {
         parsed_json_t parsed_json;
         json_parse(&parsed_json, transaction);
 
-        int token_index = array_get_element(2, 0, &parsed_json);
+        int token_index = array_get_nth_element(2, 0, &parsed_json);
         EXPECT_EQ(token_index, 3) << "Wrong token index returned";
         EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_STRING) << "Wrong token type returned";
     }
@@ -110,10 +110,154 @@ namespace {
         parsed_json_t parsed_json;
         json_parse(&parsed_json, transaction);
 
-        int token_index = array_get_element(2, 0, &parsed_json);
+        int token_index = array_get_nth_element(2, 0, &parsed_json);
         EXPECT_EQ(token_index, -1) << "Token index should be invalid (not found).";
     }
 
+    TEST(TransactionParserTest, ArrayElementGet_out_of_bounds_negative) {
+
+        auto transaction = R"({"array":["hello", "there"])";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        int token_index = array_get_nth_element(2, -1, &parsed_json);
+        EXPECT_EQ(token_index, -1) << "Token index should be invalid (not found).";
+    }
+
+    TEST(TransactionParserTest, ArrayElementGet_out_of_bounds) {
+
+        auto transaction = R"({"array":["hello", "there"])";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        int token_index = array_get_nth_element(2, 3, &parsed_json);
+        EXPECT_EQ(token_index, -1) << "Token index should be invalid (not found).";
+    }
+
+
+    TEST(TransactionParserTest, ObjectElementCount_primitives) {
+
+        auto transaction = R"({"age":36, "height":185, "year":1981})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        EXPECT_EQ(object_get_element_count(0, &parsed_json), 3) << "Wrong number of object elements";
+    }
+
+    TEST(TransactionParserTest, ObjectElementCount_string) {
+
+        auto transaction = R"({"age":"36", "height":"185", "year":"1981", "month":"july"})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        EXPECT_EQ(object_get_element_count(0, &parsed_json), 4) << "Wrong number of object elements";
+    }
+
+    TEST(TransactionParserTest, ObjectElementCount_array) {
+
+        auto transaction = R"({ "ages":[36, 31, 10, 2],
+                                "heights":[185, 164, 154, 132],
+                                "years":[1981, 1985, 2008, 2016],
+                                "months":["july", "august", "february", "july"]})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        EXPECT_EQ(object_get_element_count(0, &parsed_json), 4) << "Wrong number of object elements";
+    }
+
+    TEST(TransactionParserTest, ObjectElementCount_object) {
+
+        auto transaction = R"({"person1":{"age":36, "height":185, "year":1981},
+                               "person2":{"age":36, "height":185, "year":1981},
+                               "person3":{"age":36, "height":185, "year":1981}})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        EXPECT_EQ(object_get_element_count(0, &parsed_json), 3) << "Wrong number of object elements";
+    }
+
+    TEST(TransactionParserTest, ObjectElementCount_deep) {
+
+        auto transaction = R"({"person1":{"age":{"age":36, "height":185, "year":1981}, "height":{"age":36, "height":185, "year":1981}, "year":1981},
+                               "person2":{"age":{"age":36, "height":185, "year":1981}, "height":{"age":36, "height":185, "year":1981}, "year":1981},
+                               "person3":{"age":{"age":36, "height":185, "year":1981}, "height":{"age":36, "height":185, "year":1981}, "year":1981}})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        EXPECT_EQ(object_get_element_count(0, &parsed_json), 3) << "Wrong number of object elements";
+    }
+
+    TEST(TransactionParserTest, ObjectElementGet_primitives) {
+
+        auto transaction = R"({"age":36, "height":185, "year":1981})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        int token_index = object_get_nth_key(0, 0, &parsed_json);
+        EXPECT_EQ(token_index, 1) << "Wrong token index";
+        EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_STRING) << "Wrong token type returned";
+        EXPECT_EQ(memcmp(transaction+parsed_json.Tokens[token_index].start,"age", strlen("age")), 0) << "Wrong key returned";
+    }
+
+    TEST(TransactionParserTest, ObjectElementGet_string) {
+
+        auto transaction = R"({"age":"36", "height":"185", "year":"1981", "month":"july"})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        int token_index = object_get_nth_value(0, 3, &parsed_json);
+        EXPECT_EQ(token_index, 8) << "Wrong token index";
+        EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_STRING) << "Wrong token type returned";
+        EXPECT_EQ(memcmp(transaction+parsed_json.Tokens[token_index].start,"july", strlen("july")), 0) << "Wrong key returned";
+    }
+
+    TEST(TransactionParserTest, ObjectElementGet_out_of_bounds_negative) {
+
+        auto transaction = R"({"age":36, "height":185, "year":1981})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        int token_index = object_get_nth_key(0, -1, &parsed_json);
+        EXPECT_EQ(token_index, -1) << "Wrong token index, should be invalid";
+    }
+
+    TEST(TransactionParserTest, ObjectElementGet_out_of_bounds) {
+
+        auto transaction = R"({"age":36, "height":185, "year":1981})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        int token_index = object_get_nth_key(0, 5, &parsed_json);
+        EXPECT_EQ(token_index, -1) << "Wrong token index, should be invalid";
+    }
+
+    TEST(TransactionParserTest, ObjectElementGet_array) {
+
+        auto transaction = R"({ "ages":[36, 31, 10, 2],
+                                "heights":[185, 164, 154, 132],
+                                "years":[1981, 1985, 2008, 2016, 2022],
+                                "months":["july", "august", "february", "july"]})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        int token_index = object_get_value(0, "years", &parsed_json, transaction);
+
+        EXPECT_EQ(token_index, 14) << "Wrong token index";
+        EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_ARRAY) << "Wrong token type returned";
+        EXPECT_EQ(array_get_element_count(token_index, &parsed_json), 5) << "Wrong number of array elements";
+    }
 
 //    // Validation tests
 //    TEST(TransactionParserTest, correct_format) {
@@ -162,298 +306,5 @@ namespace {
 //        char errorMsg[20];
 //        int result = json_validate(transaction, errorMsg, sizeof(errorMsg));
 //        EXPECT_TRUE(result == -1) << "Validation should fail, sequence is missing";
-//    }
-//
-//    // Json parsing tests
-//    int get_token_valid_message(const char* name, int parent_token_index)
-//    {
-//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
-//        char errorMsg[20];
-//
-//        parsed_json_t parsed_json;
-//        json_parse(&parsed_json, transaction);
-//
-//        int result = json_get_child_token(
-//                transaction,
-//                &parsed_json,
-//                name,
-//                parent_token_index);
-//        return result;
-//    }
-//
-//    int get_token_valid_message(int index, int parent_token_index)
-//    {
-//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
-//        char errorMsg[20];
-//
-//        parsed_json_t parsed_json;
-//        json_parse(&parsed_json, transaction);
-//
-//        int result = json_get_child_token_by_index(
-//                transaction,
-//                &parsed_json,
-//                index,
-//                parent_token_index);
-//        return result;
-//    }
-//
-//    TEST(TransactionParserTest, get_token_alt_bytes) {
-//        auto result = get_token_valid_message("alt_bytes", 0);
-//        EXPECT_EQ(result, 1) << "Wrong token index, expected: " << 1 << ", received: " << result;
-//    }
-//
-//    TEST(TransactionParserTest, get_token_alt_bytes_index) {
-//        auto result = get_token_valid_message(0, 0);
-//        EXPECT_EQ(result, 1) << "Wrong token index, expected: " << 1 << ", received: " << result;
-//    }
-//
-//    TEST(TransactionParserTest, get_token_chain_id) {
-//        auto result = get_token_valid_message("chain_id", 0);
-//        EXPECT_EQ(result, 3) << "Wrong token index, expected: " << 3 << ", received: " << result;
-//    }
-//
-//    TEST(TransactionParserTest, get_token_chain_id_index) {
-//        auto result = get_token_valid_message(1, 0);
-//        EXPECT_EQ(result, 3) << "Wrong token index, expected: " << 3 << ", received: " << result;
-//    }
-//
-//    TEST(TransactionParserTest, get_token_fee_bytes) {
-//        auto result = get_token_valid_message("fee_bytes", 0);
-//        EXPECT_EQ(result, 5) << "Wrong token index, expected: " << 5 << ", received: " << result;
-//    }
-//
-//    TEST(TransactionParserTest, get_token_fee_bytes_index) {
-//        auto result = get_token_valid_message(2, 0);
-//        EXPECT_EQ(result, 5) << "Wrong token index, expected: " << 5 << ", received: " << result;
-//    }
-//
-//    TEST(TransactionParserTest, get_token_msg_bytes) {
-//        auto result = get_token_valid_message("msg_bytes", 0);
-//        EXPECT_EQ(result, 14) << "Wrong token index, expected: " << 14 << ", received: " << result;
-//    }
-//
-//    TEST(TransactionParserTest, get_token_msg_bytes_index) {
-//        auto result = get_token_valid_message(3, 0);
-//        EXPECT_EQ(result, 14) << "Wrong token index, expected: " << 14 << ", received: " << result;
-//    }
-//
-//    TEST(TransactionParserTest, get_token_sequences) {
-//        auto result = get_token_valid_message("sequences", 0);
-//        EXPECT_EQ(result, 32) << "Wrong token index, expected: " << 32 << ", received: " << result;
-//    }
-//
-//    TEST(TransactionParserTest, get_token_sequences_index) {
-//        auto result = get_token_valid_message(4, 0);
-//        EXPECT_EQ(result, 32) << "Wrong token index, expected: " << 32 << ", received: " << result;
-//    }
-//
-//    TEST(TransactionParserTest, get_token_alt_bytes_wrong_level) {
-//        auto result = get_token_valid_message("alt_bytes", 2);
-//        EXPECT_EQ(result, -1) << "Wrong token index, expected: " << 0 << ", received: " << result;
-//    }
-//    TEST(TransactionParserTest, get_token_chain_id_wrong_level) {
-//        auto result = get_token_valid_message("chain_id", 3);
-//        EXPECT_EQ(result, -1) << "Wrong token index, expected: " << 0 << ", received: " << result;
-//    }
-//    TEST(TransactionParserTest, get_token_fee_bytes_wrong_level) {
-//        auto result = get_token_valid_message("fee_bytes", 10);
-//        EXPECT_EQ(result, -1) << "Wrong token index, expected: " << 0 << ", received: " << result;
-//    }
-//    TEST(TransactionParserTest, get_token_msg_bytes_wrong_level) {
-//        auto result = get_token_valid_message("msg_bytes", 4);
-//        EXPECT_EQ(result, -1) << "Wrong token index, expected: " << 0 << ", received: " << result;
-//    }
-//    TEST(TransactionParserTest, get_token_sequences_wrong_level) {
-//        auto result = get_token_valid_message("sequences", -1);
-//        EXPECT_EQ(result, -1) << "Wrong token index, expected: " << 0 << ", received: " << result;
-//    }
-//
-//    TEST(TransactionParserTest, read_chain_id) {
-//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
-//        char errorMsg[20];
-//
-//        parsed_json_t parsed_json;
-//        json_parse(&parsed_json, transaction);
-//        int token_index = json_get_child_token(
-//                transaction,
-//                &parsed_json,
-//                "chain_id",
-//                0);
-//
-//        char buffer[20];
-//        // Read name
-//        json_read_token(transaction, &parsed_json, token_index, buffer, sizeof(buffer), 0);
-//        auto cmp = "chain_id";
-//        EXPECT_TRUE(strcmp(buffer, cmp) == 0) << "Incorrect name, expected:" << cmp << ", received:" << buffer;
-//
-//        // Read value
-//        json_read_token(transaction, &parsed_json, token_index+1, buffer, sizeof(buffer), 0);
-//        cmp = "test-chain-1";
-//        EXPECT_TRUE(strcmp(buffer, cmp) == 0) << "Incorrect name, expected:" << cmp << ", received:" << buffer;
-//    }
-//
-//    TEST(TransactionParserTest, read_fee_offset_0) {
-//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
-//        char errorMsg[20];
-//
-//        parsed_json_t parsed_json;
-//        json_parse(&parsed_json, transaction);
-//        int token_index = json_get_child_token(
-//                transaction,
-//                &parsed_json,
-//                "fee_bytes",
-//                0);
-//
-//        char buffer[20];
-//        json_read_token(transaction, &parsed_json, token_index+1, buffer, sizeof(buffer), 0);
-//        auto cmp = R"({"amount":[{"amount")";
-//        EXPECT_TRUE(strcmp(buffer, cmp) == 0) << "Incorrect value of fee, expected:" << cmp << ", received:" << buffer;
-//    }
-//
-//    TEST(TransactionParserTest, read_fee_offset_20) {
-//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
-//        char errorMsg[20];
-//
-//        parsed_json_t parsed_json;
-//        json_parse(&parsed_json, transaction);
-//        int token_index = json_get_child_token(
-//                transaction,
-//                &parsed_json,
-//                "fee_bytes",
-//                0);
-//
-//        char buffer[20];
-//        json_read_token(transaction, &parsed_json, token_index+1, buffer, sizeof(buffer), 20);
-//        auto cmp = R"(":5,"denom":"photon)";
-//        EXPECT_TRUE(strcmp(buffer, cmp) == 0) << "Incorrect value of fee, expected:" << cmp << ", received:" << buffer;
-//    }
-//
-//    TEST(TransactionParserTest, read_msg_bytes_item_1_level_0) {
-//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
-//        char errorMsg[20];
-//
-//        parsed_json_t parsed_json;
-//        json_parse(&parsed_json, transaction);
-//
-//        // First find the msg_bytes parent token, level 0
-//        int token_index = json_get_child_token(
-//                transaction,
-//                &parsed_json,
-//                "msg_bytes",
-//                0);
-//
-//        // Because token_index+1 is object
-//        int child_token_level_0 = json_get_child_token_by_index(
-//                transaction,
-//                &parsed_json,
-//                0,
-//                token_index+1);
-//
-//        char buffer[100];
-//        json_read_token(transaction, &parsed_json, child_token_level_0, buffer, sizeof(buffer), 0);
-//        auto cmp = "inputs";
-//        EXPECT_TRUE(strcmp(buffer, cmp) == 0) << "Incorrect name, expected:" << cmp << ", received:" << buffer;
-//
-//        // Because child_token_level_0+1 is object
-//        int child_token_level_1 = json_get_child_token_by_index(
-//                transaction,
-//                &parsed_json,
-//                0,
-//                child_token_level_0+1);
-//
-//        json_read_token(transaction, &parsed_json, child_token_level_1, buffer, sizeof(buffer), 0);
-//        cmp = "address";
-//        EXPECT_TRUE(strcmp(buffer, cmp) == 0) << "Incorrect name, expected:" << cmp << ", received:" << buffer;
-//
-//        // Because child_token_level_1+1 is string
-//        json_read_token(transaction, &parsed_json, child_token_level_1+1, buffer, sizeof(buffer), 0);
-//        cmp = "696E707574";
-//        EXPECT_TRUE(strcmp(buffer, cmp) == 0) << "Incorrect name, expected:" << cmp << ", received:" << buffer;
-//    }
-//
-//    TEST(TransactionParserTest, read_msg_bytes_item_2_level_1) {
-//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
-//        char errorMsg[20];
-//
-//        parsed_json_t parsed_json;
-//        json_parse(&parsed_json, transaction);
-//
-//        // First find the msg_bytes parent token, level 0
-//        int token_index = json_get_child_token(
-//                transaction,
-//                &parsed_json,
-//                "msg_bytes",
-//                0);
-//
-//        // Because token_index+1 is object
-//        int child_token_level_0 = json_get_child_token_by_index(
-//                transaction,
-//                &parsed_json,
-//                0,
-//                token_index+1);
-//
-//        char buffer[100];
-//        json_read_token(transaction, &parsed_json, child_token_level_0, buffer, sizeof(buffer), 0);
-//        auto cmp = "inputs";
-//        EXPECT_TRUE(strcmp(buffer, cmp) == 0) << "Incorrect name, expected:" << cmp << ", received:" << buffer;
-//
-//        // Because child_token_level_0+1 is object
-//        int child_token_level_1 = json_get_child_token_by_index(
-//                transaction,
-//                &parsed_json,
-//                1,
-//                child_token_level_0+1);
-//
-//        json_read_token(transaction, &parsed_json, child_token_level_1, buffer, sizeof(buffer), 0);
-//        cmp = "coins";
-//        EXPECT_TRUE(strcmp(buffer, cmp) == 0) << "Incorrect name, expected:" << cmp << ", received:" << buffer;
-//
-//        // Although child_token_level_1+1 is object, we have restriction to stringify level 2
-//        json_read_token(transaction, &parsed_json, child_token_level_1+1, buffer, sizeof(buffer), 0);
-//        cmp = R"([{\"amount\":10,\"denom\":\"atom\"}]}])";
-//        EXPECT_TRUE(strcmp(buffer, cmp) == 0) << "Incorrect name, expected:" << cmp << ", received:" << buffer;
-//    }
-//
-//    TEST(TransactionParserTest, read_msg_bytes_item_2_level_0) {
-//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
-//        char errorMsg[20];
-//
-//        parsed_json_t parsed_json;
-//        json_parse(&parsed_json, transaction);
-//
-//        // First find the msg_bytes parent token, level 0
-//        int token_index = json_get_child_token(
-//                transaction,
-//                &parsed_json,
-//                "msg_bytes",
-//                0);
-//
-//        // Because token_index+1 is object
-//        int child_token_level_0 = json_get_child_token_by_index(
-//                transaction,
-//                &parsed_json,
-//                0,
-//                token_index+1);
-//
-//        char buffer[100];
-//        json_read_token(transaction, &parsed_json, child_token_level_0, buffer, sizeof(buffer), 0);
-//        auto cmp = "outputs";
-//        EXPECT_TRUE(strcmp(buffer, cmp) == 0) << "Incorrect name, expected:" << cmp << ", received:" << buffer;
-//
-//        // Because child_token_level_0+1 is object
-//        int child_token_level_1 = json_get_child_token_by_index(
-//                transaction,
-//                &parsed_json,
-//                0,
-//                child_token_level_0+1);
-//
-//        json_read_token(transaction, &parsed_json, child_token_level_1, buffer, sizeof(buffer), 0);
-//        cmp = "address";
-//        EXPECT_TRUE(strcmp(buffer, cmp) == 0) << "Incorrect name, expected:" << cmp << ", received:" << buffer;
-//
-//        // Because child_token_level_1+1 is string
-//        json_read_token(transaction, &parsed_json, child_token_level_1+1, buffer, sizeof(buffer), 0);
-//        cmp = "6F7574707574";
-//        EXPECT_TRUE(strcmp(buffer, cmp) == 0) << "Incorrect name, expected:" << cmp << ", received:" << buffer;
 //    }
 }

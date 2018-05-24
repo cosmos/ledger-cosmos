@@ -118,49 +118,75 @@ int SignedMsgGetInfo(
         void(*copy)(void* dst, const void* source, unsigned int size));
 
 //---------------------------------------------
+// NEW JSON PARSER CODE
 
 // Parse json to create a token representation
 void json_parse(
         parsed_json_t* parsed_json,
         const char* transaction);
 
-// validate transaction json according to the TXSPEC
-// returns 0 if validation is successful
-// returns -1 if validation fails, with error stored in errorMsg
-int json_validate(
-        const char* transaction,
-        char* errorMsg,
-        int errMsgLength);
+int array_get_element_count(
+        int array_token_index,
+        const parsed_json_t* parsed_transaction);
 
-// find child token with a given name
-int json_get_child_token(
-        const char* transaction,
-        const parsed_json_t* parsed_transaction,
-        const char* name,
-        int parent_token_index);
+int array_get_nth_element(
+        int array_token_index,
+        int element_index,
+        const parsed_json_t* parsed_transaction);
 
-// find child token with a given index
-int json_get_child_token_by_index(
-        const char* transaction,
-        const parsed_json_t* parsed_transaction,
-        int index,
-        int parent_token_index);
+int object_get_element_count(
+        int object_token_index,
+        const parsed_json_t* parsed_transaction);
 
-void json_read_token(
-        const char* transaction,
+int object_get_nth_key(
+        int object_token_index,
+        int object_element_index,
+        const parsed_json_t* parsed_transaction);
+
+int object_get_nth_value(
+        int object_token_index,
+        int object_element_index,
+        const parsed_json_t* parsed_transaction);
+
+int object_get_value(
+        int object_token_index,
+        const char* key_name,
         const parsed_json_t* parsed_transaction,
+        const char* transaction);
+
+void display_value(
+        char* value,
         int token_index,
-        char* buffer,
-        int buffer_size,
-        int offset);
+        int* current_item_index,
+        int item_index_to_display,
+        const parsed_json_t* parsed_transaction,
+        unsigned int* view_scrolling_total_size, // output
+        unsigned int view_scrolling_step, // input
+        unsigned int max_chars_per_line, // input
+        const char* transaction, // input
+        void(*copy)(void* dst, const void* source, unsigned int size));
 
-int array_get_element_count(int array_token_index, const parsed_json_t* parsed_transaction);
-int array_get_element(int array_token_index, int element_index, const parsed_json_t* parsed_transaction);
+void display_key(
+        char* key,
+        int token_index,
+        const parsed_json_t* parsed_transaction,
+        unsigned int max_chars_per_line, // input
+        const char* transaction, // input
+        void(*copy)(void* dst, const void* source, unsigned int size));
 
-int object_get_element_count(int object_token_index, const parsed_json_t* parsed_transaction);
-int object_get_key(int object_token_index, int object_element_index, const parsed_json_t* parsed_transaction);
-int object_get_value(int object_token_index, int object_element_index, const parsed_json_t* parsed_transaction);
-int object_get_value(int object_token_index, const char* key_name, const parsed_json_t* parsed_transaction);
+void display_arbitrary_item(
+        char* key, // output
+        char* value, // output
+        int token_index, // input
+        int* current_item_index, // input
+        int level, // input
+        int item_index_to_display, //input
+        const parsed_json_t* parsed_transaction, // input
+        unsigned int* view_scrolling_total_size, // output
+        unsigned int view_scrolling_step, // input
+        unsigned int max_chars_per_line, // input
+        const char* transaction, // input
+        void(*copy)(void* dst, const void* source, unsigned int size));
 
 #ifdef __cplusplus
 }
