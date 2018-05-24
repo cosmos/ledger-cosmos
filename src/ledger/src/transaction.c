@@ -84,19 +84,62 @@ int transaction_msg_get_key_value(
             &os_memmove);
 }
 
+void update(char* msg, int token_index)
+{
+    view_scrolling_total_size = parsed_transaction.Tokens[token_index].end - parsed_transaction.Tokens[token_index].start;
+    int size = view_scrolling_total_size < MAX_CHARS_PER_LINE ? view_scrolling_total_size : MAX_CHARS_PER_LINE;
+    os_memmove(msg,
+               transaction_buffer + parsed_transaction.Tokens[token_index].start + view_scrolling_step,
+               size);
+    msg[size] = '\0';
+}
+
 int signed_msg_get_key_value(
         char* key,
         char* value,
         int index)
 {
-    return SignedMsgGetInfo(
-            key,
-            value,
-            index,
-            &parsed_transaction,
-            &view_scrolling_total_size,
-            view_scrolling_step,
-            MAX_CHARS_PER_LINE,
-            transaction_buffer,
-            &os_memmove);
+    switch (index) {
+        case 0: {
+            os_memmove(key, "chain_id", sizeof("chain_id"));
+            int token_index = object_get_value(0, "chain_id", &parsed_transaction, transaction_buffer);
+            update(value, token_index);
+            break;
+        }
+        case 1: {
+            os_memmove(key, "sequences", sizeof("sequences"));
+            int token_index = object_get_value(0, "sequences", &parsed_transaction, transaction_buffer);
+            update(value, token_index);
+            break;
+        }
+        case 2: {
+            os_memmove(key, "fee_bytes", sizeof("fee_bytes"));
+            int token_index = object_get_value(0, "fee_bytes", &parsed_transaction, transaction_buffer);
+            update(value, token_index);
+            break;
+        }
+        case 3: {
+            os_memmove(key, "msg_bytes", sizeof("msg_bytes"));
+            int token_index = object_get_value(0, "msg_bytes", &parsed_transaction, transaction_buffer);
+            update(value, token_index);
+            break;
+        }
+        case 4: {
+            os_memmove(key, "alt_bytes", sizeof("alt_bytes"));
+            int token_index = object_get_value(0, "alt_bytes", &parsed_transaction, transaction_buffer);
+            update(value, token_index);
+            break;
+        }
+    }
+    return 0;
+//    return SignedMsgGetInfo(
+//            key,
+//            value,
+//            index,
+//            &parsed_transaction,
+//            &view_scrolling_total_size,
+//            view_scrolling_step,
+//            MAX_CHARS_PER_LINE,
+//            transaction_buffer,
+//            &os_memmove);
 }

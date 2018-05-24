@@ -291,6 +291,7 @@ func testSECP256K1_StdSignMsg(messages []sdk.StdSignMsg, ledger *ledger_goclient
 
 		path := []uint32{44, 60, 0, 0, 0}
 
+		fmt.Printf("\nMessage: %s\n", message)
 		signature, err := ledger.SignSECP256K1_StdSignMsg(path, message)
 		if err != nil {
 			fmt.Printf("[Sign] Error: %s\n", err)

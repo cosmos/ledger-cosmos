@@ -82,8 +82,8 @@ static const bagl_element_t bagl_ui_transaction_info[] = {
     UI_Icon(0, 0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT),
     UI_Icon(0, 128-7, 0, 7, 7, BAGL_GLYPH_ICON_RIGHT),
     UI_LabelLine(1, 0, 8, 128, 11, 0xFFFFFF, 0x000000,(const char*)pageInfo),
-    UI_LabelLine(2, 0, 21, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataName),
-    UI_LabelLine(3, 0, 32, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataValue),
+    UI_LabelLine(2, 0, 20, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataName),
+    UI_LabelLine(3, 0, 30, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataValue),
 };
 //------ View elements
 

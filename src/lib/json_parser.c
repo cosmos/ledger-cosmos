@@ -315,25 +315,27 @@ int TransactionMsgGetInfo(
 int SignedMsgGetNumberOfElements(const parsed_json_t* parsed_message,
                                  const char* message)
 {
-    int currentIndex = 0;
-    int foundKeyIndex = 0;
-    int nextKeyMinPosition = -1;
-    while (currentIndex < parsed_message->NumberOfTokens) {
-
-        if (parsed_message->Tokens[currentIndex].type == JSMN_UNDEFINED) break;
-        // Here we're assuming that json keys are always of JSMN_STRING type
-        if (parsed_message->Tokens[currentIndex].type == JSMN_STRING) {
-            if (parsed_message->Tokens[currentIndex].start > nextKeyMinPosition) {
-
-                // Found the key
-                foundKeyIndex++;
-                // Skip all the value tokens
-                nextKeyMinPosition = parsed_message->Tokens[currentIndex + 1].end;
-            }
-        }
-        currentIndex++;
-    }
-    return foundKeyIndex;
+    return 4;
+//
+//    int currentIndex = 0;
+//    int foundKeyIndex = 0;
+//    int nextKeyMinPosition = -1;
+//    while (currentIndex < parsed_message->NumberOfTokens) {
+//
+//        if (parsed_message->Tokens[currentIndex].type == JSMN_UNDEFINED) break;
+//        // Here we're assuming that json keys are always of JSMN_STRING type
+//        if (parsed_message->Tokens[currentIndex].type == JSMN_STRING) {
+//            if (parsed_message->Tokens[currentIndex].start > nextKeyMinPosition) {
+//
+//                // Found the key
+//                foundKeyIndex++;
+//                // Skip all the value tokens
+//                nextKeyMinPosition = parsed_message->Tokens[currentIndex + 1].end;
+//            }
+//        }
+//        currentIndex++;
+//    }
+//    return foundKeyIndex;
 }
 
 int GetTokenIndexForKey(
@@ -575,7 +577,6 @@ int object_get_value(int object_token_index,
     int length = strlen(key_name);
     jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
     int token_index = object_token_index;
-    int element_count = 0;
     int prev_element_end = object_token.start;
     while (true) {
         token_index++;
@@ -637,9 +638,9 @@ void display_key(
         const char* transaction, // input
         void(*copy)(void* dst, const void* source, unsigned int size))
 {
-    int key_size = parsed_transaction->Tokens[token_index].end - parsed_transaction->Tokens[token_index].start;
+    unsigned int key_size = parsed_transaction->Tokens[token_index].end - parsed_transaction->Tokens[token_index].start;
     const char* address_ptr = transaction + parsed_transaction->Tokens[token_index].start;
-    int size = key_size < max_chars_per_line ? key_size : max_chars_per_line;
+    unsigned int size = key_size < max_chars_per_line ? key_size : max_chars_per_line;
     copy(key, address_ptr, size);
     key[size] = '\0';
 }
@@ -648,7 +649,7 @@ void append_keys(char* key, const char* temp_key)
 {
     int size = strlen(key);
     if (size > 0) {
-        key[size] = '//';
+        key[size] = '/';
         size++;
     }
     strcpy(key+size, temp_key);

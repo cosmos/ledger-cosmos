@@ -185,7 +185,6 @@ void display_key(
         void(*copy)(void* dst, const void* source, unsigned int size));
 
 // Generic function to display arbitrary json based on the specification
-// TODO: This function is currently untested.
 int display_arbitrary_item(
         int item_index_to_display, //input
         char* key, // output
