@@ -44,3 +44,7 @@ src/ledger/obj/
 src/goclient/vendor
 pkg/
 src/goclient/goclient
+
+src/ledger/pkgdemo/loaddemo\.sh
+
+src/ledger/pkgdemo/app\.hex

@@ -11,18 +11,36 @@ jobs:
       - run: git submodule update --init --recursive
       - run: cmake . && make
       - run: export GTEST_COLOR=1 && ctest -VV
+
   build_ledger:
     docker:
       - image: zondax/ledger-docker-bolos
     environment:
       - BOLOS_SDK=/root/project/deps/nanos-secure-sdk
+      - BOLOS_ENV=/opt/bolos
       - JSMN_LIB=/root/project/deps/jsmn
       - JSON_PARSER_LIB=/root/project/src/lib
-      - BOLOS_ENV=/opt/bolos
     steps:
       - checkout
       - run: git submodule update --init --recursive
       - run: make -C src/ledger
+
+  package_demo:
+    docker:
+      - image: zondax/ledger-docker-bolos
+    environment:
+      - BOLOS_SDK=/root/project/deps/nanos-secure-sdk
+      - BOLOS_ENV=/opt/bolos
+      - JSMN_LIB=/root/project/deps/jsmn
+      - JSON_PARSER_LIB=/root/project/src/lib
+    steps:
+      - checkout
+      - run: git submodule update --init --recursive
+      - run: make -C src/ledger package
+      - run: sudo apt-get -y install zip
+      - run: zip -r demo.zip /root/project/src/ledger/pkgdemo
+      - store_artifacts:
+          path: demo.zip
 
 workflows:
   version: 2
@@ -30,3 +48,7 @@ workflows:
     jobs:
       - build
       - build_ledger
+      - package_demo:
+          requires:
+            - build
+            - build_ledger
