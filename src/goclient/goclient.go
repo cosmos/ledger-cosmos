@@ -32,6 +32,7 @@ import (
 	"github.com/zondax/ledger-goclient"
 	"os"
 	"strconv"
+	"encoding/hex"
 )
 
 func PrintSampleFunc(message bank.MsgSend, output string) {
@@ -218,7 +219,14 @@ func testTendermintED25519(messages []bank.SendMsg, ledger *ledger_goclient.Ledg
 		fmt.Printf("\nMessage %d - Please Sign..\n", i)
 		message := messages[i].GetSignBytes()
 
+		fmt.Printf("Private key=%s\n", hex.EncodeToString(privateKey[:32]))
 		pubKey := ed25519.MakePublicKey(&privateKey)
+		fmt.Printf("Public key=%s\n", hex.EncodeToString(privateKey[32:]))
+		fmt.Printf("Public key=%s\n", hex.EncodeToString(pubKey[:]))
+
+		// Print ledger test public key for comparison only
+		pubKeyEd, _ := ledger.TestGetPublicKeyED25519()
+		fmt.Printf("ED Public key=%s\n", hex.EncodeToString(pubKeyEd))
 
 		signature := ed25519.Sign(&privateKey, message)
 		verified := ed25519.Verify(pubKey, message, signature)
@@ -370,13 +378,13 @@ func main() {
 		ledger.Logging = true
 
 		// WORKING: Sign standard signature message using ledger (SECP256K1)
-		testSECP256K1_StdSignMsg(GetStdSignMessages(), ledger)
+		//testSECP256K1_StdSignMsg(GetStdSignMessages(), ledger)
 
 		// WORKING: Sign transaction message using ledger (SECP256K1)
 		//testSECP256K1(GetMessages(), ledger)
 
 		// WORKING: Sign transaction message using tendermint sdk (ED25519)
-		//testTendermintED25519(GetMessages(), ledger)
+		testTendermintED25519(GetMessages(), ledger)
 
 		// FIXME, sign transaction message using ledger (ED25519)
 		//testED25519(GetMessages(), ledger)

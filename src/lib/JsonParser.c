@@ -388,7 +388,7 @@ int SignedMsgGetInfo(
 
         *view_scrolling_total_size = value_token.end-value_token.start;
 
-        char* value_start_address = message + value_token.start;
+        const char* value_start_address = message + value_token.start;
         if (view_scrolling_step < *view_scrolling_total_size) {
             int size =
                     *view_scrolling_total_size < max_chars_per_line ? *view_scrolling_total_size : max_chars_per_line;
