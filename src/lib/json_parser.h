@@ -125,35 +125,44 @@ void json_parse(
         parsed_json_t* parsed_json,
         const char* transaction);
 
+// Get number of elements in array
 int array_get_element_count(
         int array_token_index,
         const parsed_json_t* parsed_transaction);
 
+// Get token index of the nth array's element
 int array_get_nth_element(
         int array_token_index,
         int element_index,
         const parsed_json_t* parsed_transaction);
 
+// Get number of elements (key/value pairs) in object
 int object_get_element_count(
         int object_token_index,
         const parsed_json_t* parsed_transaction);
 
+// Get token index for the nth key
 int object_get_nth_key(
         int object_token_index,
         int object_element_index,
         const parsed_json_t* parsed_transaction);
 
+// Get token index for the nth value
 int object_get_nth_value(
         int object_token_index,
         int object_element_index,
         const parsed_json_t* parsed_transaction);
 
+// Get token index for the value that matched given key
 int object_get_value(
         int object_token_index,
         const char* key_name,
         const parsed_json_t* parsed_transaction,
         const char* transaction);
 
+// Update value characters from json transaction read from the token_index element.
+// Value is only updated if current_item_index (which is incremented internally) matches item_index_to_display
+// If value is updated, we also update view_scrolling_total_size to value string length.
 void display_value(
         char* value,
         int token_index,
@@ -166,6 +175,7 @@ void display_value(
         const char* transaction, // input
         void(*copy)(void* dst, const void* source, unsigned int size));
 
+// Update key characters from json transaction read from the token_index element.
 void display_key(
         char* key,
         int token_index,
@@ -174,6 +184,8 @@ void display_key(
         const char* transaction, // input
         void(*copy)(void* dst, const void* source, unsigned int size));
 
+// Generic function to display arbitrary json based on the specification
+// TODO: This function is currently untested.
 void display_arbitrary_item(
         char* key, // output
         char* value, // output
