@@ -17,9 +17,9 @@ jobs:
       - image: zondax/ledger-docker-bolos
     environment:
       - BOLOS_SDK=/root/project/deps/nanos-secure-sdk
+      - BOLOS_ENV=/opt/bolos
       - JSMN_LIB=/root/project/deps/jsmn
       - JSON_PARSER_LIB=/root/project/src/lib
-      - BOLOS_ENV=/opt/bolos
     steps:
       - checkout
       - run: git submodule update --init --recursive
@@ -31,6 +31,8 @@ jobs:
     environment:
       - BOLOS_SDK=/root/project/deps/nanos-secure-sdk
       - BOLOS_ENV=/opt/bolos
+      - JSMN_LIB=/root/project/deps/jsmn
+      - JSON_PARSER_LIB=/root/project/src/lib
     steps:
       - checkout
       - run: git submodule update --init --recursive
