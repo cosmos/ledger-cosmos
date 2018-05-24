@@ -166,7 +166,7 @@ func Test_FakePublicKeyED25519(t *testing.T) {
 		len(pubKey),
 		"Public key has wrong length: %x, expected length: %x\n", pubKey, 32)
 
-	expectedPubKey, err := hex.DecodeString("0421ee8989ab1141b07ed7b92f6eca9c5b722fd04aa1f8268242231d6f3bf4dd")
+	expectedPubKey, err := hex.DecodeString("6310a04a64842d764dcd1d0af325db65f67e95ad0fb30abd270a0ca0c40b2582")
 	require.Nil(t, err)
 
 	assert.Equal(t, expectedPubKey, pubKey)

@@ -171,6 +171,16 @@ bool extractBip32(uint8_t* depth, uint32_t path[10], uint32_t rx, uint32_t offse
     return 1;
 }
 
+void extractPubKey(unsigned char* outputBuffer, cx_ecfp_public_key_t* pubKey)
+{
+    for (int i = 0; i < 32; i++) {
+        outputBuffer[i] = pubKey->W[64 - i];
+    }
+    if ((pubKey->W[32] & 1) != 0) {
+        outputBuffer[31] |= 0x80;
+    }
+}
+
 void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
 {
     uint16_t sw = 0;
@@ -238,8 +248,10 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                 keys_ed25519(&publicKey, &privateKey, privateKeyData);
                 memset(privateKeyData, 0, 32);
 
-                os_memmove(G_io_apdu_buffer, publicKey.W, 32);
-                *tx += 32;
+                unsigned char output[32];
+                extractPubKey(output, &publicKey);
+                os_memmove(G_io_apdu_buffer, output, sizeof(output));
+                *tx += sizeof(output);
 
                 THROW(APDU_CODE_OK);
             }
@@ -362,10 +374,12 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     // Generate key
                     cx_ecfp_public_key_t publicKey;
                     cx_ecfp_private_key_t privateKey;
-                    keys_ed25519(&publicKey, &privateKey, privateKeyDataTest );
+                    keys_ed25519(&publicKey, &privateKey, privateKeyDataTest);
 
-                    os_memmove(G_io_apdu_buffer, publicKey.W, 32);
-                    *tx += 32;
+                    unsigned char output[32];
+                    extractPubKey(output, &publicKey);
+                    os_memmove(G_io_apdu_buffer, output, sizeof(output));
+                    *tx += sizeof(output);
 
                     THROW(APDU_CODE_OK);
                 }
