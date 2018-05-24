@@ -259,6 +259,122 @@ namespace {
         EXPECT_EQ(array_get_element_count(token_index, &parsed_json), 5) << "Wrong number of array elements";
     }
 
+    TEST(TransactionParserTest, DisplayItem_0) {
+
+        auto transaction = R"({"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 50;
+        char key[screen_size] = "";
+        char value[screen_size] = "";
+        int current_item_index = 0;
+        unsigned int view_scrolling_total_size = 0;
+        display_arbitrary_item(
+                0,
+                key,
+                value,
+                2,
+                &current_item_index,
+                0,
+                &parsed_json,
+                &view_scrolling_total_size,
+                0,
+                screen_size,
+                transaction,
+                [](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        EXPECT_EQ(strcmp(key,"inputs/address"), 0) << "Wrong key returned";
+        EXPECT_EQ(strcmp(value,"696E707574"), 0) << "Wrong value returned";
+    }
+
+    TEST(TransactionParserTest, DisplayItem_1) {
+
+        auto transaction = R"({"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 50;
+        char key[screen_size] = "";
+        char value[screen_size] = "";
+        int current_item_index = 0;
+        unsigned int view_scrolling_total_size = 0;
+        display_arbitrary_item(
+                1,
+                key,
+                value,
+                2,
+                &current_item_index,
+                0,
+                &parsed_json,
+                &view_scrolling_total_size,
+                0,
+                screen_size,
+                transaction,
+                [](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        EXPECT_EQ(strcmp(key,"inputs/coins"), 0) << "Wrong key returned";
+        EXPECT_EQ(strcmp(value,"[{\"amount\":10,\"denom\":\"atom\"}]"), 0) << "Wrong value returned";
+    }
+
+    TEST(TransactionParserTest, DisplayItem_2) {
+
+        auto transaction = R"({"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 50;
+        char key[screen_size] = "";
+        char value[screen_size] = "";
+        int current_item_index = 0;
+        unsigned int view_scrolling_total_size = 0;
+        display_arbitrary_item(
+                2,
+                key,
+                value,
+                2,
+                &current_item_index,
+                0,
+                &parsed_json,
+                &view_scrolling_total_size,
+                0,
+                screen_size,
+                transaction,
+                [](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        EXPECT_EQ(strcmp(key,"outputs/address"), 0) << "Wrong key returned";
+        EXPECT_EQ(strcmp(value,"6F7574707574"), 0) << "Wrong value returned";
+    }
+
+    TEST(TransactionParserTest, DisplayItem_3) {
+
+        auto transaction = R"({"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 50;
+        char key[screen_size] = "";
+        char value[screen_size] = "";
+        int current_item_index = 0;
+        unsigned int view_scrolling_total_size = 0;
+        display_arbitrary_item(
+                3,
+                key,
+                value,
+                2,
+                &current_item_index,
+                0,
+                &parsed_json,
+                &view_scrolling_total_size,
+                0,
+                screen_size,
+                transaction,
+                [](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        EXPECT_EQ(strcmp(key,"outputs/coins"), 0) << "Wrong key returned";
+        EXPECT_EQ(strcmp(value,"[{\"amount\":10,\"denom\":\"atom\"}]"), 0) << "Wrong value returned";
+    }
+
 //    // TODO: Not yet implemented
 //    TEST(TransactionParserTest, correct_format) {
 //

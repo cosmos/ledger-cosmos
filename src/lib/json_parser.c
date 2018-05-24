@@ -599,7 +599,7 @@ int object_get_value(int object_token_index,
     return -1;
 }
 
-void display_value(
+int display_value(
         char* value,
         int token_index,
         int* current_item_index,
@@ -611,7 +611,6 @@ void display_value(
         const char* transaction, // input
         void(*copy)(void* dst, const void* source, unsigned int size)) {
 
-    *current_item_index = *current_item_index + 1;
     if (*current_item_index == item_index_to_display) {
 
         *view_scrolling_total_size =
@@ -624,7 +623,10 @@ void display_value(
             copy(value, address_ptr + view_scrolling_step, size);
             value[size] = '\0';
         }
+        return 1;
     }
+    *current_item_index = *current_item_index + 1;
+    return 0;
 }
 
 void display_key(
@@ -635,20 +637,44 @@ void display_key(
         const char* transaction, // input
         void(*copy)(void* dst, const void* source, unsigned int size))
 {
-    int key_size = transaction + parsed_transaction->Tokens[token_index].end - transaction + parsed_transaction->Tokens[token_index].start;
+    int key_size = parsed_transaction->Tokens[token_index].end - parsed_transaction->Tokens[token_index].start;
     const char* address_ptr = transaction + parsed_transaction->Tokens[token_index].start;
     int size = key_size < max_chars_per_line ? key_size : max_chars_per_line;
     copy(key, address_ptr, size);
     key[size] = '\0';
 }
 
-void display_arbitrary_item(
+void append_keys(char* key, const char* temp_key)
+{
+    int size = strlen(key);
+    if (size > 0) {
+        key[size] = '//';
+        size++;
+    }
+    strcpy(key+size, temp_key);
+}
+
+void remove_last(char* key)
+{
+    int size = strlen(key);
+    char* last = key + size;
+    while (last > key) {
+        if (*last == '/') {
+            *last = '\0';
+            return;
+        }
+        last--;
+    }
+    *last = '\0';
+}
+
+int display_arbitrary_item(
+        int item_index_to_display, //input
         char* key, // output
         char* value, // output
         int token_index, // input
         int* current_item_index, // input
         int level, // input
-        int item_index_to_display, //input
         const parsed_json_t* parsed_transaction, // input
         unsigned int* view_scrolling_total_size, // output
         unsigned int view_scrolling_step, // input
@@ -671,7 +697,7 @@ void display_arbitrary_item(
 //        show value as json-encoded string
 //    }
     if (level == 2) {
-        display_value(
+        return display_value(
                 value,
                 token_index,
                 current_item_index,
@@ -686,7 +712,7 @@ void display_arbitrary_item(
     else {
         switch (parsed_transaction->Tokens[token_index].type) {
             case JSMN_STRING:
-                display_value(
+                return display_value(
                         value,
                         token_index,
                         current_item_index,
@@ -697,9 +723,9 @@ void display_arbitrary_item(
                         max_chars_per_line,
                         transaction,
                         copy);
-                break;
+
             case JSMN_PRIMITIVE:
-                display_value(
+                return display_value(
                         value,
                         token_index,
                         current_item_index,
@@ -710,33 +736,42 @@ void display_arbitrary_item(
                         max_chars_per_line,
                         transaction,
                         copy);
-                break;
+
             case JSMN_OBJECT: {
                 int el_count = object_get_element_count(token_index, parsed_transaction);
                 for (int i = 0; i < el_count; ++i) {
                     int key_index = object_get_nth_key(token_index, i, parsed_transaction);
                     int value_index = object_get_nth_value(token_index, i, parsed_transaction);
+
+                    char key_temp[10];
                     display_key(
-                            key,
+                            key_temp,
                             key_index,
                             parsed_transaction,
                             max_chars_per_line,
                             transaction,
                             copy);
 
-                    display_arbitrary_item(
+                    append_keys(key, key_temp);
+
+                    int found = display_arbitrary_item(
+                            item_index_to_display,
                             key,
                             value,
                             value_index,
                             current_item_index,
                             level + 1,
-                            item_index_to_display,
                             parsed_transaction,
                             view_scrolling_total_size,
                             view_scrolling_step,
                             max_chars_per_line,
                             transaction,
                             copy);
+                    if (found == 1) {
+                        return 1;
+                    } else {
+                        remove_last(key);
+                    }
                 }
                 break;
             }
@@ -744,22 +779,28 @@ void display_arbitrary_item(
                 int el_count = array_get_element_count(token_index, parsed_transaction);
                 for (int i = 0; i < el_count; ++i) {
                     int element_index = array_get_nth_element(token_index, i, parsed_transaction);
-                    display_value(
+                    int found = display_arbitrary_item(
+                            item_index_to_display,
                             key,
+                            value,
                             element_index,
                             current_item_index,
-                            item_index_to_display,
+                            level,
                             parsed_transaction,
                             view_scrolling_total_size,
                             view_scrolling_step,
                             max_chars_per_line,
                             transaction,
                             copy);
+                    if (found == 1) {
+                        return 1;
+                    }
                 }
                 break;
             }
             default:
-                break;
+                return 0;
         }
+        return 0;
     }
 }

@@ -163,7 +163,7 @@ int object_get_value(
 // Update value characters from json transaction read from the token_index element.
 // Value is only updated if current_item_index (which is incremented internally) matches item_index_to_display
 // If value is updated, we also update view_scrolling_total_size to value string length.
-void display_value(
+int display_value(
         char* value,
         int token_index,
         int* current_item_index,
@@ -186,13 +186,13 @@ void display_key(
 
 // Generic function to display arbitrary json based on the specification
 // TODO: This function is currently untested.
-void display_arbitrary_item(
+int display_arbitrary_item(
+        int item_index_to_display, //input
         char* key, // output
         char* value, // output
         int token_index, // input
         int* current_item_index, // input
         int level, // input
-        int item_index_to_display, //input
         const parsed_json_t* parsed_transaction, // input
         unsigned int* view_scrolling_total_size, // output
         unsigned int view_scrolling_step, // input
