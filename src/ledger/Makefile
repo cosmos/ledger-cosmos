@@ -108,6 +108,10 @@ load: all
 delete:
 	python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
 
+package: all
+	./pkgdemo.sh ${APPNAME} ${APPVERSION} ${ICONNAME}
+
+
 # Import generic rules from the SDK
 
 include $(BOLOS_SDK)/Makefile.rules
