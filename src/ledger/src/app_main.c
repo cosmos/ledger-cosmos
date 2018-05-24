@@ -34,6 +34,7 @@ const uint8_t privateKeyDataTest[] = {
         0x2d, 0x13, 0x4c, 0xc2, 0xa0, 0x59, 0xbf, 0xe8,
         0x7e, 0x9b, 0x5d, 0x55, 0xbf, 0x81, 0x3b, 0xd4
 };
+
 #endif
 
 uint8_t bip32_depth;
@@ -249,7 +250,9 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
 
                 transaction_parse();
-                view_display_transaction_menu(transaction_get_info(NULL, NULL, -1));
+
+                view_add_update_transaction_info_event_handler(&transaction_msg_get_key_value);
+                view_display_transaction_menu(transaction_msg_get_key_value(NULL, NULL, -1));
 
                 *flags |= IO_ASYNCH_REPLY;
             }
@@ -261,7 +264,40 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
 
                 transaction_parse();
-                view_display_transaction_menu(transaction_get_info(NULL, NULL, -1));
+                view_add_update_transaction_info_event_handler(&transaction_msg_get_key_value);
+                view_display_transaction_menu(transaction_msg_get_key_value(NULL, NULL, -1));
+
+                *flags |= IO_ASYNCH_REPLY;
+            }
+                break;
+
+            case INS_SIGN_SECP256K1_STDSIGNMSG: {
+                current_sigtype = SECP256K1;
+                if (!process_chunk(tx, rx, true))
+                    THROW(APDU_CODE_OK);
+
+                transaction_parse();
+
+                view_add_update_transaction_info_event_handler(&signed_msg_get_key_value);
+                view_display_transaction_menu(SignedMsgGetNumberOfElements(
+                        transaction_get_parsed(),
+                        (const char*)transaction_get_buffer()));
+
+                *flags |= IO_ASYNCH_REPLY;
+            }
+                break;
+
+            case INS_SIGN_ED25519_STDSIGNMSG: {
+                current_sigtype = ED25519;
+                if (!process_chunk(tx, rx, true))
+                    THROW(APDU_CODE_OK);
+
+                transaction_parse();
+
+                view_add_update_transaction_info_event_handler(&signed_msg_get_key_value);
+                view_display_transaction_menu(SignedMsgGetNumberOfElements(
+                        transaction_get_parsed(),
+                        (const char*)transaction_get_buffer()));
 
                 *flags |= IO_ASYNCH_REPLY;
             }
@@ -403,6 +439,7 @@ void sign_transaction()
     uint8_t privateKeyData[32];
 
     unsigned int length = 0;
+    int result = 0;
     switch(current_sigtype)
     {
     case SECP256K1:
@@ -414,7 +451,7 @@ void sign_transaction()
         keys_secp256k1(&publicKey, &privateKey, privateKeyData);
         memset(privateKeyData, 0, 32);
 
-        sign_secp256k1(
+        result = sign_secp256k1(
                 transaction_get_buffer(),
                 transaction_get_buffer_length(),
                 G_io_apdu_buffer,
@@ -431,7 +468,7 @@ void sign_transaction()
         keys_ed25519(&publicKey, &privateKey, privateKeyData);
         memset(privateKeyData, 0, 32);
 
-        sign_ed25519(
+        result = sign_ed25519(
                 transaction_get_buffer(),
                 transaction_get_buffer_length(),
                 G_io_apdu_buffer,
@@ -441,16 +478,22 @@ void sign_transaction()
         break;
     }
 
-    set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
-    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length+2);
-    view_display_signing_success();
+    if (result == 1) {
+        set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
+        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
+        view_display_signing_success();
+    }
+    else {
+        set_code(G_io_apdu_buffer, length, APDU_CODE_SIGN_VERIFY_ERROR);
+        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
+        view_display_signing_error();
+    }
 }
 
 void app_main()
 {
     volatile uint32_t rx = 0, tx = 0, flags = 0;
 
-    view_add_update_transaction_info_event_handler(&transaction_get_info);
     view_add_reject_transaction_event_handler(&reject_transaction);
     view_add_sign_transaction_event_handler(&sign_transaction);
 

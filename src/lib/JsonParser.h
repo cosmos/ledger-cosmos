@@ -82,6 +82,41 @@ void ParseJson(parsed_json_t* parsedMessage, const char* jsonString);
 // This function is called recursively from within ParseJson function
 void ProcessToken(parsed_json_t* parsedMessage, int currentDepth, int tokenIndex);
 
+// Get key/value pairs (name/value) from the transaction message based on the
+// index of the key/value pair that will be displayed
+int TransactionMsgGetInfo(
+        char *name,
+        char *value,
+        int index,
+        const parsed_json_t* parsed_transaction,
+        unsigned int* view_scrolling_total_size,
+        unsigned int view_scrolling_step,
+        unsigned int max_chars_per_line,
+        const char* message,
+        void(*copy)(void* dst, const void* source, unsigned int size));
+
+
+// The main function that parses jsonString and creates a parsed message
+// which contains all the json tokens plus skeleton of SendMsg with links to those tokens
+void ParseSignedMsg(parsed_json_t* parsedMessage, const char* signedMsg);
+
+// Returns number of key/value elements in the sdk.StdSignMsg
+int SignedMsgGetNumberOfElements(const parsed_json_t* parsed_message,
+                                 const char* message);
+
+// Get key/value pairs (name/value) from the sdk.StdSignMsg based on the
+// index of the key/value pair that will be displayed
+int SignedMsgGetInfo(
+        char *name,
+        char *value,
+        int index,
+        const parsed_json_t* parsed_message,
+        unsigned int* view_scrolling_total_size,
+        unsigned int view_scrolling_step,
+        unsigned int max_chars_per_line,
+        const char* message,
+        void(*copy)(void* dst, const void* source, unsigned int size));
+
 #ifdef __cplusplus
 }
 #endif
