@@ -312,30 +312,14 @@ int TransactionMsgGetInfo(
     return currentIndex;
 }
 
-int SignedMsgGetNumberOfElements(const parsed_json_t* parsed_message,
-                                 const char* message)
+int SignedMsgGetNumberOfElements(const parsed_json_t* parsed_transaction,
+                                 const char* transaction)
 {
-    return 4;
-//
-//    int currentIndex = 0;
-//    int foundKeyIndex = 0;
-//    int nextKeyMinPosition = -1;
-//    while (currentIndex < parsed_message->NumberOfTokens) {
-//
-//        if (parsed_message->Tokens[currentIndex].type == JSMN_UNDEFINED) break;
-//        // Here we're assuming that json keys are always of JSMN_STRING type
-//        if (parsed_message->Tokens[currentIndex].type == JSMN_STRING) {
-//            if (parsed_message->Tokens[currentIndex].start > nextKeyMinPosition) {
-//
-//                // Found the key
-//                foundKeyIndex++;
-//                // Skip all the value tokens
-//                nextKeyMinPosition = parsed_message->Tokens[currentIndex + 1].end;
-//            }
-//        }
-//        currentIndex++;
-//    }
-//    return foundKeyIndex;
+    int token_index = object_get_value(0, "msg_bytes", parsed_transaction, transaction);
+    return display_get_arbitrary_items(
+            token_index,
+            parsed_transaction,
+            transaction) + 3;
 }
 
 int GetTokenIndexForKey(
@@ -507,8 +491,8 @@ int object_get_element_count(int object_token_index,
     int token_index = object_token_index;
     int element_count = 0;
     int prev_element_end = object_token.start;
+    token_index++;
     while (true) {
-        token_index++;
         if (token_index >= parsed_transaction->NumberOfTokens) {
             break;
         }
@@ -535,8 +519,8 @@ int object_get_nth_key(int object_token_index,
     int token_index = object_token_index;
     int element_count = 0;
     int prev_element_end = object_token.start;
+    token_index++;
     while (true) {
-        token_index++;
         if (token_index >= parsed_transaction->NumberOfTokens) {
             break;
         }
@@ -578,8 +562,8 @@ int object_get_value(int object_token_index,
     jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
     int token_index = object_token_index;
     int prev_element_end = object_token.start;
+    token_index++;
     while (true) {
-        token_index++;
         if (token_index >= parsed_transaction->NumberOfTokens) {
             break;
         }
@@ -592,7 +576,8 @@ int object_get_value(int object_token_index,
             continue;
         }
         prev_element_end = value_token.end;
-        if (memcmp(key_name, (char*)(transaction + key_token.start), length) == 0) {
+        char* cmper = (char*)(transaction + key_token.start);
+        if (memcmp(key_name, cmper, length) == 0) {
             return token_index;
         }
     }
@@ -667,6 +652,30 @@ void remove_last(char* key)
         last--;
     }
     *last = '\0';
+}
+
+int display_get_arbitrary_items(
+        int token_index,
+        const parsed_json_t* parsed_transaction,
+        const char* transaction)
+{
+    int number_of_items = 0;
+    char dummy[1];
+    unsigned int dummy_size = 0;
+    display_arbitrary_item(
+            -1,
+            dummy,
+            dummy,
+            token_index,
+            &number_of_items,
+            0,
+            parsed_transaction,
+            &dummy_size,
+            0,
+            0,
+            transaction,
+            NULL);
+    return number_of_items;
 }
 
 int display_arbitrary_item(
@@ -744,16 +753,18 @@ int display_arbitrary_item(
                     int key_index = object_get_nth_key(token_index, i, parsed_transaction);
                     int value_index = object_get_nth_value(token_index, i, parsed_transaction);
 
-                    char key_temp[10];
-                    display_key(
-                            key_temp,
-                            key_index,
-                            parsed_transaction,
-                            max_chars_per_line,
-                            transaction,
-                            copy);
+                    if (item_index_to_display != -1) {
+                        char key_temp[10];
+                        display_key(
+                                key_temp,
+                                key_index,
+                                parsed_transaction,
+                                max_chars_per_line,
+                                transaction,
+                                copy);
 
-                    append_keys(key, key_temp);
+                        append_keys(key, key_temp);
+                    }
 
                     int found = display_arbitrary_item(
                             item_index_to_display,
@@ -771,7 +782,9 @@ int display_arbitrary_item(
                     if (found == 1) {
                         return 1;
                     } else {
-                        remove_last(key);
+                        if (item_index_to_display != -1) {
+                            remove_last(key);
+                        }
                     }
                 }
                 break;

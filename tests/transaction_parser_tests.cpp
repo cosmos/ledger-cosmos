@@ -375,6 +375,24 @@ namespace {
         EXPECT_EQ(strcmp(value,"[{\"amount\":10,\"denom\":\"atom\"}]"), 0) << "Wrong value returned";
     }
 
+        // TODO: Not yet implemented
+    TEST(TransactionParserTest, correct_format) {
+
+        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+        int token_index = object_get_value(0, "alt_bytes", &parsed_json, transaction);
+        EXPECT_EQ(token_index, 2) << "Wrong token index";
+        token_index = object_get_value(0, "chain_id", &parsed_json, transaction);
+        EXPECT_EQ(token_index, 4) << "Wrong token index";
+        token_index = object_get_value(0, "fee_bytes", &parsed_json, transaction);
+        EXPECT_EQ(token_index, 6) << "Wrong token index";
+        token_index = object_get_value(0, "msg_bytes", &parsed_json, transaction);
+        EXPECT_EQ(token_index, 17) << "Wrong token index";
+        token_index = object_get_value(0, "sequences", &parsed_json, transaction);
+        EXPECT_EQ(token_index, 43) << "Wrong token index";
+    }
+
 //    // TODO: Not yet implemented
 //    TEST(TransactionParserTest, correct_format) {
 //

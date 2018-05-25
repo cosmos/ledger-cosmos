@@ -18,6 +18,7 @@
 #include "transaction.h"
 #include "view.h"
 #include "apdu_codes.h"
+#include "json_parser.h"
 
 // TODO: We are currently limited by amount of SRAM (4K)
 // In order to parse longer messages we may have to consider moving
@@ -118,28 +119,38 @@ int signed_msg_get_key_value(
             update(value, token_index);
             break;
         }
-        case 3: {
-            os_memmove(key, "msg_bytes", sizeof("msg_bytes"));
+        default: {
             int token_index = object_get_value(0, "msg_bytes", &parsed_transaction, transaction_buffer);
-            update(value, token_index);
+            int current_item_index = 0;
+            os_memmove(key, "msg_bytes", sizeof("msg_bytes"));
+            key[sizeof("msg_bytes")] = '\0';
+            display_arbitrary_item(index - 3,
+                                   key,
+                                   value,
+                                   token_index,
+                                   &current_item_index,
+                                   0,
+                                   &parsed_transaction,
+                                   &view_scrolling_total_size,
+                                   view_scrolling_step,
+                                   MAX_CHARS_PER_LINE,
+                                   transaction_buffer,
+                                   &os_memmove);
             break;
         }
-        case 4: {
-            os_memmove(key, "alt_bytes", sizeof("alt_bytes"));
-            int token_index = object_get_value(0, "alt_bytes", &parsed_transaction, transaction_buffer);
-            update(value, token_index);
-            break;
-        }
+
+//        case 3: {
+//            os_memmove(key, "msg_bytes", sizeof("msg_bytes"));
+//            int token_index = object_get_value(0, "msg_bytes", &parsed_transaction, transaction_buffer);
+//            token_index = object_get_value(token_index, "inputs", &parsed_transaction, transaction_buffer);
+//            update(value, token_index);
+//            break;
+//        }
+//        case 4: {
+//            os_memmove(key, "alt_bytes", sizeof("alt_bytes"));
+//            int token_index = object_get_value(0, "alt_bytes", &parsed_transaction, transaction_buffer);
+//            update(value, token_index);
+//            break;
     }
     return 0;
-//    return SignedMsgGetInfo(
-//            key,
-//            value,
-//            index,
-//            &parsed_transaction,
-//            &view_scrolling_total_size,
-//            view_scrolling_step,
-//            MAX_CHARS_PER_LINE,
-//            transaction_buffer,
-//            &os_memmove);
 }

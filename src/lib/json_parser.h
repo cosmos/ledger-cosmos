@@ -199,6 +199,11 @@ int display_arbitrary_item(
         const char* transaction, // input
         void(*copy)(void* dst, const void* source, unsigned int size));
 
+int display_get_arbitrary_items(
+        int token_index,
+        const parsed_json_t* parsed_transaction,
+        const char* transaction);
+
 #ifdef __cplusplus
 }
 #endif

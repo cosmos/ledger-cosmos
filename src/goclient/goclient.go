@@ -203,7 +203,7 @@ func GetStdSignMessages() ([]sdk.StdSignMsg) {
 		}};
 }
 
-func testTendermintED25519(messages []bank.SendMsg, ledger *ledger_goclient.Ledger) {
+func testTendermintED25519(messages []bank.MsgSend, ledger *ledger_goclient.Ledger) {
 	privateKey := [64]byte{
 		0x75, 0x56, 0x0e, 0x4d, 0xde, 0xa0, 0x63, 0x05,
 		0xc3, 0x6e, 0x2e, 0xb5, 0xf7, 0x2a, 0xca, 0x71,
@@ -332,8 +332,10 @@ func testSECP256K1_StdSignMsg(messages []sdk.StdSignMsg, ledger *ledger_goclient
 
 		path := []uint32{44, 60, 0, 0, 0}
 
-		fmt.Printf("\nMessage: %s\n", message)
-		signature, err := ledger.SignSECP256K1_StdSignMsg(path, message)
+		// FIXME: Hard-coding message because StdSignMsg is still base64 encoded.
+		var msg = []byte("{\"sequences\":[1],\"alt_bytes\":null,\"chain_id\":\"test-chain-1\",\"fee_bytes\":{\"amount\":[{\"amount\":5,\"denom\":\"photon\"}],\"gas\":10000},\"msg_bytes\":{\"inputs\":[{\"address\":\"696E707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}],\"outputs\":[{\"address\":\"6F7574707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}]}}")
+		fmt.Printf("\nMessage: %s\n", msg)
+		signature, err := ledger.SignSECP256K1_StdSignMsg(path, msg)
 		if err != nil {
 			fmt.Printf("[Sign] Error: %s\n", err)
 			os.Exit(1)
@@ -379,13 +381,13 @@ func main() {
 		ledger.Logging = true
 
 		// WORKING: Sign standard signature message using ledger (SECP256K1)
-		//testSECP256K1_StdSignMsg(GetStdSignMessages(), ledger)
+		testSECP256K1_StdSignMsg(GetStdSignMessages(), ledger)
 
 		// WORKING: Sign transaction message using ledger (SECP256K1)
 		//testSECP256K1(GetMessages(), ledger)
 
 		// WORKING: Sign transaction message using tendermint sdk (ED25519)
-		testTendermintED25519(GetMessages(), ledger)
+		//testTendermintED25519(GetMessages(), ledger)
 
 		// FIXME, sign transaction message using ledger (ED25519)
 		//testED25519(GetMessages(), ledger)
