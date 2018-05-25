@@ -14,7 +14,7 @@
   revision = "1432d294a5b055c297457c25434efbf13384cc46"
 
 [[projects]]
-  branch = "develop"
+  branch = "cwgoes/ledger-integration"
   name = "github.com/cosmos/cosmos-sdk"
   packages = [
     "store",
@@ -25,7 +25,7 @@
     "x/ibc",
     "x/stake"
   ]
-  revision = "2198908d0233f0c04aad210b2311f44e36f22fc0"
+  revision = "da66010790873908139f59ff5f5f73f5dc9ff0fa"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -358,6 +358,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ec4469a5196f62e556a7e3d53096de05815854e8647b1cf37c9be4759faad545"
+  inputs-digest = "9d67518c636d3e5009e280d72cac43f86c0aab5e02ad57a19822bbf2efb0e206"
   solver-name = "gps-cdcl"
   solver-version = 1
