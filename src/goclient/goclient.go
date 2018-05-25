@@ -203,7 +203,7 @@ func GetStdSignMessages() ([]sdk.StdSignMsg) {
 		}};
 }
 
-func testTendermintED25519(messages []bank.SendMsg, ledger *ledger_goclient.Ledger) {
+func testTendermintED25519(messages []bank.MsgSend, ledger *ledger_goclient.Ledger) {
 	privateKey := [64]byte{
 		0x75, 0x56, 0x0e, 0x4d, 0xde, 0xa0, 0x63, 0x05,
 		0xc3, 0x6e, 0x2e, 0xb5, 0xf7, 0x2a, 0xca, 0x71,
