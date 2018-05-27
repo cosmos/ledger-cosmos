@@ -106,49 +106,29 @@ int display_value(
         char* value, // output
         int token_index, // input
         int* current_item_index, // input / output
-        int item_index_to_display, // input
-        const parsed_json_t* parsed_transaction, // input
-        unsigned int* view_scrolling_total_size, // output
-        unsigned int view_scrolling_step, // input
-        unsigned int max_chars_per_line, // input
-        const char* transaction);   // input
+        int item_index_to_display);   // input
 
 // Update key characters from json transaction read from the token_index element.
 void display_key(
         char* key, // output
-        int token_index, // input
-        const parsed_json_t* parsed_transaction,
-        unsigned int max_chars_per_line, // input
-        const char* transaction); // input
+        int token_index); // input
 
 // Generic function to display arbitrary json based on the specification
 int display_arbitrary_item(
         int item_index_to_display, //input
         char* key, // output
         char* value, // output
-        int token_index, // input
-        const parsed_json_t* parsed_transaction, // input
-        unsigned int* view_scrolling_total_size, // output
-        unsigned int view_scrolling_step, // input
-        unsigned int max_chars_per_line, // input
-        const char* transaction); // input
+        int token_index); // input
 
 int display_get_arbitrary_items_count(
-        int token_index,
-        const parsed_json_t* parsed_transaction,
-        const char* transaction);
+        int token_index);
 
 int transaction_get_display_key_value(
         char* key, // output
         char* value, // output
-        int index, // input
-        const parsed_json_t* parsed_transaction, // input
-        unsigned int* view_scrolling_total_size, // output
-        unsigned int view_scrolling_step, // input
-        unsigned int max_chars_per_line, // input
-        const char* transaction); // input
+        int index); // input
 
-
+int transaction_get_display_pages();
 //---------------------------------------------
 
 // Delegates

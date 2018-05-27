@@ -262,11 +262,8 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
 
                 transaction_parse();
-
                 view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
-                view_display_transaction_menu(SignedMsgGetNumberOfElements(
-                        transaction_get_parsed(),
-                        (const char *) transaction_get_buffer()));
+                view_display_transaction_menu(transaction_get_display_pages());
 
                 *flags |= IO_ASYNCH_REPLY;
                 break;
@@ -278,8 +275,8 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
 
                 transaction_parse();
-                view_add_update_transaction_info_event_handler(&transaction_msg_get_key_value);
-                view_display_transaction_menu(transaction_msg_get_key_value(NULL, NULL, -1));
+                view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
+                view_display_transaction_menu(transaction_get_display_pages());
 
                 *flags |= IO_ASYNCH_REPLY;
             }
@@ -291,11 +288,8 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
 
                 transaction_parse();
-
                 view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
-                view_display_transaction_menu(SignedMsgGetNumberOfElements(
-                        transaction_get_parsed(),
-                        (const char *) transaction_get_buffer()));
+                view_display_transaction_menu(transaction_get_display_pages());
 
                 *flags |= IO_ASYNCH_REPLY;
                 break;
@@ -307,11 +301,8 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
 
                 transaction_parse();
-
-                view_add_update_transaction_info_event_handler(&signed_msg_get_key_value);
-                view_display_transaction_menu(SignedMsgGetNumberOfElements(
-                        transaction_get_parsed(),
-                        (const char*)transaction_get_buffer()));
+                view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
+                view_display_transaction_menu(transaction_get_display_pages());
 
                 *flags |= IO_ASYNCH_REPLY;
             }

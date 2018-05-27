@@ -61,6 +61,16 @@ void transaction_parse()
 {
     json_parse(&parsed_transaction, transaction_buffer);
     // FIXME: Verify is valid. Sorted / whitespaces, etc.
+
+    parsing_context_t context;
+    context.transaction = transaction_buffer;
+    context.view_scrolling_total_size = &view_scrolling_total_size;
+    context.max_chars_per_line = MAX_CHARS_PER_LINE;
+    context.parsed_transaction = &parsed_transaction;
+    context.view_scrolling_step = 0;//view_scrolling_step;
+    set_parsing_context(context);
+
+    set_copy_delegate(&os_memmove);
 }
 
 parsed_json_t *transaction_get_parsed()

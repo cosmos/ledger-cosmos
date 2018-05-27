@@ -231,27 +231,26 @@ int object_get_value(
     return -1;
 }
 
+//--------------------------------------
+// TODO: Move to seperate file
+// Transaction parsing helper functions
+//--------------------------------------
 int display_value(
         char* value,
         int token_index,
         int* current_item_index,
-        int item_index_to_display,
-        const parsed_json_t* parsed_transaction,
-        unsigned int* view_scrolling_total_size, // output
-        unsigned int view_scrolling_step, // input
-        unsigned int max_chars_per_line, // input
-        const char* transaction) {
+        int item_index_to_display) {
 
     if (*current_item_index == item_index_to_display) {
 
-        *view_scrolling_total_size =
-                parsed_transaction->Tokens[token_index].end - parsed_transaction->Tokens[token_index].start;
+        *(parsing_context.view_scrolling_total_size) =
+                parsing_context.parsed_transaction->Tokens[token_index].end - parsing_context.parsed_transaction->Tokens[token_index].start;
 
-        const char* address_ptr = transaction + parsed_transaction->Tokens[token_index].start;
-        if (view_scrolling_step < *view_scrolling_total_size) {
+        const char* address_ptr = parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start;
+        if (parsing_context.view_scrolling_step < *(parsing_context.view_scrolling_total_size)) {
             int size =
-                    *view_scrolling_total_size < max_chars_per_line ? *view_scrolling_total_size : max_chars_per_line;
-            copy_fct(value, address_ptr + view_scrolling_step, size);
+                    *(parsing_context.view_scrolling_total_size) < parsing_context.max_chars_per_line ? *(parsing_context.view_scrolling_total_size): parsing_context.max_chars_per_line;
+            copy_fct(value, address_ptr + parsing_context.view_scrolling_step, size);
             value[size] = '\0';
         }
         return item_index_to_display;
@@ -262,14 +261,11 @@ int display_value(
 
 void display_key(
         char* key,
-        int token_index,
-        const parsed_json_t* parsed_transaction,
-        unsigned int max_chars_per_line, // input
-        const char* transaction)
+        int token_index)
 {
-    unsigned int key_size = parsed_transaction->Tokens[token_index].end - parsed_transaction->Tokens[token_index].start;
-    const char* address_ptr = transaction + parsed_transaction->Tokens[token_index].start;
-    unsigned int size = key_size < max_chars_per_line ? key_size : max_chars_per_line;
+    unsigned int key_size = parsing_context.parsed_transaction->Tokens[token_index].end - parsing_context.parsed_transaction->Tokens[token_index].start;
+    const char* address_ptr = parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start;
+    unsigned int size = key_size < parsing_context.max_chars_per_line ? key_size : parsing_context.max_chars_per_line;
     copy_fct(key, address_ptr, size);
     key[size] = '\0';
 }
@@ -304,12 +300,7 @@ int display_arbitrary_item_inner(
         char* value, // output
         int token_index, // input
         int* current_item_index, // input
-        int level, // input
-        const parsed_json_t* parsed_transaction, // input
-        unsigned int* view_scrolling_total_size, // output
-        unsigned int view_scrolling_step, // input
-        unsigned int max_chars_per_line, // input
-        const char* transaction)
+        int level)
 {
 //    if level == 2
 //    show value as json-encoded string
@@ -330,53 +321,35 @@ int display_arbitrary_item_inner(
                 value,
                 token_index,
                 current_item_index,
-                item_index_to_display,
-                parsed_transaction,
-                view_scrolling_total_size,
-                view_scrolling_step,
-                max_chars_per_line,
-                transaction);
+                item_index_to_display);
     }
     else {
-        switch (parsed_transaction->Tokens[token_index].type) {
+        switch (parsing_context.parsed_transaction->Tokens[token_index].type) {
             case JSMN_STRING:
                 return display_value(
                         value,
                         token_index,
                         current_item_index,
-                        item_index_to_display,
-                        parsed_transaction,
-                        view_scrolling_total_size,
-                        view_scrolling_step,
-                        max_chars_per_line,
-                        transaction);
+                        item_index_to_display);
 
             case JSMN_PRIMITIVE:
                 return display_value(
                         value,
                         token_index,
                         current_item_index,
-                        item_index_to_display,
-                        parsed_transaction,
-                        view_scrolling_total_size,
-                        view_scrolling_step,
-                        max_chars_per_line,
-                        transaction);
+                        item_index_to_display);
 
             case JSMN_OBJECT: {
-                int el_count = object_get_element_count(token_index, parsed_transaction);
+                int el_count = object_get_element_count(token_index, parsing_context.parsed_transaction);
                 for (int i = 0; i < el_count; ++i) {
-                    int key_index = object_get_nth_key(token_index, i, parsed_transaction);
-                    int value_index = object_get_nth_value(token_index, i, parsed_transaction);
+                    int key_index = object_get_nth_key(token_index, i, parsing_context.parsed_transaction);
+                    int value_index = object_get_nth_value(token_index, i, parsing_context.parsed_transaction);
 
                     if (item_index_to_display != -1) {
                         char key_temp[10];
                         display_key(
                                 key_temp,
-                                key_index,
-                                parsed_transaction,
-                                max_chars_per_line,
-                                transaction);
+                                key_index);
 
                         append_keys(key, key_temp);
                     }
@@ -387,40 +360,36 @@ int display_arbitrary_item_inner(
                             value,
                             value_index,
                             current_item_index,
-                            level + 1,
-                            parsed_transaction,
-                            view_scrolling_total_size,
-                            view_scrolling_step,
-                            max_chars_per_line,
-                            transaction);
-                    if (found == item_index_to_display) {
-                        return item_index_to_display;
-                    } else {
-                        if (item_index_to_display != -1) {
-                            remove_last(key);
+                            level + 1);
+
+                    if (item_index_to_display != -1) {
+                        if (found == item_index_to_display) {
+                            return item_index_to_display;
+                        } else {
+                            if (item_index_to_display != -1) {
+                                remove_last(key);
+                            }
                         }
                     }
                 }
                 break;
             }
             case JSMN_ARRAY: {
-                int el_count = array_get_element_count(token_index, parsed_transaction);
+                int el_count = array_get_element_count(token_index, parsing_context.parsed_transaction);
                 for (int i = 0; i < el_count; ++i) {
-                    int element_index = array_get_nth_element(token_index, i, parsed_transaction);
+                    int element_index = array_get_nth_element(token_index, i, parsing_context.parsed_transaction);
                     int found = display_arbitrary_item_inner(
                             item_index_to_display,
                             key,
                             value,
                             element_index,
                             current_item_index,
-                            level,
-                            parsed_transaction,
-                            view_scrolling_total_size,
-                            view_scrolling_step,
-                            max_chars_per_line,
-                            transaction);
-                    if (found == item_index_to_display) {
-                        return item_index_to_display;
+                            level);
+
+                    if (item_index_to_display != -1) {
+                        if (found == item_index_to_display) {
+                            return item_index_to_display;
+                        }
                     }
 
                 }
@@ -434,39 +403,27 @@ int display_arbitrary_item_inner(
     }
 }
 
-int display_get_arbitrary_items(
-        int token_index,
-        const parsed_json_t* parsed_transaction,
-        const char* transaction)
+int display_get_arbitrary_items_count(
+        int token_index)
 {
     int number_of_items = 0;
     char dummy[1];
-    unsigned int dummy_size = 0;
-    return display_arbitrary_item_inner(
+    display_arbitrary_item_inner(
             -1,
             dummy,
             dummy,
             token_index,
             &number_of_items,
-            0,
-            parsed_transaction,
-            &dummy_size,
-            0,
-            0,
-            transaction);
-}
+            0);
 
+    return number_of_items;
+}
 
 int display_arbitrary_item(
         int item_index_to_display, //input
         char* key, // output
         char* value, // output
-        int token_index, // input
-        const parsed_json_t* parsed_transaction, // input
-        unsigned int* view_scrolling_total_size, // output
-        unsigned int view_scrolling_step, // input
-        unsigned int max_chars_per_line, // input
-        const char* transaction)
+        int token_index)
 {
     int current_item_index = 0;
     return display_arbitrary_item_inner(
@@ -475,88 +432,64 @@ int display_arbitrary_item(
             value,
             token_index,
             &current_item_index,
-            0,
-            parsed_transaction,
-            view_scrolling_total_size,
-            view_scrolling_step,
-            max_chars_per_line,
-            transaction);
+            0);
 }
 
 void update(
         char* msg,// output
-        int token_index, // input
-        const parsed_json_t* parsed_transaction, // input
-        unsigned int* view_scrolling_total_size, // output
-        unsigned int view_scrolling_step, // input
-        unsigned int max_chars_per_line, // input
-        const char* transaction) // input
+        int token_index) // input
 {
-    view_scrolling_total_size = parsed_transaction->Tokens[token_index].end - parsed_transaction->Tokens[token_index].start;
-    int size = view_scrolling_total_size < max_chars_per_line ? view_scrolling_total_size : max_chars_per_line;
-    copy_fct(msg,
-             transaction + parsed_transaction->Tokens[token_index].start + view_scrolling_step,
-               size);
+    *(parsing_context.view_scrolling_total_size) = parsing_context.parsed_transaction->Tokens[token_index].end - parsing_context.parsed_transaction->Tokens[token_index].start;
+    int size = *(parsing_context.view_scrolling_total_size) < parsing_context.max_chars_per_line ? *(parsing_context.view_scrolling_total_size) : parsing_context.max_chars_per_line;
+    copy_fct(
+            msg,
+            parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start + parsing_context.view_scrolling_step,
+            size);
     msg[size] = '\0';
 }
 
 int transaction_get_display_key_value(
         char* key, // output
         char* value, // output
-        int index, // input
-        const parsed_json_t* parsed_transaction, // input
-        unsigned int* view_scrolling_total_size, // output
-        unsigned int view_scrolling_step, // input
-        unsigned int max_chars_per_line, // input
-        const char* transaction) // input
+        int index) // input
 {
     switch (index) {
         case 0: {
             copy_fct(key, "chain_id", sizeof("chain_id"));
-            int token_index = object_get_value(0, "chain_id", &parsed_transaction, transaction);
-            update(value, token_index, parsed_transaction, view_scrolling_total_size, view_scrolling_step, max_chars_per_line, transaction);
+            copy_fct(value, "siusiak", sizeof("siusiak"));
+            int token_index = object_get_value(0, "chain_id", parsing_context.parsed_transaction, parsing_context.transaction);
+            update(value, token_index);
             break;
         }
         case 1: {
             copy_fct(key, "sequences", sizeof("sequences"));
-            int token_index = object_get_value(0, "sequences", &parsed_transaction, transaction);
-            update(value, token_index, parsed_transaction, view_scrolling_total_size, view_scrolling_step, max_chars_per_line, transaction);
+            int token_index = object_get_value(0, "sequences", parsing_context.parsed_transaction, parsing_context.transaction);
+            update(value, token_index);
             break;
         }
         case 2: {
             copy_fct(key, "fee_bytes", sizeof("fee_bytes"));
-            int token_index = object_get_value(0, "fee_bytes", &parsed_transaction, transaction);
-            update(value, token_index, parsed_transaction, view_scrolling_total_size, view_scrolling_step, max_chars_per_line, transaction);
+            int token_index = object_get_value(0, "fee_bytes", parsing_context.parsed_transaction, parsing_context.transaction);
+            update(value, token_index);
             break;
         }
         default: {
-            int token_index = object_get_value(0, "msg_bytes", &parsed_transaction, transaction);
+            int token_index = object_get_value(0, "msg_bytes", parsing_context.parsed_transaction, parsing_context.transaction);
             copy_fct(key, "msg_bytes", sizeof("msg_bytes"));
             key[sizeof("msg_bytes")] = '\0';
             display_arbitrary_item(index - 3,
                                    key,
                                    value,
-                                   token_index,
-                                   &parsed_transaction,
-                                   &view_scrolling_total_size,
-                                   view_scrolling_step,
-                                   max_chars_per_line,
-                                   transaction);
+                                   token_index);
             break;
         }
-
-//        case 3: {
-//            os_memmove(key, "msg_bytes", sizeof("msg_bytes"));
-//            int token_index = object_get_value(0, "msg_bytes", &parsed_transaction, transaction_buffer);
-//            token_index = object_get_value(token_index, "inputs", &parsed_transaction, transaction_buffer);
-//            update(value, token_index);
-//            break;
-//        }
-//        case 4: {
-//            os_memmove(key, "alt_bytes", sizeof("alt_bytes"));
-//            int token_index = object_get_value(0, "alt_bytes", &parsed_transaction, transaction_buffer);
-//            update(value, token_index);
-//            break;
     }
     return 0;
+}
+
+int transaction_get_display_pages()
+{
+    int token_index = object_get_value(0, "msg_bytes", parsing_context.parsed_transaction, parsing_context.transaction);
+    int msg_bytes_pages = display_get_arbitrary_items_count(token_index);
+    return msg_bytes_pages + 3; // TODO + alt_bytes
 }

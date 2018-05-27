@@ -24,6 +24,7 @@
 #include <string>
 #include <array>
 #include <jsmn.h>
+#include <lib/json_parser.h>
 
 namespace {
 
@@ -270,18 +271,22 @@ namespace {
         char key[screen_size] = "";
         char value[screen_size] = "";
         unsigned int view_scrolling_total_size = 0;
+
         set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        parsing_context_t context;
+        context.view_scrolling_step = 0;
+        context.parsed_transaction = &parsed_json;
+        context.max_chars_per_line = screen_size;
+        context.view_scrolling_total_size = &view_scrolling_total_size;
+        context.transaction = transaction;
+
+        set_parsing_context(context);
 
         display_arbitrary_item(
                 0,
                 key,
                 value,
-                2,
-                &parsed_json,
-                &view_scrolling_total_size,
-                0,
-                screen_size,
-                transaction);
+                2);
 
         EXPECT_EQ(strcmp(key,"inputs/address"), 0) << "Wrong key returned";
         EXPECT_EQ(strcmp(value,"696E707574"), 0) << "Wrong value returned";
@@ -299,17 +304,20 @@ namespace {
         char value[screen_size] = "";
         unsigned int view_scrolling_total_size = 0;
         set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        parsing_context_t context;
+        context.view_scrolling_step = 0;
+        context.parsed_transaction = &parsed_json;
+        context.max_chars_per_line = screen_size;
+        context.view_scrolling_total_size = &view_scrolling_total_size;
+        context.transaction = transaction;
+
+        set_parsing_context(context);
 
         display_arbitrary_item(
                 1,
                 key,
                 value,
-                2,
-                &parsed_json,
-                &view_scrolling_total_size,
-                0,
-                screen_size,
-                transaction);
+                2);
 
         EXPECT_EQ(strcmp(key,"inputs/coins"), 0) << "Wrong key returned";
         EXPECT_EQ(strcmp(value,"[{\"amount\":10,\"denom\":\"atom\"}]"), 0) << "Wrong value returned";
@@ -328,17 +336,20 @@ namespace {
         unsigned int view_scrolling_total_size = 0;
 
         set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        parsing_context_t context;
+        context.view_scrolling_step = 0;
+        context.parsed_transaction = &parsed_json;
+        context.max_chars_per_line = screen_size;
+        context.view_scrolling_total_size = &view_scrolling_total_size;
+        context.transaction = transaction;
+
+        set_parsing_context(context);
 
         display_arbitrary_item(
                 2,
                 key,
                 value,
-                2,
-                &parsed_json,
-                &view_scrolling_total_size,
-                0,
-                screen_size,
-                transaction);
+                2);
 
         EXPECT_EQ(strcmp(key,"outputs/address"), 0) << "Wrong key returned";
         EXPECT_EQ(strcmp(value,"6F7574707574"), 0) << "Wrong value returned";
@@ -358,21 +369,49 @@ namespace {
         int requested_item_index = 3;
 
         set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        parsing_context_t context;
+        context.view_scrolling_step = 0;
+        context.parsed_transaction = &parsed_json;
+        context.max_chars_per_line = screen_size;
+        context.view_scrolling_total_size = &view_scrolling_total_size;
+        context.transaction = transaction;
+
+        set_parsing_context(context);
 
         int found_item_index = display_arbitrary_item(
                 requested_item_index,
                 key,
                 value,
-                2,
-                &parsed_json,
-                &view_scrolling_total_size,
-                0,
-                screen_size,
-                transaction);
+                2);
 
         EXPECT_EQ(strcmp(key,"outputs/coins"), 0) << "Wrong key returned";
         EXPECT_EQ(strcmp(value,"[{\"amount\":10,\"denom\":\"atom\"}]"), 0) << "Wrong value returned";
         EXPECT_EQ(found_item_index, requested_item_index) << "Returned wrong index";
+    }
+
+    TEST(TransactionParserTest, DisplayItemCount) {
+
+        auto transaction = R"({"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
+
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 50;
+        unsigned int view_scrolling_total_size = 0;
+        int requested_item_index = 3;
+
+        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        parsing_context_t context;
+        context.view_scrolling_step = 0;
+        context.parsed_transaction = &parsed_json;
+        context.max_chars_per_line = screen_size;
+        context.view_scrolling_total_size = &view_scrolling_total_size;
+        context.transaction = transaction;
+
+        set_parsing_context(context);
+
+        int found_item_index = display_get_arbitrary_items_count(2);
+        EXPECT_EQ(found_item_index, 4) << "Wrong number of displayable elements";
     }
 
     TEST(TransactionParserTest, correct_format) {
