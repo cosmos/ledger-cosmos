@@ -67,9 +67,10 @@ void transaction_parse()
     context.view_scrolling_total_size = &view_scrolling_total_size;
     context.max_chars_per_line = MAX_CHARS_PER_LINE;
     context.parsed_transaction = &parsed_transaction;
-    context.view_scrolling_step = 0;//view_scrolling_step;
+    context.view_scrolling_step = &view_scrolling_step;
+    view_scrolling_total_size = 10;
+    view_scrolling_step = 0;
     set_parsing_context(context);
-
     set_copy_delegate(&os_memmove);
 }
 

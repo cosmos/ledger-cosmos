@@ -51,7 +51,7 @@ typedef struct
 {
     const parsed_json_t* parsed_transaction;
     unsigned int* view_scrolling_total_size;
-    unsigned int view_scrolling_step;
+    unsigned int* view_scrolling_step;
     unsigned int max_chars_per_line;
     const char* transaction;
 } parsing_context_t;

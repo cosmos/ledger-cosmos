@@ -18,6 +18,8 @@
 #include <jsmn.h>
 #include "json_parser.h"
 
+int msg_bytes_pages = 0;
+int alt_bytes_pages = 0;
 //---------------------------------------------
 
 copy_delegate copy_fct = NULL;
@@ -247,10 +249,10 @@ int display_value(
                 parsing_context.parsed_transaction->Tokens[token_index].end - parsing_context.parsed_transaction->Tokens[token_index].start;
 
         const char* address_ptr = parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start;
-        if (parsing_context.view_scrolling_step < *(parsing_context.view_scrolling_total_size)) {
+        if (*(parsing_context.view_scrolling_step) < *(parsing_context.view_scrolling_total_size)) {
             int size =
                     *(parsing_context.view_scrolling_total_size) < parsing_context.max_chars_per_line ? *(parsing_context.view_scrolling_total_size): parsing_context.max_chars_per_line;
-            copy_fct(value, address_ptr + parsing_context.view_scrolling_step, size);
+            copy_fct(value, address_ptr + *parsing_context.view_scrolling_step, size);
             value[size] = '\0';
         }
         return item_index_to_display;
@@ -443,7 +445,7 @@ void update(
     int size = *(parsing_context.view_scrolling_total_size) < parsing_context.max_chars_per_line ? *(parsing_context.view_scrolling_total_size) : parsing_context.max_chars_per_line;
     copy_fct(
             msg,
-            parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start + parsing_context.view_scrolling_step,
+            parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start + *(parsing_context.view_scrolling_step),
             size);
     msg[size] = '\0';
 }
@@ -474,13 +476,26 @@ int transaction_get_display_key_value(
             break;
         }
         default: {
-            int token_index = object_get_value(0, "msg_bytes", parsing_context.parsed_transaction, parsing_context.transaction);
-            copy_fct(key, "msg_bytes", sizeof("msg_bytes"));
-            key[sizeof("msg_bytes")] = '\0';
-            display_arbitrary_item(index - 3,
-                                   key,
-                                   value,
-                                   token_index);
+            if (index - 3 < msg_bytes_pages) {
+                int token_index = object_get_value(0, "msg_bytes", parsing_context.parsed_transaction,
+                                                   parsing_context.transaction);
+                copy_fct(key, "msg_bytes", sizeof("msg_bytes"));
+                key[sizeof("msg_bytes")] = '\0';
+                display_arbitrary_item(index - 3,
+                                       key,
+                                       value,
+                                       token_index);
+            }
+            else {
+                int token_index = object_get_value(0, "alt_bytes", parsing_context.parsed_transaction,
+                                                   parsing_context.transaction);
+                copy_fct(key, "alt_bytes", sizeof("alt_bytes"));
+                key[sizeof("alt_bytes")] = '\0';
+                display_arbitrary_item(index - 3 - msg_bytes_pages,
+                                       key,
+                                       value,
+                                       token_index);
+            }
             break;
         }
     }
@@ -489,7 +504,11 @@ int transaction_get_display_key_value(
 
 int transaction_get_display_pages()
 {
-    int token_index = object_get_value(0, "msg_bytes", parsing_context.parsed_transaction, parsing_context.transaction);
-    int msg_bytes_pages = display_get_arbitrary_items_count(token_index);
-    return msg_bytes_pages + 3; // TODO + alt_bytes
+    int token_index_mb = object_get_value(0, "msg_bytes", parsing_context.parsed_transaction, parsing_context.transaction);
+    int token_index_ab = object_get_value(0, "alt_bytes", parsing_context.parsed_transaction, parsing_context.transaction);
+
+    msg_bytes_pages = display_get_arbitrary_items_count(token_index_mb);
+    alt_bytes_pages = display_get_arbitrary_items_count(token_index_ab);
+
+    return msg_bytes_pages + alt_bytes_pages + 3;
 }
