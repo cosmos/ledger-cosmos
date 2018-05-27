@@ -263,12 +263,14 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
 
                 transaction_parse();
 
-                view_add_update_transaction_info_event_handler(&transaction_msg_get_key_value);
-                view_display_transaction_menu(transaction_msg_get_key_value(NULL, NULL, -1));
+                view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
+                view_display_transaction_menu(SignedMsgGetNumberOfElements(
+                        transaction_get_parsed(),
+                        (const char *) transaction_get_buffer()));
 
                 *flags |= IO_ASYNCH_REPLY;
-            }
                 break;
+            }
 
             case INS_SIGN_ED25519: {
                 current_sigtype = ED25519;
@@ -290,14 +292,14 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
 
                 transaction_parse();
 
-                view_add_update_transaction_info_event_handler(&signed_msg_get_key_value);
+                view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
                 view_display_transaction_menu(SignedMsgGetNumberOfElements(
                         transaction_get_parsed(),
-                        (const char*)transaction_get_buffer()));
+                        (const char *) transaction_get_buffer()));
 
                 *flags |= IO_ASYNCH_REPLY;
-            }
                 break;
+            }
 
             case INS_SIGN_ED25519_STDSIGNMSG: {
                 current_sigtype = ED25519;

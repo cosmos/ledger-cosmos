@@ -33,29 +33,7 @@ typedef unsigned char byte;
 #define MAX_INPUT_OUTPUT_COUNT  2
 #define MAX_COIN_COUNT          3
 
-// Coin part of the SendMsg struct
-typedef struct
-{
-    byte Denum;     //< index that points to Denum token in parsed json
-    byte Amount;    //< index that points to Amount token in parsed json
-} Coin;
-
-// Input part of the SendMsg struct
-typedef struct
-{
-    byte Address;               //< index that points to Denum token in parsed json
-    Coin Coins[MAX_COIN_COUNT];
-    //byte Sequence;              //< index that points to Sequence token in parsed json
-    byte NumberOfCoins;
-} Input;
-
-// Output part of the SendMsg struct
-typedef struct
-{
-    byte Address;               //< index that points to Address in parsed json
-    Coin Coins[MAX_COIN_COUNT];
-    byte NumberOfCoins;
-} Output;
+//---------------------------------------------
 
 // Context that keeps all the parsed data together. That includes:
 //  - parsed json tokens
@@ -66,56 +44,17 @@ typedef struct
     bool        CorrectFormat;
     byte        NumberOfTokens;
     jsmntok_t   Tokens[MAX_NUMBER_OF_TOKENS];
-
-    // SendMsg
-    byte        NumberOfInputs;
-    byte        NumberOfOutputs;
-    Input       Inputs[MAX_INPUT_OUTPUT_COUNT];
-    Output      Outputs[MAX_INPUT_OUTPUT_COUNT];
 } parsed_json_t;
 
-// The main function that parses jsonString and creates a parsed message
-// which contains all the json tokens plus skeleton of SendMsg with links to those tokens
-void ParseJson(parsed_json_t* parsedMessage, const char* jsonString);
 
-// Helper function which is used to find parent-child relationship in the token hierarchy
-// This function is called recursively from within ParseJson function
-void ProcessToken(parsed_json_t* parsedMessage, int currentDepth, int tokenIndex);
-
-// Get key/value pairs (name/value) from the transaction message based on the
-// index of the key/value pair that will be displayed
-int TransactionMsgGetInfo(
-        char *name,
-        char *value,
-        int index,
-        const parsed_json_t* parsed_transaction,
-        unsigned int* view_scrolling_total_size,
-        unsigned int view_scrolling_step,
-        unsigned int max_chars_per_line,
-        const char* message,
-        void(*copy)(void* dst, const void* source, unsigned int size));
-
-
-// The main function that parses jsonString and creates a parsed message
-// which contains all the json tokens plus skeleton of SendMsg with links to those tokens
-void ParseSignedMsg(parsed_json_t* parsedMessage, const char* signedMsg);
-
-// Returns number of key/value elements in the sdk.StdSignMsg
-int SignedMsgGetNumberOfElements(const parsed_json_t* parsed_message,
-                                 const char* message);
-
-// Get key/value pairs (name/value) from the sdk.StdSignMsg based on the
-// index of the key/value pair that will be displayed
-int SignedMsgGetInfo(
-        char *name,
-        char *value,
-        int index,
-        const parsed_json_t* parsed_message,
-        unsigned int* view_scrolling_total_size,
-        unsigned int view_scrolling_step,
-        unsigned int max_chars_per_line,
-        const char* message,
-        void(*copy)(void* dst, const void* source, unsigned int size));
+typedef struct
+{
+    const parsed_json_t* parsed_transaction;
+    unsigned int* view_scrolling_total_size;
+    unsigned int view_scrolling_step;
+    unsigned int max_chars_per_line;
+    const char* transaction;
+} parsing_context_t;
 
 //---------------------------------------------
 // NEW JSON PARSER CODE
@@ -164,25 +103,23 @@ int object_get_value(
 // Value is only updated if current_item_index (which is incremented internally) matches item_index_to_display
 // If value is updated, we also update view_scrolling_total_size to value string length.
 int display_value(
-        char* value,
-        int token_index,
-        int* current_item_index,
-        int item_index_to_display,
-        const parsed_json_t* parsed_transaction,
+        char* value, // output
+        int token_index, // input
+        int* current_item_index, // input / output
+        int item_index_to_display, // input
+        const parsed_json_t* parsed_transaction, // input
         unsigned int* view_scrolling_total_size, // output
         unsigned int view_scrolling_step, // input
         unsigned int max_chars_per_line, // input
-        const char* transaction, // input
-        void(*copy)(void* dst, const void* source, unsigned int size));
+        const char* transaction);   // input
 
 // Update key characters from json transaction read from the token_index element.
 void display_key(
-        char* key,
-        int token_index,
+        char* key, // output
+        int token_index, // input
         const parsed_json_t* parsed_transaction,
         unsigned int max_chars_per_line, // input
-        const char* transaction, // input
-        void(*copy)(void* dst, const void* source, unsigned int size));
+        const char* transaction); // input
 
 // Generic function to display arbitrary json based on the specification
 int display_arbitrary_item(
@@ -190,19 +127,36 @@ int display_arbitrary_item(
         char* key, // output
         char* value, // output
         int token_index, // input
-        int* current_item_index, // input
-        int level, // input
         const parsed_json_t* parsed_transaction, // input
         unsigned int* view_scrolling_total_size, // output
         unsigned int view_scrolling_step, // input
         unsigned int max_chars_per_line, // input
-        const char* transaction, // input
-        void(*copy)(void* dst, const void* source, unsigned int size));
+        const char* transaction); // input
 
-int display_get_arbitrary_items(
+int display_get_arbitrary_items_count(
         int token_index,
         const parsed_json_t* parsed_transaction,
         const char* transaction);
+
+int transaction_get_display_key_value(
+        char* key, // output
+        char* value, // output
+        int index, // input
+        const parsed_json_t* parsed_transaction, // input
+        unsigned int* view_scrolling_total_size, // output
+        unsigned int view_scrolling_step, // input
+        unsigned int max_chars_per_line, // input
+        const char* transaction); // input
+
+
+//---------------------------------------------
+
+// Delegates
+typedef void(*copy_delegate)(void* dst, const void* source, unsigned int size);
+void set_copy_delegate(copy_delegate delegate);
+void set_parsing_context(parsing_context_t context);
+
+//---------------------------------------------
 
 #ifdef __cplusplus
 }

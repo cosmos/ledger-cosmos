@@ -269,21 +269,20 @@ namespace {
         constexpr int screen_size = 50;
         char key[screen_size] = "";
         char value[screen_size] = "";
-        int current_item_index = 0;
         unsigned int view_scrolling_total_size = 0;
+        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+
         display_arbitrary_item(
                 0,
                 key,
                 value,
                 2,
-                &current_item_index,
-                0,
                 &parsed_json,
                 &view_scrolling_total_size,
                 0,
                 screen_size,
-                transaction,
-                [](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+                transaction);
+
         EXPECT_EQ(strcmp(key,"inputs/address"), 0) << "Wrong key returned";
         EXPECT_EQ(strcmp(value,"696E707574"), 0) << "Wrong value returned";
     }
@@ -298,21 +297,20 @@ namespace {
         constexpr int screen_size = 50;
         char key[screen_size] = "";
         char value[screen_size] = "";
-        int current_item_index = 0;
         unsigned int view_scrolling_total_size = 0;
+        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+
         display_arbitrary_item(
                 1,
                 key,
                 value,
                 2,
-                &current_item_index,
-                0,
                 &parsed_json,
                 &view_scrolling_total_size,
                 0,
                 screen_size,
-                transaction,
-                [](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+                transaction);
+
         EXPECT_EQ(strcmp(key,"inputs/coins"), 0) << "Wrong key returned";
         EXPECT_EQ(strcmp(value,"[{\"amount\":10,\"denom\":\"atom\"}]"), 0) << "Wrong value returned";
     }
@@ -327,21 +325,21 @@ namespace {
         constexpr int screen_size = 50;
         char key[screen_size] = "";
         char value[screen_size] = "";
-        int current_item_index = 0;
         unsigned int view_scrolling_total_size = 0;
+
+        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+
         display_arbitrary_item(
                 2,
                 key,
                 value,
                 2,
-                &current_item_index,
-                0,
                 &parsed_json,
                 &view_scrolling_total_size,
                 0,
                 screen_size,
-                transaction,
-                [](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+                transaction);
+
         EXPECT_EQ(strcmp(key,"outputs/address"), 0) << "Wrong key returned";
         EXPECT_EQ(strcmp(value,"6F7574707574"), 0) << "Wrong value returned";
     }
@@ -356,26 +354,27 @@ namespace {
         constexpr int screen_size = 50;
         char key[screen_size] = "";
         char value[screen_size] = "";
-        int current_item_index = 0;
         unsigned int view_scrolling_total_size = 0;
-        display_arbitrary_item(
-                3,
+        int requested_item_index = 3;
+
+        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+
+        int found_item_index = display_arbitrary_item(
+                requested_item_index,
                 key,
                 value,
                 2,
-                &current_item_index,
-                0,
                 &parsed_json,
                 &view_scrolling_total_size,
                 0,
                 screen_size,
-                transaction,
-                [](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+                transaction);
+
         EXPECT_EQ(strcmp(key,"outputs/coins"), 0) << "Wrong key returned";
         EXPECT_EQ(strcmp(value,"[{\"amount\":10,\"denom\":\"atom\"}]"), 0) << "Wrong value returned";
+        EXPECT_EQ(found_item_index, requested_item_index) << "Returned wrong index";
     }
 
-        // TODO: Not yet implemented
     TEST(TransactionParserTest, correct_format) {
 
         auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
@@ -392,6 +391,260 @@ namespace {
         token_index = object_get_value(0, "sequences", &parsed_json, transaction);
         EXPECT_EQ(token_index, 43) << "Wrong token index";
     }
+
+
+//    TEST(JsonParserTest, ParseSignedMsg_index_0) {
+//        parsed_json_t parsedMessage = {0};
+//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
+//
+//        json_parse(&parsedMessage, transaction);
+//
+//        char name[100] = {0};
+//        char value[100] = {0};
+//        unsigned int scrollingSize = 0;
+//        unsigned int scrollingStep = 0;
+//        unsigned int maxCharsPerLine = 20;
+//        int current_item_index = 0;
+//
+//        int index = signed_msg_get_key_value(
+//
+//                key,
+//                value,
+//                0,
+//                &current_item_index,
+//                0,
+//                &parsedMessage,
+//                &scrollingSize,
+//                scrollingStep,
+//                maxCharsPerLine,
+//                msg_bytes,
+//                [](void* dst, const void* src, unsigned int size) {
+//                    memcpy(dst, src, (size_t)(size)); });
+//
+//        EXPECT_TRUE(strcmp("chain_id", name)==0) << "Received: " << name << ", expected: chain_id";
+//        EXPECT_TRUE(strcmp("test-chain-27AkQh", value)==0) << "Received: " << value << ", expected: test-chain-27AkQh";
+//    }
+//
+//    TEST(JsonParserTest, ParseSignedMsg_index_0_long_value) {
+//        parsed_json_t parsedMessage = {0};
+//        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+//
+//        json_parse(&parsedMessage, signedMsg);
+//
+//        char name[100] = {0};
+//        char value[100] = {0};
+//        unsigned int scrollingSize = 0;
+//        unsigned int scrollingStep = 0;
+//        unsigned int maxCharsPerLine = 10;
+//        int size = SignedMsgGetInfo(name,
+//                                    value,
+//                                    0,
+//                                    &parsedMessage,
+//                                    &scrollingSize,
+//                                    scrollingStep,
+//                                    maxCharsPerLine,
+//                                    signedMsg,
+//                                    [](void* dst, const void* src, unsigned int size) {
+//                                        memcpy(dst, src, (size_t)(size));
+//                                    });
+//
+//        EXPECT_TRUE(strcmp("chain_id", name)==0) << "Received: " << name << ", expected: chain_id";
+//
+//        // Value will be cropped to the first 10 characters
+//        EXPECT_TRUE(strcmp("test-chain", value)==0) << "Received: " << value << ", expected: test-chain";
+//    }
+//
+//    TEST(JsonParserTest, ParseSignedMsg_index_0_long_value_scrolling) {
+//        parsed_json_t parsedMessage = {0};
+//        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+//
+//        json_parse(&parsedMessage, signedMsg);
+//
+//        char name[100] = {0};
+//        char value[100] = {0};
+//        unsigned int scrollingSize = 0;
+//        unsigned int scrollingStep = 5;
+//        unsigned int maxCharsPerLine = 10;
+//        int size = SignedMsgGetInfo(name,
+//                                    value,
+//                                    0,
+//                                    &parsedMessage,
+//                                    &scrollingSize,
+//                                    scrollingStep,
+//                                    maxCharsPerLine,
+//                                    signedMsg,
+//                                    [](void* dst, const void* src, unsigned int size) {
+//                                        memcpy(dst, src, (size_t)(size));
+//                                    });
+//
+//        EXPECT_TRUE(strcmp("chain_id", name)==0) << "Received: " << name << ", expected: chain_id";
+//
+//        // Take 10 characters (maxCharsPerLine) starting at position 5 (scrollingStep)
+//        EXPECT_TRUE(strcmp("chain-27Ak", value)==0) << "Received: " << value << ", expected: chain-27Ak";
+//    }
+//
+//    TEST(JsonParserTest, ParseSignedMsg_index_1) {
+//        parsed_json_t parsedMessage = {0};
+//        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+//
+//        json_parse(&parsedMessage, signedMsg);
+//
+//        char name[100] = {0};
+//        char value[100] = {0};
+//        unsigned int scrollingSize = 0;
+//        unsigned int scrollingStep = 0;
+//        unsigned int maxCharsPerLine = 10;
+//        int size = SignedMsgGetInfo(name,
+//                                    value,
+//                                    1,
+//                                    &parsedMessage,
+//                                    &scrollingSize,
+//                                    scrollingStep,
+//                                    maxCharsPerLine,
+//                                    signedMsg,
+//                                    [](void* dst, const void* src, unsigned int size) {
+//                                        memcpy(dst, src, (size_t)(size));
+//                                    });
+//
+//        EXPECT_TRUE(strcmp("sequences", name)==0) << "Received: " << name << ", expected: sequences";
+//        EXPECT_TRUE(strcmp("[1]", value)==0) << "Received: " << value << ", expected: [1]";
+//    }
+//
+//    TEST(JsonParserTest, ParseSignedMsg_index_2) {
+//        parsed_json_t parsedMessage = {0};
+//        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+//
+//        json_parse(&parsedMessage, signedMsg);
+//
+//        char name[100] = {0};
+//        char value[100] = {0};
+//        unsigned int scrollingSize = 0;
+//        unsigned int scrollingStep = 0;
+//        unsigned int maxCharsPerLine = 10;
+//        int size = SignedMsgGetInfo(name,
+//                                    value,
+//                                    2,
+//                                    &parsedMessage,
+//                                    &scrollingSize,
+//                                    scrollingStep,
+//                                    maxCharsPerLine,
+//                                    signedMsg,
+//                                    [](void* dst, const void* src, unsigned int size) {
+//                                        memcpy(dst, src, (size_t)(size));
+//                                    });
+//
+//        EXPECT_TRUE(strcmp("fee_bytes", name)==0) << "Received: " << name << ", expected: fee_bytes";
+//        EXPECT_TRUE(strcmp("eyJhbW91bn", value)==0) << "Received: " << value << ", expected: eyJhbW91bn";
+//    }
+//
+//
+//    TEST(JsonParserTest, ParseSignedMsg_index_3) {
+//        parsed_json_t parsedMessage = {0};
+//        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+//
+//        json_parse(&parsedMessage, signedMsg);
+//
+//        char name[100] = {0};
+//        char value[1000] = {0};
+//        unsigned int scrollingSize = 0;
+//        unsigned int scrollingStep = 0;
+//        unsigned int maxCharsPerLine = 10;
+//        int size = SignedMsgGetInfo(name,
+//                                    value,
+//                                    3,
+//                                    &parsedMessage,
+//                                    &scrollingSize,
+//                                    scrollingStep,
+//                                    maxCharsPerLine,
+//                                    signedMsg,
+//                                    [](void* dst, const void* src, unsigned int size) {
+//                                        memcpy(dst, src, (size_t)(size));
+//                                    });
+//
+//        EXPECT_TRUE(strcmp("msg_bytes", name)==0) << "Received: " << name << ", expected: msg_bytes";
+//        EXPECT_TRUE(strcmp("eyJpbnB1dH", value)==0) << "Received: " << value << ", expected: eyJpbnB1dH";
+//    }
+//
+//    TEST(JsonParserTest, ParseSignedMsg_index_3_long_message) {
+//        parsed_json_t parsedMessage = {0};
+//        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+//
+//        json_parse(&parsedMessage, signedMsg);
+//
+//        char name[100] = {0};
+//        char value[1000] = {0};
+//        unsigned int scrollingSize = 0;
+//        unsigned int scrollingStep = 0;
+//        unsigned int maxCharsPerLine = 1000;
+//        int size = SignedMsgGetInfo(name,
+//                                    value,
+//                                    3,
+//                                    &parsedMessage,
+//                                    &scrollingSize,
+//                                    scrollingStep,
+//                                    maxCharsPerLine,
+//                                    signedMsg,
+//                                    [](void* dst, const void* src, unsigned int size) {
+//                                        memcpy(dst, src, (size_t)(size));
+//                                    });
+//
+//        EXPECT_TRUE(strcmp("msg_bytes", name)==0) << "Received: " << name << ", expected: msg_bytes";
+//        EXPECT_TRUE(strcmp("eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=", value)==0) << "Received: " << value << ", expected: eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=";
+//    }
+//
+//    TEST(JsonParserTest, ParseSignedMsg_index_4) {
+//        parsed_json_t parsedMessage = {0};
+//        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+//
+//        json_parse(&parsedMessage, signedMsg);
+//
+//        char name[100] = {0};
+//        char value[1000] = {0};
+//        unsigned int scrollingSize = 0;
+//        unsigned int scrollingStep = 0;
+//        unsigned int maxCharsPerLine = 10;
+//        int size = SignedMsgGetInfo(name,
+//                                    value,
+//                                    4,
+//                                    &parsedMessage,
+//                                    &scrollingSize,
+//                                    scrollingStep,
+//                                    maxCharsPerLine,
+//                                    signedMsg,
+//                                    [](void* dst, const void* src, unsigned int size) {
+//                                        memcpy(dst, src, (size_t)(size));
+//                                    });
+//
+//        EXPECT_TRUE(strcmp("alt_bytes", name)==0) << "Received: " << name << ", expected: alt_bytes";
+//        EXPECT_TRUE(strcmp("null", value)==0) << "Received: " << value << ", expected: null";
+//    }
+//
+//    TEST(JsonParserTest, ParseSignedMsg_index_outside_bounds) {
+//        parsed_json_t parsedMessage = {0};
+//        const char* signedMsg = R"({"chain_id":"test-chain-27AkQh","sequences":[1],"fee_bytes":"eyJhbW91bnQiOltdLCJnYXMiOjB9","msg_bytes":"eyJpbnB1dHMiOlt7ImFkZHJlc3MiOiI0QkNEODBEMUU4NDlFNjE3MTY0MjM1OEMxMkUzODA3MERFQzRCRjA5IiwiY29pbnMiOlt7ImRlbm9tIjoic3RlYWsiLCJhbW91bnQiOjF9XX1dLCJvdXRwdXRzIjpbeyJhZGRyZXNzIjoiQkZFQjQ4OTM0NzQ0MjdENUJERENFQTVGRkM5NUI2ODFBQzg1RjM1QyIsImNvaW5zIjpbeyJkZW5vbSI6InN0ZWFrIiwiYW1vdW50IjoxfV19XX0=","alt_bytes":null})";
+//
+//        json_parse(&parsedMessage, signedMsg);
+//
+//        char name[100] = {0};
+//        char value[1000] = {0};
+//        unsigned int scrollingSize = 0;
+//        unsigned int scrollingStep = 0;
+//        unsigned int maxCharsPerLine = 10;
+//        int size = SignedMsgGetInfo(name,
+//                                    value,
+//                                    5,
+//                                    &parsedMessage,
+//                                    &scrollingSize,
+//                                    scrollingStep,
+//                                    maxCharsPerLine,
+//                                    signedMsg,
+//                                    [](void* dst, const void* src, unsigned int size) {
+//                                        memcpy(dst, src, (size_t)(size));
+//                                    });
+//
+//        EXPECT_TRUE(strcmp("Error", name)==0) << "Received: " << name << ", expected: Error";
+//        EXPECT_TRUE(strcmp("Out-of-bounds", value)==0) << "Received: " << value << ", expected: Out-of-bounds";
+//    }
 
 //    // TODO: Not yet implemented
 //    TEST(TransactionParserTest, correct_format) {

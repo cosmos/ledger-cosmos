@@ -18,379 +18,19 @@
 #include <jsmn.h>
 #include "json_parser.h"
 
-bool Match(
-        const char* jsonString,
-        jsmntok_t token,
-        const char* reference,
-        int size)
+//---------------------------------------------
+
+copy_delegate copy_fct = NULL;
+parsing_context_t parsing_context;
+
+void set_copy_delegate(copy_delegate delegate)
 {
-    bool sizeOkay =(token.end - token.start) == size;
-    const char* str = jsonString + token.start;
-    return (sizeOkay && strncmp(str, reference, size) == 0);
+    copy_fct = delegate;
 }
 
-// Known issues:
-// 1. The same block of code is duplicated for inputs and outputs - this could be further refactored
-// 2. Parsing logic supports a varying number of inputs, outputs and coins. Input and output arrays can be
-//    found at random positions in the stream - offsets are not hardcoded. Internal layouts of individual
-//    inputs and outputs are however hardcoded and must not change. 
-
-bool IsChild(int potentialChildIndex, int parentIndex, jsmntok_t* tokens)
+void set_parsing_context(parsing_context_t context)
 {
-    return (tokens[potentialChildIndex].start > tokens[parentIndex].start)
-        && (tokens[potentialChildIndex].end < tokens[parentIndex].end);
-}
-
-void ParseMessage(
-        parsed_json_t* parsedMessage,
-        const char* jsonString)
-{
-    const char inputsTokenName[] = "inputs";
-    int inputsTokenSize = sizeof(inputsTokenName)-1; // minus null terminating char
-
-    const char outputsTokenName[] = "outputs";
-    int outputsTokenSize = sizeof(outputsTokenName)-1; // minus null terminating char
-
-    bool processedInputs = false;
-    bool processedOutputs = false;
-
-    int i = 0;
-    while (i < parsedMessage->NumberOfTokens) {
-        if (parsedMessage->Tokens[i].type == JSMN_UNDEFINED){
-            break;
-        }
-        // Parse inputs array
-        if (!processedInputs && Match(jsonString, parsedMessage->Tokens[i], inputsTokenName, inputsTokenSize)) {
-            int inputsArrayIndex = i + 1;
-            parsedMessage->NumberOfInputs = 0;
-
-            // Parse input
-            int inputIndex = inputsArrayIndex + 1;
-            while (IsChild(inputIndex, inputsArrayIndex, parsedMessage->Tokens)) {
-
-                // Parse single input
-                parsedMessage->Inputs[parsedMessage->NumberOfInputs].Address = inputIndex + 2;
-
-                // Parse Coins array
-                int coinsArrayIndex = inputIndex + 4;
-                parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins = 0;
-
-                // Parse Coin
-                int coinIndex = coinsArrayIndex + 1;
-                while (IsChild(coinIndex, coinsArrayIndex, parsedMessage->Tokens)) {
-
-                    parsedMessage->Inputs[parsedMessage->NumberOfInputs].Coins[parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins].Denum =
-                            coinIndex + 2;
-
-                    parsedMessage->Inputs[parsedMessage->NumberOfInputs].Coins[parsedMessage->Inputs[parsedMessage->NumberOfInputs].NumberOfCoins++].Amount =
-                            coinIndex + 4;
-
-                    coinIndex += 5;
-                }
-
-                //parsedMessage->Inputs[parsedMessage->NumberOfInputs].Sequence = coinIndex + 1;
-                parsedMessage->NumberOfInputs++;
-
-                inputIndex = coinIndex;
-            }
-            i = inputIndex;
-            processedInputs = true;
-        }
-
-        // Parse outputs array
-        if (!processedOutputs && Match(jsonString, parsedMessage->Tokens[i], outputsTokenName, outputsTokenSize)) {
-            int outputsArrayIndex = i + 1;
-            parsedMessage->NumberOfOutputs = 0;
-
-            // Parse output
-            int outputIndex = outputsArrayIndex + 1;
-            while (IsChild(outputIndex, outputsArrayIndex, parsedMessage->Tokens)) {
-
-                // Parse single input
-                parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Address = outputIndex + 2;
-
-                // Parse Coins array
-                int coinsArrayIndex = outputIndex + 4;
-                parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins = 0;
-
-                // Parse Coin
-                int coinIndex = coinsArrayIndex + 1;
-                while (IsChild(coinIndex, coinsArrayIndex, parsedMessage->Tokens)) {
-
-                    parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Coins[parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins].Denum =
-                            coinIndex + 2;
-
-                    parsedMessage->Outputs[parsedMessage->NumberOfOutputs].Coins[parsedMessage->Outputs[parsedMessage->NumberOfOutputs].NumberOfCoins++].Amount =
-                            coinIndex + 4;
-
-                    coinIndex += 5;
-                }
-
-                parsedMessage->NumberOfOutputs++;
-                outputIndex = coinIndex;
-            }
-            i = outputIndex - 1;
-            processedOutputs = true;
-        }
-
-        i++;
-    }
-}
-
-void ParseJson(parsed_json_t *parsedJson, const char *jsonString) {
-    jsmn_parser parser;
-    jsmn_init(&parser);
-
-    parsedJson->NumberOfTokens = jsmn_parse(
-            &parser,
-            jsonString,
-            strlen(jsonString),
-            parsedJson->Tokens,
-            MAX_NUMBER_OF_TOKENS);
-
-    parsedJson->CorrectFormat = false;
-    if (parsedJson->NumberOfTokens >= 1
-        &&
-        parsedJson->Tokens[0].type != JSMN_OBJECT) {
-        parsedJson->CorrectFormat = true;
-    }
-
-    // Build SendMsg representation with links to tokens
-    ParseMessage(parsedJson, jsonString);
-}
-
-void ParseSignedMsg(parsed_json_t* parsedMessage, const char* signedMsg)
-{
-    jsmn_parser parser;
-    jsmn_init(&parser);
-
-    parsedMessage->NumberOfTokens = jsmn_parse(
-            &parser,
-            signedMsg,
-            strlen(signedMsg),
-            parsedMessage->Tokens,
-            MAX_NUMBER_OF_TOKENS);
-
-    parsedMessage->CorrectFormat = false;
-    if (parsedMessage->NumberOfTokens >= 1
-        &&
-        parsedMessage->Tokens[0].type != JSMN_OBJECT) {
-        parsedMessage->CorrectFormat = true;
-    }
-
-}
-
-int TransactionMsgGetInfo(
-        char *name,
-        char *value,
-        int index,
-        const parsed_json_t* parsed_transaction,
-        unsigned int* view_scrolling_total_size,
-        unsigned int view_scrolling_step,
-        unsigned int max_chars_per_line,
-        const char* message,
-        void(*copy)(void* dst, const void* source, unsigned int size))
-{
-    int currentIndex = 0;
-    for (int i = 0; i < parsed_transaction->NumberOfInputs; i++) {
-        if (index == currentIndex) {
-            copy((char *) name, "Input address", sizeof("Input address"));
-
-            unsigned int addressSize =
-                    parsed_transaction->Tokens[parsed_transaction->Inputs[i].Address].end -
-                    parsed_transaction->Tokens[parsed_transaction->Inputs[i].Address].start;
-
-            *view_scrolling_total_size = addressSize;
-            const char *addressPtr =
-                    message +
-                    parsed_transaction->Tokens[parsed_transaction->Inputs[i].Address].start;
-
-            if (view_scrolling_step < addressSize) {
-                copy(
-                        (char *) value,
-                        addressPtr + view_scrolling_step,
-                        addressSize < max_chars_per_line ? addressSize : max_chars_per_line);
-                value[addressSize] = '\0';
-            }
-            return currentIndex;
-        }
-        currentIndex++;
-        for (int j = 0; j < parsed_transaction->Inputs[i].NumberOfCoins; j++) {
-            if (index == currentIndex) {
-                copy((char *) name, "Coin", sizeof("Coin"));
-
-                int coinSize =
-                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Denum].end -
-                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Denum].start;
-
-                const char *coinPtr =
-                        message +
-                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Denum].start;
-
-                copy((char *) value, coinPtr, coinSize);
-                value[coinSize] = '\0';
-                return currentIndex;
-            }
-            currentIndex++;
-            if (index == currentIndex) {
-                copy((char *) name, "Amount", sizeof("Amount"));
-
-                int coinAmountSize =
-                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Amount].end -
-                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Amount].start;
-
-                const char *coinAmountPtr =
-                        message +
-                        parsed_transaction->Tokens[parsed_transaction->Inputs[i].Coins[j].Amount].start;
-
-                copy((char *) value, coinAmountPtr, coinAmountSize);
-                value[coinAmountSize] = '\0';
-                return currentIndex;
-            }
-            currentIndex++;
-        }
-    }
-    for (int i = 0; i < parsed_transaction->NumberOfOutputs; i++) {
-        if (index == currentIndex) {
-            copy((char *) name, "Output address", sizeof("Output address"));
-
-            unsigned int addressSize =
-                    parsed_transaction->Tokens[parsed_transaction->Outputs[i].Address].end -
-                    parsed_transaction->Tokens[parsed_transaction->Outputs[i].Address].start;
-
-            const char *addressPtr =
-                    message +
-                    parsed_transaction->Tokens[parsed_transaction->Outputs[i].Address].start;
-
-            *view_scrolling_total_size = addressSize;
-
-            if (view_scrolling_step < addressSize) {
-                copy(
-                        (char *) value,
-                        addressPtr + view_scrolling_step,
-                        addressSize < max_chars_per_line ? addressSize : max_chars_per_line);
-                value[addressSize] = '\0';
-            }
-            return currentIndex;
-        }
-        currentIndex++;
-        for (int j = 0; j < parsed_transaction->Outputs[i].NumberOfCoins; j++) {
-            if (index == currentIndex) {
-                copy((char *) name, "Coin", sizeof("Coin"));
-
-                int coinSize =
-                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Denum].end -
-                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Denum].start;
-
-                const char *coinPtr =
-                        message +
-                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Denum].start;
-
-                copy((char *) value, coinPtr, coinSize);
-                value[coinSize] = '\0';
-                return currentIndex;
-            }
-            currentIndex++;
-            if (index == currentIndex) {
-                copy((char *) name, "Amount", sizeof("Amount"));
-
-                int coinAmountSize =
-                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Amount].end -
-                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Amount].start;
-
-                const char *coinAmountPtr =
-                        message +
-                        parsed_transaction->Tokens[parsed_transaction->Outputs[i].Coins[j].Amount].start;
-
-                copy((char *) value, coinAmountPtr, coinAmountSize);
-                value[coinAmountSize] = '\0';
-                return currentIndex;
-            }
-            currentIndex++;
-        }
-    }
-    return currentIndex;
-}
-
-int SignedMsgGetNumberOfElements(const parsed_json_t* parsed_transaction,
-                                 const char* transaction)
-{
-    int token_index = object_get_value(0, "msg_bytes", parsed_transaction, transaction);
-    return display_get_arbitrary_items(
-            token_index,
-            parsed_transaction,
-            transaction) + 3;
-}
-
-int GetTokenIndexForKey(
-        int keyIndex,
-        const parsed_json_t* parsed_message)
-{
-    int currentIndex = 0;
-    int foundKeyIndex = 0;
-    int nextKeyMinPosition = -1;
-    while (currentIndex < parsed_message->NumberOfTokens) {
-
-        if (parsed_message->Tokens[currentIndex].type == JSMN_UNDEFINED) break;
-        // Here we're assuming that json keys are always of JSMN_STRING type
-        if (parsed_message->Tokens[currentIndex].type == JSMN_STRING) {
-            if (parsed_message->Tokens[currentIndex].start > nextKeyMinPosition) {
-
-                // Found the key
-                if (keyIndex == foundKeyIndex) {
-                    return currentIndex;
-                }
-                foundKeyIndex++;
-                // Skip all the value tokens
-                nextKeyMinPosition = parsed_message->Tokens[currentIndex + 1].end;
-            }
-        }
-        currentIndex++;
-    }
-    return -1;
-}
-
-int SignedMsgGetInfo(
-        char *name,
-        char *value,
-        int index,
-        const parsed_json_t* parsed_message,
-        unsigned int* view_scrolling_total_size,
-        unsigned int view_scrolling_step,
-        unsigned int max_chars_per_line,
-        const char* message,
-        void(*copy)(void* dst, const void* source, unsigned int size))
-{
-    int tokenKeyIndex = GetTokenIndexForKey(index, parsed_message);
-
-    if (tokenKeyIndex != -1) {
-        jsmntok_t key_token = parsed_message->Tokens[tokenKeyIndex];
-        jsmntok_t value_token = parsed_message->Tokens[tokenKeyIndex+1];
-
-        copy((char *) name,
-             message + key_token.start,
-             key_token.end - key_token.start);
-        name[key_token.end - key_token.start] = '\0';
-
-        *view_scrolling_total_size = value_token.end-value_token.start;
-
-        const char* value_start_address = message + value_token.start;
-        if (view_scrolling_step < *view_scrolling_total_size) {
-            int size =
-                    *view_scrolling_total_size < max_chars_per_line ? *view_scrolling_total_size : max_chars_per_line;
-            copy(
-                    (char *) value,
-                    value_start_address + view_scrolling_step,
-                    size);
-            value[size] = '\0';
-        }
-    }
-    else {
-        strcpy(name, "Error");
-        strcpy(value, "Out-of-bounds");
-    }
-
-    return tokenKeyIndex;
+    parsing_context = context;
 }
 
 //---------------------------------------------
@@ -428,8 +68,9 @@ int json_validate(
     return -1;
 }
 
-int array_get_element_count(int array_token_index,
-                            const parsed_json_t* parsed_transaction)
+int array_get_element_count(
+        int array_token_index,
+        const parsed_json_t* parsed_transaction)
 {
     jsmntok_t array_token = parsed_transaction->Tokens[array_token_index];
     int token_index = array_token_index;
@@ -454,9 +95,10 @@ int array_get_element_count(int array_token_index,
     return element_count;
 }
 
-int array_get_nth_element(int array_token_index,
-                        int element_index,
-                        const parsed_json_t* parsed_transaction)
+int array_get_nth_element(
+        int array_token_index,
+        int element_index,
+        const parsed_json_t* parsed_transaction)
 {
     jsmntok_t array_token = parsed_transaction->Tokens[array_token_index];
     int token_index = array_token_index;
@@ -484,8 +126,9 @@ int array_get_nth_element(int array_token_index,
     return -1;
 }
 
-int object_get_element_count(int object_token_index,
-                             const parsed_json_t* parsed_transaction)
+int object_get_element_count(
+        int object_token_index,
+        const parsed_json_t* parsed_transaction)
 {
     jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
     int token_index = object_token_index;
@@ -511,9 +154,10 @@ int object_get_element_count(int object_token_index,
     return element_count;
 }
 
-int object_get_nth_key(int object_token_index,
-                     int object_element_index,
-                     const parsed_json_t* parsed_transaction)
+int object_get_nth_key(
+        int object_token_index,
+        int object_element_index,
+        const parsed_json_t* parsed_transaction)
 {
     jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
     int token_index = object_token_index;
@@ -542,9 +186,10 @@ int object_get_nth_key(int object_token_index,
     return -1;
 }
 
-int object_get_nth_value(int object_token_index,
-                       int object_element_index,
-                       const parsed_json_t* parsed_transaction)
+int object_get_nth_value(
+        int object_token_index,
+        int object_element_index,
+        const parsed_json_t* parsed_transaction)
 {
     int key_index = object_get_nth_key(object_token_index, object_element_index, parsed_transaction);
     if (key_index != -1) {
@@ -553,10 +198,11 @@ int object_get_nth_value(int object_token_index,
     return -1;
 }
 
-int object_get_value(int object_token_index,
-                     const char* key_name,
-                     const parsed_json_t* parsed_transaction,
-                     const char* transaction)
+int object_get_value(
+        int object_token_index,
+        const char* key_name,
+        const parsed_json_t* parsed_transaction,
+        const char* transaction)
 {
     int length = strlen(key_name);
     jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
@@ -594,8 +240,7 @@ int display_value(
         unsigned int* view_scrolling_total_size, // output
         unsigned int view_scrolling_step, // input
         unsigned int max_chars_per_line, // input
-        const char* transaction, // input
-        void(*copy)(void* dst, const void* source, unsigned int size)) {
+        const char* transaction) {
 
     if (*current_item_index == item_index_to_display) {
 
@@ -606,13 +251,13 @@ int display_value(
         if (view_scrolling_step < *view_scrolling_total_size) {
             int size =
                     *view_scrolling_total_size < max_chars_per_line ? *view_scrolling_total_size : max_chars_per_line;
-            copy(value, address_ptr + view_scrolling_step, size);
+            copy_fct(value, address_ptr + view_scrolling_step, size);
             value[size] = '\0';
         }
-        return 1;
+        return item_index_to_display;
     }
     *current_item_index = *current_item_index + 1;
-    return 0;
+    return -1;
 }
 
 void display_key(
@@ -620,13 +265,12 @@ void display_key(
         int token_index,
         const parsed_json_t* parsed_transaction,
         unsigned int max_chars_per_line, // input
-        const char* transaction, // input
-        void(*copy)(void* dst, const void* source, unsigned int size))
+        const char* transaction)
 {
     unsigned int key_size = parsed_transaction->Tokens[token_index].end - parsed_transaction->Tokens[token_index].start;
     const char* address_ptr = transaction + parsed_transaction->Tokens[token_index].start;
     unsigned int size = key_size < max_chars_per_line ? key_size : max_chars_per_line;
-    copy(key, address_ptr, size);
+    copy_fct(key, address_ptr, size);
     key[size] = '\0';
 }
 
@@ -654,31 +298,7 @@ void remove_last(char* key)
     *last = '\0';
 }
 
-int display_get_arbitrary_items(
-        int token_index,
-        const parsed_json_t* parsed_transaction,
-        const char* transaction)
-{
-    int number_of_items = 0;
-    char dummy[1];
-    unsigned int dummy_size = 0;
-    display_arbitrary_item(
-            -1,
-            dummy,
-            dummy,
-            token_index,
-            &number_of_items,
-            0,
-            parsed_transaction,
-            &dummy_size,
-            0,
-            0,
-            transaction,
-            NULL);
-    return number_of_items;
-}
-
-int display_arbitrary_item(
+int display_arbitrary_item_inner(
         int item_index_to_display, //input
         char* key, // output
         char* value, // output
@@ -689,8 +309,7 @@ int display_arbitrary_item(
         unsigned int* view_scrolling_total_size, // output
         unsigned int view_scrolling_step, // input
         unsigned int max_chars_per_line, // input
-        const char* transaction, // input
-        void(*copy)(void* dst, const void* source, unsigned int size))
+        const char* transaction)
 {
 //    if level == 2
 //    show value as json-encoded string
@@ -716,8 +335,7 @@ int display_arbitrary_item(
                 view_scrolling_total_size,
                 view_scrolling_step,
                 max_chars_per_line,
-                transaction,
-                copy);
+                transaction);
     }
     else {
         switch (parsed_transaction->Tokens[token_index].type) {
@@ -731,8 +349,7 @@ int display_arbitrary_item(
                         view_scrolling_total_size,
                         view_scrolling_step,
                         max_chars_per_line,
-                        transaction,
-                        copy);
+                        transaction);
 
             case JSMN_PRIMITIVE:
                 return display_value(
@@ -744,8 +361,7 @@ int display_arbitrary_item(
                         view_scrolling_total_size,
                         view_scrolling_step,
                         max_chars_per_line,
-                        transaction,
-                        copy);
+                        transaction);
 
             case JSMN_OBJECT: {
                 int el_count = object_get_element_count(token_index, parsed_transaction);
@@ -760,13 +376,12 @@ int display_arbitrary_item(
                                 key_index,
                                 parsed_transaction,
                                 max_chars_per_line,
-                                transaction,
-                                copy);
+                                transaction);
 
                         append_keys(key, key_temp);
                     }
 
-                    int found = display_arbitrary_item(
+                    int found = display_arbitrary_item_inner(
                             item_index_to_display,
                             key,
                             value,
@@ -777,10 +392,9 @@ int display_arbitrary_item(
                             view_scrolling_total_size,
                             view_scrolling_step,
                             max_chars_per_line,
-                            transaction,
-                            copy);
-                    if (found == 1) {
-                        return 1;
+                            transaction);
+                    if (found == item_index_to_display) {
+                        return item_index_to_display;
                     } else {
                         if (item_index_to_display != -1) {
                             remove_last(key);
@@ -793,7 +407,7 @@ int display_arbitrary_item(
                 int el_count = array_get_element_count(token_index, parsed_transaction);
                 for (int i = 0; i < el_count; ++i) {
                     int element_index = array_get_nth_element(token_index, i, parsed_transaction);
-                    int found = display_arbitrary_item(
+                    int found = display_arbitrary_item_inner(
                             item_index_to_display,
                             key,
                             value,
@@ -804,17 +418,145 @@ int display_arbitrary_item(
                             view_scrolling_total_size,
                             view_scrolling_step,
                             max_chars_per_line,
-                            transaction,
-                            copy);
-                    if (found == 1) {
-                        return 1;
+                            transaction);
+                    if (found == item_index_to_display) {
+                        return item_index_to_display;
                     }
+
                 }
                 break;
             }
             default:
-                return 0;
+                return *current_item_index;
         }
-        return 0;
+        // Not found yet, continue parsing
+        return -1;
     }
+}
+
+int display_get_arbitrary_items(
+        int token_index,
+        const parsed_json_t* parsed_transaction,
+        const char* transaction)
+{
+    int number_of_items = 0;
+    char dummy[1];
+    unsigned int dummy_size = 0;
+    return display_arbitrary_item_inner(
+            -1,
+            dummy,
+            dummy,
+            token_index,
+            &number_of_items,
+            0,
+            parsed_transaction,
+            &dummy_size,
+            0,
+            0,
+            transaction);
+}
+
+
+int display_arbitrary_item(
+        int item_index_to_display, //input
+        char* key, // output
+        char* value, // output
+        int token_index, // input
+        const parsed_json_t* parsed_transaction, // input
+        unsigned int* view_scrolling_total_size, // output
+        unsigned int view_scrolling_step, // input
+        unsigned int max_chars_per_line, // input
+        const char* transaction)
+{
+    int current_item_index = 0;
+    return display_arbitrary_item_inner(
+            item_index_to_display,
+            key,
+            value,
+            token_index,
+            &current_item_index,
+            0,
+            parsed_transaction,
+            view_scrolling_total_size,
+            view_scrolling_step,
+            max_chars_per_line,
+            transaction);
+}
+
+void update(
+        char* msg,// output
+        int token_index, // input
+        const parsed_json_t* parsed_transaction, // input
+        unsigned int* view_scrolling_total_size, // output
+        unsigned int view_scrolling_step, // input
+        unsigned int max_chars_per_line, // input
+        const char* transaction) // input
+{
+    view_scrolling_total_size = parsed_transaction->Tokens[token_index].end - parsed_transaction->Tokens[token_index].start;
+    int size = view_scrolling_total_size < max_chars_per_line ? view_scrolling_total_size : max_chars_per_line;
+    copy_fct(msg,
+             transaction + parsed_transaction->Tokens[token_index].start + view_scrolling_step,
+               size);
+    msg[size] = '\0';
+}
+
+int transaction_get_display_key_value(
+        char* key, // output
+        char* value, // output
+        int index, // input
+        const parsed_json_t* parsed_transaction, // input
+        unsigned int* view_scrolling_total_size, // output
+        unsigned int view_scrolling_step, // input
+        unsigned int max_chars_per_line, // input
+        const char* transaction) // input
+{
+    switch (index) {
+        case 0: {
+            copy_fct(key, "chain_id", sizeof("chain_id"));
+            int token_index = object_get_value(0, "chain_id", &parsed_transaction, transaction);
+            update(value, token_index, parsed_transaction, view_scrolling_total_size, view_scrolling_step, max_chars_per_line, transaction);
+            break;
+        }
+        case 1: {
+            copy_fct(key, "sequences", sizeof("sequences"));
+            int token_index = object_get_value(0, "sequences", &parsed_transaction, transaction);
+            update(value, token_index, parsed_transaction, view_scrolling_total_size, view_scrolling_step, max_chars_per_line, transaction);
+            break;
+        }
+        case 2: {
+            copy_fct(key, "fee_bytes", sizeof("fee_bytes"));
+            int token_index = object_get_value(0, "fee_bytes", &parsed_transaction, transaction);
+            update(value, token_index, parsed_transaction, view_scrolling_total_size, view_scrolling_step, max_chars_per_line, transaction);
+            break;
+        }
+        default: {
+            int token_index = object_get_value(0, "msg_bytes", &parsed_transaction, transaction);
+            copy_fct(key, "msg_bytes", sizeof("msg_bytes"));
+            key[sizeof("msg_bytes")] = '\0';
+            display_arbitrary_item(index - 3,
+                                   key,
+                                   value,
+                                   token_index,
+                                   &parsed_transaction,
+                                   &view_scrolling_total_size,
+                                   view_scrolling_step,
+                                   max_chars_per_line,
+                                   transaction);
+            break;
+        }
+
+//        case 3: {
+//            os_memmove(key, "msg_bytes", sizeof("msg_bytes"));
+//            int token_index = object_get_value(0, "msg_bytes", &parsed_transaction, transaction_buffer);
+//            token_index = object_get_value(token_index, "inputs", &parsed_transaction, transaction_buffer);
+//            update(value, token_index);
+//            break;
+//        }
+//        case 4: {
+//            os_memmove(key, "alt_bytes", sizeof("alt_bytes"));
+//            int token_index = object_get_value(0, "alt_bytes", &parsed_transaction, transaction_buffer);
+//            update(value, token_index);
+//            break;
+    }
+    return 0;
 }
