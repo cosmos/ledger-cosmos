@@ -260,6 +260,23 @@ namespace {
         EXPECT_EQ(array_get_element_count(token_index, &parsed_json), 5) << "Wrong number of array elements";
     }
 
+    TEST(TransactionParserTest, ObjectGetValueCorrectFormat) {
+
+        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+        int token_index = object_get_value(0, "alt_bytes", &parsed_json, transaction);
+        EXPECT_EQ(token_index, 2) << "Wrong token index";
+        token_index = object_get_value(0, "chain_id", &parsed_json, transaction);
+        EXPECT_EQ(token_index, 4) << "Wrong token index";
+        token_index = object_get_value(0, "fee_bytes", &parsed_json, transaction);
+        EXPECT_EQ(token_index, 6) << "Wrong token index";
+        token_index = object_get_value(0, "msg_bytes", &parsed_json, transaction);
+        EXPECT_EQ(token_index, 17) << "Wrong token index";
+        token_index = object_get_value(0, "sequences", &parsed_json, transaction);
+        EXPECT_EQ(token_index, 43) << "Wrong token index";
+    }
+
     void setup_context(
             parsed_json_t* parsed_json,
             int screen_size,
@@ -276,13 +293,18 @@ namespace {
         context.view_scrolling_total_size = &view_scrolling_total_size;
         context.view_scrolling_step = &view_scrolling_step;
         context.key_scrolling_total_size = &key_scrolling_total_size;
-        context.key_scrolling_total_size = &key_scrolling_step;
+        context.key_scrolling_step = &key_scrolling_step;
         context.transaction = transaction;
         set_parsing_context(context);
         set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
     }
 
-    TEST(TransactionParserTest, DisplayItem_0) {
+    void EXPECT_EQ_STR(const char* str1, const char* str2, const char* errorMsg)
+    {
+        EXPECT_TRUE(strcmp(str1,str2)==0)  << errorMsg << ", expected: " << str1 << ", received: " << str2;
+    }
+
+    TEST(TransactionParserTest, DisplayArbitraryItem_0) {
 
         auto transaction = R"({"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
 
@@ -301,11 +323,11 @@ namespace {
                 value,
                 2);
 
-        EXPECT_EQ(strcmp(key,"inputs/address"), 0) << "Wrong key returned";
-        EXPECT_EQ(strcmp(value,"696E707574"), 0) << "Wrong value returned";
+        EXPECT_EQ_STR(key,"inputs/address", "Wrong key returned");
+        EXPECT_EQ_STR(value, "696E707574", "Wrong value returned");
     }
 
-    TEST(TransactionParserTest, DisplayItem_1) {
+    TEST(TransactionParserTest, DisplayArbitraryItem_1) {
 
         auto transaction = R"({"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
 
@@ -324,11 +346,11 @@ namespace {
                 value,
                 2);
 
-        EXPECT_EQ(strcmp(key,"inputs/coins"), 0) << "Wrong key returned";
-        EXPECT_EQ(strcmp(value,"[{\"amount\":10,\"denom\":\"atom\"}]"), 0) << "Wrong value returned";
+        EXPECT_EQ_STR(key,"inputs/coins","Wrong key returned");
+        EXPECT_EQ_STR(value,"[{\"amount\":10,\"denom\":\"atom\"}]", "Wrong value returned");
     }
 
-    TEST(TransactionParserTest, DisplayItem_2) {
+    TEST(TransactionParserTest, DisplayArbitraryItem_2) {
 
         auto transaction = R"({"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
 
@@ -347,11 +369,11 @@ namespace {
                 value,
                 2);
 
-        EXPECT_EQ(strcmp(key,"outputs/address"), 0) << "Wrong key returned";
-        EXPECT_EQ(strcmp(value,"6F7574707574"), 0) << "Wrong value returned";
+        EXPECT_EQ_STR(key,"outputs/address","Wrong key returned");
+        EXPECT_EQ_STR(value,"6F7574707574","Wrong value returned");
     }
 
-    TEST(TransactionParserTest, DisplayItem_3) {
+    TEST(TransactionParserTest, DisplayArbitraryItem_3) {
 
         auto transaction = R"({"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
 
@@ -371,12 +393,12 @@ namespace {
                 value,
                 2);
 
-        EXPECT_EQ(strcmp(key,"outputs/coins"), 0) << "Wrong key returned";
-        EXPECT_EQ(strcmp(value,"[{\"amount\":10,\"denom\":\"atom\"}]"), 0) << "Wrong value returned";
+        EXPECT_EQ_STR(key,"outputs/coins","Wrong key returned");
+        EXPECT_EQ_STR(value,"[{\"amount\":10,\"denom\":\"atom\"}]","Wrong value returned");
         EXPECT_EQ(found_item_index, requested_item_index) << "Returned wrong index";
     }
 
-    TEST(TransactionParserTest, DisplayItemCount) {
+    TEST(TransactionParserTest, DisplayArbitraryItemCount) {
 
         auto transaction = R"({"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
 
@@ -392,21 +414,156 @@ namespace {
         EXPECT_EQ(found_item_index, 4) << "Wrong number of displayable elements";
     }
 
-    TEST(TransactionParserTest, correct_format) {
+
+    TEST(TransactionParserTest, ParseTransaction_Pages) {
 
         auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
         parsed_json_t parsed_json;
         json_parse(&parsed_json, transaction);
-        int token_index = object_get_value(0, "alt_bytes", &parsed_json, transaction);
-        EXPECT_EQ(token_index, 2) << "Wrong token index";
-        token_index = object_get_value(0, "chain_id", &parsed_json, transaction);
-        EXPECT_EQ(token_index, 4) << "Wrong token index";
-        token_index = object_get_value(0, "fee_bytes", &parsed_json, transaction);
-        EXPECT_EQ(token_index, 6) << "Wrong token index";
-        token_index = object_get_value(0, "msg_bytes", &parsed_json, transaction);
-        EXPECT_EQ(token_index, 17) << "Wrong token index";
-        token_index = object_get_value(0, "sequences", &parsed_json, transaction);
-        EXPECT_EQ(token_index, 43) << "Wrong token index";
+
+        constexpr int screen_size = 50;
+        setup_context(&parsed_json, screen_size, transaction);
+        int pages = transaction_get_display_pages();
+        EXPECT_EQ(pages, 8) << "Wrong number of displayable pages";
+    }
+
+    TEST(TransactionParserTest, ParseTransaction_Page_1) {
+
+        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 50;
+        setup_context(&parsed_json, screen_size, transaction);
+
+        char key[100];
+        char value[100];
+        transaction_get_display_key_value(key, value, 0);
+
+        EXPECT_EQ_STR(key, "chain_id", "Wrong key");
+        EXPECT_EQ_STR(value, "test-chain-1", "Wrong value");
+    }
+
+    TEST(TransactionParserTest, ParseTransaction_Page_2) {
+
+        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 50;
+        setup_context(&parsed_json, screen_size, transaction);
+
+        char key[100];
+        char value[100];
+        transaction_get_display_key_value(key, value, 1);
+
+        EXPECT_EQ_STR(key, "sequences", "Wrong key");
+        EXPECT_EQ_STR(value, "[1]", "Wrong value");
+    }
+
+    // FIXME: Failing test
+//    TEST(TransactionParserTest, ParseTransaction_Page_3) {
+//
+//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
+//        parsed_json_t parsed_json;
+//        json_parse(&parsed_json, transaction);
+//
+//        constexpr int screen_size = 50;
+//        setup_context(&parsed_json, screen_size, transaction);
+//
+//        char key[100];
+//        char value[100];
+//        transaction_get_display_key_value(key, value, 2);
+//
+//        EXPECT_EQ_STR(key, "fee_bytes", "Wrong key");
+//        EXPECT_EQ_STR(value, "{\"amount\":[{\"amount\":5,\"denom\":\"photon\"}],\"gas\":10000}", "Wrong value");
+//    }
+
+    TEST(TransactionParserTest, ParseTransaction_Page_4) {
+
+        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 50;
+        setup_context(&parsed_json, screen_size, transaction);
+
+        char key[100];
+        char value[100];
+        transaction_get_display_key_value(key, value, 3);
+
+        EXPECT_EQ_STR(key, "msg_bytes/inputs/address", "Wrong key");
+        EXPECT_EQ_STR(value, "696E707574", "Wrong value");
+    }
+
+    // FIXME: Failing test
+//    TEST(TransactionParserTest, ParseTransaction_Page_5) {
+//
+//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
+//        parsed_json_t parsed_json;
+//        json_parse(&parsed_json, transaction);
+//
+//        constexpr int screen_size = 50;
+//        setup_context(&parsed_json, screen_size, transaction);
+//
+//        char key[100];
+//        char value[100];
+//        transaction_get_display_key_value(key, value, 4);
+//
+//        EXPECT_EQ_STR(key, "msg_bytes/inputs/coins", "Wrong key");
+//        EXPECT_EQ_STR(value, "[{\"amount\":10,\"denom\":\"atom\"}]}]", "Wrong value");
+//    }
+
+    TEST(TransactionParserTest, ParseTransaction_Page_6) {
+
+        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 50;
+        setup_context(&parsed_json, screen_size, transaction);
+
+        char key[100];
+        char value[100];
+        transaction_get_display_key_value(key, value, 5);
+
+        EXPECT_EQ_STR(key, "msg_bytes/outputs/address", "Wrong key");
+        EXPECT_EQ_STR(value, "6F7574707574", "Wrong value");
+    }
+
+    // FIXME: Failing test
+//    TEST(TransactionParserTest, ParseTransaction_Page_7) {
+//
+//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
+//        parsed_json_t parsed_json;
+//        json_parse(&parsed_json, transaction);
+//
+//        constexpr int screen_size = 50;
+//        setup_context(&parsed_json, screen_size, transaction);
+//
+//        char key[100];
+//        char value[100];
+//        transaction_get_display_key_value(key, value, 6);
+//
+//        EXPECT_EQ_STR(key, "msg_bytes/outputs/coins", "Wrong key");
+//        EXPECT_EQ_STR(value, "[{\"amount\":10,\"denom\":\"atom\"}]}]", "Wrong value");
+//    }
+
+    TEST(TransactionParserTest, ParseTransaction_Page_8) {
+
+        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 50;
+        setup_context(&parsed_json, screen_size, transaction);
+
+        char key[100];
+        char value[100];
+        transaction_get_display_key_value(key, value, 7);
+
+        EXPECT_EQ_STR(key, "alt_bytes", "Wrong key");
+        EXPECT_EQ_STR(value, "null", "Wrong value");
     }
 
 
