@@ -102,107 +102,6 @@ func GetExampleTxs() []sdk.StdSignMsg {
 	}
 }
 
-func GetMessages() []bank.MsgSend {
-	return []bank.MsgSend{
-		// Simple address, 1 input, 1 output
-		bank.MsgSend{
-			Inputs: []bank.Input{
-				{
-					Address: crypto.Address([]byte("input")),
-					Coins:   sdk.Coins{{"atom", 10}},
-					//Sequence: 1,
-				},
-			},
-			Outputs: []bank.Output{
-				{
-					Address: crypto.Address([]byte("output")),
-					Coins:   sdk.Coins{{"atom", 10}},
-				},
-			},
-		},
-
-		// Real public key, 1 input, 1 output
-		bank.MsgSend{
-			Inputs: []bank.Input{
-				{
-					Address: crypto.Address(crypto.GenPrivKeySecp256k1().PubKey().Bytes()),
-					Coins:   sdk.Coins{{"atom", 1000000}},
-					//Sequence: 1,
-				},
-			},
-			Outputs: []bank.Output{
-				{
-					Address: crypto.Address(crypto.GenPrivKeySecp256k1().PubKey().Bytes()),
-					Coins:   sdk.Coins{{"atom", 1000000}},
-				},
-			},
-		},
-
-		// Simple address, 2 inputs, 2 outputs
-		bank.MsgSend{
-			Inputs: []bank.Input{
-				{
-					Address: crypto.Address([]byte("input")),
-					Coins:   sdk.Coins{{"atom", 10}},
-					//Sequence: 1,
-				},
-				{
-					Address: crypto.Address([]byte("anotherinput")),
-					Coins:   sdk.Coins{{"atom", 50}},
-					//Sequence: 1,
-				},
-			},
-			Outputs: []bank.Output{
-				{
-					Address: crypto.Address([]byte("output")),
-					Coins:   sdk.Coins{{"atom", 10}},
-				},
-				{
-					Address: crypto.Address([]byte("anotheroutput")),
-					Coins:   sdk.Coins{{"atom", 50}},
-				},
-			},
-		},
-
-		// Simple address, 2 inputs, 2 outputs, 2 coins
-		bank.MsgSend{
-			Inputs: []bank.Input{
-				{
-					Address: crypto.Address([]byte("input")),
-					Coins:   sdk.Coins{{"atom", 10}, {"bitcoin", 20}},
-					//Sequence: 1,
-				},
-				{
-					Address: crypto.Address([]byte("anotherinput")),
-					Coins:   sdk.Coins{{"atom", 50}, {"bitcoin", 60}, {"ethereum", 70}},
-					//Sequence: 1,
-				},
-			},
-			Outputs: []bank.Output{
-				{
-					Address: crypto.Address([]byte("output")),
-					Coins:   sdk.Coins{{"atom", 10}, {"bitcoin", 20}},
-				},
-				{
-					Address: crypto.Address([]byte("anotheroutput")),
-					Coins:   sdk.Coins{{"atom", 50}, {"bitcoin", 60}, {"ethereum", 70}},
-				},
-			},
-		},
-	}
-}
-
-func GetStdSignMessages() ([]sdk.StdSignMsg) {
-	return []sdk.StdSignMsg{
-
-		sdk.StdSignMsg{
-			ChainID:   "1",
-			Sequences: []int64{2},
-			Fee:       sdk.StdFee{Amount: sdk.Coins{sdk.Coin{Denom: "GBP", Amount: 100}, sdk.Coin{Denom: "GBP", Amount: 100}}, Gas: 2},
-			Msg:       GetMessages()[0],
-		}};
-}
-
 func testTendermintED25519(messages []bank.MsgSend, ledger *ledger_goclient.Ledger) {
 	privateKey := [64]byte{
 		0x75, 0x56, 0x0e, 0x4d, 0xde, 0xa0, 0x63, 0x05,
@@ -239,13 +138,15 @@ func testTendermintED25519(messages []bank.MsgSend, ledger *ledger_goclient.Ledg
 	}
 }
 
-func testED25519(messages []bank.MsgSend, ledger *ledger_goclient.Ledger) {
+func testED25519(messages []sdk.StdSignMsg, ledger *ledger_goclient.Ledger) {
 	//// Now the same with ed25519
 	for i := 0; i < len(messages); i++ {
 		fmt.Printf("\nMessage %d - Please Sign..\n", i)
-		message := messages[i].GetSignBytes()
+		message := messages[i].Bytes()
 
 		path := []uint32{44, 60, 0, 0, 0}
+
+		fmt.Printf("\nMessage: %s\n", message)
 
 		pubKey, err := ledger.GetPublicKeyED25519(path)
 		if err != nil {
@@ -282,50 +183,7 @@ func testED25519(messages []bank.MsgSend, ledger *ledger_goclient.Ledger) {
 	}
 }
 
-func testSECP256K1(messages []bank.MsgSend, ledger *ledger_goclient.Ledger) {
-	for i := 0; i < len(messages); i++ {
-		fmt.Printf("\nMessage %d - Please Sign..\n", i)
-		message := messages[i].GetSignBytes()
-		fmt.Printf("[GetPK] Message: %s", message)
-
-		path := []uint32{44, 60, 0, 0, 0}
-
-		signature, err := ledger.SignSECP256K1(path, message)
-		if err != nil {
-			fmt.Printf("[Sign] Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		pubKey, err := ledger.GetPublicKeySECP256K1(path)
-
-		if err != nil {
-			fmt.Printf("[GetPK] Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
-		if err != nil {
-			fmt.Printf("[ParsePK] Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
-		if err != nil {
-			fmt.Printf("[ParseSig] Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		verified := sig__.Verify(crypto.Sha256(message), pub__)
-		if !verified {
-			fmt.Printf("[VerifySig] Error verifying signature\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("Message %d - Valid signature\n", i)
-	}
-}
-
-func testSECP256K1_StdSignMsg(messages []sdk.StdSignMsg, ledger *ledger_goclient.Ledger) {
+func testSECP256K1(messages []sdk.StdSignMsg, ledger *ledger_goclient.Ledger) {
 	for i := 0; i < len(messages); i++ {
 		fmt.Printf("\nMessage %d - Please Sign..\n", i)
 		message := messages[i].Bytes()
@@ -333,9 +191,10 @@ func testSECP256K1_StdSignMsg(messages []sdk.StdSignMsg, ledger *ledger_goclient
 		path := []uint32{44, 60, 0, 0, 0}
 
 		// FIXME: Hard-coding message because StdSignMsg is still base64 encoded.
-		var msg = []byte("{\"sequences\":[1],\"alt_bytes\":null,\"chain_id\":\"test-chain-1\",\"fee_bytes\":{\"amount\":[{\"amount\":5,\"denom\":\"photon\"}],\"gas\":10000},\"msg_bytes\":{\"inputs\":[{\"address\":\"696E707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}],\"outputs\":[{\"address\":\"6F7574707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}]}}")
-		fmt.Printf("\nMessage: %s\n", msg)
-		signature, err := ledger.SignSECP256K1_StdSignMsg(path, msg)
+		//var msg = []byte("{\"sequences\":[1],\"alt_bytes\":null,\"chain_id\":\"test-chain-1\",\"fee_bytes\":{\"amount\":[{\"amount\":5,\"denom\":\"photon\"}],\"gas\":10000},\"msg_bytes\":{\"inputs\":[{\"address\":\"696E707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}],\"outputs\":[{\"address\":\"6F7574707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}]}}")
+		fmt.Printf("\nMessage: %s\n", message)
+
+		signature, err := ledger.SignSECP256K1(path, message)
 		if err != nil {
 			fmt.Printf("[Sign] Error: %s\n", err)
 			os.Exit(1)
@@ -380,16 +239,7 @@ func main() {
 	} else {
 		ledger.Logging = true
 
-		// WORKING: Sign standard signature message using ledger (SECP256K1)
-		testSECP256K1_StdSignMsg(GetStdSignMessages(), ledger)
-
-		// WORKING: Sign transaction message using ledger (SECP256K1)
-		//testSECP256K1(GetMessages(), ledger)
-
-		// WORKING: Sign transaction message using tendermint sdk (ED25519)
-		//testTendermintED25519(GetMessages(), ledger)
-
-		// FIXME, sign transaction message using ledger (ED25519)
-		//testED25519(GetMessages(), ledger)
+		testSECP256K1(GetExampleTxs(), ledger)
+		testED25519(GetExampleTxs(), ledger)
 	}
 }
