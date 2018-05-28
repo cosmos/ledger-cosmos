@@ -260,6 +260,28 @@ namespace {
         EXPECT_EQ(array_get_element_count(token_index, &parsed_json), 5) << "Wrong number of array elements";
     }
 
+    void setup_context(
+            parsed_json_t* parsed_json,
+            int screen_size,
+            const char* transaction)
+    {
+        static unsigned short view_scrolling_total_size = 0;
+        static unsigned short view_scrolling_step = 0;
+        static unsigned short key_scrolling_total_size = 0;
+        static unsigned short key_scrolling_step = 0;
+        parsing_context_t context;
+        context.view_scrolling_step = 0;
+        context.parsed_transaction = parsed_json;
+        context.max_chars_per_line = screen_size;
+        context.view_scrolling_total_size = &view_scrolling_total_size;
+        context.view_scrolling_step = &view_scrolling_step;
+        context.key_scrolling_total_size = &key_scrolling_total_size;
+        context.key_scrolling_total_size = &key_scrolling_step;
+        context.transaction = transaction;
+        set_parsing_context(context);
+        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+    }
+
     TEST(TransactionParserTest, DisplayItem_0) {
 
         auto transaction = R"({"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
@@ -271,21 +293,7 @@ namespace {
         char key[screen_size] = "";
         char value[screen_size] = "";
 
-        unsigned short view_scrolling_total_size = 0;
-        unsigned short view_scrolling_step = 0;
-        unsigned short key_scrolling_total_size = 0;
-        unsigned short key_scrolling_step = 0;
-        parsing_context_t context;
-        context.view_scrolling_step = 0;
-        context.parsed_transaction = &parsed_json;
-        context.max_chars_per_line = screen_size;
-        context.view_scrolling_total_size = &view_scrolling_total_size;
-        context.view_scrolling_step = &view_scrolling_step;
-        context.key_scrolling_total_size = &key_scrolling_total_size;
-        context.key_scrolling_total_size = &key_scrolling_step;
-        context.transaction = transaction;
-        set_parsing_context(context);
-        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        setup_context(&parsed_json, screen_size, transaction);
 
         display_arbitrary_item(
                 0,
@@ -308,21 +316,7 @@ namespace {
         char key[screen_size] = "";
         char value[screen_size] = "";
 
-        unsigned short view_scrolling_total_size = 0;
-        unsigned short view_scrolling_step = 0;
-        unsigned short key_scrolling_total_size = 0;
-        unsigned short key_scrolling_step = 0;
-        parsing_context_t context;
-        context.view_scrolling_step = 0;
-        context.parsed_transaction = &parsed_json;
-        context.max_chars_per_line = screen_size;
-        context.view_scrolling_total_size = &view_scrolling_total_size;
-        context.view_scrolling_step = &view_scrolling_step;
-        context.key_scrolling_total_size = &key_scrolling_total_size;
-        context.key_scrolling_total_size = &key_scrolling_step;
-        context.transaction = transaction;
-        set_parsing_context(context);
-        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        setup_context(&parsed_json, screen_size, transaction);
 
         display_arbitrary_item(
                 1,
@@ -345,22 +339,7 @@ namespace {
         char key[screen_size] = "";
         char value[screen_size] = "";
 
-        unsigned short view_scrolling_total_size = 0;
-        unsigned short view_scrolling_step = 0;
-        unsigned short key_scrolling_total_size = 0;
-        unsigned short key_scrolling_step = 0;
-        parsing_context_t context;
-        context.view_scrolling_step = 0;
-        context.parsed_transaction = &parsed_json;
-        context.max_chars_per_line = screen_size;
-        context.view_scrolling_total_size = &view_scrolling_total_size;
-        context.view_scrolling_step = &view_scrolling_step;
-        context.key_scrolling_total_size = &key_scrolling_total_size;
-        context.key_scrolling_total_size = &key_scrolling_step;
-        context.transaction = transaction;
-        set_parsing_context(context);
-        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
-
+        setup_context(&parsed_json, screen_size, transaction);
 
         display_arbitrary_item(
                 2,
@@ -384,23 +363,7 @@ namespace {
         char value[screen_size] = "";
         int requested_item_index = 3;
 
-        unsigned short view_scrolling_total_size = 0;
-        unsigned short view_scrolling_step = 0;
-        unsigned short key_scrolling_total_size = 0;
-        unsigned short key_scrolling_step = 0;
-
-        parsing_context_t context;
-        context.view_scrolling_step = 0;
-        context.parsed_transaction = &parsed_json;
-        context.max_chars_per_line = screen_size;
-        context.view_scrolling_total_size = &view_scrolling_total_size;
-        context.view_scrolling_step = &view_scrolling_step;
-        context.key_scrolling_total_size = &key_scrolling_total_size;
-        context.key_scrolling_total_size = &key_scrolling_step;
-        context.transaction = transaction;
-        set_parsing_context(context);
-        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
-
+        setup_context(&parsed_json, screen_size, transaction);
 
         int found_item_index = display_arbitrary_item(
                 requested_item_index,
@@ -423,22 +386,7 @@ namespace {
         constexpr int screen_size = 50;
         int requested_item_index = 3;
 
-        unsigned short view_scrolling_total_size = 0;
-        unsigned short view_scrolling_step = 0;
-        unsigned short key_scrolling_total_size = 0;
-        unsigned short key_scrolling_step = 0;
-
-        parsing_context_t context;
-        context.view_scrolling_step = 0;
-        context.parsed_transaction = &parsed_json;
-        context.max_chars_per_line = screen_size;
-        context.view_scrolling_total_size = &view_scrolling_total_size;
-        context.view_scrolling_step = &view_scrolling_step;
-        context.key_scrolling_total_size = &key_scrolling_total_size;
-        context.key_scrolling_total_size = &key_scrolling_step;
-        context.transaction = transaction;
-        set_parsing_context(context);
-        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        setup_context(&parsed_json, screen_size, transaction);
 
         int found_item_index = display_get_arbitrary_items_count(2);
         EXPECT_EQ(found_item_index, 4) << "Wrong number of displayable elements";
