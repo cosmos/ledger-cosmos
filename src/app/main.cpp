@@ -24,7 +24,7 @@ extern "C"
 int main()
 {
     parsed_json_t data;
-    ParseJson(&data, "Topic: \"Hello json world\"");
+    json_parse(&data, "Topic: \"Hello json world\"");
 
     std::cout << "Number of found tokens: " << data.NumberOfTokens << std::endl;
 
