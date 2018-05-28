@@ -18,6 +18,7 @@
 #include "transaction.h"
 #include "view.h"
 #include "apdu_codes.h"
+#include "json_parser.h"
 
 // TODO: We are currently limited by amount of SRAM (4K)
 // In order to parse longer messages we may have to consider moving
@@ -58,45 +59,26 @@ uint8_t *transaction_get_buffer()
 
 void transaction_parse()
 {
-    ParseJson(&parsed_transaction, transaction_buffer);
+    json_parse(&parsed_transaction, transaction_buffer);
     // FIXME: Verify is valid. Sorted / whitespaces, etc.
+
+    parsing_context_t context;
+    context.transaction = transaction_buffer;
+    context.view_scrolling_total_size = &view_scrolling_total_size;
+    context.view_scrolling_step = &view_scrolling_step;
+    context.key_scrolling_step = &key_scrolling_step;
+    context.key_scrolling_total_size = &key_scrolling_total_size;
+    context.max_chars_per_line = MAX_CHARS_PER_LINE;
+    context.parsed_transaction = &parsed_transaction;
+    view_scrolling_total_size = 10;
+    view_scrolling_step = 0;
+    key_scrolling_total_size = 10;
+    key_scrolling_step = 0;
+    set_parsing_context(context);
+    set_copy_delegate(&os_memmove);
 }
 
 parsed_json_t *transaction_get_parsed()
 {
     return &parsed_transaction;
-}
-
-int transaction_msg_get_key_value(
-        char* key,
-        char* value,
-        int index)
-{
-    return TransactionMsgGetInfo(
-            key,
-            value,
-            index,
-            &parsed_transaction,
-            &view_scrolling_total_size,
-            view_scrolling_step,
-            MAX_CHARS_PER_LINE,
-            transaction_buffer,
-            &os_memmove);
-}
-
-int signed_msg_get_key_value(
-        char* key,
-        char* value,
-        int index)
-{
-    return SignedMsgGetInfo(
-            key,
-            value,
-            index,
-            &parsed_transaction,
-            &view_scrolling_total_size,
-            view_scrolling_step,
-            MAX_CHARS_PER_LINE,
-            transaction_buffer,
-            &os_memmove);
 }

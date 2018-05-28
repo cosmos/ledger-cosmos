@@ -62,24 +62,43 @@ unsigned char io_event(unsigned char channel)
     case SEPROXYHAL_TAG_TICKER_EVENT:   //
         UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {
                 if (UX_ALLOWED) {
+                    int redisplay = 0;
                     if (view_scrolling_step_count) {
                         // prepare next screen
-                        if (view_scrolling_direction==0) {
-                            if (view_scrolling_step<(view_scrolling_step_count-1)) {
+                        if (view_scrolling_direction == 0) {
+                            if (view_scrolling_step < (view_scrolling_step_count - 1)) {
                                 view_scrolling_step++;
-                            }
-                            else {
+                            } else {
                                 view_scrolling_direction = 1;
                             }
-                        }
-                        else {
-                            if (view_scrolling_step>0) {
+                        } else {
+                            if (view_scrolling_step > 0) {
                                 view_scrolling_step--;
-                            }
-                            else {
+                            } else {
                                 view_scrolling_direction = 0;
                             }
                         }
+                        redisplay = 1;
+                    }
+                    if (key_scrolling_step_count) {
+                        // prepare next screen
+                        if (key_scrolling_direction == 0) {
+                            if (key_scrolling_step < (key_scrolling_step_count - 1)) {
+                                key_scrolling_step++;
+                            } else {
+                                key_scrolling_direction = 1;
+                            }
+                        } else {
+                            if (key_scrolling_step > 0) {
+                                key_scrolling_step--;
+                            } else {
+                                key_scrolling_direction = 0;
+                            }
+                        }
+                        redisplay = 1;
+                    }
+
+                    if (redisplay == 1) {
                         // redisplay screen
                         UX_REDISPLAY();
                     }
@@ -262,13 +281,12 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
 
                 transaction_parse();
-
-                view_add_update_transaction_info_event_handler(&transaction_msg_get_key_value);
-                view_display_transaction_menu(transaction_msg_get_key_value(NULL, NULL, -1));
+                view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
+                view_display_transaction_menu(transaction_get_display_pages());
 
                 *flags |= IO_ASYNCH_REPLY;
-            }
                 break;
+            }
 
             case INS_SIGN_ED25519: {
                 current_sigtype = ED25519;
@@ -276,8 +294,8 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
 
                 transaction_parse();
-                view_add_update_transaction_info_event_handler(&transaction_msg_get_key_value);
-                view_display_transaction_menu(transaction_msg_get_key_value(NULL, NULL, -1));
+                view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
+                view_display_transaction_menu(transaction_get_display_pages());
 
                 *flags |= IO_ASYNCH_REPLY;
             }
@@ -289,15 +307,12 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
 
                 transaction_parse();
-
-                view_add_update_transaction_info_event_handler(&signed_msg_get_key_value);
-                view_display_transaction_menu(SignedMsgGetNumberOfElements(
-                        transaction_get_parsed(),
-                        (const char*)transaction_get_buffer()));
+                view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
+                view_display_transaction_menu(transaction_get_display_pages());
 
                 *flags |= IO_ASYNCH_REPLY;
-            }
                 break;
+            }
 
             case INS_SIGN_ED25519_STDSIGNMSG: {
                 current_sigtype = ED25519;
@@ -305,11 +320,8 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
 
                 transaction_parse();
-
-                view_add_update_transaction_info_event_handler(&signed_msg_get_key_value);
-                view_display_transaction_menu(SignedMsgGetNumberOfElements(
-                        transaction_get_parsed(),
-                        (const char*)transaction_get_buffer()));
+                view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
+                view_display_transaction_menu(transaction_get_display_pages());
 
                 *flags |= IO_ASYNCH_REPLY;
             }

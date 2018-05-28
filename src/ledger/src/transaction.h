@@ -15,7 +15,7 @@
 *  limitations under the License.
 ********************************************************************************/
 #pragma once
-#include "JsonParser.h"
+#include "json_parser.h"
 #include "os.h"
 
 // Clears the transaction buffer
@@ -39,21 +39,3 @@ void transaction_parse();
 
 // Returns parsed representation of the transaction message
 parsed_json_t* transaction_get_parsed();
-
-// Updates key and value pair from the message in sdk.Msg format
-// Returns the same index if a node with given index was found
-// or the total number of available nodes if node with the given index was not found.
-// f.e. transaction_get_info(NULL, NULL, -1) returns the total number of nodes
-int transaction_msg_get_key_value(
-        char* key,
-        char* value,
-        int index);
-
-// Updates key and value pair from the message in sdk.StdSignMsg format
-// Returns the same index if a node with given index was found
-// or the total number of available nodes if node with the given index was not found.
-// f.e. transaction_get_info(NULL, NULL, -1) returns the total number of nodes
-int signed_msg_get_key_value(
-        char* key,
-        char* value,
-        int index);

@@ -22,7 +22,7 @@
 #define UI_CENTER11PX       BAGL_FONT_OPEN_SANS_REGULAR_11px | BAGL_FONT_ALIGNMENT_CENTER
 #define UI_CENTER11PX_BOLD  BAGL_FONT_OPEN_SANS_EXTRABOLD_11px | BAGL_FONT_ALIGNMENT_CENTER
 #define DEFAULT_FONT        BAGL_FONT_OPEN_SANS_LIGHT_16px | BAGL_FONT_ALIGNMENT_LEFT
-#define MAX_CHARS_PER_LINE 10
+#define MAX_CHARS_PER_LINE 20
 
 enum UI_STATE {
     UI_IDLE,
@@ -30,10 +30,16 @@ enum UI_STATE {
 };
 
 //------ Public data (TODO review)
-extern unsigned int view_scrolling_step;
-extern unsigned int view_scrolling_step_count;
-extern unsigned int view_scrolling_total_size;
-extern unsigned int view_scrolling_direction;
+extern unsigned short view_scrolling_step;
+extern unsigned short view_scrolling_step_count;
+extern unsigned short view_scrolling_total_size;
+extern unsigned char view_scrolling_direction;
+
+extern unsigned short key_scrolling_step;
+extern unsigned short key_scrolling_step_count;
+extern unsigned short key_scrolling_total_size;
+extern unsigned char key_scrolling_direction;
+
 extern enum UI_STATE view_uiState;
 
 //------ Delegates definitions

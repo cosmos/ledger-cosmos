@@ -30,12 +30,26 @@ enum UI_STATE view_uiState;
 
 void update_transaction_page_info();
 
-unsigned int view_scrolling_step = 0;
-unsigned int view_scrolling_step_count = 0;
-unsigned int view_scrolling_total_size = 0;
-unsigned int view_scrolling_direction = 0;
+// Current scrolling position of view msg
+unsigned short view_scrolling_step = 0;
+// Maximum number of characters to scroll view msg (view_scrolling_total_size - screen size)
+unsigned short view_scrolling_step_count = 0;
+// Total size of the view message
+unsigned short view_scrolling_total_size = 0;
+// Direction of the view msg scroll (0 - left to right, 1 - right to left)
+unsigned char view_scrolling_direction = 0;
 
-volatile char transactionDataName[32];
+// Current scrolling position of key msg
+unsigned short key_scrolling_step = 0;
+// Maximum number of characters to scroll key msg (view_scrolling_total_size - screen size)
+unsigned short key_scrolling_step_count = 0;
+// Total size of the key message
+unsigned short key_scrolling_total_size = 0;
+// Direction of the key msg scroll (0 - left to right, 1 - right to left)
+unsigned char key_scrolling_direction = 0;
+
+
+volatile char transactionDataKey[32];
 volatile char transactionDataValue[32];
 volatile char pageInfo[20];
 
@@ -82,8 +96,8 @@ static const bagl_element_t bagl_ui_transaction_info[] = {
     UI_Icon(0, 0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT),
     UI_Icon(0, 128-7, 0, 7, 7, BAGL_GLYPH_ICON_RIGHT),
     UI_LabelLine(1, 0, 8, 128, 11, 0xFFFFFF, 0x000000,(const char*)pageInfo),
-    UI_LabelLine(2, 0, 21, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataName),
-    UI_LabelLine(3, 0, 32, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataValue),
+    UI_LabelLine(2, 0, 19, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataKey),
+    UI_LabelLine(3, 0, 30, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataValue),
 };
 //------ View elements
 
@@ -124,6 +138,13 @@ const bagl_element_t* ui_transaction_info_prepro(const bagl_element_t *element) 
     if (element->component.userid == 0) {
         update_transaction_page_info();
 
+        if (key_scrolling_total_size > MAX_CHARS_PER_LINE) {
+            key_scrolling_step_count = key_scrolling_total_size - MAX_CHARS_PER_LINE;
+            UX_CALLBACK_SET_INTERVAL(500);
+        } else {
+            key_scrolling_step_count = 0;
+        }
+
         if (view_scrolling_total_size > MAX_CHARS_PER_LINE) {
             view_scrolling_step_count = view_scrolling_total_size - MAX_CHARS_PER_LINE;
             if (view_scrolling_step == 0 || view_scrolling_step == view_scrolling_step_count-1)   {
@@ -140,6 +161,14 @@ const bagl_element_t* ui_transaction_info_prepro(const bagl_element_t *element) 
     return element;
 }
 
+void reset_scrolling()
+{
+    view_scrolling_step = 0;
+    view_scrolling_direction = 0;
+    key_scrolling_step = 0;
+    key_scrolling_direction = 0;
+}
+
 static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
                                                     unsigned int button_mask_counter)
 {
@@ -151,8 +180,7 @@ static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
         case BUTTON_EVT_RELEASED | BUTTON_LEFT:
             if (transactionDetailsCurrentPage > 0) {
                 transactionDetailsCurrentPage--;
-                view_scrolling_step = 0;
-                view_scrolling_direction = 0;
+                reset_scrolling();
                 UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
             } else {
                 view_display_transaction_menu(0);
@@ -162,8 +190,7 @@ static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
         case BUTTON_EVT_RELEASED | BUTTON_RIGHT:
             if (transactionDetailsCurrentPage < transactionDetailsPageCount - 1) {
                 transactionDetailsCurrentPage++;
-                view_scrolling_step = 0;
-                view_scrolling_direction = 0;
+                reset_scrolling();
                 UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
             } else {
                 view_display_transaction_menu(0);
@@ -177,8 +204,7 @@ void start_transaction_info_display(unsigned int unused)
 {
     UNUSED(unused);
     transactionDetailsCurrentPage = 0;
-    view_scrolling_step = 0;
-    view_scrolling_direction = 0;
+    reset_scrolling();
     UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
 }
 
@@ -186,7 +212,7 @@ void update_transaction_page_info()
 {
     if (event_handler_update_transaction_info != NULL) {
         event_handler_update_transaction_info(
-                (char *) transactionDataName,
+                (char *) transactionDataKey,
                 (char *) transactionDataValue,
                 transactionDetailsCurrentPage);
 

@@ -47,8 +47,8 @@ file(GLOB_RECURSE JSMN_SRC
 ###############
 # jsmn as a C static lib
 add_library(jsmn STATIC ${JSMN_SRC})
-add_library(JsonParser STATIC ${LIB_SRC})
-target_link_libraries(JsonParser jsmn)
+add_library(json_parser STATIC ${LIB_SRC})
+target_link_libraries(json_parser jsmn)
 
 ###############
 
@@ -56,10 +56,11 @@ include(CTest)
 enable_testing()
 
 add_executable(tests_example
-        ${CMAKE_CURRENT_SOURCE_DIR}/tests/JsonParserTests.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/json_parser_tests.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/transaction_parser_tests.cpp
         )
 
-target_link_libraries(tests_example gtest_main jsmn JsonParser)
+target_link_libraries(tests_example gtest_main jsmn json_parser)
 add_test(gtest ${PROJECT_BINARY_DIR}/tests_example)
 
 ###############
@@ -69,4 +70,4 @@ add_executable(main_example
         ${APP_SRC}
         )
 
-target_link_libraries(main_example jsmn JsonParser)
+target_link_libraries(main_example jsmn json_parser)
