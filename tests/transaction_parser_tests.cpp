@@ -270,17 +270,22 @@ namespace {
         constexpr int screen_size = 50;
         char key[screen_size] = "";
         char value[screen_size] = "";
-        unsigned int view_scrolling_total_size = 0;
 
-        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        unsigned short view_scrolling_total_size = 0;
+        unsigned short view_scrolling_step = 0;
+        unsigned short key_scrolling_total_size = 0;
+        unsigned short key_scrolling_step = 0;
         parsing_context_t context;
         context.view_scrolling_step = 0;
         context.parsed_transaction = &parsed_json;
         context.max_chars_per_line = screen_size;
         context.view_scrolling_total_size = &view_scrolling_total_size;
+        context.view_scrolling_step = &view_scrolling_step;
+        context.key_scrolling_total_size = &key_scrolling_total_size;
+        context.key_scrolling_total_size = &key_scrolling_step;
         context.transaction = transaction;
-
         set_parsing_context(context);
+        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
 
         display_arbitrary_item(
                 0,
@@ -302,16 +307,22 @@ namespace {
         constexpr int screen_size = 50;
         char key[screen_size] = "";
         char value[screen_size] = "";
-        unsigned int view_scrolling_total_size = 0;
-        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+
+        unsigned short view_scrolling_total_size = 0;
+        unsigned short view_scrolling_step = 0;
+        unsigned short key_scrolling_total_size = 0;
+        unsigned short key_scrolling_step = 0;
         parsing_context_t context;
         context.view_scrolling_step = 0;
         context.parsed_transaction = &parsed_json;
         context.max_chars_per_line = screen_size;
         context.view_scrolling_total_size = &view_scrolling_total_size;
+        context.view_scrolling_step = &view_scrolling_step;
+        context.key_scrolling_total_size = &key_scrolling_total_size;
+        context.key_scrolling_total_size = &key_scrolling_step;
         context.transaction = transaction;
-
         set_parsing_context(context);
+        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
 
         display_arbitrary_item(
                 1,
@@ -333,17 +344,23 @@ namespace {
         constexpr int screen_size = 50;
         char key[screen_size] = "";
         char value[screen_size] = "";
-        unsigned int view_scrolling_total_size = 0;
 
-        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        unsigned short view_scrolling_total_size = 0;
+        unsigned short view_scrolling_step = 0;
+        unsigned short key_scrolling_total_size = 0;
+        unsigned short key_scrolling_step = 0;
         parsing_context_t context;
         context.view_scrolling_step = 0;
         context.parsed_transaction = &parsed_json;
         context.max_chars_per_line = screen_size;
         context.view_scrolling_total_size = &view_scrolling_total_size;
+        context.view_scrolling_step = &view_scrolling_step;
+        context.key_scrolling_total_size = &key_scrolling_total_size;
+        context.key_scrolling_total_size = &key_scrolling_step;
         context.transaction = transaction;
-
         set_parsing_context(context);
+        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+
 
         display_arbitrary_item(
                 2,
@@ -365,18 +382,25 @@ namespace {
         constexpr int screen_size = 50;
         char key[screen_size] = "";
         char value[screen_size] = "";
-        unsigned int view_scrolling_total_size = 0;
         int requested_item_index = 3;
 
-        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        unsigned short view_scrolling_total_size = 0;
+        unsigned short view_scrolling_step = 0;
+        unsigned short key_scrolling_total_size = 0;
+        unsigned short key_scrolling_step = 0;
+
         parsing_context_t context;
         context.view_scrolling_step = 0;
         context.parsed_transaction = &parsed_json;
         context.max_chars_per_line = screen_size;
         context.view_scrolling_total_size = &view_scrolling_total_size;
+        context.view_scrolling_step = &view_scrolling_step;
+        context.key_scrolling_total_size = &key_scrolling_total_size;
+        context.key_scrolling_total_size = &key_scrolling_step;
         context.transaction = transaction;
-
         set_parsing_context(context);
+        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+
 
         int found_item_index = display_arbitrary_item(
                 requested_item_index,
@@ -397,18 +421,24 @@ namespace {
         json_parse(&parsed_json, transaction);
 
         constexpr int screen_size = 50;
-        unsigned int view_scrolling_total_size = 0;
         int requested_item_index = 3;
 
-        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        unsigned short view_scrolling_total_size = 0;
+        unsigned short view_scrolling_step = 0;
+        unsigned short key_scrolling_total_size = 0;
+        unsigned short key_scrolling_step = 0;
+
         parsing_context_t context;
         context.view_scrolling_step = 0;
         context.parsed_transaction = &parsed_json;
         context.max_chars_per_line = screen_size;
         context.view_scrolling_total_size = &view_scrolling_total_size;
+        context.view_scrolling_step = &view_scrolling_step;
+        context.key_scrolling_total_size = &key_scrolling_total_size;
+        context.key_scrolling_total_size = &key_scrolling_step;
         context.transaction = transaction;
-
         set_parsing_context(context);
+        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
 
         int found_item_index = display_get_arbitrary_items_count(2);
         EXPECT_EQ(found_item_index, 4) << "Wrong number of displayable elements";

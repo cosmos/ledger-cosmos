@@ -348,7 +348,7 @@ int display_arbitrary_item_inner(
                     int value_index = object_get_nth_value(token_index, i, parsing_context.parsed_transaction);
 
                     if (item_index_to_display != -1) {
-                        char key_temp[10];
+                        char key_temp[20];
                         display_key(
                                 key_temp,
                                 key_index);
@@ -458,7 +458,6 @@ int transaction_get_display_key_value(
     switch (index) {
         case 0: {
             copy_fct(key, "chain_id", sizeof("chain_id"));
-            copy_fct(value, "siusiak", sizeof("siusiak"));
             int token_index = object_get_value(0, "chain_id", parsing_context.parsed_transaction, parsing_context.transaction);
             update(value, token_index);
             break;
@@ -479,22 +478,36 @@ int transaction_get_display_key_value(
             if (index - 3 < msg_bytes_pages) {
                 int token_index = object_get_value(0, "msg_bytes", parsing_context.parsed_transaction,
                                                    parsing_context.transaction);
-                copy_fct(key, "msg_bytes", sizeof("msg_bytes"));
-                key[sizeof("msg_bytes")] = '\0';
+                char full_key[50];
+                copy_fct(full_key, "msg_bytes", sizeof("msg_bytes"));
+                full_key[sizeof("msg_bytes")] = '\0';
+
                 display_arbitrary_item(index - 3,
-                                       key,
+                                       full_key,
                                        value,
                                        token_index);
+
+                *(parsing_context.key_scrolling_total_size) = strlen(full_key);
+                int size = *(parsing_context.key_scrolling_total_size) < parsing_context.max_chars_per_line ? *(parsing_context.key_scrolling_total_size) : parsing_context.max_chars_per_line;
+                copy_fct(key, full_key + *(parsing_context.key_scrolling_step), size);
+                key[size] = '\0';
             }
             else {
                 int token_index = object_get_value(0, "alt_bytes", parsing_context.parsed_transaction,
                                                    parsing_context.transaction);
-                copy_fct(key, "alt_bytes", sizeof("alt_bytes"));
-                key[sizeof("alt_bytes")] = '\0';
+                char full_key[50];
+                copy_fct(full_key, "alt_bytes", sizeof("alt_bytes"));
+                full_key[sizeof("alt_bytes")] = '\0';
+
                 display_arbitrary_item(index - 3 - msg_bytes_pages,
-                                       key,
+                                       full_key,
                                        value,
                                        token_index);
+
+                *(parsing_context.key_scrolling_total_size) = strlen(full_key);
+                int size = *(parsing_context.key_scrolling_total_size) < parsing_context.max_chars_per_line ? *(parsing_context.key_scrolling_total_size) : parsing_context.max_chars_per_line;
+                copy_fct(key, full_key + *(parsing_context.key_scrolling_step), size);
+                key[size] = '\0';
             }
             break;
         }

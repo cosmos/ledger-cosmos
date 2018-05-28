@@ -62,24 +62,43 @@ unsigned char io_event(unsigned char channel)
     case SEPROXYHAL_TAG_TICKER_EVENT:   //
         UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {
                 if (UX_ALLOWED) {
+                    int redisplay = 0;
                     if (view_scrolling_step_count) {
                         // prepare next screen
-                        if (view_scrolling_direction==0) {
-                            if (view_scrolling_step<(view_scrolling_step_count-1)) {
+                        if (view_scrolling_direction == 0) {
+                            if (view_scrolling_step < (view_scrolling_step_count - 1)) {
                                 view_scrolling_step++;
-                            }
-                            else {
+                            } else {
                                 view_scrolling_direction = 1;
                             }
-                        }
-                        else {
-                            if (view_scrolling_step>0) {
+                        } else {
+                            if (view_scrolling_step > 0) {
                                 view_scrolling_step--;
-                            }
-                            else {
+                            } else {
                                 view_scrolling_direction = 0;
                             }
                         }
+                        redisplay = 1;
+                    }
+                    if (key_scrolling_step_count) {
+                        // prepare next screen
+                        if (key_scrolling_direction == 0) {
+                            if (key_scrolling_step < (key_scrolling_step_count - 1)) {
+                                key_scrolling_step++;
+                            } else {
+                                key_scrolling_direction = 1;
+                            }
+                        } else {
+                            if (key_scrolling_step > 0) {
+                                key_scrolling_step--;
+                            } else {
+                                key_scrolling_direction = 0;
+                            }
+                        }
+                        redisplay = 1;
+                    }
+
+                    if (redisplay == 1) {
                         // redisplay screen
                         UX_REDISPLAY();
                     }
