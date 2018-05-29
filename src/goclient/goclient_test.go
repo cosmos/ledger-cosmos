@@ -60,7 +60,7 @@ func Test_LedgerVersion(t *testing.T) {
 	assert.Equal(t, uint8(0xFF), version.AppId, "TESTING MODE NOT ENABLED")
 	assert.Equal(t, uint8(0x0), version.Major, "Wrong Major version")
 	assert.Equal(t, uint8(0x0), version.Minor, "Wrong Minor version")
-	assert.Equal(t, uint8(0x8), version.Patch, "Wrong Patch version")
+	assert.Equal(t, uint8(0x9), version.Patch, "Wrong Patch version")
 }
 
 func Test_LedgerSHA256(t *testing.T) {
