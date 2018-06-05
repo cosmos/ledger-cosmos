@@ -36,7 +36,7 @@ APPVERSION_P=9
 APP_LOAD_PARAMS = --appFlags 0x00 $(COMMON_LOAD_PARAMS)
 
 #prepare hsm generation
-ICONNAME=$(CURDIR)/icon_app.gif
+ICONNAME=$(CURDIR)/glyphs/icon_app.gif
 
 ############
 # Platform
