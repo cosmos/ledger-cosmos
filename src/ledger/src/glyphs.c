@@ -1,4 +1,20 @@
 #include "glyphs.h"
+unsigned int const C_icon_app_colors[]
+ = {
+  0x00000000, 
+  0x00ffffff, 
+};
+	
+unsigned char const C_icon_app_bitmap[] = {
+0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x3f, 0xe4, 0x1f, 0xe0, 0x8f, 0xf1, 0xc7, 0xe0, 0x67, 0xe4, 
+  0x27, 0xe6, 0x07, 0xe3, 0x8f, 0xf1, 0x07, 0xf8, 0x27, 0xfc, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+  };
+
+#ifdef OS_IO_SEPROXYHAL
+#include "os_io_seproxyhal.h"
+const bagl_icon_details_t C_icon_app = { GLYPH_icon_app_WIDTH, GLYPH_icon_app_HEIGHT, 1, C_icon_app_colors, C_icon_app_bitmap };
+#endif // OS_IO_SEPROXYHAL
+#include "glyphs.h"
 unsigned int const C_icon_back_colors[]
  = {
   0x00000000, 
@@ -27,19 +43,4 @@ unsigned char const C_icon_dashboard_bitmap[] = {
 #ifdef OS_IO_SEPROXYHAL
 #include "os_io_seproxyhal.h"
 const bagl_icon_details_t C_icon_dashboard = { GLYPH_icon_dashboard_WIDTH, GLYPH_icon_dashboard_HEIGHT, 1, C_icon_dashboard_colors, C_icon_dashboard_bitmap };
-#endif // OS_IO_SEPROXYHAL
-#include "glyphs.h"
-unsigned int const C_icon_tendermint_colors[]
- = {
-  0x00000000, 
-  0x00ffffff, 
-};
-	
-unsigned char const C_icon_tendermint_bitmap[] = {
-0xe0, 0x01, 0xfe, 0x01, 0x80, 0x18, 0x60, 0x3e, 0xdf, 0xcf, 0xff, 0xf3, 0xff, 0xfc, 0x3f, 0xbf, 
-  0xcf, 0xe7, 0xf3, 0xf1, 0x3c, 0x38, 0x07, 0x78, 0x00, };
-
-#ifdef OS_IO_SEPROXYHAL
-#include "os_io_seproxyhal.h"
-const bagl_icon_details_t C_icon_tendermint = { GLYPH_icon_tendermint_WIDTH, GLYPH_icon_tendermint_HEIGHT, 1, C_icon_tendermint_colors, C_icon_tendermint_bitmap };
 #endif // OS_IO_SEPROXYHAL

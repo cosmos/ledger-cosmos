@@ -72,7 +72,11 @@ const ux_menu_entry_t menu_transaction_info[] = {
 };
 
 const ux_menu_entry_t menu_main[] = {
-    {NULL, NULL, 0, &C_icon_tendermint, "Tendermint", "Cosmos Demo", 33, 12},
+#ifdef TESTING_ENABLED
+    {NULL, NULL, 0, &C_icon_app, "Tendermint", "Cosmos TEST!", 33, 12},
+#else
+    {NULL, NULL, 0, &C_icon_app, "Tendermint", "Cosmos", 33, 12},
+#endif
     {menu_about, NULL, 0, NULL, "About", NULL, 0, 0},
     {NULL, os_sched_exit, 0, &C_icon_dashboard, "Quit app", NULL, 50, 29},
     UX_MENU_END
