@@ -30,17 +30,21 @@
 
 #define INS_GET_VERSION                 0
 #define INS_PUBLIC_KEY_SECP256K1        1
-#define INS_PUBLIC_KEY_ED25519          2
 #define INS_SIGN_SECP256K1              3
-#define INS_SIGN_ED25519                4
-#define INS_SIGN_SECP256K1_STDSIGNMSG   5
-#define INS_SIGN_ED25519_STDSIGNMSG     6
+
+#ifdef FEATURE_ED25519
+    #define INS_PUBLIC_KEY_ED25519          2
+    #define INS_SIGN_ED25519                4
+#endif
 
 #define INS_HASH_TEST                   100
 #define INS_PUBLIC_KEY_SECP256K1_TEST   101
-#define INS_PUBLIC_KEY_ED25519_TEST     102
 #define INS_SIGN_SECP256K1_TEST         103
-#define INS_SIGN_ED25519_TEST           104
+
+#ifdef FEATURE_ED25519
+    #define INS_PUBLIC_KEY_ED25519_TEST     102
+    #define INS_SIGN_ED25519_TEST           104
+#endif
 
 void app_init();
 void app_main();

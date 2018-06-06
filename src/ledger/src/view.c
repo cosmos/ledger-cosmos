@@ -231,6 +231,7 @@ void update_transaction_page_info()
                     transactionDetailsCurrentPage + 1,
                     transactionDetailsPageCount);
             break;
+#ifdef FEATURE_ED25519
         case ED25519:
             snprintf(
                     (char *) pageInfo,
@@ -239,6 +240,7 @@ void update_transaction_page_info()
                     transactionDetailsCurrentPage + 1,
                     transactionDetailsPageCount);
             break;
+#endif
         }
 
     }

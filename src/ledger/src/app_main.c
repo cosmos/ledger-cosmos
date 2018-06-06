@@ -250,6 +250,20 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                 THROW(APDU_CODE_OK);
             }
 
+            case INS_SIGN_SECP256K1: {
+                current_sigtype = SECP256K1;
+                if (!process_chunk(tx, rx, true))
+                    THROW(APDU_CODE_OK);
+
+                transaction_parse();
+                view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
+                view_display_transaction_menu(transaction_get_display_pages());
+
+                *flags |= IO_ASYNCH_REPLY;
+                break;
+            }
+
+#ifdef FEATURE_ED25519
             case INS_PUBLIC_KEY_ED25519: {
                 if (!extractBip32(&bip32_depth, bip32_path, rx, 2)) {
                     THROW(APDU_CODE_DATA_INVALID);
@@ -275,19 +289,6 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                 THROW(APDU_CODE_OK);
             }
 
-            case INS_SIGN_SECP256K1: {
-                current_sigtype = SECP256K1;
-                if (!process_chunk(tx, rx, true))
-                    THROW(APDU_CODE_OK);
-
-                transaction_parse();
-                view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
-                view_display_transaction_menu(transaction_get_display_pages());
-
-                *flags |= IO_ASYNCH_REPLY;
-                break;
-            }
-
             case INS_SIGN_ED25519: {
                 current_sigtype = ED25519;
                 if (!process_chunk(tx, rx, true))
@@ -300,32 +301,7 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                 *flags |= IO_ASYNCH_REPLY;
             }
                 break;
-
-            case INS_SIGN_SECP256K1_STDSIGNMSG: {
-                current_sigtype = SECP256K1;
-                if (!process_chunk(tx, rx, true))
-                    THROW(APDU_CODE_OK);
-
-                transaction_parse();
-                view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
-                view_display_transaction_menu(transaction_get_display_pages());
-
-                *flags |= IO_ASYNCH_REPLY;
-                break;
-            }
-
-            case INS_SIGN_ED25519_STDSIGNMSG: {
-                current_sigtype = ED25519;
-                if (!process_chunk(tx, rx, true))
-                    THROW(APDU_CODE_OK);
-
-                transaction_parse();
-                view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
-                view_display_transaction_menu(transaction_get_display_pages());
-
-                *flags |= IO_ASYNCH_REPLY;
-            }
-                break;
+#endif
 
 #ifdef TESTING_ENABLED
                 case INS_HASH_TEST: {
@@ -382,6 +358,7 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                 }
                 break;
 
+#ifdef FEATURE_ED25519
                 case INS_PUBLIC_KEY_ED25519_TEST: {
                     // Generate key
                     cx_ecfp_public_key_t publicKey;
@@ -421,6 +398,7 @@ void handleApdu(volatile uint32_t* flags, volatile uint32_t* tx, uint32_t rx)
                     THROW(APDU_CODE_OK);
                 }
                 break;
+#endif
 #endif
 
             default:THROW(APDU_CODE_INS_NOT_SUPPORTED);
@@ -485,6 +463,7 @@ void sign_transaction()
                 &length,
                 &privateKey);
         break;
+#ifdef FEATURE_ED25519
     case ED25519:
         os_perso_derive_node_bip32(
                 CX_CURVE_Ed25519,
@@ -502,8 +481,8 @@ void sign_transaction()
                 &length,
                 &privateKey);
         break;
+#endif
     }
-
     if (result == 1) {
         set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
         io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
