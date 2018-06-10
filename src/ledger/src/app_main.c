@@ -46,20 +46,28 @@ unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 unsigned char io_event(unsigned char channel)
 {
     switch (G_io_seproxyhal_spi_buffer[0]) {
-    case SEPROXYHAL_TAG_FINGER_EVENT: //
-        UX_FINGER_EVENT(G_io_seproxyhal_spi_buffer);
-        break;
+        case SEPROXYHAL_TAG_FINGER_EVENT: //
+            UX_FINGER_EVENT(G_io_seproxyhal_spi_buffer);
+            break;
 
-    case SEPROXYHAL_TAG_BUTTON_PUSH_EVENT: // for Nano S
-        UX_BUTTON_PUSH_EVENT(G_io_seproxyhal_spi_buffer);
-        break;
+        case SEPROXYHAL_TAG_BUTTON_PUSH_EVENT: // for Nano S
+            UX_BUTTON_PUSH_EVENT(G_io_seproxyhal_spi_buffer);
+            break;
 
-    case SEPROXYHAL_TAG_DISPLAY_PROCESSED_EVENT:
-        if (!UX_DISPLAYED())
-            UX_DISPLAYED_EVENT();
-        break;
+        case SEPROXYHAL_TAG_DISPLAY_PROCESSED_EVENT:
+            if (!UX_DISPLAYED())
+                UX_DISPLAYED_EVENT();
+            break;
 
-    case SEPROXYHAL_TAG_TICKER_EVENT:   //
+        case SEPROXYHAL_TAG_TICKER_EVENT: { //
+            UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {
+                    if (UX_ALLOWED) {
+                        UX_REDISPLAY();
+                    }
+            });
+            break;
+        }
+
         UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {
                 if (UX_ALLOWED) {
                     int redisplay = 0;
@@ -119,25 +127,26 @@ unsigned char io_event(unsigned char channel)
 unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len)
 {
     switch (channel & ~(IO_FLAGS)) {
-    case CHANNEL_KEYBOARD:break;
+        case CHANNEL_KEYBOARD:
+            break;
 
-        // multiplexed io exchange over a SPI channel and TLV encapsulated protocol
-    case CHANNEL_SPI:
-        if (tx_len) {
-            io_seproxyhal_spi_send(G_io_apdu_buffer, tx_len);
+            // multiplexed io exchange over a SPI channel and TLV encapsulated protocol
+        case CHANNEL_SPI:
+            if (tx_len) {
+                io_seproxyhal_spi_send(G_io_apdu_buffer, tx_len);
 
-            if (channel & IO_RESET_AFTER_REPLIED) {
-                reset();
+                if (channel & IO_RESET_AFTER_REPLIED) {
+                    reset();
+                }
+                return 0; // nothing received from the master so far (it's a tx
+                // transaction)
+            } else {
+                return io_seproxyhal_spi_recv(G_io_apdu_buffer,
+                                              sizeof(G_io_apdu_buffer), 0);
             }
-            return 0; // nothing received from the master so far (it's a tx
-            // transaction)
-        }
-        else {
-            return io_seproxyhal_spi_recv(G_io_apdu_buffer,
-                    sizeof(G_io_apdu_buffer), 0);
-        }
 
-    default:THROW(INVALID_PARAMETER);
+        default:
+            THROW(INVALID_PARAMETER);
     }
     return 0;
 }

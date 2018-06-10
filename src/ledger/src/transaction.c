@@ -23,7 +23,7 @@
 // TODO: We are currently limited by amount of SRAM (4K)
 // In order to parse longer messages we may have to consider moving
 // this buffer to FLASH
-#define TRANSACTION_JSON_BUFFER_SIZE 650
+#define TRANSACTION_JSON_BUFFER_SIZE 512
 
 parsed_json_t parsed_transaction;
 char transaction_buffer[TRANSACTION_JSON_BUFFER_SIZE];
@@ -64,16 +64,18 @@ void transaction_parse()
 
     parsing_context_t context;
     context.transaction = transaction_buffer;
-    context.view_scrolling_total_size = &view_scrolling_total_size;
-    context.view_scrolling_step = &view_scrolling_step;
-    context.key_scrolling_step = &key_scrolling_step;
-    context.key_scrolling_total_size = &key_scrolling_total_size;
-    context.max_chars_per_line = MAX_CHARS_PER_LINE;
+    //context.view_scrolling_total_size = &view_scrolling_total_size;
+    //context.view_scrolling_step = &view_scrolling_step;
+    //context.key_scrolling_step = &key_scrolling_step;
+    //context.key_scrolling_total_size = &key_scrolling_total_size;
+    context.max_chars_per_key_line = MAX_CHARS_PER_KEY_LINE;
+    context.max_chars_per_value_line = MAX_CHARS_PER_VALUE_LINE;
     context.parsed_transaction = &parsed_transaction;
-    view_scrolling_total_size = 10;
-    view_scrolling_step = 0;
-    key_scrolling_total_size = 10;
-    key_scrolling_step = 0;
+
+    //view_scrolling_total_size = 10;
+    //view_scrolling_step = 0;
+    //key_scrolling_total_size = 10;
+    //key_scrolling_step = 0;
     set_parsing_context(context);
     set_copy_delegate(&os_memmove);
 }
