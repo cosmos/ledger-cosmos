@@ -141,7 +141,7 @@ const bagl_element_t* ui_transaction_info_prepro(const bagl_element_t *element) 
     switch (element->component.userid) {
         case 0x01:  UX_CALLBACK_SET_INTERVAL(2000); break;
         case 0x02:  UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7))); break;
-        //case 0x03:  UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7))); break;
+        case 0x03:  UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7))); break;
     }
     return element;
 }
