@@ -50,7 +50,7 @@ void display_transaction_page();
 //unsigned char key_scrolling_direction = 0;
 
 volatile char transactionDataKey[MAX_CHARS_PER_KEY_LINE];
-volatile char transactionDataValue[MAX_CHARS_PER_VALUE_LINE]; // dummy placeholder
+volatile char transactionDataValue[MAX_CHARS_PER_VALUE_LINE];
 volatile char pageInfo[20];
 
 int transactionDetailsCurrentPage;
@@ -97,11 +97,11 @@ static const bagl_element_t bagl_ui_sign_transaction[] = {
 
 static const bagl_element_t bagl_ui_transaction_info[] = {
     UI_FillRectangle(0, 0, 0, 128, 32, 0x000000, 0xFFFFFF),
-    //UI_Icon(0, 0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT),
-    //UI_Icon(0, 128-7, 0, 7, 7, BAGL_GLYPH_ICON_RIGHT),
-    UI_LabelLine(2, 0, 8, 128, 11, 0xFFFFFF, 0x000000,(const char*)pageInfo),
+    UI_Icon(0, 0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT),
+    UI_Icon(0, 128-7, 0, 7, 7, BAGL_GLYPH_ICON_RIGHT),
+    UI_LabelLine(1, 0, 8, 128, 11, 0xFFFFFF, 0x000000,(const char*)pageInfo),
     UI_LabelLine(2, 0, 19, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataKey),
-    UI_LabelLine(2, 0, 30, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataValue),
+    UI_LabelLine(3, 0, 30, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataValue),
 };
 //------ View elements
 
@@ -126,30 +126,6 @@ void view_add_sign_transaction_event_handler(delegate_sign_transaction delegate)
 }
 // ------ Event handlers
 
-//char long_text[100];
-//
-//static const bagl_element_t bagl_ui_somedata[] = {
-//    UI_FillRectangle(0, 0, 0, 128, 32, 0x000000, 0xFFFFFF),
-//    UI_LabelLine(0x02, 0, 11, 128, 11, 0xffffff, 0x000000, "Fixed"),
-//    UI_LabelLine(0x02, 0, 25, 128, 11, 0xffffff, 0x000000, long_text),
-//};
-
-
-const bagl_element_t* bagl_ui_somedata_prepro(const bagl_element_t* element) {
-    switch (element->component.userid) {
-        case 0x01:
-            UX_CALLBACK_SET_INTERVAL(2000);
-            break;
-        case 0x02: {
-            UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7)));
-
-            break;
-        }
-    }
-    return element;
-}
-
-
 static unsigned int bagl_ui_sign_transaction_button(unsigned int button_mask,
                                                     unsigned int button_mask_counter)
 {
@@ -163,22 +139,12 @@ static unsigned int bagl_ui_sign_transaction_button(unsigned int button_mask,
 const bagl_element_t* ui_transaction_info_prepro(const bagl_element_t *element) {
 
     switch (element->component.userid) {
-        //case 0x00:  update_transaction_page_info(); break;
         case 0x01:  UX_CALLBACK_SET_INTERVAL(2000); break;
         case 0x02:  UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7))); break;
+        //case 0x03:  UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7))); break;
     }
     return element;
 }
-
-//
-//void reset_scrolling()
-//{
-//    view_scrolling_step = 0;
-//    view_scrolling_direction = 0;
-//    key_scrolling_step = 0;
-//    key_scrolling_direction = 0;
-//}
-
 
 static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
                                                     unsigned int button_mask_counter)
@@ -191,9 +157,7 @@ static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
         case BUTTON_EVT_RELEASED | BUTTON_LEFT:
             if (transactionDetailsCurrentPage > 0) {
                 transactionDetailsCurrentPage--;
-                //reset_scrolling();
                 display_transaction_page();
-                //UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
             } else {
                 view_display_transaction_menu(0);
             }
@@ -203,8 +167,6 @@ static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
             if (transactionDetailsCurrentPage < transactionDetailsPageCount - 1) {
                 transactionDetailsCurrentPage++;
                 display_transaction_page();
-                //reset_scrolling();
-                //UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
             } else {
                 view_display_transaction_menu(0);
             }
@@ -212,19 +174,6 @@ static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
     }
     return 0;
 }
-//
-//static unsigned int bagl_ui_somedata_button(
-//    unsigned int button_mask,
-//    unsigned int button_mask_counter) {
-//    switch (button_mask) {
-//        case BUTTON_EVT_RELEASED | BUTTON_LEFT:
-//        case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT: {
-//            os_sched_exit(0);
-//        }
-//            break;
-//    }
-//    return 0;
-//}
 
 void display_transaction_page()
 {
@@ -235,12 +184,7 @@ void display_transaction_page()
 
 void start_transaction_info_display(unsigned int unused)
 {
-    //UNUSED(unused);
     transactionDetailsCurrentPage = 0;
-    //reset_scrolling();
-    //UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
-    //strcpy(long_text, "Key generation is very long");
-    //UX_DISPLAY(bagl_ui_somedata, bagl_ui_somedata_prepro);
     display_transaction_page();
 }
 
@@ -248,45 +192,10 @@ void update_transaction_page_info()
 {
     if (event_handler_update_transaction_info != NULL) {
 
-        strcpy((char*)transactionDataValue, "EMPTY");
-        strcpy((char*)transactionDataValue2, "EMPTYPACEK");
-        strcpy((char*)transactionDataKey, "DUMMY");
-
-//        int l = sizeof(bagl_ui_transaction_info)/sizeof(bagl_element_t);
-//        if (l < 4) {
-//            strcpy((char*)transactionDataValue, "Less than 4");
-//            return;
-//        }
-//        if (bagl_ui_transaction_info[3].component.userid != 2) {
-//            strcpy((char*)transactionDataValue, "userid not 2");
-//            return;
-//        }
-//        if (bagl_ui_transaction_info[3].text == NULL) {
-//            strcpy((char*)transactionDataValue, "NULL text");
-//            return;
-//        }
-//        if (&(bagl_ui_transaction_info[3].text) == NULL) {
-//            strcpy((char*)transactionDataValue, "baba");
-//            return;
-//        }
-//
-//        char** ptrToValue = (char**)&(bagl_ui_transaction_info[3].text);
-//
-//        if (*ptrToValue != transactionDataValue) {
-//            strcpy((char*)transactionDataValue, "wrong ptr!");
-//            return;
-//        }
-//        if (*ptrToValue == NULL) {
-//            strcpy((char*)transactionDataValue, "ptrToValue == NULL");
-//            return;
-//        }
-        //strcpy(*ptrToValue, "WORK");
-
         if (event_handler_update_transaction_info != NULL) {
             event_handler_update_transaction_info(
                     (char *) transactionDataKey,
-                    //(char**)transactionDataValue,
-                    ptrToValue,
+                    (char *) transactionDataValue,
                     transactionDetailsCurrentPage);
         }
 

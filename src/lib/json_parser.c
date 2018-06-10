@@ -238,28 +238,21 @@ int object_get_value(
 // Transaction parsing helper functions
 //--------------------------------------
 int display_value(
-        char** value,
+        char* value,
         int token_index,
         int* current_item_index,
         int item_index_to_display) {
 
     if (*current_item_index == item_index_to_display) {
 
-        //int length = parsing_context.parsed_transaction->Tokens[token_index].end - parsing_context.parsed_transaction->Tokens[token_index].start;
-        //if (length >= parsing_context.max_chars_per_value_line) {
-            // FIXME: bounds checking!
-        //}
+        int length = parsing_context.parsed_transaction->Tokens[token_index].end - parsing_context.parsed_transaction->Tokens[token_index].start;
+        if (length >= parsing_context.max_chars_per_value_line) {
+            length = parsing_context.max_chars_per_value_line - 1;
+        }
+
         char* start = (char*)(parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start);
-        char* end = (char*)(parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].end);
-        //copy_fct(value, address_ptr, length);
-
-        *value = start;
-        *end = '\0';
-
-        //char* address = parsing_context.transaction;
-        //*(address + parsing_context.parsed_transaction->Tokens[token_index].end) = '\0';
-        //value[length] = '\0';
-
+        copy_fct(value, start, length);
+        value[length] = '\0';
         return item_index_to_display;
     }
     *current_item_index = *current_item_index + 1;
@@ -307,7 +300,7 @@ void remove_last(char* key)
 int display_arbitrary_item_inner(
         int item_index_to_display, //input
         char* key, // output
-        char** value, // output
+        char* value, // output
         int token_index, // input
         int* current_item_index, // input
         int level)
@@ -376,9 +369,7 @@ int display_arbitrary_item_inner(
                         if (found == item_index_to_display) {
                             return item_index_to_display;
                         } else {
-                            if (item_index_to_display != -1) {
-                                remove_last(key);
-                            }
+                            remove_last(key);
                         }
                     }
                 }
@@ -421,7 +412,7 @@ int display_get_arbitrary_items_count(
     display_arbitrary_item_inner(
             -1,
             dummy,
-            (char**)&dummy,
+            dummy,
             token_index,
             &number_of_items,
             0);
@@ -432,7 +423,7 @@ int display_get_arbitrary_items_count(
 int display_arbitrary_item(
         int item_index_to_display, //input
         char* key, // output
-        char** value, // output
+        char* value, // output
         int token_index)
 {
     int current_item_index = 0;
@@ -445,43 +436,23 @@ int display_arbitrary_item(
             0);
 }
 
-//static char sampleText[100] = "Hello everybody here is a very very long text.";
-
 void update(
-        char** msg,// output
+        char* msg,// output
         int token_index) // input
 {
-//    int length = parsing_context.parsed_transaction->Tokens[token_index].end - parsing_context.parsed_transaction->Tokens[token_index].start;
-//    copy_fct(
-//            *msg,
-//            parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start,
-//            length);
-//    (*msg)[length] = '\0';
-
-
-
-//    if (length > 80) {
-//        strcpy(*msg, "ENIU");
-//    }
-//    else {
-//        strcpy(*msg, "ANTAK");
-//    }
-
-//    // FIXME: bounds checking!
-
-
-    //char* start = (char *) sampleText;//parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start;
-    //char* end = (char *) parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].end;
-
-    //if (start != NULL && msg != NULL && end != NULL && *msg != NULL) {
-        //*msg = start;
-        //*end = '\0';
-    //}
+    // FIXME: bounds checking!
+    int length = parsing_context.parsed_transaction->Tokens[token_index].end -
+                 parsing_context.parsed_transaction->Tokens[token_index].start;
+    copy_fct(
+            msg,
+            parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start,
+            length);
+    msg[length] = '\0';
 }
 
 int transaction_get_display_key_value(
         char* key, // output
-        char** value, // output
+        char* value, // output
         int index) // input
 {
     switch (index) {
@@ -518,7 +489,6 @@ int transaction_get_display_key_value(
                                        token_index);
 
                 int length = strlen(full_key);
-                // FIXME: bounds checking
                 copy_fct(key, full_key, length);
                 key[length] = '\0';
             }
@@ -535,8 +505,6 @@ int transaction_get_display_key_value(
                                        token_index);
 
                 int length = strlen(full_key);
-                //int size = *(parsing_context.key_scrolling_total_size) < parsing_context.max_chars_per_line ? *(parsing_context.key_scrolling_total_size) : parsing_context.max_chars_per_line;
-                // FIXME: bounds checking!
                 copy_fct(key, full_key, length);
                 key[length] = '\0';
             }

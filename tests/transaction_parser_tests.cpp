@@ -287,13 +287,9 @@ namespace {
         static unsigned short key_scrolling_total_size = 0;
         static unsigned short key_scrolling_step = 0;
         parsing_context_t context;
-        context.view_scrolling_step = 0;
         context.parsed_transaction = parsed_json;
-        context.max_chars_per_line = screen_size;
-        context.view_scrolling_total_size = &view_scrolling_total_size;
-        context.view_scrolling_step = &view_scrolling_step;
-        context.key_scrolling_total_size = &key_scrolling_total_size;
-        context.key_scrolling_step = &key_scrolling_step;
+        context.max_chars_per_key_line = screen_size;
+        context.max_chars_per_value_line = screen_size;
         context.transaction = transaction;
         set_parsing_context(context);
         set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});

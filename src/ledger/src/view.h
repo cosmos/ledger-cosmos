@@ -44,7 +44,7 @@ extern unsigned char key_scrolling_direction;
 extern enum UI_STATE view_uiState;
 
 //------ Delegates definitions
-typedef int (*delegate_update_transaction_info)(char*,char**,int);
+typedef int (*delegate_update_transaction_info)(char*,char*,int);
 typedef void (*delegate_reject_transaction)();
 typedef void (*delegate_sign_transaction)();
 
