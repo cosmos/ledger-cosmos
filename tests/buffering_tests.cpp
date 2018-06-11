@@ -98,8 +98,7 @@ namespace {
         EXPECT_TRUE(buffering_get_ram_buffer()->in_use) << "Writing small buffer should only write to RAM";
         EXPECT_FALSE(buffering_get_flash_buffer()->in_use) << "Writing big buffer should write data to FLASH";
 
-        // And again, this time ram is not big enough to hold the data
-        // and data will be copied to flash
+        // Here we write another chunk which should not top over the ram buffer
         buffering_append(small, sizeof(small));
         EXPECT_TRUE(buffering_get_ram_buffer()->in_use) << "Writing small buffer should only write to RAM";
         EXPECT_FALSE(buffering_get_flash_buffer()->in_use) << "Writing big buffer should write data to FLASH";
@@ -132,8 +131,8 @@ namespace {
         EXPECT_TRUE(buffering_get_ram_buffer()->in_use) << "Writing small buffer should only write to RAM";
         EXPECT_FALSE(buffering_get_flash_buffer()->in_use) << "Writing big buffer should write data to FLASH";
 
-        // And again, this time ram is not big enough to hold the data
-        // and data will be copied to flash
+        // Here we append another small buffer, this time we're going to exceed ram's size
+        // data will be copied to nvram
         buffering_append(small, sizeof(small));
         EXPECT_FALSE(buffering_get_ram_buffer()->in_use) << "Data should be now in FLASH";
         EXPECT_TRUE(buffering_get_flash_buffer()->in_use) << "Data should be now in FLASH";
@@ -172,6 +171,7 @@ namespace {
             small2[i] = 100 - i;
         }        buffering_append(small2, sizeof(small2));
 
+        // In this test we want to make sure that data is not compromised.
         uint8_t* dst = buffering_get_flash_buffer()->data;
         for (int i=0;i<sizeof(small1)+sizeof(small2);i++) {
             if (i < sizeof(small1)) {
