@@ -21,22 +21,9 @@
 append_buffer_delegate append_ram_buffer = NULL;
 buffer_state_t ram;
 
-// Move to a separate file
-#define RAM_BUFFER_SIZE 512
-uint8_t ram_buffer[RAM_BUFFER_SIZE];
-
 // Flash
 append_buffer_delegate append_flash_buffer = NULL;
 buffer_state_t flash;
-
-// Move to a separate file
-#define FLASH_BUFFER_SIZE 16384
-typedef struct {
-    uint8_t buffer[FLASH_BUFFER_SIZE];
-} storage_t;
-extern storage_t N_appdata_impl;
-#define N_appdata (*(storage_t *)PIC(&N_appdata_impl))
-
 
 void buffering_init(
         uint8_t* ram_buffer,
@@ -75,17 +62,21 @@ void buffering_append(uint8_t* data, int length)
     if (ram.in_use) {
         if (ram.size - ram.pos >= length) {
             append_ram_buffer(&ram, data, length);
+            ram.pos += length;
         }
         else {
             ram.in_use = 0;
             flash.in_use = 1;
-            buffering_append(ram.data, ram.pos);
+            if (ram.pos > 0) {
+                buffering_append(ram.data, ram.pos);
+            }
             buffering_append(data,length);
             ram.pos = 0;
         }
     }
     else {
         append_flash_buffer(&flash, data, length);
+        flash.pos += length;
     }
 }
 
@@ -97,5 +88,13 @@ buffer_state_t* buffering_get_ram_buffer()
 
 buffer_state_t* buffering_get_flash_buffer()
 {
+    return &flash;
+}
+
+buffer_state_t* buffering_get_buffer()
+{
+    if (ram.in_use) {
+        return &ram;
+    }
     return &flash;
 }

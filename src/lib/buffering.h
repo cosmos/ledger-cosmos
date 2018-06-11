@@ -49,6 +49,7 @@ void buffering_append(uint8_t* data, int length);
 
 buffer_state_t* buffering_get_ram_buffer();
 buffer_state_t* buffering_get_flash_buffer();
+buffer_state_t* buffering_get_buffer();
 
 
 #ifdef __cplusplus

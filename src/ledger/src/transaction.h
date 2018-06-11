@@ -18,6 +18,8 @@
 #include "json_parser.h"
 #include "os.h"
 
+void transaction_initialize();
+
 // Clears the transaction buffer
 void transaction_reset();
 

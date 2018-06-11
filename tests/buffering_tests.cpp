@@ -30,13 +30,11 @@ namespace {
                 sizeof(ram_buffer),
                 [](buffer_state_t* buffer, uint8_t* data, int size) {
                     memcpy(buffer->data+buffer->pos, data, size);
-                    buffer->pos += size;
                 },
                 flash_buffer,
                 sizeof(flash_buffer),
                 [](buffer_state_t* buffer, uint8_t* data, int size) {
                     memcpy(buffer->data+buffer->pos, data, size);
-                    buffer->pos += size;
                 });
 
         // Data is small enough to fit into ram buffer
@@ -60,13 +58,11 @@ namespace {
                 sizeof(ram_buffer),
                 [](buffer_state_t* buffer, uint8_t* data, int size) {
                     memcpy(buffer->data+buffer->pos, data, size);
-                    buffer->pos += size;
                 },
                 flash_buffer,
                 sizeof(flash_buffer),
                 [](buffer_state_t* buffer, uint8_t* data, int size) {
                     memcpy(buffer->data+buffer->pos, data, size);
-                    buffer->pos += size;
                 });
 
         // Data is too big to fit into ram buffer, it will be written directly to flash
@@ -80,7 +76,7 @@ namespace {
         EXPECT_EQ(1000, buffering_get_flash_buffer()->size) << "Wrong size of the flash buffer";
     }
 
-    TEST(Buffering, SmallBufferMultipleTimes) {
+    TEST(Buffering, SmallBufferMultipleTimesWithinRam) {
 
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
@@ -90,13 +86,45 @@ namespace {
                 sizeof(ram_buffer),
                 [](buffer_state_t* buffer, uint8_t* data, int size) {
                     memcpy(buffer->data+buffer->pos, data, size);
-                    buffer->pos += size;
                 },
                 flash_buffer,
                 sizeof(flash_buffer),
                 [](buffer_state_t* buffer, uint8_t* data, int size) {
                     memcpy(buffer->data+buffer->pos, data, size);
-                    buffer->pos += size;
+                });
+
+        uint8_t small[40];
+        buffering_append(small, sizeof(small));
+        EXPECT_TRUE(buffering_get_ram_buffer()->in_use) << "Writing small buffer should only write to RAM";
+        EXPECT_FALSE(buffering_get_flash_buffer()->in_use) << "Writing big buffer should write data to FLASH";
+
+        // And again, this time ram is not big enough to hold the data
+        // and data will be copied to flash
+        buffering_append(small, sizeof(small));
+        EXPECT_TRUE(buffering_get_ram_buffer()->in_use) << "Writing small buffer should only write to RAM";
+        EXPECT_FALSE(buffering_get_flash_buffer()->in_use) << "Writing big buffer should write data to FLASH";
+
+        EXPECT_EQ(sizeof(small)*2, buffering_get_ram_buffer()->pos) << "Data should be written to RAM";
+        EXPECT_EQ(100, buffering_get_ram_buffer()->size) << "Wrong size of the ram buffer";
+        EXPECT_EQ(0, buffering_get_flash_buffer()->pos) << "Data should be written to RAM";
+        EXPECT_EQ(1000, buffering_get_flash_buffer()->size) << "Wrong size of the flash buffer";
+    }
+
+    TEST(Buffering, SmallBufferMultipleTimesToFlash) {
+
+        uint8_t ram_buffer[100];
+        uint8_t flash_buffer[1000];
+
+        buffering_init(
+                ram_buffer,
+                sizeof(ram_buffer),
+                [](buffer_state_t* buffer, uint8_t* data, int size) {
+                    memcpy(buffer->data+buffer->pos, data, size);
+                },
+                flash_buffer,
+                sizeof(flash_buffer),
+                [](buffer_state_t* buffer, uint8_t* data, int size) {
+                    memcpy(buffer->data+buffer->pos, data, size);
                 });
 
         uint8_t small[100];
@@ -126,13 +154,11 @@ namespace {
                 sizeof(ram_buffer),
                 [](buffer_state_t *buffer, uint8_t *data, int size) {
                     memcpy(buffer->data + buffer->pos, data, size);
-                    buffer->pos += size;
                 },
                 flash_buffer,
                 sizeof(flash_buffer),
                 [](buffer_state_t *buffer, uint8_t *data, int size) {
                     memcpy(buffer->data + buffer->pos, data, size);
-                    buffer->pos += size;
                 });
 
         uint8_t small1[100];
@@ -167,13 +193,11 @@ namespace {
                 sizeof(ram_buffer),
                 [](buffer_state_t* buffer, uint8_t* data, int size) {
                     memcpy(buffer->data+buffer->pos, data, size);
-                    buffer->pos += size;
                 },
                 flash_buffer,
                 sizeof(flash_buffer),
                 [](buffer_state_t* buffer, uint8_t* data, int size) {
                     memcpy(buffer->data+buffer->pos, data, size);
-                    buffer->pos += size;
                 });
 
         uint8_t big[1000];
