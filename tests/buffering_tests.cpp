@@ -39,10 +39,15 @@ namespace {
                     buffer->pos += size;
                 });
 
-        uint8_t small[100];
+        // Data is small enough to fit into ram buffer
+        uint8_t small[50];
         buffering_append(small, sizeof(small));
         EXPECT_TRUE(buffering_get_ram_buffer()->in_use) << "Writing small buffer should only write to RAM";
         EXPECT_FALSE(buffering_get_flash_buffer()->in_use) << "Writing big buffer should write data to FLASH";
+        EXPECT_EQ(50, buffering_get_ram_buffer()->pos) << "Wrong position of the written data in the ram buffer";
+        EXPECT_EQ(100, buffering_get_ram_buffer()->size) << "Wrong size of the ram buffer";
+        EXPECT_EQ(0, buffering_get_flash_buffer()->pos) << "Wrong position of the written data in the flash buffer";
+        EXPECT_EQ(1000, buffering_get_flash_buffer()->size) << "Wrong size of the flash buffer";
     }
 
     TEST(Buffering, BigBuffer) {
@@ -64,9 +69,122 @@ namespace {
                     buffer->pos += size;
                 });
 
-        uint8_t big[1000];
+        // Data is too big to fit into ram buffer, it will be written directly to flash
+        uint8_t big[500];
         buffering_append(big, sizeof(big));
         EXPECT_FALSE(buffering_get_ram_buffer()->in_use) << "Writing big buffer should write data to FLASH";
         EXPECT_TRUE(buffering_get_flash_buffer()->in_use) << "Writing big buffer should write data to FLASH";
+        EXPECT_EQ(0, buffering_get_ram_buffer()->pos) << "Wrong position of the written data in the ram buffer";
+        EXPECT_EQ(100, buffering_get_ram_buffer()->size) << "Wrong size of the ram buffer";
+        EXPECT_EQ(500, buffering_get_flash_buffer()->pos) << "Wrong position of the written data in the flash buffer";
+        EXPECT_EQ(1000, buffering_get_flash_buffer()->size) << "Wrong size of the flash buffer";
+    }
+
+    TEST(Buffering, SmallBufferMultipleTimes) {
+
+        uint8_t ram_buffer[100];
+        uint8_t flash_buffer[1000];
+
+        buffering_init(
+                ram_buffer,
+                sizeof(ram_buffer),
+                [](buffer_state_t* buffer, uint8_t* data, int size) {
+                    memcpy(buffer->data+buffer->pos, data, size);
+                    buffer->pos += size;
+                },
+                flash_buffer,
+                sizeof(flash_buffer),
+                [](buffer_state_t* buffer, uint8_t* data, int size) {
+                    memcpy(buffer->data+buffer->pos, data, size);
+                    buffer->pos += size;
+                });
+
+        uint8_t small[100];
+        buffering_append(small, sizeof(small));
+        EXPECT_TRUE(buffering_get_ram_buffer()->in_use) << "Writing small buffer should only write to RAM";
+        EXPECT_FALSE(buffering_get_flash_buffer()->in_use) << "Writing big buffer should write data to FLASH";
+
+        // And again, this time ram is not big enough to hold the data
+        // and data will be copied to flash
+        buffering_append(small, sizeof(small));
+        EXPECT_FALSE(buffering_get_ram_buffer()->in_use) << "Data should be now in FLASH";
+        EXPECT_TRUE(buffering_get_flash_buffer()->in_use) << "Data should be now in FLASH";
+
+        EXPECT_EQ(0, buffering_get_ram_buffer()->pos) << "RAM buffer should be reset";
+        EXPECT_EQ(100, buffering_get_ram_buffer()->size) << "Wrong size of the ram buffer";
+        EXPECT_EQ(200, buffering_get_flash_buffer()->pos) << "Wrong position of the written data in the flash buffer";
+        EXPECT_EQ(1000, buffering_get_flash_buffer()->size) << "Wrong size of the flash buffer";
+    }
+
+    TEST(Buffering, SmallBufferMultipleTimes_CheckData) {
+
+        uint8_t ram_buffer[100];
+        uint8_t flash_buffer[1000];
+
+        buffering_init(
+                ram_buffer,
+                sizeof(ram_buffer),
+                [](buffer_state_t *buffer, uint8_t *data, int size) {
+                    memcpy(buffer->data + buffer->pos, data, size);
+                    buffer->pos += size;
+                },
+                flash_buffer,
+                sizeof(flash_buffer),
+                [](buffer_state_t *buffer, uint8_t *data, int size) {
+                    memcpy(buffer->data + buffer->pos, data, size);
+                    buffer->pos += size;
+                });
+
+        uint8_t small1[100];
+        for (int i = 0; i < sizeof(small1); i++) {
+            small1[i] = i;
+        }
+        buffering_append(small1, sizeof(small1));
+
+        uint8_t small2[200];
+        for (int i = 0; i < sizeof(small2); i++) {
+            small2[i] = 100 - i;
+        }        buffering_append(small2, sizeof(small2));
+
+        uint8_t* dst = buffering_get_flash_buffer()->data;
+        for (int i=0;i<sizeof(small1)+sizeof(small2);i++) {
+            if (i < sizeof(small1)) {
+                EXPECT_EQ(dst[i],small1[i]) << "Wrong data written to FLASH";
+            }
+            else {
+                EXPECT_EQ(dst[i],small2[i-sizeof(small1)]) << "Wrong data written to FLASH";
+            }
+        }
+    }
+
+    TEST(Buffering, Reset) {
+
+        uint8_t ram_buffer[100];
+        uint8_t flash_buffer[1000];
+
+        buffering_init(
+                ram_buffer,
+                sizeof(ram_buffer),
+                [](buffer_state_t* buffer, uint8_t* data, int size) {
+                    memcpy(buffer->data+buffer->pos, data, size);
+                    buffer->pos += size;
+                },
+                flash_buffer,
+                sizeof(flash_buffer),
+                [](buffer_state_t* buffer, uint8_t* data, int size) {
+                    memcpy(buffer->data+buffer->pos, data, size);
+                    buffer->pos += size;
+                });
+
+        uint8_t big[1000];
+        buffering_append(big, sizeof(big));
+        EXPECT_FALSE(buffering_get_ram_buffer()->in_use) << "Writing big buffer should only write to FLASH";
+        EXPECT_TRUE(buffering_get_flash_buffer()->in_use) << "Writing big buffer should only write to FLASH";
+
+        buffering_reset();
+
+        EXPECT_TRUE(buffering_get_ram_buffer()->in_use) << "After reset RAM should be enabled by default";
+        EXPECT_FALSE(buffering_get_flash_buffer()->in_use) << "After reset RAM should be enabled by default";
+
     }
 }

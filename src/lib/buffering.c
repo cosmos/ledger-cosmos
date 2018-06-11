@@ -79,8 +79,9 @@ void buffering_append(uint8_t* data, int length)
         else {
             ram.in_use = 0;
             flash.in_use = 1;
-            append_flash_buffer(&flash, ram.data, ram.pos);
-            append_flash_buffer(&flash, data,length);
+            buffering_append(ram.data, ram.pos);
+            buffering_append(data,length);
+            ram.pos = 0;
         }
     }
     else {
