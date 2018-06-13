@@ -19,46 +19,72 @@
 #include "view.h"
 #include "apdu_codes.h"
 #include "json_parser.h"
+#include "buffering.h"
 
-// TODO: We are currently limited by amount of SRAM (4K)
-// In order to parse longer messages we may have to consider moving
-// this buffer to FLASH
-#define TRANSACTION_JSON_BUFFER_SIZE 650
+// Ram
+#define RAM_BUFFER_SIZE 512
+uint8_t ram_buffer[RAM_BUFFER_SIZE];
+
+// Flash
+// Move to a separate file
+#define FLASH_BUFFER_SIZE 16384
+typedef struct {
+    uint8_t buffer[FLASH_BUFFER_SIZE];
+} storage_t;
+
+storage_t N_appdata_impl __attribute__ ((aligned(64)));
+#define N_appdata (*(storage_t *)PIC(&N_appdata_impl))
 
 parsed_json_t parsed_transaction;
-char transaction_buffer[TRANSACTION_JSON_BUFFER_SIZE];
-uint32_t transaction_buffer_current_position = 0;
+
+void update_ram(buffer_state_t* buffer, uint8_t* data, int size)
+{
+    os_memmove(buffer->data+buffer->pos, data, size);
+}
+
+void update_flash(buffer_state_t* buffer, uint8_t* data, int size)
+{
+    nvm_write((void*) buffer->data+buffer->pos, data, size);
+}
+
+void transaction_initialize()
+{
+    append_buffer_delegate update_ram_delegate = &update_ram;
+    append_buffer_delegate update_flash_delegate = &update_flash;
+
+    buffering_init(
+            ram_buffer,
+            sizeof(ram_buffer),
+            update_ram_delegate,
+            N_appdata.buffer,
+            sizeof(N_appdata.buffer),
+            update_flash_delegate
+    );
+}
 
 void transaction_reset()
 {
-    transaction_buffer_current_position = 0;
-    os_memset((void *) &parsed_transaction, 0, sizeof(parsed_json_t));
+    buffering_reset();
 }
 
 void transaction_append(unsigned char *buffer, uint32_t length)
 {
-    if (transaction_buffer_current_position + length >= TRANSACTION_JSON_BUFFER_SIZE) {
-        THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
-    }
-    os_memmove(transaction_buffer + transaction_buffer_current_position, buffer, length);
-    transaction_buffer_current_position += length;
-
-    // Zero terminate the buffer
-    transaction_buffer[transaction_buffer_current_position+1] = '\0';
+    buffering_append(buffer, length);
 }
 
 uint32_t transaction_get_buffer_length()
 {
-    return transaction_buffer_current_position;
+    return buffering_get_buffer()->pos;
 }
 
-uint8_t *transaction_get_buffer()
+uint8_t* transaction_get_buffer()
 {
-    return (uint8_t *) transaction_buffer;
+    return buffering_get_buffer()->data;
 }
 
 void transaction_parse()
 {
+    const char* transaction_buffer = (const char*)transaction_get_buffer();
     json_parse(&parsed_transaction, transaction_buffer);
     // FIXME: Verify is valid. Sorted / whitespaces, etc.
 

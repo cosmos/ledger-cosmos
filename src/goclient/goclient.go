@@ -87,6 +87,53 @@ func GetExampleTxs() []sdk.StdSignMsg {
 				},
 			},
 		}},
+		// Long message to test writing to nvram
+		sdk.StdSignMsg{"test-chain-1,test-chain-1,test-chain-1,test-chain-1,test-chain-1,test-chain-1", []int64{1}, sdk.NewStdFee(10000, sdk.Coin{"photonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphoton", 5}), bank.MsgSend{
+			Inputs: []bank.Input{
+				{
+					Address: crypto.Address([]byte("input")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+				{
+					Address: crypto.Address([]byte("input")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+				{
+					Address: crypto.Address([]byte("input")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+				{
+					Address: crypto.Address([]byte("input")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+				{
+					Address: crypto.Address([]byte("input")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+			},
+			Outputs: []bank.Output{
+				{
+					Address: crypto.Address([]byte("output")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+				{
+					Address: crypto.Address([]byte("output")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+				{
+					Address: crypto.Address([]byte("output")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+				{
+					Address: crypto.Address([]byte("output")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+				{
+					Address: crypto.Address([]byte("output")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+			},
+		}},
 		sdk.StdSignMsg{"test-chain-2", []int64{2}, sdk.NewStdFee(10000, sdk.Coin{"photon", 10}), stake.MsgUnbond{
 			DelegatorAddr: sdk.Address([]byte("delegator")),
 			CandidateAddr: sdk.Address([]byte("candidate")),
@@ -240,6 +287,6 @@ func main() {
 		ledger.Logging = true
 
 		testSECP256K1(GetExampleTxs(), ledger)
-		testED25519(GetExampleTxs(), ledger)
+		//testED25519(GetExampleTxs(), ledger)
 	}
 }
