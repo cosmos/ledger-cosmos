@@ -310,14 +310,16 @@ namespace {
         constexpr int screen_size = 100;
         char key[screen_size] = "";
         char value[screen_size] = "";
-
+        int chunk_index = 0;
         setup_context(&parsed_json, screen_size, transaction);
 
         display_arbitrary_item(
                 0,
                 key,
                 value,
-                2);
+                sizeof(value),
+                2,
+                &chunk_index);
 
         EXPECT_EQ_STR(key,"inputs/address", "Wrong key returned");
         EXPECT_EQ_STR(value, "696E707574", "Wrong value returned");
@@ -333,14 +335,16 @@ namespace {
         constexpr int screen_size = 100;
         char key[screen_size] = "";
         char value[screen_size] = "";
-
+        int chunk_index = 0;
         setup_context(&parsed_json, screen_size, transaction);
 
         display_arbitrary_item(
                 1,
                 key,
                 value,
-                2);
+                sizeof(value),
+                2,
+                &chunk_index);
 
         EXPECT_EQ_STR(key,"inputs/coins","Wrong key returned");
         EXPECT_EQ_STR(value,"[{\"amount\":10,\"denom\":\"atom\"}]", "Wrong value returned");
@@ -356,14 +360,16 @@ namespace {
         constexpr int screen_size = 100;
         char key[screen_size] = "";
         char value[screen_size] = "";
-
+        int chunk_index = 0;
         setup_context(&parsed_json, screen_size, transaction);
 
         display_arbitrary_item(
                 2,
                 key,
                 value,
-                2);
+                sizeof(value),
+                2,
+                &chunk_index);
 
         EXPECT_EQ_STR(key,"outputs/address","Wrong key returned");
         EXPECT_EQ_STR(value,"6F7574707574","Wrong value returned");
@@ -380,14 +386,16 @@ namespace {
         char key[screen_size] = "";
         char value[screen_size] = "";
         int requested_item_index = 3;
-
+        int chunk_index = 0;
         setup_context(&parsed_json, screen_size, transaction);
 
         int found_item_index = display_arbitrary_item(
                 requested_item_index,
                 key,
                 value,
-                2);
+                sizeof(value),
+                2,
+                &chunk_index);
 
         EXPECT_EQ_STR(key,"outputs/coins","Wrong key returned");
         EXPECT_EQ_STR(value,"[{\"amount\":10,\"denom\":\"atom\"}]","Wrong value returned");
@@ -434,7 +442,8 @@ namespace {
 
         char key[screen_size];
         char value[screen_size];
-        transaction_get_display_key_value(key, value, 0);
+        int chunk_index = 0;
+        transaction_get_display_key_value(key, value, sizeof(value), 0, &chunk_index);
 
         EXPECT_EQ_STR(key, "chain_id", "Wrong key");
         EXPECT_EQ_STR(value, "test-chain-1", "Wrong value");
@@ -451,13 +460,13 @@ namespace {
 
         char key[screen_size];
         char value[screen_size];
-        transaction_get_display_key_value(key, value, 1);
+        int chunk_index = 0;
+        transaction_get_display_key_value(key, value, sizeof(value), 1, &chunk_index);
 
         EXPECT_EQ_STR(key, "sequences", "Wrong key");
         EXPECT_EQ_STR(value, "[1]", "Wrong value");
     }
 
-    // FIXME: Failing test
     TEST(TransactionParserTest, ParseTransaction_Page_3) {
 
         auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
@@ -469,7 +478,8 @@ namespace {
 
         char key[screen_size];
         char value[screen_size];
-        transaction_get_display_key_value(key, value, 2);
+        int chunk_index = 0;
+        transaction_get_display_key_value(key, value, sizeof(value), 2, &chunk_index);
 
         EXPECT_EQ_STR(key, "fee_bytes", "Wrong key");
         EXPECT_EQ_STR(value, "{\"amount\":[{\"amount\":5,\"denom\":\"photon\"}],\"gas\":10000}", "Wrong value");
@@ -486,13 +496,13 @@ namespace {
 
         char key[screen_size];
         char value[screen_size];
-        transaction_get_display_key_value(key, value, 3);
+        int chunk_index = 0;
+        transaction_get_display_key_value(key, value, sizeof(value), 3, &chunk_index);
 
         EXPECT_EQ_STR(key, "msg_bytes/inputs/address", "Wrong key");
         EXPECT_EQ_STR(value, "696E707574", "Wrong value");
     }
 
-    // FIXME: Failing test
     TEST(TransactionParserTest, ParseTransaction_Page_5) {
 
         auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
@@ -504,7 +514,8 @@ namespace {
 
         char key[screen_size];
         char value[screen_size];
-        transaction_get_display_key_value(key, value, 4);
+        int chunk_index = 0;
+        transaction_get_display_key_value(key, value, sizeof(value), 4, &chunk_index);
 
         EXPECT_EQ_STR(key, "msg_bytes/inputs/coins", "Wrong key");
         EXPECT_EQ_STR(value, "[{\"amount\":10,\"denom\":\"atom\"}]", "Wrong value");
@@ -521,13 +532,13 @@ namespace {
 
         char key[100];
         char value[100];
-        transaction_get_display_key_value(key, value, 5);
+        int chunk_index = 0;
+        transaction_get_display_key_value(key, value, sizeof(value), 5, &chunk_index);
 
         EXPECT_EQ_STR(key, "msg_bytes/outputs/address", "Wrong key");
         EXPECT_EQ_STR(value, "6F7574707574", "Wrong value");
     }
 
-    // FIXME: Failing test
     TEST(TransactionParserTest, ParseTransaction_Page_7) {
 
         auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
@@ -539,7 +550,8 @@ namespace {
 
         char key[screen_size];
         char value[screen_size];
-        transaction_get_display_key_value(key, value, 6);
+        int chunk_index = 0;
+        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
 
         EXPECT_EQ_STR(key, "msg_bytes/outputs/coins", "Wrong key");
         EXPECT_EQ_STR(value, "[{\"amount\":10,\"denom\":\"atom\"}]", "Wrong value");
@@ -556,10 +568,118 @@ namespace {
 
         char key[screen_size];
         char value[screen_size];
-        transaction_get_display_key_value(key, value, 7);
+        int chunk_index = 0;
+        transaction_get_display_key_value(key, value, sizeof(value), 7, &chunk_index);
 
         EXPECT_EQ_STR(key, "alt_bytes", "Wrong key");
         EXPECT_EQ_STR(value, "null", "Wrong value");
+    }
+
+    TEST(TransactionParserTest, ParseTransaction_ValueFitsScreen) {
+
+        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":"Four","msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 5;
+        setup_context(&parsed_json, screen_size, transaction);
+
+        char key[10];
+        char value[screen_size];
+        int chunk_index = 0;
+        transaction_get_display_key_value(key, value, sizeof(value), 2, &chunk_index);
+
+        EXPECT_EQ(chunk_index, 1) << "Wrong number of chunks";
+        EXPECT_EQ_STR(value, "Four", "Wrong value");
+    }
+
+    TEST(TransactionParserTest, ParseTransaction_ValueCharacterShortToFitScreen) {
+
+        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":"Fourt","msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]})";
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 5;
+        setup_context(&parsed_json, screen_size, transaction);
+
+        char key[10];
+        char value[screen_size];
+        int chunk_index = 0;
+        transaction_get_display_key_value(key, value, sizeof(value), 2, &chunk_index);
+        EXPECT_EQ(chunk_index, 2) << "Wrong number of chunks";
+        // Because string is null terminated there was not enough room for 't'
+        EXPECT_EQ_STR(value, "Four", "Wrong value");
+
+        chunk_index = 1;
+        transaction_get_display_key_value(key, value, sizeof(value), 2, &chunk_index);
+        EXPECT_EQ(chunk_index, 2) << "Wrong number of chunks";
+        // Because string is null terminated there was not enough room for 't'
+        EXPECT_EQ_STR(value, "t", "Wrong value");
+    }
+
+    TEST(TransactionParserTest, ParseTransaction_VeryLongValue) {
+
+        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":"LONGJUMPLIFELOVEDOVE"}]},"sequences":[1]})";
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 5;
+        setup_context(&parsed_json, screen_size, transaction);
+
+        char key[32];
+        char value[screen_size];
+
+        // String: LONGJUMPLIFELOVEDOVE
+
+        int chunk_index = 0;
+        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
+        EXPECT_EQ_STR(value, "LONG", "Wrong value");
+
+        chunk_index = 1;
+        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
+        EXPECT_EQ_STR(value, "JUMP", "Wrong value");
+
+        chunk_index = 2;
+        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
+        EXPECT_EQ_STR(value, "LIFE", "Wrong value");
+
+        chunk_index = 3;
+        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
+        EXPECT_EQ_STR(value, "LOVE", "Wrong value");
+
+        chunk_index = 4;
+        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
+        EXPECT_EQ_STR(value, "DOVE", "Wrong value");
+    }
+
+    TEST(TransactionParserTest, ParseTransaction_OutOfBounds) {
+
+        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":"LONGJUMPLIFELOVEDOVE"}]},"sequences":[1]})";
+        parsed_json_t parsed_json;
+        json_parse(&parsed_json, transaction);
+
+        constexpr int screen_size = 5;
+        setup_context(&parsed_json, screen_size, transaction);
+
+        char key[32];
+        char value[screen_size];
+
+        // String: LONGJUMPLIFELOVEDOVE
+
+        int chunk_index = -1;
+        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
+        EXPECT_EQ_STR(value, "", "Wrong value");
+
+        chunk_index = 10;
+        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
+        EXPECT_EQ_STR(value, "", "Wrong value");
     }
 
 //    // TODO: Not yet implemented

@@ -109,9 +109,11 @@ int object_get_value(
 // If value is updated, we also update view_scrolling_total_size to value string length.
 int display_value(
         char* value, // output
+        int value_length,
         int token_index, // input
         int* current_item_index, // input / output
-        int item_index_to_display);   // input
+        int item_index_to_display,
+        int* chunk_index);   // input
 
 // Update key characters from json transaction read from the token_index element.
 void display_key(
@@ -123,7 +125,9 @@ int display_arbitrary_item(
         int item_index_to_display, //input
         char* key, // output
         char* value, // output
-        int token_index); // input
+        int value_length,
+        int token_index,
+        int* chunk_index); // input
 
 int display_get_arbitrary_items_count(
         int token_index);
@@ -131,7 +135,9 @@ int display_get_arbitrary_items_count(
 int transaction_get_display_key_value(
         char* key, // output
         char* value, // output
-        int index); // input
+        int value_length,
+        int index,
+        int* chunk_index); // input
 
 int transaction_get_display_pages();
 //---------------------------------------------

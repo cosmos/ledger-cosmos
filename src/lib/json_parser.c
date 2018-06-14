@@ -237,22 +237,60 @@ int object_get_value(
 // TODO: Move to a separate file
 // Transaction parsing helper functions
 //--------------------------------------
+void update(
+        char* msg,// output
+        int msg_length,
+        int token_index,
+        int* chunk_index) // input
+{
+    int length = parsing_context.parsed_transaction->Tokens[token_index].end -
+                 parsing_context.parsed_transaction->Tokens[token_index].start;
+
+    int chunk_to_display = *chunk_index;
+    *chunk_index = (length / msg_length) + 1;
+
+    if (chunk_to_display >= 0 && chunk_to_display < *chunk_index) {
+        length = parsing_context.parsed_transaction->Tokens[token_index].end -
+                 parsing_context.parsed_transaction->Tokens[token_index].start - (msg_length - 1) * chunk_to_display;
+
+        if (length + 1 > msg_length) {
+            // Return total number of chunks
+            length = msg_length - 1;
+        }
+        copy_fct(
+                msg,
+                parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start +
+                (msg_length - 1) * chunk_to_display,
+                length);
+        msg[length] = '\0';
+    }
+    else {
+        msg[0] = '\0';
+    }
+}
+
 int display_value(
         char* value,
+        int value_length,
         int token_index,
         int* current_item_index,
-        int item_index_to_display) {
+        int item_index_to_display,
+        int* chunk_index) {
 
     if (*current_item_index == item_index_to_display) {
 
-        int length = parsing_context.parsed_transaction->Tokens[token_index].end - parsing_context.parsed_transaction->Tokens[token_index].start;
-        if (length >= parsing_context.max_chars_per_value_line) {
-            length = parsing_context.max_chars_per_value_line - 1;
-        }
+        update(value, value_length, token_index, chunk_index);
 
-        char* start = (char*)(parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start);
-        copy_fct(value, start, length);
-        value[length] = '\0';
+        //int length = parsing_context.parsed_transaction->Tokens[token_index].end - parsing_context.parsed_transaction->Tokens[token_index].start;
+        //int chunk_to_display = *chunk_index;
+        //if (length + 1 > value_length) {
+            // Return total number of chunks
+            //*chunk_index = (length + 1) / value_length;
+            //length = value_length-1;
+        //}
+        //char* start = (char*)(parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start + (value_length-1)*chunk_to_display);
+        //copy_fct(value, start, length);
+        //value[length] = '\0';
         return item_index_to_display;
     }
     *current_item_index = *current_item_index + 1;
@@ -301,9 +339,11 @@ int display_arbitrary_item_inner(
         int item_index_to_display, //input
         char* key, // output
         char* value, // output
+        int value_length,
         int token_index, // input
         int* current_item_index, // input
-        int level)
+        int level,
+        int* chunk_index)
 {
 //    if level == 2
 //    show value as json-encoded string
@@ -322,25 +362,31 @@ int display_arbitrary_item_inner(
     if (level == 2) {
         return display_value(
                 value,
+                value_length,
                 token_index,
                 current_item_index,
-                item_index_to_display);
+                item_index_to_display,
+                chunk_index);
     }
     else {
         switch (parsing_context.parsed_transaction->Tokens[token_index].type) {
             case JSMN_STRING:
                 return display_value(
                         value,
+                        value_length,
                         token_index,
                         current_item_index,
-                        item_index_to_display);
+                        item_index_to_display,
+                        chunk_index);
 
             case JSMN_PRIMITIVE:
                 return display_value(
                         value,
+                        value_length,
                         token_index,
                         current_item_index,
-                        item_index_to_display);
+                        item_index_to_display,
+                        chunk_index);
 
             case JSMN_OBJECT: {
                 int el_count = object_get_element_count(token_index, parsing_context.parsed_transaction);
@@ -361,9 +407,11 @@ int display_arbitrary_item_inner(
                             item_index_to_display,
                             key,
                             value,
+                            value_length,
                             value_index,
                             current_item_index,
-                            level + 1);
+                            level + 1,
+                            chunk_index);
 
                     if (item_index_to_display != -1) {
                         if (found == item_index_to_display) {
@@ -383,16 +431,17 @@ int display_arbitrary_item_inner(
                             item_index_to_display,
                             key,
                             value,
+                            value_length,
                             element_index,
                             current_item_index,
-                            level);
+                            level,
+                            chunk_index);
 
                     if (item_index_to_display != -1) {
                         if (found == item_index_to_display) {
                             return item_index_to_display;
                         }
                     }
-
                 }
                 break;
             }
@@ -408,14 +457,17 @@ int display_get_arbitrary_items_count(
         int token_index)
 {
     int number_of_items = 0;
+    int chunk_index = 0;
     char dummy[1];
     display_arbitrary_item_inner(
             -1,
             dummy,
             dummy,
+            1,
             token_index,
             &number_of_items,
-            0);
+            0,
+            &chunk_index);
 
     return number_of_items;
 }
@@ -424,54 +476,46 @@ int display_arbitrary_item(
         int item_index_to_display, //input
         char* key, // output
         char* value, // output
-        int token_index)
+        int value_length,
+        int token_index,
+        int* chunk_index)
 {
     int current_item_index = 0;
     return display_arbitrary_item_inner(
             item_index_to_display,
             key,
             value,
+            value_length,
             token_index,
             &current_item_index,
-            0);
-}
-
-void update(
-        char* msg,// output
-        int token_index) // input
-{
-    // FIXME: bounds checking!
-    int length = parsing_context.parsed_transaction->Tokens[token_index].end -
-                 parsing_context.parsed_transaction->Tokens[token_index].start;
-    copy_fct(
-            msg,
-            parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start,
-            length);
-    msg[length] = '\0';
+            0,
+            chunk_index);
 }
 
 int transaction_get_display_key_value(
         char* key, // output
         char* value, // output
-        int index) // input
+        int value_length,
+        int index,
+        int* chunk_index) // input/output
 {
     switch (index) {
         case 0: {
             copy_fct(key, "chain_id", sizeof("chain_id"));
             int token_index = object_get_value(0, "chain_id", parsing_context.parsed_transaction, parsing_context.transaction);
-            update(value, token_index);
+            update(value, value_length, token_index, chunk_index);
             break;
         }
         case 1: {
             copy_fct(key, "sequences", sizeof("sequences"));
             int token_index = object_get_value(0, "sequences", parsing_context.parsed_transaction, parsing_context.transaction);
-            update(value, token_index);
+            update(value, value_length, token_index, chunk_index);
             break;
         }
         case 2: {
             copy_fct(key, "fee_bytes", sizeof("fee_bytes"));
             int token_index = object_get_value(0, "fee_bytes", parsing_context.parsed_transaction, parsing_context.transaction);
-            update(value, token_index);
+            update(value, value_length, token_index, chunk_index);
             break;
         }
         default: {
@@ -486,7 +530,9 @@ int transaction_get_display_key_value(
                 display_arbitrary_item(index - 3,
                                        full_key,
                                        value,
-                                       token_index);
+                                       value_length,
+                                       token_index,
+                                       chunk_index);
 
                 int length = strlen(full_key);
                 copy_fct(key, full_key, length);
@@ -502,7 +548,9 @@ int transaction_get_display_key_value(
                 display_arbitrary_item(index - 3 - msg_bytes_pages,
                                        full_key,
                                        value,
-                                       token_index);
+                                       value_length,
+                                       token_index,
+                                       chunk_index);
 
                 int length = strlen(full_key);
                 copy_fct(key, full_key, length);

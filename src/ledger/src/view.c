@@ -55,6 +55,8 @@ volatile char pageInfo[20];
 
 int transactionDetailsCurrentPage;
 int transactionDetailsPageCount;
+int transactionValuePageIndex;
+int transactionValuePageCount;
 
 void start_transaction_info_display(unsigned int unused);
 void view_sign_transaction(unsigned int unused);
@@ -193,10 +195,23 @@ void update_transaction_page_info()
     if (event_handler_update_transaction_info != NULL) {
 
         if (event_handler_update_transaction_info != NULL) {
+
+            int index = transactionValuePageIndex;
             event_handler_update_transaction_info(
                     (char *) transactionDataKey,
                     (char *) transactionDataValue,
-                    transactionDetailsCurrentPage);
+                    sizeof(transactionDataValue),
+                    transactionDetailsCurrentPage,
+                    &index);
+            transactionDetailsPageCount = index;
+
+            int position = strlen((char *)transactionDataKey);
+            snprintf(
+                    (char *) transactionDataKey + position,
+                    sizeof(transactionDataKey) - position,
+                    "%02d/%02d",
+                    transactionValuePageIndex+1,
+                    transactionValuePageCount);
         }
 
         switch (current_sigtype) {
