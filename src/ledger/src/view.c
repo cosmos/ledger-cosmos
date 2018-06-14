@@ -53,9 +53,16 @@ volatile char transactionDataKey[MAX_CHARS_PER_KEY_LINE];
 volatile char transactionDataValue[MAX_CHARS_PER_VALUE_LINE];
 volatile char pageInfo[20];
 
+// Index of the currently displayed page
 int transactionDetailsCurrentPage;
+// Total number of displayable pages
 int transactionDetailsPageCount;
+
+// Below data is used to help split long messages that are scrolled
+// into smaller chunks so they fit the memory buffer
+// Index of currently displayed value chunk
 int transactionValuePageIndex;
+// Total number of displayable value chunks
 int transactionValuePageCount;
 
 void start_transaction_info_display(unsigned int unused);
@@ -157,20 +164,33 @@ static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
             break;
 
         case BUTTON_EVT_RELEASED | BUTTON_LEFT:
-            if (transactionDetailsCurrentPage > 0) {
-                transactionDetailsCurrentPage--;
+            if (transactionValuePageIndex > 0) {
+                transactionValuePageIndex--;
                 display_transaction_page();
             } else {
-                view_display_transaction_menu(0);
+                if (transactionDetailsCurrentPage > 0) {
+                    transactionDetailsCurrentPage--;
+                    display_transaction_page();
+                } else {
+                    view_display_transaction_menu(0);
+                }
             }
 
             break;
         case BUTTON_EVT_RELEASED | BUTTON_RIGHT:
-            if (transactionDetailsCurrentPage < transactionDetailsPageCount - 1) {
-                transactionDetailsCurrentPage++;
+            if (transactionValuePageIndex < transactionValuePageCount - 1) {
+                transactionValuePageIndex++;
                 display_transaction_page();
-            } else {
-                view_display_transaction_menu(0);
+            }
+            else {
+                transactionValuePageIndex = 0;
+                transactionValuePageCount = 1;
+                if (transactionDetailsCurrentPage < transactionDetailsPageCount - 1) {
+                    transactionDetailsCurrentPage++;
+                    display_transaction_page();
+                } else {
+                    view_display_transaction_menu(0);
+                }
             }
             break;
     }
@@ -187,6 +207,8 @@ void display_transaction_page()
 void start_transaction_info_display(unsigned int unused)
 {
     transactionDetailsCurrentPage = 0;
+    transactionValuePageIndex = 0;
+    transactionValuePageCount = 1;
     display_transaction_page();
 }
 
@@ -203,15 +225,17 @@ void update_transaction_page_info()
                     sizeof(transactionDataValue),
                     transactionDetailsCurrentPage,
                     &index);
-            transactionDetailsPageCount = index;
+            transactionValuePageCount = index;
 
-            int position = strlen((char *)transactionDataKey);
-            snprintf(
-                    (char *) transactionDataKey + position,
-                    sizeof(transactionDataKey) - position,
-                    "%02d/%02d",
-                    transactionValuePageIndex+1,
-                    transactionValuePageCount);
+            if (transactionValuePageCount > 1) {
+                int position = strlen((char *) transactionDataKey);
+                snprintf(
+                        (char *) transactionDataKey + position,
+                        sizeof(transactionDataKey) - position,
+                        " %02d/%02d",
+                        transactionValuePageIndex + 1,
+                        transactionValuePageCount);
+            }
         }
 
         switch (current_sigtype) {
