@@ -171,6 +171,7 @@ bool process_chunk(volatile uint32_t* tx, uint32_t rx, bool getBip32)
     }
 
     if (packageIndex==1) {
+        transaction_initialize();
         transaction_reset();
         if (getBip32) {
             if (!extractBip32(&bip32_depth, bip32_path, rx, OFFSET_DATA)) {
@@ -181,6 +182,7 @@ bool process_chunk(volatile uint32_t* tx, uint32_t rx, bool getBip32)
     }
 
     transaction_append(&(G_io_apdu_buffer[offset]), rx-offset);
+
     return packageIndex==packageCount;
 }
 
