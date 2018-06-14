@@ -281,16 +281,6 @@ int display_value(
 
         update(value, value_length, token_index, chunk_index);
 
-        //int length = parsing_context.parsed_transaction->Tokens[token_index].end - parsing_context.parsed_transaction->Tokens[token_index].start;
-        //int chunk_to_display = *chunk_index;
-        //if (length + 1 > value_length) {
-            // Return total number of chunks
-            //*chunk_index = (length + 1) / value_length;
-            //length = value_length-1;
-        //}
-        //char* start = (char*)(parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start + (value_length-1)*chunk_to_display);
-        //copy_fct(value, start, length);
-        //value[length] = '\0';
         return item_index_to_display;
     }
     *current_item_index = *current_item_index + 1;
@@ -305,9 +295,6 @@ void display_key(
     const char* address_ptr = parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start;
     // FIXME: bounds checking!
     copy_fct(key, address_ptr, key_size);
-    //*key = address_ptr;
-    //char* address = *parsing_context.transaction;
-    //*(address + parsing_context.parsed_transaction->Tokens[token_index].end) = '\0';
     key[key_size] = '\0';
 }
 
