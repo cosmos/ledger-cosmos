@@ -31,24 +31,6 @@ enum UI_STATE view_uiState;
 void update_transaction_page_info();
 void display_transaction_page();
 
-//// Current scrolling position of view msg
-//unsigned short view_scrolling_step = 0;
-//// Maximum number of characters to scroll view msg (view_scrolling_total_size - screen size)
-//unsigned short view_scrolling_step_count = 0;
-//// Total size of the view message
-//unsigned short view_scrolling_total_size = 0;
-//// Direction of the view msg scroll (0 - left to right, 1 - right to left)
-//unsigned char view_scrolling_direction = 0;
-//
-//// Current scrolling position of key msg
-//unsigned short key_scrolling_step = 0;
-//// Maximum number of characters to scroll key msg (view_scrolling_total_size - screen size)
-//unsigned short key_scrolling_step_count = 0;
-//// Total size of the key message
-//unsigned short key_scrolling_total_size = 0;
-//// Direction of the key msg scroll (0 - left to right, 1 - right to left)
-//unsigned char key_scrolling_direction = 0;
-
 volatile char transactionDataKey[MAX_CHARS_PER_KEY_LINE];
 volatile char transactionDataValue[MAX_CHARS_PER_VALUE_LINE];
 volatile char pageInfo[20];
@@ -155,44 +137,85 @@ const bagl_element_t* ui_transaction_info_prepro(const bagl_element_t *element) 
     return element;
 }
 
+void submenu_left()
+{
+    transactionValuePageIndex--;
+    display_transaction_page();
+}
+
+void submenu_right()
+{
+    transactionValuePageIndex++;
+    display_transaction_page();
+}
+
+void menu_left()
+{
+    transactionValuePageIndex = 0;
+    transactionValuePageCount = 1;
+    if (transactionDetailsCurrentPage > 0) {
+        transactionDetailsCurrentPage--;
+        display_transaction_page();
+    } else {
+        view_display_transaction_menu(0);
+    }
+}
+
+void menu_right()
+{
+    transactionValuePageIndex = 0;
+    transactionValuePageCount = 1;
+    if (transactionDetailsCurrentPage < transactionDetailsPageCount - 1) {
+        transactionDetailsCurrentPage++;
+        display_transaction_page();
+    } else {
+        view_display_transaction_menu(0);
+    }
+}
+
 static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
                                                     unsigned int button_mask_counter)
 {
     switch (button_mask) {
-        case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
+        // Hold left and right long to quit
+        case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT: {
             view_display_transaction_menu(0);
             break;
+        }
 
-        case BUTTON_EVT_RELEASED | BUTTON_LEFT:
+        // Press to progress to the previous element
+        case BUTTON_EVT_RELEASED | BUTTON_LEFT: {
             if (transactionValuePageIndex > 0) {
-                transactionValuePageIndex--;
-                display_transaction_page();
+                submenu_left();
             } else {
-                if (transactionDetailsCurrentPage > 0) {
-                    transactionDetailsCurrentPage--;
-                    display_transaction_page();
-                } else {
-                    view_display_transaction_menu(0);
-                }
+                menu_left();
             }
+            break;
+        }
 
+        // Hold to progress to the previous element quickly
+        // It also steps out from the value chunk page view mode
+        case BUTTON_EVT_FAST | BUTTON_LEFT: {
+            menu_left();
             break;
-        case BUTTON_EVT_RELEASED | BUTTON_RIGHT:
+        }
+
+        // Press to progress to the next element
+        case BUTTON_EVT_RELEASED | BUTTON_RIGHT: {
             if (transactionValuePageIndex < transactionValuePageCount - 1) {
-                transactionValuePageIndex++;
-                display_transaction_page();
-            }
-            else {
-                transactionValuePageIndex = 0;
-                transactionValuePageCount = 1;
-                if (transactionDetailsCurrentPage < transactionDetailsPageCount - 1) {
-                    transactionDetailsCurrentPage++;
-                    display_transaction_page();
-                } else {
-                    view_display_transaction_menu(0);
-                }
+                submenu_right();
+            } else {
+                menu_right();
             }
             break;
+        }
+
+        // Hold to progress to the next element quickly
+        // It also steps out from the value chunk page view mode
+        case BUTTON_EVT_FAST | BUTTON_RIGHT: {
+            menu_right();
+            break;
+        }
     }
     return 0;
 }
