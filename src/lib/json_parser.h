@@ -29,9 +29,6 @@ extern "C" {
 typedef unsigned char byte;
 
 #define MAX_NUMBER_OF_TOKENS    128
-#define MAX_JSON_DEPTH          6
-#define MAX_INPUT_OUTPUT_COUNT  2
-#define MAX_COIN_COUNT          3
 
 //---------------------------------------------
 
@@ -50,11 +47,8 @@ typedef struct
 typedef struct
 {
     const parsed_json_t* parsed_transaction;
-    unsigned short* view_scrolling_total_size;
-    unsigned short* view_scrolling_step;
-    unsigned short* key_scrolling_total_size;
-    unsigned short* key_scrolling_step;
-    unsigned short max_chars_per_line;
+    unsigned short max_chars_per_key_line;
+    unsigned short max_chars_per_value_line;
     const char* transaction;
 } parsing_context_t;
 
@@ -101,14 +95,18 @@ int object_get_value(
         const parsed_json_t* parsed_transaction,
         const char* transaction);
 
+
+/// FIXME: Move all this code to a separate file
 // Update value characters from json transaction read from the token_index element.
 // Value is only updated if current_item_index (which is incremented internally) matches item_index_to_display
 // If value is updated, we also update view_scrolling_total_size to value string length.
 int display_value(
         char* value, // output
+        int value_length,
         int token_index, // input
         int* current_item_index, // input / output
-        int item_index_to_display);   // input
+        int item_index_to_display,
+        int* chunk_index);   // input
 
 // Update key characters from json transaction read from the token_index element.
 void display_key(
@@ -120,7 +118,9 @@ int display_arbitrary_item(
         int item_index_to_display, //input
         char* key, // output
         char* value, // output
-        int token_index); // input
+        int value_length,
+        int token_index,
+        int* chunk_index); // input
 
 int display_get_arbitrary_items_count(
         int token_index);
@@ -128,7 +128,9 @@ int display_get_arbitrary_items_count(
 int transaction_get_display_key_value(
         char* key, // output
         char* value, // output
-        int index); // input
+        int value_length,
+        int index,
+        int* chunk_index); // input
 
 int transaction_get_display_pages();
 //---------------------------------------------

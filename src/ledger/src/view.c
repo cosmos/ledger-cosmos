@@ -29,32 +29,23 @@ ux_state_t ux;
 enum UI_STATE view_uiState;
 
 void update_transaction_page_info();
+void display_transaction_page();
 
-// Current scrolling position of view msg
-unsigned short view_scrolling_step = 0;
-// Maximum number of characters to scroll view msg (view_scrolling_total_size - screen size)
-unsigned short view_scrolling_step_count = 0;
-// Total size of the view message
-unsigned short view_scrolling_total_size = 0;
-// Direction of the view msg scroll (0 - left to right, 1 - right to left)
-unsigned char view_scrolling_direction = 0;
-
-// Current scrolling position of key msg
-unsigned short key_scrolling_step = 0;
-// Maximum number of characters to scroll key msg (view_scrolling_total_size - screen size)
-unsigned short key_scrolling_step_count = 0;
-// Total size of the key message
-unsigned short key_scrolling_total_size = 0;
-// Direction of the key msg scroll (0 - left to right, 1 - right to left)
-unsigned char key_scrolling_direction = 0;
-
-
-volatile char transactionDataKey[32];
-volatile char transactionDataValue[32];
+volatile char transactionDataKey[MAX_CHARS_PER_KEY_LINE];
+volatile char transactionDataValue[MAX_CHARS_PER_VALUE_LINE];
 volatile char pageInfo[20];
 
+// Index of the currently displayed page
 int transactionDetailsCurrentPage;
+// Total number of displayable pages
 int transactionDetailsPageCount;
+
+// Below data is used to help split long messages that are scrolled
+// into smaller chunks so they fit the memory buffer
+// Index of currently displayed value chunk
+int transactionValuePageIndex;
+// Total number of displayable value chunks
+int transactionValuePageCount;
 
 void start_transaction_info_display(unsigned int unused);
 void view_sign_transaction(unsigned int unused);
@@ -126,7 +117,6 @@ void view_add_sign_transaction_event_handler(delegate_sign_transaction delegate)
 }
 // ------ Event handlers
 
-
 static unsigned int bagl_ui_sign_transaction_button(unsigned int button_mask,
                                                     unsigned int button_mask_counter)
 {
@@ -139,107 +129,156 @@ static unsigned int bagl_ui_sign_transaction_button(unsigned int button_mask,
 
 const bagl_element_t* ui_transaction_info_prepro(const bagl_element_t *element) {
 
-    if (element->component.userid == 0) {
-        update_transaction_page_info();
-
-        if (key_scrolling_total_size > MAX_CHARS_PER_LINE) {
-            key_scrolling_step_count = key_scrolling_total_size - MAX_CHARS_PER_LINE;
-            UX_CALLBACK_SET_INTERVAL(500);
-        } else {
-            key_scrolling_step_count = 0;
-        }
-
-        if (view_scrolling_total_size > MAX_CHARS_PER_LINE) {
-            view_scrolling_step_count = view_scrolling_total_size - MAX_CHARS_PER_LINE;
-            if (view_scrolling_step == 0 || view_scrolling_step == view_scrolling_step_count-1)   {
-                UX_CALLBACK_SET_INTERVAL(2000);
-            }
-            else {
-                UX_CALLBACK_SET_INTERVAL(500);
-            }
-        } else {
-            view_scrolling_step_count = 0;
-        }
+    switch (element->component.userid) {
+        case 0x01:  UX_CALLBACK_SET_INTERVAL(2000); break;
+        case 0x02:  UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7))); break;
+        case 0x03:  UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7))); break;
     }
-
     return element;
 }
 
-void reset_scrolling()
+void submenu_left()
 {
-    view_scrolling_step = 0;
-    view_scrolling_direction = 0;
-    key_scrolling_step = 0;
-    key_scrolling_direction = 0;
+    transactionValuePageIndex--;
+    display_transaction_page();
+}
+
+void submenu_right()
+{
+    transactionValuePageIndex++;
+    display_transaction_page();
+}
+
+void menu_left()
+{
+    transactionValuePageIndex = 0;
+    transactionValuePageCount = 1;
+    if (transactionDetailsCurrentPage > 0) {
+        transactionDetailsCurrentPage--;
+        display_transaction_page();
+    } else {
+        view_display_transaction_menu(0);
+    }
+}
+
+void menu_right()
+{
+    transactionValuePageIndex = 0;
+    transactionValuePageCount = 1;
+    if (transactionDetailsCurrentPage < transactionDetailsPageCount - 1) {
+        transactionDetailsCurrentPage++;
+        display_transaction_page();
+    } else {
+        view_display_transaction_menu(0);
+    }
 }
 
 static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
                                                     unsigned int button_mask_counter)
 {
     switch (button_mask) {
-        case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
+        // Hold left and right long to quit
+        case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT: {
             view_display_transaction_menu(0);
             break;
+        }
 
-        case BUTTON_EVT_RELEASED | BUTTON_LEFT:
-            if (transactionDetailsCurrentPage > 0) {
-                transactionDetailsCurrentPage--;
-                reset_scrolling();
-                UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
+        // Press to progress to the previous element
+        case BUTTON_EVT_RELEASED | BUTTON_LEFT: {
+            if (transactionValuePageIndex > 0) {
+                submenu_left();
             } else {
-                view_display_transaction_menu(0);
-            }
-
-            break;
-        case BUTTON_EVT_RELEASED | BUTTON_RIGHT:
-            if (transactionDetailsCurrentPage < transactionDetailsPageCount - 1) {
-                transactionDetailsCurrentPage++;
-                reset_scrolling();
-                UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
-            } else {
-                view_display_transaction_menu(0);
+                menu_left();
             }
             break;
+        }
+
+        // Hold to progress to the previous element quickly
+        // It also steps out from the value chunk page view mode
+        case BUTTON_EVT_FAST | BUTTON_LEFT: {
+            menu_left();
+            break;
+        }
+
+        // Press to progress to the next element
+        case BUTTON_EVT_RELEASED | BUTTON_RIGHT: {
+            if (transactionValuePageIndex < transactionValuePageCount - 1) {
+                submenu_right();
+            } else {
+                menu_right();
+            }
+            break;
+        }
+
+        // Hold to progress to the next element quickly
+        // It also steps out from the value chunk page view mode
+        case BUTTON_EVT_FAST | BUTTON_RIGHT: {
+            menu_right();
+            break;
+        }
     }
     return 0;
 }
 
+void display_transaction_page()
+{
+    update_transaction_page_info();
+    UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
+}
+
+
 void start_transaction_info_display(unsigned int unused)
 {
-    UNUSED(unused);
     transactionDetailsCurrentPage = 0;
-    reset_scrolling();
-    UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
+    transactionValuePageIndex = 0;
+    transactionValuePageCount = 1;
+    display_transaction_page();
 }
 
 void update_transaction_page_info()
 {
     if (event_handler_update_transaction_info != NULL) {
-        event_handler_update_transaction_info(
-                (char *) transactionDataKey,
-                (char *) transactionDataValue,
-                transactionDetailsCurrentPage);
 
+        if (event_handler_update_transaction_info != NULL) {
 
-        switch (current_sigtype)
-        {
-        case SECP256K1:
-            snprintf(
-                    (char *) pageInfo,
-                    sizeof(pageInfo),
-                    "SECP256K1 - %02d/%02d",
-                    transactionDetailsCurrentPage + 1,
-                    transactionDetailsPageCount);
-            break;
+            int index = transactionValuePageIndex;
+            event_handler_update_transaction_info(
+                    (char *) transactionDataKey,
+                    (char *) transactionDataValue,
+                    sizeof(transactionDataValue),
+                    transactionDetailsCurrentPage,
+                    &index);
+            transactionValuePageCount = index;
+
+            if (transactionValuePageCount > 1) {
+                int position = strlen((char *) transactionDataKey);
+                snprintf(
+                        (char *) transactionDataKey + position,
+                        sizeof(transactionDataKey) - position,
+                        " %02d/%02d",
+                        transactionValuePageIndex + 1,
+                        transactionValuePageCount);
+            }
+        }
+
+        switch (current_sigtype) {
+            case SECP256K1:
+                snprintf(
+                        (char *) pageInfo,
+                        sizeof(pageInfo),
+                        "SECP256K1 - %02d/%02d",
+                        transactionDetailsCurrentPage + 1,
+                        transactionDetailsPageCount);
+                break;
 #ifdef FEATURE_ED25519
-        case ED25519:
-            snprintf(
-                    (char *) pageInfo,
-                    sizeof(pageInfo),
-                    "ED25519 - %02d/%02d",
-                    transactionDetailsCurrentPage + 1,
-                    transactionDetailsPageCount);
-            break;
+            case ED25519:
+                snprintf(
+                        (char *) pageInfo,
+                        sizeof(pageInfo),
+                        "ED25519 - %02d/%02d",
+                        transactionDetailsCurrentPage + 1,
+                        transactionDetailsPageCount);
+                break;
 #endif
         }
 

@@ -51,13 +51,13 @@
         y,              /* y        */                          \
         w,              /* width    */                          \
         h,              /* height   */                          \
-        0,              /* stroke   */                          \
+        5 | BAGL_STROKE_FLAG_ONESHOT, /* stroke | scr pause */ \
         0,              /* radius   */                          \
         0,              /* fill     */                          \
         fgcolor,        /* fgcolor  */                          \
         bgcolor,        /* bgcolor  */                          \
         UI_CENTER11PX,  /* font_id  */                          \
-        0               /* icon_id  */                          \
+         50 /* icon_id / scroll speed  */ \
     },                                                          \
         text,   /* text             */                          \
         0,      /* touch_area_brim  */                          \

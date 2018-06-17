@@ -26,7 +26,6 @@
 uint8_t ram_buffer[RAM_BUFFER_SIZE];
 
 // Flash
-// Move to a separate file
 #define FLASH_BUFFER_SIZE 16384
 typedef struct {
     uint8_t buffer[FLASH_BUFFER_SIZE];
@@ -90,16 +89,9 @@ void transaction_parse()
 
     parsing_context_t context;
     context.transaction = transaction_buffer;
-    context.view_scrolling_total_size = &view_scrolling_total_size;
-    context.view_scrolling_step = &view_scrolling_step;
-    context.key_scrolling_step = &key_scrolling_step;
-    context.key_scrolling_total_size = &key_scrolling_total_size;
-    context.max_chars_per_line = MAX_CHARS_PER_LINE;
+    context.max_chars_per_key_line = MAX_CHARS_PER_KEY_LINE;
+    context.max_chars_per_value_line = MAX_CHARS_PER_VALUE_LINE;
     context.parsed_transaction = &parsed_transaction;
-    view_scrolling_total_size = 10;
-    view_scrolling_step = 0;
-    key_scrolling_total_size = 10;
-    key_scrolling_step = 0;
     set_parsing_context(context);
     set_copy_delegate(&os_memmove);
 }
