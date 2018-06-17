@@ -29,9 +29,6 @@ extern "C" {
 typedef unsigned char byte;
 
 #define MAX_NUMBER_OF_TOKENS    128
-#define MAX_JSON_DEPTH          6
-#define MAX_INPUT_OUTPUT_COUNT  2
-#define MAX_COIN_COUNT          3
 
 //---------------------------------------------
 
@@ -50,10 +47,6 @@ typedef struct
 typedef struct
 {
     const parsed_json_t* parsed_transaction;
-    //unsigned short* view_scrolling_total_size;
-    //unsigned short* view_scrolling_step;
-    //unsigned short* key_scrolling_total_size;
-    //unsigned short* key_scrolling_step;
     unsigned short max_chars_per_key_line;
     unsigned short max_chars_per_value_line;
     const char* transaction;
