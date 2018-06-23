@@ -1,7 +1,7 @@
 UI Specification
 -------------------------
 
-##Terminology:
+## Terminology:
 
 **Left click** - clicking and releasing left button
 
@@ -102,7 +102,7 @@ Line2 contains the title - key element from the json transaction for a particula
 
 Line3 contains the value - value element from the json transaction for a particular page.
 
-#####Here's the page breakdown for a simple json transaction:
+##### Here's the page breakdown for a simple json transaction:
 Screen 1. (default)
 ```
 LINE1: [left icon]  SECP256K1 - 01/08         [right icon]
@@ -166,7 +166,7 @@ LINE2:                     alt_bytes
 LINE3:                        null
 ```
 
-####Scrolling
+#### Scrolling
 Ledger screen can only fit around 20 characters and therefore we need a way for displaying the key and the value strings that are longer. Here we assume that the page info will always fit the screen line.
 
 Ledger supports the smooth pixel scrolling which is enabled by default for the line #3 (i.e. the line that holds the json value). If a text is longer than (around) 20 characters, then Ledger will automatically start scrolling the line.
@@ -203,7 +203,7 @@ Same as Left click, unless we are in the 'Value Chunk Preview', in which case we
 ##### Right hold
 Same as Right click, unless we are in the 'Value Chunk Preview', in which case we step out from the 'Value Chunk Preview' and skip to the next screen.
 
-##Known issues:
+## Known issues:
 We currently don't scroll the key (in line 2) and only display its first 20 characters. The key can be longer though.
 Unfortunately scrolling 2 lines at the same time seems to be impossible in Ledger (TODO: confirm this).
 We need a way of scrolling the key or some other way of displaying the full key string.
