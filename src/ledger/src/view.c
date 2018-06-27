@@ -25,15 +25,20 @@
 #include <string.h>
 #include <stdio.h>
 
+#define TRUE  1
+#define FALSE 0
+
 ux_state_t ux;
 enum UI_STATE view_uiState;
 
 void update_transaction_page_info();
-void display_transaction_page();
+void display_transaction_page(int);
 
 volatile char transactionDataKey[MAX_CHARS_PER_KEY_LINE];
 volatile char transactionDataValue[MAX_CHARS_PER_VALUE_LINE];
 volatile char pageInfo[MAX_SCREEN_LINE_WIDTH];
+
+int value_scrolling_mode;
 
 // Index of the currently displayed page
 int transactionDetailsCurrentPage;
@@ -86,7 +91,7 @@ static const bagl_element_t bagl_ui_sign_transaction[] = {
     UI_LabelLineNoScrolling(1, 0, 23, 128, 11, 0xFFFFFF, 0x000000, "Not implemented yet"),
 };
 
-static const bagl_element_t bagl_ui_transaction_info[] = {
+static const bagl_element_t bagl_ui_transaction_info_valuescrolling[] = {
     UI_FillRectangle(0, 0, 0, 128, 32, 0x000000, 0xFFFFFF),
     UI_Icon(0, 0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT),
     UI_Icon(0, 128-7, 0, 7, 7, BAGL_GLYPH_ICON_RIGHT),
@@ -95,14 +100,13 @@ static const bagl_element_t bagl_ui_transaction_info[] = {
     UI_LabelLine(2, 0, 30, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataValue),
 };
 
-//static const bagl_element_t bagl_ui_transaction_info_keyscrolling[] = {
-//        UI_FillRectangle(0, 0, 0, 128, 32, 0x000000, 0xFFFFFF),
-//        UI_Icon(0, 0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT),
-//        UI_Icon(0, 128-7, 0, 7, 7, BAGL_GLYPH_ICON_RIGHT),
-//        UI_LabelLineNoScrolling(1, 0, 8, 128, 11, 0xFFFFFF, 0x000000,(const char*)pageInfo),
-//        UI_LabelLine(2, 0, 19, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataKey),
-//        UI_LabelLineNoScrolling(1, 0, 30, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataValue),
-//};
+static const bagl_element_t bagl_ui_transaction_info_keyscrolling[] = {
+    UI_FillRectangle(0, 0, 0, 128, 32, 0x000000, 0xFFFFFF),
+    UI_Icon(0, 0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT),
+    UI_Icon(0, 128-7, 0, 7, 7, BAGL_GLYPH_ICON_RIGHT),
+    UI_LabelLineNoScrolling(1, 0, 8, 128, 11, 0xFFFFFF, 0x000000,(const char*)pageInfo),
+    UI_LabelLine(3, 0, 19, 128, 11, 0xFFFFFF, 0x000000,(const char*)transactionDataKey),
+};
 //------ View elements
 
 //------ Event handlers
@@ -141,7 +145,7 @@ const bagl_element_t* ui_transaction_info_prepro(const bagl_element_t *element) 
     switch (element->component.userid) {
         case 0x01:  UX_CALLBACK_SET_INTERVAL(2000); break;
         case 0x02:  UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7))); break;
-        //case 0x03:  UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7))); break;
+        case 0x03:  UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7))); break;
     }
     return element;
 }
@@ -149,13 +153,13 @@ const bagl_element_t* ui_transaction_info_prepro(const bagl_element_t *element) 
 void submenu_left()
 {
     transactionChunksPageIndex--;
-    display_transaction_page();
+    display_transaction_page(TRUE);
 }
 
 void submenu_right()
 {
     transactionChunksPageIndex++;
-    display_transaction_page();
+    display_transaction_page(TRUE);
 }
 
 void menu_left()
@@ -164,7 +168,7 @@ void menu_left()
     transactionChunksPageCount = 1;
     if (transactionDetailsCurrentPage > 0) {
         transactionDetailsCurrentPage--;
-        display_transaction_page();
+        display_transaction_page(TRUE);
     } else {
         view_display_transaction_menu(0);
     }
@@ -176,14 +180,15 @@ void menu_right()
     transactionChunksPageCount = 1;
     if (transactionDetailsCurrentPage < transactionDetailsPageCount - 1) {
         transactionDetailsCurrentPage++;
-        display_transaction_page();
+        display_transaction_page(TRUE);
     } else {
         view_display_transaction_menu(0);
     }
 }
 
-static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
-                                                    unsigned int button_mask_counter)
+static unsigned int bagl_ui_transaction_info_valuescrolling_button(
+        unsigned int button_mask,
+        unsigned int button_mask_counter)
 {
     switch (button_mask) {
         // Hold left and right long to quit
@@ -229,19 +234,67 @@ static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
     return 0;
 }
 
-void display_transaction_page()
+void switch_to_value_scrolling()
 {
-    update_transaction_page_info();
-    UX_DISPLAY(bagl_ui_transaction_info, ui_transaction_info_prepro);
+    if (value_scrolling_mode == FALSE) {
+        int offset = strlen((char*)transactionDataKey) - MAX_SCREEN_LINE_WIDTH;
+        if (offset > 0) {
+            char* start = (char*)transactionDataKey;
+            while (1) {
+                *start = start[offset];
+                if (*start == '\0') break;
+                start++;
+            }
+        }
+        value_scrolling_mode = TRUE;
+        display_transaction_page(FALSE);
+    }
+}
+
+static unsigned int bagl_ui_transaction_info_keyscrolling_button(
+        unsigned int button_mask,
+        unsigned int button_mask_counter)
+{
+    switch (button_mask) {
+        // Hold left and right long to quit
+        case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT: {
+            view_display_transaction_menu(0);
+            break;
+        }
+
+        // Press to progress to the previous element
+        case BUTTON_EVT_RELEASED | BUTTON_LEFT:
+        // Press to progress to the next element
+        case BUTTON_EVT_RELEASED | BUTTON_RIGHT: {
+            switch_to_value_scrolling();
+        } break;
+    }
+    return 0;
+}
+
+
+void display_transaction_page(int update)
+{
+    if (update == TRUE) {
+        update_transaction_page_info();
+    }
+    if (value_scrolling_mode == TRUE) {
+        UX_DISPLAY(bagl_ui_transaction_info_valuescrolling, ui_transaction_info_prepro);
+    }
+    else
+    {
+        UX_DISPLAY(bagl_ui_transaction_info_keyscrolling, ui_transaction_info_prepro);
+    }
 }
 
 
 void start_transaction_info_display(unsigned int unused)
 {
+    value_scrolling_mode = TRUE;
     transactionDetailsCurrentPage = 0;
     transactionChunksPageIndex = 0;
     transactionChunksPageCount = 1;
-    display_transaction_page();
+    display_transaction_page(TRUE);
 }
 
 void update_transaction_page_info()
@@ -268,6 +321,13 @@ void update_transaction_page_info()
                         " %02d/%02d",
                         transactionChunksPageIndex + 1,
                         transactionChunksPageCount);
+            }
+
+            if (strlen((char*)transactionDataKey) > MAX_SCREEN_LINE_WIDTH) {
+                value_scrolling_mode = FALSE;
+            }
+            else {
+                value_scrolling_mode = TRUE;
             }
         }
 

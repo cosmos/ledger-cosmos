@@ -57,7 +57,7 @@
         fgcolor,        /* fgcolor  */                          \
         bgcolor,        /* bgcolor  */                          \
         UI_CENTER11PX,  /* font_id  */                          \
-         50 /* icon_id / scroll speed  */ \
+        50 /* icon_id / scroll speed  */ \
     },                                                          \
         text,   /* text             */                          \
         0,      /* touch_area_brim  */                          \
