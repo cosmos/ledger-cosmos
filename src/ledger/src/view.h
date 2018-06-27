@@ -22,8 +22,9 @@
 #define UI_CENTER11PX       BAGL_FONT_OPEN_SANS_REGULAR_11px | BAGL_FONT_ALIGNMENT_CENTER
 #define UI_CENTER11PX_BOLD  BAGL_FONT_OPEN_SANS_EXTRABOLD_11px | BAGL_FONT_ALIGNMENT_CENTER
 #define DEFAULT_FONT        BAGL_FONT_OPEN_SANS_LIGHT_16px | BAGL_FONT_ALIGNMENT_LEFT
-#define MAX_CHARS_PER_KEY_LINE      32
-#define MAX_CHARS_PER_VALUE_LINE    256
+#define MAX_CHARS_PER_KEY_LINE      64
+#define MAX_CHARS_PER_VALUE_LINE    128
+#define MAX_SCREEN_LINE_WIDTH       20
 
 enum UI_STATE {
     UI_IDLE,
@@ -33,7 +34,7 @@ enum UI_STATE {
 extern enum UI_STATE view_uiState;
 
 //------ Delegates definitions
-typedef int (*delegate_update_transaction_info)(char*,char*, int, int, int*);
+typedef int (*delegate_update_transaction_info)(char*,int, char*, int, int, int*);
 typedef void (*delegate_reject_transaction)();
 typedef void (*delegate_sign_transaction)();
 

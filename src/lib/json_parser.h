@@ -111,12 +111,14 @@ int display_value(
 // Update key characters from json transaction read from the token_index element.
 void display_key(
         char* key, // output
+        int key_length,
         int token_index); // input
 
 // Generic function to display arbitrary json based on the specification
 int display_arbitrary_item(
         int item_index_to_display, //input
         char* key, // output
+        int key_length,
         char* value, // output
         int value_length,
         int token_index,
@@ -127,9 +129,10 @@ int display_get_arbitrary_items_count(
 
 int transaction_get_display_key_value(
         char* key, // output
+        int key_length,
         char* value, // output
         int value_length,
-        int index,
+        int page_index,
         int* chunk_index); // input
 
 int transaction_get_display_pages();

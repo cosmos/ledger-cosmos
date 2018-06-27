@@ -33,7 +33,7 @@ void display_transaction_page();
 
 volatile char transactionDataKey[MAX_CHARS_PER_KEY_LINE];
 volatile char transactionDataValue[MAX_CHARS_PER_VALUE_LINE];
-volatile char pageInfo[20];
+volatile char pageInfo[MAX_SCREEN_LINE_WIDTH];
 
 // Index of the currently displayed page
 int transactionDetailsCurrentPage;
@@ -43,9 +43,9 @@ int transactionDetailsPageCount;
 // Below data is used to help split long messages that are scrolled
 // into smaller chunks so they fit the memory buffer
 // Index of currently displayed value chunk
-int transactionValuePageIndex;
+int transactionChunksPageIndex;
 // Total number of displayable value chunks
-int transactionValuePageCount;
+int transactionChunksPageCount;
 
 void start_transaction_info_display(unsigned int unused);
 void view_sign_transaction(unsigned int unused);
@@ -139,20 +139,20 @@ const bagl_element_t* ui_transaction_info_prepro(const bagl_element_t *element) 
 
 void submenu_left()
 {
-    transactionValuePageIndex--;
+    transactionChunksPageIndex--;
     display_transaction_page();
 }
 
 void submenu_right()
 {
-    transactionValuePageIndex++;
+    transactionChunksPageIndex++;
     display_transaction_page();
 }
 
 void menu_left()
 {
-    transactionValuePageIndex = 0;
-    transactionValuePageCount = 1;
+    transactionChunksPageIndex = 0;
+    transactionChunksPageCount = 1;
     if (transactionDetailsCurrentPage > 0) {
         transactionDetailsCurrentPage--;
         display_transaction_page();
@@ -163,8 +163,8 @@ void menu_left()
 
 void menu_right()
 {
-    transactionValuePageIndex = 0;
-    transactionValuePageCount = 1;
+    transactionChunksPageIndex = 0;
+    transactionChunksPageCount = 1;
     if (transactionDetailsCurrentPage < transactionDetailsPageCount - 1) {
         transactionDetailsCurrentPage++;
         display_transaction_page();
@@ -185,7 +185,7 @@ static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
 
         // Press to progress to the previous element
         case BUTTON_EVT_RELEASED | BUTTON_LEFT: {
-            if (transactionValuePageIndex > 0) {
+            if (transactionChunksPageIndex > 0) {
                 submenu_left();
             } else {
                 menu_left();
@@ -202,7 +202,7 @@ static unsigned int bagl_ui_transaction_info_button(unsigned int button_mask,
 
         // Press to progress to the next element
         case BUTTON_EVT_RELEASED | BUTTON_RIGHT: {
-            if (transactionValuePageIndex < transactionValuePageCount - 1) {
+            if (transactionChunksPageIndex < transactionChunksPageCount - 1) {
                 submenu_right();
             } else {
                 menu_right();
@@ -230,8 +230,8 @@ void display_transaction_page()
 void start_transaction_info_display(unsigned int unused)
 {
     transactionDetailsCurrentPage = 0;
-    transactionValuePageIndex = 0;
-    transactionValuePageCount = 1;
+    transactionChunksPageIndex = 0;
+    transactionChunksPageCount = 1;
     display_transaction_page();
 }
 
@@ -241,23 +241,24 @@ void update_transaction_page_info()
 
         if (event_handler_update_transaction_info != NULL) {
 
-            int index = transactionValuePageIndex;
+            int index = transactionChunksPageIndex;
             event_handler_update_transaction_info(
                     (char *) transactionDataKey,
+                    sizeof(transactionDataKey),
                     (char *) transactionDataValue,
                     sizeof(transactionDataValue),
                     transactionDetailsCurrentPage,
                     &index);
-            transactionValuePageCount = index;
+            transactionChunksPageCount = index;
 
-            if (transactionValuePageCount > 1) {
+            if (transactionChunksPageCount > 1) {
                 int position = strlen((char *) transactionDataKey);
                 snprintf(
                         (char *) transactionDataKey + position,
                         sizeof(transactionDataKey) - position,
                         " %02d/%02d",
-                        transactionValuePageIndex + 1,
-                        transactionValuePageCount);
+                        transactionChunksPageIndex + 1,
+                        transactionChunksPageCount);
             }
         }
 
