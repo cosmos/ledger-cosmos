@@ -68,6 +68,31 @@
         NULL,   /* over             */                          \
 }
 
+#define UI_LabelLineNoScrolling(id, x, y, w, h, fgcolor, bgcolor, text)    \
+{                                                               \
+    {                                                           \
+        BAGL_LABELINE, /* type     */                           \
+        id,           /* usedid   */                            \
+        x,              /* x        */                          \
+        y,              /* y        */                          \
+        w,              /* width    */                          \
+        h,              /* height   */                          \
+        0,              /* stroke   */                          \
+        0,              /* radius   */                          \
+        0,              /* fill     */                          \
+        fgcolor,        /* fgcolor  */                          \
+        bgcolor,        /* bgcolor  */                          \
+        UI_CENTER11PX,  /* font_id  */                          \
+        0               /* icon_id  */                          \
+    },                                                          \
+        text,   /* text             */                          \
+        0,      /* touch_area_brim  */                          \
+        0,      /* overfgcolor      */                          \
+        0,      /* overbgcolor      */                          \
+        NULL,   /* tap              */                          \
+        NULL,   /* out              */                          \
+        NULL,   /* over             */                          \
+}
 
 #define UI_Icon(id, x, y, w, h, icon)                       \
 {                                                           \
