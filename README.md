@@ -1,9 +1,23 @@
 # ledger-cosmos
 [![CircleCI](https://circleci.com/gh/cosmos/ledger-cosmos/tree/master.svg?style=svg)](https://circleci.com/gh/cosmos/ledger-cosmos/tree/master)
 
-This is a prototype of the ledger app for cosmos-sdk. It is work in progress subject to further modifications and testing.
+This is a prototype of the Ledger Nano S app for Tendermint/Cosmos. 
 
-WARNING: DO NOT USE THIS APP IN A LEDGER WITH FUNDS. 
+It is work in progress and subject to further modifications and testing.
+
+**WARNING: DO NOT USE THIS APP IN A LEDGER WITH REAL FUNDS.**
+
+This repo includes:
+
+- Ledger Nano S app
+- C++ unit tests
+- Golang client test
+
+# Demo firmware
+
+Continuous integration generates a demo.zip. This includes firmware plus a shell script that installs the firmware. 
+
+**WARNING**: Remember to use this ONLY in a ledger without fund and only for test purposes.
 
 # Get source
 Apart from cloning, be sure you get all the submodules, by calling:
@@ -13,19 +27,35 @@ git submodule update --init --recursive
 or alternatively using ```fix_submodules.sh``` script which can be found in the tools folder.
 
 # Dependencies
-This project requires ledger firmware 1.4.1
 
-## Ledger python tools
+### Ledger Nano S
 
-Ledger firmware 1.4.1 requires ledgerblue 0.1.17. Unfortunately, the package is still not available in pypi. For this reason, it is necessary to install it directly from source. In most cases, `nanocli.sh` should be able to install all dependencies: 
+This project requires ledger firmware 1.4.2
+
+### Docker CE
+
+Install docker CE following this instructions:
+
+https://docs.docker.com/install/
+
+## CircleCI CLI
+
+CircleCI allows compiling BOLOS firmware both in Linux and MacOS. The CLI will download a docker container ready to run.
+
+To install, follow the instructions here:
+
+https://circleci.com/docs/2.0/local-cli/#installing-the-circleci-local-cli-on-macos-and-linux-distros
+
+## Ledger Python Tools
+
+Ledger firmware 1.4.2 requires ledgerblue 0.1.18. In most cases, `nanocli.sh` should be able to install all dependencies: 
 
 ```bash
 ./nanocli.sh config
 ```
 It is possible that due to recent changes to the firmware/SDK some additional steps might be required.
 
-This tool requires python 2.7 - it will not run in 3.x versions. 
-In order to check which version you are using run this in your terminal:
+This tool requires python 2.7 - some versions do not run correclty with python 3.x versions. In order to check which version you are using run this in your terminal:
 ```python --version```
 
 There are different ways of installing python 2.7 side-by-side your existing version:
@@ -54,71 +84,69 @@ and then:
 step 4: ```deactivate```
 to switch back to the original environment
 
-## CircleCI CLI
-
-Installing the CircleCI CLI is recommended. Follow the instructions here:
-
-https://circleci.com/docs/2.0/local-cli/#installing-the-circleci-local-cli-on-macos-and-linux-distros
-
-## Ubuntu
+## Ubuntu Dependencies
 Install the following packages:
 ```
 sudo apt update && apt-get -y install build-essential git sudo wget cmake libssl-dev libgmp-dev autoconf libtool
 ```
 
+## OSX Dependencies
+
+Similar dependencies as Ubuntu. Using brew is recommended.
+
 # Building
 
-Depending on the purpose, there are different ways in which this project can be built.
-## Local x64 code + tests
+## Local builds
+
+There are different local builds:
+
+ - Generic C++ code and run unit tests
+ - BOLOS firmware
+
+#### Generic C++ Code / Tests
+
 This is useful when you want to make changes to libraries, run unit tests, etc. It will build all common libraries and unit tests.
 
-#### Compile
+**Compile**
 ```
 cmake . && make
 ```
-#### Run unit tests
+**Run unit tests**
 ```
 export GTEST_COLOR=1 && ctest -VV
 ```
-## Continous Integration Image - Ubuntu 16.04
-This is similar to the previous approach, however, it will build in a docker image identical to what CircleCI uses. This provides a clean, reproducible environment. It also can be helpful to debug CI issues.
-```
-circleci build
-```
 
-## BOLOS / Ledger firmware
-This approach will build the cosmos' ledger app in a Docker image for BOLOS. The resulting firmware will be available in the host. This can be later uploaded as described below.
-#### Build
+#### BOLOS / Ledger firmware
+In order to keep builds reproducible, a bash script is provided.
+ The script will build the firmware in a docker container and leave the binary in the correct directory.
+
+**Build**
+
 The following command will build the app firmware inside a container. All output will be available to the host.
 ```
 ./nanocli.sh make
 ```
-#### Delete app from ledger
-The following command will delete the application from the ledger. 
-```
-./nanocli.sh delete
-```
-#### Load app to ledger
+
+**Upload the app to the device**
 The following command will upload the application to the ledger. _Warning: The application must be deleted before uploading._
 ```
 ./nanocli.sh load
 ```
 
-# Additional Scripts
+## Continuous Integration (debugging CI issues)
+This will build in a docker image identical to what CircleCI uses. This provides a clean, reproducible environment. It also can be helpful to debug CI issues.
 
-There are a few additional scripts that could be useful.
-#### Build json samples
-Use go to build json test samples for different test scenarios. 
+**To build in ubuntu 16.04 and run C++ unit tests**
 ```
-./tools/build_samples.sh
+circleci build
 ```
-#### Python test script
-In addition to unit tests, it is possible to run an integration test using this script.
 
-- Build and upload the ledger app
-- Start the ledger app
-- Run the following command:
+**To build BOLOS firmware**
 ```
-./tools/test.py
+circleci build --job build_ledger
 ```
-- The app should change to a "View/Sign transaction" mode.
+
+**To build go client**
+```
+circleci build --job build_go
+```
