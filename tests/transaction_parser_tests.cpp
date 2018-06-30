@@ -316,6 +316,7 @@ namespace {
         display_arbitrary_item(
                 0,
                 key,
+                sizeof(key),
                 value,
                 sizeof(value),
                 2,
@@ -341,6 +342,7 @@ namespace {
         display_arbitrary_item(
                 1,
                 key,
+                sizeof(key),
                 value,
                 sizeof(value),
                 2,
@@ -366,6 +368,7 @@ namespace {
         display_arbitrary_item(
                 2,
                 key,
+                sizeof(key),
                 value,
                 sizeof(value),
                 2,
@@ -392,6 +395,7 @@ namespace {
         int found_item_index = display_arbitrary_item(
                 requested_item_index,
                 key,
+                sizeof(key),
                 value,
                 sizeof(value),
                 2,
@@ -443,7 +447,10 @@ namespace {
         char key[screen_size];
         char value[screen_size];
         int chunk_index = 0;
-        transaction_get_display_key_value(key, value, sizeof(value), 0, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value, sizeof(value),
+            0, &chunk_index);
 
         EXPECT_EQ_STR(key, "chain_id", "Wrong key");
         EXPECT_EQ_STR(value, "test-chain-1", "Wrong value");
@@ -461,7 +468,10 @@ namespace {
         char key[screen_size];
         char value[screen_size];
         int chunk_index = 0;
-        transaction_get_display_key_value(key, value, sizeof(value), 1, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value, sizeof(value),
+            1, &chunk_index);
 
         EXPECT_EQ_STR(key, "sequences", "Wrong key");
         EXPECT_EQ_STR(value, "[1]", "Wrong value");
@@ -479,7 +489,10 @@ namespace {
         char key[screen_size];
         char value[screen_size];
         int chunk_index = 0;
-        transaction_get_display_key_value(key, value, sizeof(value), 2, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value, sizeof(value),
+            2, &chunk_index);
 
         EXPECT_EQ_STR(key, "fee_bytes", "Wrong key");
         EXPECT_EQ_STR(value, "{\"amount\":[{\"amount\":5,\"denom\":\"photon\"}],\"gas\":10000}", "Wrong value");
@@ -497,7 +510,10 @@ namespace {
         char key[screen_size];
         char value[screen_size];
         int chunk_index = 0;
-        transaction_get_display_key_value(key, value, sizeof(value), 3, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value, sizeof(value),
+            3, &chunk_index);
 
         EXPECT_EQ_STR(key, "msg_bytes/inputs/address", "Wrong key");
         EXPECT_EQ_STR(value, "696E707574", "Wrong value");
@@ -515,7 +531,10 @@ namespace {
         char key[screen_size];
         char value[screen_size];
         int chunk_index = 0;
-        transaction_get_display_key_value(key, value, sizeof(value), 4, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value, sizeof(value),
+            4, &chunk_index);
 
         EXPECT_EQ_STR(key, "msg_bytes/inputs/coins", "Wrong key");
         EXPECT_EQ_STR(value, "[{\"amount\":10,\"denom\":\"atom\"}]", "Wrong value");
@@ -533,7 +552,10 @@ namespace {
         char key[100];
         char value[100];
         int chunk_index = 0;
-        transaction_get_display_key_value(key, value, sizeof(value), 5, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value, sizeof(value),
+            5, &chunk_index);
 
         EXPECT_EQ_STR(key, "msg_bytes/outputs/address", "Wrong key");
         EXPECT_EQ_STR(value, "6F7574707574", "Wrong value");
@@ -551,7 +573,10 @@ namespace {
         char key[screen_size];
         char value[screen_size];
         int chunk_index = 0;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value,sizeof(value),
+            6, &chunk_index);
 
         EXPECT_EQ_STR(key, "msg_bytes/outputs/coins", "Wrong key");
         EXPECT_EQ_STR(value, "[{\"amount\":10,\"denom\":\"atom\"}]", "Wrong value");
@@ -569,7 +594,10 @@ namespace {
         char key[screen_size];
         char value[screen_size];
         int chunk_index = 0;
-        transaction_get_display_key_value(key, value, sizeof(value), 7, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value, sizeof(value),
+            7, &chunk_index);
 
         EXPECT_EQ_STR(key, "alt_bytes", "Wrong key");
         EXPECT_EQ_STR(value, "null", "Wrong value");
@@ -587,7 +615,10 @@ namespace {
         char key[10];
         char value[screen_size];
         int chunk_index = 0;
-        transaction_get_display_key_value(key, value, sizeof(value), 2, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value, sizeof(value),
+            2, &chunk_index);
 
         EXPECT_EQ(chunk_index, 1) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "Four", "Wrong value");
@@ -605,13 +636,21 @@ namespace {
         char key[10];
         char value[screen_size];
         int chunk_index = 0;
-        transaction_get_display_key_value(key, value, sizeof(value), 2, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value, sizeof(value),
+            2, &chunk_index);
+
         EXPECT_EQ(chunk_index, 2) << "Wrong number of chunks";
         // Because string is null terminated there was not enough room for 't'
         EXPECT_EQ_STR(value, "Four", "Wrong value");
 
         chunk_index = 1;
-        transaction_get_display_key_value(key, value, sizeof(value), 2, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value, sizeof(value),
+            2, &chunk_index);
+
         EXPECT_EQ(chunk_index, 2) << "Wrong number of chunks";
         // Because string is null terminated there was not enough room for 't'
         EXPECT_EQ_STR(value, "t", "Wrong value");
@@ -632,27 +671,47 @@ namespace {
         // String: LONGJUMPLIFELOVEDOVE
 
         int chunk_index = 0;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value,sizeof(value),
+            6, &chunk_index);
+
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "LONG", "Wrong value");
 
         chunk_index = 1;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value,sizeof(value),
+            6, &chunk_index);
+
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "JUMP", "Wrong value");
 
         chunk_index = 2;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value,sizeof(value),
+            6, &chunk_index);
+
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "LIFE", "Wrong value");
 
         chunk_index = 3;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value,sizeof(value),
+            6, &chunk_index);
+
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "LOVE", "Wrong value");
 
         chunk_index = 4;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value,sizeof(value),
+            6, &chunk_index);
+
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "DOVE", "Wrong value");
     }
@@ -672,12 +731,20 @@ namespace {
         // String: LONGJUMPLIFELOVEDOVE
 
         int chunk_index = -1;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value,sizeof(value),
+            6, &chunk_index);
+
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "", "Wrong value");
 
         chunk_index = 10;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(
+            key, sizeof(key),
+            value,sizeof(value),
+            6, &chunk_index);
+
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "", "Wrong value");
     }
