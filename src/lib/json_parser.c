@@ -465,8 +465,8 @@ int transaction_get_display_key_value(char *key, // output
             break;
         }
         case 1: {
-            copy_fct(key, "sequences", sizeof("sequences"));
-            int token_index = object_get_value(0, "sequences", parsing_context.parsed_transaction,
+            copy_fct(key, "sequence", sizeof("sequence"));
+            int token_index = object_get_value(0, "sequence", parsing_context.parsed_transaction,
                                                parsing_context.transaction);
             update(value, value_length, token_index, chunk_index);
             break;
