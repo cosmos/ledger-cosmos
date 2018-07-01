@@ -1,5 +1,4 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
 *   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,13 +25,12 @@ append_buffer_delegate append_flash_buffer = NULL;
 buffer_state_t flash;
 
 void buffering_init(
-        uint8_t* ram_buffer,
-        int ram_buffer_size,
+        uint8_t *ram_buffer,
+        uint16_t ram_buffer_size,
         append_buffer_delegate ram_delegate,
-        uint8_t* flash_buffer,
-        int flash_buffer_size,
-        append_buffer_delegate flash_delegate)
-{
+        uint8_t *flash_buffer,
+        uint16_t flash_buffer_size,
+        append_buffer_delegate flash_delegate) {
     append_ram_buffer = ram_delegate;
     append_flash_buffer = flash_delegate;
 
@@ -49,50 +47,43 @@ void buffering_init(
     flash.initialized = 1;
 }
 
-void buffering_reset()
-{
+void buffering_reset() {
     ram.pos = 0;
     ram.in_use = 1;
     flash.pos = 0;
     flash.in_use = 0;
 }
 
-void buffering_append(uint8_t* data, int length)
-{
+void buffering_append(uint8_t *data, int length) {
     if (ram.in_use) {
         if (ram.size - ram.pos >= length) {
             append_ram_buffer(&ram, data, length);
             ram.pos += length;
-        }
-        else {
+        } else {
             ram.in_use = 0;
             flash.in_use = 1;
             if (ram.pos > 0) {
                 buffering_append(ram.data, ram.pos);
             }
-            buffering_append(data,length);
+            buffering_append(data, length);
             ram.pos = 0;
         }
-    }
-    else {
+    } else {
         append_flash_buffer(&flash, data, length);
         flash.pos += length;
     }
 }
 
 
-buffer_state_t* buffering_get_ram_buffer()
-{
+buffer_state_t *buffering_get_ram_buffer() {
     return &ram;
 }
 
-buffer_state_t* buffering_get_flash_buffer()
-{
+buffer_state_t *buffering_get_flash_buffer() {
     return &flash;
 }
 
-buffer_state_t* buffering_get_buffer()
-{
+buffer_state_t *buffering_get_buffer() {
     if (ram.in_use) {
         return &ram;
     }

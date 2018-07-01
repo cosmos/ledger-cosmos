@@ -1,5 +1,4 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
 *   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -205,7 +204,8 @@ namespace {
         int token_index = object_get_nth_key(0, 0, &parsed_json);
         EXPECT_EQ(token_index, 1) << "Wrong token index";
         EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_STRING) << "Wrong token type returned";
-        EXPECT_EQ(memcmp(transaction+parsed_json.Tokens[token_index].start,"age", strlen("age")), 0) << "Wrong key returned";
+        EXPECT_EQ(memcmp(transaction + parsed_json.Tokens[token_index].start, "age", strlen("age")), 0)
+                            << "Wrong key returned";
     }
 
     TEST(TransactionParserTest, ObjectElementGet_string) {
@@ -218,7 +218,8 @@ namespace {
         int token_index = object_get_nth_value(0, 3, &parsed_json);
         EXPECT_EQ(token_index, 8) << "Wrong token index";
         EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_STRING) << "Wrong token type returned";
-        EXPECT_EQ(memcmp(transaction+parsed_json.Tokens[token_index].start,"july", strlen("july")), 0) << "Wrong key returned";
+        EXPECT_EQ(memcmp(transaction + parsed_json.Tokens[token_index].start, "july", strlen("july")), 0)
+                            << "Wrong key returned";
     }
 
     TEST(TransactionParserTest, ObjectElementGet_out_of_bounds_negative) {
@@ -278,26 +279,20 @@ namespace {
     }
 
     void setup_context(
-            parsed_json_t* parsed_json,
-            int screen_size,
-            const char* transaction)
-    {
-        static unsigned short view_scrolling_total_size = 0;
-        static unsigned short view_scrolling_step = 0;
-        static unsigned short key_scrolling_total_size = 0;
-        static unsigned short key_scrolling_step = 0;
+            parsed_json_t *parsed_json,
+            unsigned short screen_size,
+            const char *transaction) {
         parsing_context_t context;
         context.parsed_transaction = parsed_json;
         context.max_chars_per_key_line = screen_size;
         context.max_chars_per_value_line = screen_size;
         context.transaction = transaction;
         set_parsing_context(context);
-        set_copy_delegate([](void* d, const void* s, unsigned int size) { memcpy(d, s, size);});
+        set_copy_delegate([](void *d, const void *s, size_t size) { memcpy(d, s, size); });
     }
 
-    void EXPECT_EQ_STR(const char* str1, const char* str2, const char* errorMsg)
-    {
-        EXPECT_TRUE(strcmp(str1,str2)==0)  << errorMsg << ", expected: " << str2 << ", received: " << str1;
+    void EXPECT_EQ_STR(const char *str1, const char *str2, const char *errorMsg) {
+        EXPECT_TRUE(strcmp(str1, str2) == 0) << errorMsg << ", expected: " << str2 << ", received: " << str1;
     }
 
     TEST(TransactionParserTest, DisplayArbitraryItem_0) {
@@ -321,7 +316,7 @@ namespace {
                 2,
                 &chunk_index);
 
-        EXPECT_EQ_STR(key,"inputs/address", "Wrong key returned");
+        EXPECT_EQ_STR(key, "inputs/address", "Wrong key returned");
         EXPECT_EQ_STR(value, "696E707574", "Wrong value returned");
     }
 
@@ -346,8 +341,8 @@ namespace {
                 2,
                 &chunk_index);
 
-        EXPECT_EQ_STR(key,"inputs/coins","Wrong key returned");
-        EXPECT_EQ_STR(value,"[{\"amount\":10,\"denom\":\"atom\"}]", "Wrong value returned");
+        EXPECT_EQ_STR(key, "inputs/coins", "Wrong key returned");
+        EXPECT_EQ_STR(value, R"([{"amount":10,"denom":"atom"}])", "Wrong value returned");
     }
 
     TEST(TransactionParserTest, DisplayArbitraryItem_2) {
@@ -371,8 +366,8 @@ namespace {
                 2,
                 &chunk_index);
 
-        EXPECT_EQ_STR(key,"outputs/address","Wrong key returned");
-        EXPECT_EQ_STR(value,"6F7574707574","Wrong value returned");
+        EXPECT_EQ_STR(key, "outputs/address", "Wrong key returned");
+        EXPECT_EQ_STR(value, "6F7574707574", "Wrong value returned");
     }
 
     TEST(TransactionParserTest, DisplayArbitraryItem_3) {
@@ -397,8 +392,8 @@ namespace {
                 2,
                 &chunk_index);
 
-        EXPECT_EQ_STR(key,"outputs/coins","Wrong key returned");
-        EXPECT_EQ_STR(value,"[{\"amount\":10,\"denom\":\"atom\"}]","Wrong value returned");
+        EXPECT_EQ_STR(key, "outputs/coins", "Wrong key returned");
+        EXPECT_EQ_STR(value, R"([{"amount":10,"denom":"atom"}])", "Wrong value returned");
         EXPECT_EQ(found_item_index, requested_item_index) << "Returned wrong index";
     }
 
@@ -410,7 +405,6 @@ namespace {
         json_parse(&parsed_json, transaction);
 
         constexpr int screen_size = 100;
-        int requested_item_index = 3;
 
         setup_context(&parsed_json, screen_size, transaction);
 
@@ -482,7 +476,7 @@ namespace {
         transaction_get_display_key_value(key, value, sizeof(value), 2, &chunk_index);
 
         EXPECT_EQ_STR(key, "fee_bytes", "Wrong key");
-        EXPECT_EQ_STR(value, "{\"amount\":[{\"amount\":5,\"denom\":\"photon\"}],\"gas\":10000}", "Wrong value");
+        EXPECT_EQ_STR(value, R"({"amount":[{"amount":5,"denom":"photon"}],"gas":10000})", "Wrong value");
     }
 
     TEST(TransactionParserTest, ParseTransaction_Page_4) {
@@ -518,7 +512,7 @@ namespace {
         transaction_get_display_key_value(key, value, sizeof(value), 4, &chunk_index);
 
         EXPECT_EQ_STR(key, "msg_bytes/inputs/coins", "Wrong key");
-        EXPECT_EQ_STR(value, "[{\"amount\":10,\"denom\":\"atom\"}]", "Wrong value");
+        EXPECT_EQ_STR(value, R"([{"amount":10,"denom":"atom"}])", "Wrong value");
     }
 
     TEST(TransactionParserTest, ParseTransaction_Page_6) {
@@ -551,10 +545,10 @@ namespace {
         char key[screen_size];
         char value[screen_size];
         int chunk_index = 0;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(key, value, sizeof(value), 6, &chunk_index);
 
         EXPECT_EQ_STR(key, "msg_bytes/outputs/coins", "Wrong key");
-        EXPECT_EQ_STR(value, "[{\"amount\":10,\"denom\":\"atom\"}]", "Wrong value");
+        EXPECT_EQ_STR(value, R"([{"amount":10,"denom":"atom"}])", "Wrong value");
     }
 
     TEST(TransactionParserTest, ParseTransaction_Page_8) {
@@ -632,27 +626,27 @@ namespace {
         // String: LONGJUMPLIFELOVEDOVE
 
         int chunk_index = 0;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(key, value, sizeof(value), 6, &chunk_index);
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "LONG", "Wrong value");
 
         chunk_index = 1;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(key, value, sizeof(value), 6, &chunk_index);
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "JUMP", "Wrong value");
 
         chunk_index = 2;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(key, value, sizeof(value), 6, &chunk_index);
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "LIFE", "Wrong value");
 
         chunk_index = 3;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(key, value, sizeof(value), 6, &chunk_index);
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "LOVE", "Wrong value");
 
         chunk_index = 4;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(key, value, sizeof(value), 6, &chunk_index);
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "DOVE", "Wrong value");
     }
@@ -672,12 +666,12 @@ namespace {
         // String: LONGJUMPLIFELOVEDOVE
 
         int chunk_index = -1;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(key, value, sizeof(value), 6, &chunk_index);
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "", "Wrong value");
 
         chunk_index = 10;
-        transaction_get_display_key_value(key, value,sizeof(value), 6, &chunk_index);
+        transaction_get_display_key_value(key, value, sizeof(value), 6, &chunk_index);
         EXPECT_EQ(chunk_index, 5) << "Wrong number of chunks";
         EXPECT_EQ_STR(value, "", "Wrong value");
     }

@@ -36,18 +36,15 @@ storage_t N_appdata_impl __attribute__ ((aligned(64)));
 
 parsed_json_t parsed_transaction;
 
-void update_ram(buffer_state_t* buffer, uint8_t* data, int size)
-{
-    os_memmove(buffer->data+buffer->pos, data, size);
+void update_ram(buffer_state_t *buffer, uint8_t *data, int size) {
+    os_memmove(buffer->data + buffer->pos, data, size);
 }
 
-void update_flash(buffer_state_t* buffer, uint8_t* data, int size)
-{
-    nvm_write((void*) buffer->data+buffer->pos, data, size);
+void update_flash(buffer_state_t *buffer, uint8_t *data, int size) {
+    nvm_write((void *) buffer->data + buffer->pos, data, size);
 }
 
-void transaction_initialize()
-{
+void transaction_initialize() {
     append_buffer_delegate update_ram_delegate = &update_ram;
     append_buffer_delegate update_flash_delegate = &update_flash;
 
@@ -61,29 +58,24 @@ void transaction_initialize()
     );
 }
 
-void transaction_reset()
-{
+void transaction_reset() {
     buffering_reset();
 }
 
-void transaction_append(unsigned char *buffer, uint32_t length)
-{
+void transaction_append(unsigned char *buffer, uint32_t length) {
     buffering_append(buffer, length);
 }
 
-uint32_t transaction_get_buffer_length()
-{
+uint32_t transaction_get_buffer_length() {
     return buffering_get_buffer()->pos;
 }
 
-uint8_t* transaction_get_buffer()
-{
+uint8_t *transaction_get_buffer() {
     return buffering_get_buffer()->data;
 }
 
-void transaction_parse()
-{
-    const char* transaction_buffer = (const char*)transaction_get_buffer();
+void transaction_parse() {
+    const char *transaction_buffer = (const char *) transaction_get_buffer();
     json_parse(&parsed_transaction, transaction_buffer);
     // FIXME: Verify is valid. Sorted / whitespaces, etc.
 
@@ -96,7 +88,6 @@ void transaction_parse()
     set_copy_delegate(&os_memmove);
 }
 
-parsed_json_t *transaction_get_parsed()
-{
+parsed_json_t *transaction_get_parsed() {
     return &parsed_transaction;
 }

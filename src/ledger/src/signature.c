@@ -20,33 +20,30 @@
 #include "apdu_codes.h"
 
 void keys_secp256k1(
-        cx_ecfp_public_key_t* publicKey,
-        cx_ecfp_private_key_t* privateKey,
-        const uint8_t privateKeyData[32])
-{
+        cx_ecfp_public_key_t *publicKey,
+        cx_ecfp_private_key_t *privateKey,
+        const uint8_t privateKeyData[32]) {
     cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, privateKey);
     cx_ecfp_init_public_key(CX_CURVE_256K1, NULL, 0, publicKey);
     cx_ecfp_generate_pair(CX_CURVE_256K1, publicKey, privateKey, 1);
 }
 
 void keys_ed25519(
-        cx_ecfp_public_key_t* publicKey,
-        cx_ecfp_private_key_t* privateKey,
-        const uint8_t privateKeyData[32])
-{
+        cx_ecfp_public_key_t *publicKey,
+        cx_ecfp_private_key_t *privateKey,
+        const uint8_t privateKeyData[32]) {
     cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, privateKey);
     cx_ecfp_init_public_key(CX_CURVE_Ed25519, NULL, 0, publicKey);
     cx_ecfp_generate_pair(CX_CURVE_Ed25519, publicKey, privateKey, 1);
 }
 
 int sign_secp256k1(
-        const uint8_t* message,
+        const uint8_t *message,
         unsigned int message_length,
-        uint8_t* signature,
+        uint8_t *signature,
         unsigned int signature_capacity,
-        unsigned int* signature_length,
-        cx_ecfp_private_key_t* privateKey)
-{
+        unsigned int *signature_length,
+        cx_ecfp_private_key_t *privateKey) {
     uint8_t message_digest[CX_SHA256_SIZE];
     cx_hash_sha256(message, message_length, message_digest, CX_SHA256_SIZE);
 
@@ -81,13 +78,12 @@ int sign_secp256k1(
 }
 
 int sign_ed25519(
-        const uint8_t* message,
+        const uint8_t *message,
         unsigned int message_length,
-        uint8_t* signature,
+        uint8_t *signature,
         unsigned int signature_capacity,
-        unsigned int* signature_length,
-        cx_ecfp_private_key_t* privateKey)
-{
+        unsigned int *signature_length,
+        cx_ecfp_private_key_t *privateKey) {
     uint8_t message_digest[CX_SHA512_SIZE];
     cx_hash_sha512(message, message_length, message_digest, CX_SHA512_SIZE);
 

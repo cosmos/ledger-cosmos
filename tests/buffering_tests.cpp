@@ -1,5 +1,4 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
 *   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,13 +27,13 @@ namespace {
         buffering_init(
                 ram_buffer,
                 sizeof(ram_buffer),
-                [](buffer_state_t* buffer, uint8_t* data, int size) {
-                    memcpy(buffer->data+buffer->pos, data, size);
+                [](buffer_state_t *buffer, uint8_t *data, int size) {
+                    memcpy(buffer->data + buffer->pos, data, size);
                 },
                 flash_buffer,
                 sizeof(flash_buffer),
-                [](buffer_state_t* buffer, uint8_t* data, int size) {
-                    memcpy(buffer->data+buffer->pos, data, size);
+                [](buffer_state_t *buffer, uint8_t *data, int size) {
+                    memcpy(buffer->data + buffer->pos, data, size);
                 });
 
         // Data is small enough to fit into ram buffer
@@ -56,13 +55,13 @@ namespace {
         buffering_init(
                 ram_buffer,
                 sizeof(ram_buffer),
-                [](buffer_state_t* buffer, uint8_t* data, int size) {
-                    memcpy(buffer->data+buffer->pos, data, size);
+                [](buffer_state_t *buffer, uint8_t *data, int size) {
+                    memcpy(buffer->data + buffer->pos, data, size);
                 },
                 flash_buffer,
                 sizeof(flash_buffer),
-                [](buffer_state_t* buffer, uint8_t* data, int size) {
-                    memcpy(buffer->data+buffer->pos, data, size);
+                [](buffer_state_t *buffer, uint8_t *data, int size) {
+                    memcpy(buffer->data + buffer->pos, data, size);
                 });
 
         // Data is too big to fit into ram buffer, it will be written directly to flash
@@ -84,13 +83,13 @@ namespace {
         buffering_init(
                 ram_buffer,
                 sizeof(ram_buffer),
-                [](buffer_state_t* buffer, uint8_t* data, int size) {
-                    memcpy(buffer->data+buffer->pos, data, size);
+                [](buffer_state_t *buffer, uint8_t *data, int size) {
+                    memcpy(buffer->data + buffer->pos, data, size);
                 },
                 flash_buffer,
                 sizeof(flash_buffer),
-                [](buffer_state_t* buffer, uint8_t* data, int size) {
-                    memcpy(buffer->data+buffer->pos, data, size);
+                [](buffer_state_t *buffer, uint8_t *data, int size) {
+                    memcpy(buffer->data + buffer->pos, data, size);
                 });
 
         uint8_t small[40];
@@ -103,7 +102,7 @@ namespace {
         EXPECT_TRUE(buffering_get_ram_buffer()->in_use) << "Writing small buffer should only write to RAM";
         EXPECT_FALSE(buffering_get_flash_buffer()->in_use) << "Writing big buffer should write data to FLASH";
 
-        EXPECT_EQ(sizeof(small)*2, buffering_get_ram_buffer()->pos) << "Data should be written to RAM";
+        EXPECT_EQ(sizeof(small) * 2, buffering_get_ram_buffer()->pos) << "Data should be written to RAM";
         EXPECT_EQ(100, buffering_get_ram_buffer()->size) << "Wrong size of the ram buffer";
         EXPECT_EQ(0, buffering_get_flash_buffer()->pos) << "Data should be written to RAM";
         EXPECT_EQ(1000, buffering_get_flash_buffer()->size) << "Wrong size of the flash buffer";
@@ -117,13 +116,13 @@ namespace {
         buffering_init(
                 ram_buffer,
                 sizeof(ram_buffer),
-                [](buffer_state_t* buffer, uint8_t* data, int size) {
-                    memcpy(buffer->data+buffer->pos, data, size);
+                [](buffer_state_t *buffer, uint8_t *data, int size) {
+                    memcpy(buffer->data + buffer->pos, data, size);
                 },
                 flash_buffer,
                 sizeof(flash_buffer),
-                [](buffer_state_t* buffer, uint8_t* data, int size) {
-                    memcpy(buffer->data+buffer->pos, data, size);
+                [](buffer_state_t *buffer, uint8_t *data, int size) {
+                    memcpy(buffer->data + buffer->pos, data, size);
                 });
 
         uint8_t small[100];
@@ -169,16 +168,16 @@ namespace {
         uint8_t small2[200];
         for (int i = 0; i < sizeof(small2); i++) {
             small2[i] = 100 - i;
-        }        buffering_append(small2, sizeof(small2));
+        }
+        buffering_append(small2, sizeof(small2));
 
         // In this test we want to make sure that data is not compromised.
-        uint8_t* dst = buffering_get_flash_buffer()->data;
-        for (int i=0;i<sizeof(small1)+sizeof(small2);i++) {
+        uint8_t *dst = buffering_get_flash_buffer()->data;
+        for (int i = 0; i < sizeof(small1) + sizeof(small2); i++) {
             if (i < sizeof(small1)) {
-                EXPECT_EQ(dst[i],small1[i]) << "Wrong data written to FLASH";
-            }
-            else {
-                EXPECT_EQ(dst[i],small2[i-sizeof(small1)]) << "Wrong data written to FLASH";
+                EXPECT_EQ(dst[i], small1[i]) << "Wrong data written to FLASH";
+            } else {
+                EXPECT_EQ(dst[i], small2[i - sizeof(small1)]) << "Wrong data written to FLASH";
             }
         }
     }
@@ -191,13 +190,13 @@ namespace {
         buffering_init(
                 ram_buffer,
                 sizeof(ram_buffer),
-                [](buffer_state_t* buffer, uint8_t* data, int size) {
-                    memcpy(buffer->data+buffer->pos, data, size);
+                [](buffer_state_t *buffer, uint8_t *data, int size) {
+                    memcpy(buffer->data + buffer->pos, data, size);
                 },
                 flash_buffer,
                 sizeof(flash_buffer),
-                [](buffer_state_t* buffer, uint8_t* data, int size) {
-                    memcpy(buffer->data+buffer->pos, data, size);
+                [](buffer_state_t *buffer, uint8_t *data, int size) {
+                    memcpy(buffer->data + buffer->pos, data, size);
                 });
 
         uint8_t big[1000];
