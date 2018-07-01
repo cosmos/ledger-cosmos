@@ -4,3 +4,6 @@
 [submodule "deps/jsmn"]
 	path = deps/jsmn
 	url = https://github.com/brejski/jsmn.git
+[submodule "deps/ledger-zxlib"]
+	path = deps/ledger-zxlib
+	url = https://github.com/ZondaX/ledger-zxlib
