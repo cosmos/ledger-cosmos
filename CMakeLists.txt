@@ -38,6 +38,7 @@ file(GLOB_RECURSE APP_SRC
 
 file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/json_parser.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/transaction_parser.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/lib/buffering.c
         )
 

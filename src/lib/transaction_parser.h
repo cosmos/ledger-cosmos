@@ -17,6 +17,8 @@
 #ifndef CI_TEST_TRANSACTIONPARSER_H
 #define CI_TEST_TRANSACTIONPARSER_H
 
+#include "json_parser.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

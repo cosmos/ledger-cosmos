@@ -14,25 +14,7 @@
 *  limitations under the License.
 ********************************************************************************/
 
-#include <jsmn.h>
 #include "json_parser.h"
-
-int msg_bytes_pages = 0;
-int alt_bytes_pages = 0;
-//---------------------------------------------
-
-copy_delegate copy_fct = NULL;
-parsing_context_t parsing_context;
-
-void set_copy_delegate(copy_delegate delegate) {
-    copy_fct = delegate;
-}
-
-void set_parsing_context(parsing_context_t context) {
-    parsing_context = context;
-}
-
-//---------------------------------------------
 
 void json_parse(parsed_json_t *parsed_json, const char *transaction) {
     jsmn_parser parser;

@@ -17,7 +17,7 @@
 #ifndef CI_TEST_JSONPARSER_H
 #define CI_TEST_JSONPARSER_H
 
-#include "jsmn.h"
+#include <jsmn.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -92,15 +92,6 @@ int object_get_value(
         const parsed_json_t *parsed_transaction,
         const char *transaction);
 
-
-//---------------------------------------------
-// Delegates
-
-typedef void(*copy_delegate)(void *dst, const void *source, size_t size);
-void set_copy_delegate(copy_delegate delegate);
-void set_parsing_context(parsing_context_t context);
-
-//---------------------------------------------
 
 #ifdef __cplusplus
 }

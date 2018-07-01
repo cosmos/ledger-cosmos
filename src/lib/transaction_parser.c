@@ -15,11 +15,13 @@
 ********************************************************************************/
 
 #include <jsmn.h>
-#include "transaction_parser.c"
-#include "json_parser.h"
+#include "transaction_parser.h"
+
+//---------------------------------------------
 
 int msg_bytes_pages = 0;
 int alt_bytes_pages = 0;
+
 //---------------------------------------------
 
 copy_delegate copy_fct = NULL;
@@ -36,10 +38,10 @@ void set_parsing_context(parsing_context_t context) {
 //--------------------------------------
 // Transaction parsing helper functions
 //--------------------------------------
-void update(char *msg,// output
+void update(char *msg,
             int msg_length,
             int token_index,
-            int *chunk_index) // input
+            int *chunk_index)
 {
     int length = parsing_context.parsed_transaction->Tokens[token_index].end -
                  parsing_context.parsed_transaction->Tokens[token_index].start;
@@ -70,12 +72,12 @@ int display_value(char *value,
                   int token_index,
                   int *current_item_index,
                   int item_index_to_display,
-                  int *chunk_index) {
+                  int *chunk_index)
+{
 
     if (*current_item_index == item_index_to_display) {
 
         update(value, value_length, token_index, chunk_index);
-
         return item_index_to_display;
     }
     *current_item_index = *current_item_index + 1;
@@ -122,13 +124,13 @@ void remove_last(char *key) {
 }
 
 int display_arbitrary_item_inner(
-        int item_index_to_display, //input
-        char* key, // output
+        int item_index_to_display,
+        char* key,
         int key_length,
-        char* value, // output
+        char* value,
         int value_length,
-        int token_index, // input
-        int* current_item_index, // input
+        int token_index,
+        int* current_item_index,
         int level,
         int* chunk_index)
 {
@@ -261,10 +263,10 @@ int display_get_arbitrary_items_count(int token_index) {
 }
 
 int display_arbitrary_item(
-        int item_index_to_display, //input
-        char* key, // output
+        int item_index_to_display,
+        char* key,
         int key_length,
-        char* value, // output
+        char* value,
         int value_length,
         int token_index,
         int* chunk_index)
@@ -352,7 +354,8 @@ int transaction_get_display_key_value(
     return 0;
 }
 
-int transaction_get_display_pages() {
+int transaction_get_display_pages()
+{
     int token_index_mb = object_get_value(0, "msg_bytes", parsing_context.parsed_transaction,
                                           parsing_context.transaction);
     int token_index_ab = object_get_value(0, "alt_bytes", parsing_context.parsed_transaction,
