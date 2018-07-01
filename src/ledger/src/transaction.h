@@ -15,6 +15,7 @@
 *  limitations under the License.
 ********************************************************************************/
 #pragma once
+
 #include "json_parser.h"
 #include "os.h"
 
@@ -26,18 +27,18 @@ void transaction_reset();
 // Appends buffer to the end of the current transaction buffer
 // Transaction buffer will grow until it reaches the maximum allowed size
 void transaction_append(
-        unsigned char* buffer,
+        unsigned char *buffer,
         uint32_t length);
 
 // Returns size of the raw json transaction buffer
 uint32_t transaction_get_buffer_length();
 
 // Returns the raw json transaction buffer
-uint8_t* transaction_get_buffer();
+uint8_t *transaction_get_buffer();
 
 // Parse json message stored in transaction buffer
 // This function should be called as soon as full buffer data is loaded.
 void transaction_parse();
 
 // Returns parsed representation of the transaction message
-parsed_json_t* transaction_get_parsed();
+parsed_json_t *transaction_get_parsed();

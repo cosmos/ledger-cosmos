@@ -53,7 +53,9 @@ int transactionChunksPageIndex;
 int transactionChunksPageCount;
 
 void start_transaction_info_display(unsigned int unused);
+
 void view_sign_transaction(unsigned int unused);
+
 void reject(unsigned int unused);
 
 //------ View elements
@@ -61,27 +63,27 @@ const ux_menu_entry_t menu_main[];
 const ux_menu_entry_t menu_about[];
 
 const ux_menu_entry_t menu_transaction_info[] = {
-    {NULL, start_transaction_info_display, 0, NULL, "View transaction", NULL, 0, 0},
-    {NULL, view_sign_transaction, 0, NULL, "Sign transaction", NULL, 0, 0},
-    {NULL, reject, 0, &C_icon_back, "Reject", NULL, 60, 40},
-    UX_MENU_END
+        {NULL, start_transaction_info_display, 0, NULL, "View transaction", NULL, 0, 0},
+        {NULL, view_sign_transaction, 0, NULL, "Sign transaction", NULL, 0, 0},
+        {NULL, reject, 0, &C_icon_back, "Reject", NULL, 60, 40},
+        UX_MENU_END
 };
 
 const ux_menu_entry_t menu_main[] = {
 #ifdef TESTING_ENABLED
-    {NULL, NULL, 0, &C_icon_app, "Tendermint", "Cosmos TEST!", 33, 12},
+        {NULL, NULL, 0, &C_icon_app, "Tendermint", "Cosmos TEST!", 33, 12},
 #else
-    {NULL, NULL, 0, &C_icon_app, "Tendermint", "Cosmos", 33, 12},
+        {NULL, NULL, 0, &C_icon_app, "Tendermint", "Cosmos", 33, 12},
 #endif
-    {menu_about, NULL, 0, NULL, "About", NULL, 0, 0},
-    {NULL, os_sched_exit, 0, &C_icon_dashboard, "Quit app", NULL, 50, 29},
-    UX_MENU_END
+        {menu_about, NULL, 0, NULL, "About", NULL, 0, 0},
+        {NULL, os_sched_exit, 0, &C_icon_dashboard, "Quit app", NULL, 50, 29},
+        UX_MENU_END
 };
 
 const ux_menu_entry_t menu_about[] = {
-    {NULL, NULL, 0, NULL, "Version", APPVERSION, 0, 0},
-    {menu_main, NULL, 2, &C_icon_back, "Back", NULL, 61, 40},
-    UX_MENU_END
+        {NULL, NULL, 0, NULL, "Version", APPVERSION, 0, 0},
+        {menu_main, NULL, 2, &C_icon_back, "Back", NULL, 61, 40},
+        UX_MENU_END
 };
 
 static const bagl_element_t bagl_ui_sign_transaction[] = {
@@ -114,25 +116,21 @@ delegate_update_transaction_info event_handler_update_transaction_info = NULL;
 delegate_reject_transaction event_handler_reject_transaction = NULL;
 delegate_sign_transaction event_handler_sign_transaction = NULL;
 
-void view_add_update_transaction_info_event_handler(delegate_update_transaction_info delegate)
-{
+void view_add_update_transaction_info_event_handler(delegate_update_transaction_info delegate) {
     event_handler_update_transaction_info = delegate;
 }
 
-void view_add_reject_transaction_event_handler(delegate_reject_transaction delegate)
-{
+void view_add_reject_transaction_event_handler(delegate_reject_transaction delegate) {
     event_handler_reject_transaction = delegate;
 }
 
-void view_add_sign_transaction_event_handler(delegate_sign_transaction delegate)
-{
+void view_add_sign_transaction_event_handler(delegate_sign_transaction delegate) {
     event_handler_sign_transaction = delegate;
 }
 // ------ Event handlers
 
 static unsigned int bagl_ui_sign_transaction_button(unsigned int button_mask,
-                                                    unsigned int button_mask_counter)
-{
+                                                    unsigned int button_mask_counter) {
     switch (button_mask) {
         default:
             view_display_transaction_menu(0);
@@ -140,12 +138,18 @@ static unsigned int bagl_ui_sign_transaction_button(unsigned int button_mask,
     return 0;
 }
 
-const bagl_element_t* ui_transaction_info_prepro(const bagl_element_t *element) {
+const bagl_element_t *ui_transaction_info_prepro(const bagl_element_t *element) {
 
     switch (element->component.userid) {
-        case 0x01:  UX_CALLBACK_SET_INTERVAL(2000); break;
-        case 0x02:  UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7))); break;
-        case 0x03:  UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7))); break;
+        case 0x01:
+            UX_CALLBACK_SET_INTERVAL(2000);
+            break;
+        case 0x02:
+            UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7)));
+            break;
+        case 0x03:
+            UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7)));
+            break;
     }
     return element;
 }
@@ -197,7 +201,7 @@ static unsigned int bagl_ui_transaction_info_valuescrolling_button(
             break;
         }
 
-        // Press to progress to the previous element
+            // Press to progress to the previous element
         case BUTTON_EVT_RELEASED | BUTTON_LEFT: {
             if (transactionChunksPageIndex > 0) {
                 submenu_left();
@@ -207,14 +211,14 @@ static unsigned int bagl_ui_transaction_info_valuescrolling_button(
             break;
         }
 
-        // Hold to progress to the previous element quickly
-        // It also steps out from the value chunk page view mode
+            // Hold to progress to the previous element quickly
+            // It also steps out from the value chunk page view mode
         case BUTTON_EVT_FAST | BUTTON_LEFT: {
             menu_left();
             break;
         }
 
-        // Press to progress to the next element
+            // Press to progress to the next element
         case BUTTON_EVT_RELEASED | BUTTON_RIGHT: {
             if (transactionChunksPageIndex < transactionChunksPageCount - 1) {
                 submenu_right();
@@ -224,8 +228,8 @@ static unsigned int bagl_ui_transaction_info_valuescrolling_button(
             break;
         }
 
-        // Hold to progress to the next element quickly
-        // It also steps out from the value chunk page view mode
+            // Hold to progress to the next element quickly
+            // It also steps out from the value chunk page view mode
         case BUTTON_EVT_FAST | BUTTON_RIGHT: {
             menu_right();
             break;
@@ -297,8 +301,7 @@ void start_transaction_info_display(unsigned int unused)
     display_transaction_page(TRUE);
 }
 
-void update_transaction_page_info()
-{
+void update_transaction_page_info() {
     if (event_handler_update_transaction_info != NULL) {
 
         if (event_handler_update_transaction_info != NULL) {
@@ -355,44 +358,37 @@ void update_transaction_page_info()
     }
 }
 
-void view_sign_transaction(unsigned int unused)
-{
+void view_sign_transaction(unsigned int unused) {
     UNUSED(unused);
 
     if (event_handler_sign_transaction != NULL) {
         event_handler_sign_transaction();
-    }
-    else {
+    } else {
         UX_DISPLAY(bagl_ui_sign_transaction, NULL);
     }
 }
 
-void reject(unsigned int unused)
-{
+void reject(unsigned int unused) {
     if (event_handler_reject_transaction != NULL) {
         event_handler_reject_transaction();
     }
 }
 
-void io_seproxyhal_display(const bagl_element_t *element)
-{
+void io_seproxyhal_display(const bagl_element_t *element) {
     io_seproxyhal_display_default((bagl_element_t *) element);
 }
 
-void view_init(void)
-{
+void view_init(void) {
     UX_INIT();
     view_uiState = UI_IDLE;
 }
 
-void view_idle(unsigned int ignored)
-{
+void view_idle(unsigned int ignored) {
     view_uiState = UI_IDLE;
     UX_MENU_DISPLAY(0, menu_main, NULL);
 }
 
-void view_display_transaction_menu(unsigned int numberOfTransactionPages)
-{
+void view_display_transaction_menu(unsigned int numberOfTransactionPages) {
     if (numberOfTransactionPages != 0) {
         transactionDetailsPageCount = numberOfTransactionPages;
     }
@@ -400,14 +396,12 @@ void view_display_transaction_menu(unsigned int numberOfTransactionPages)
     UX_MENU_DISPLAY(0, menu_transaction_info, NULL);
 }
 
-void view_display_signing_success()
-{
+void view_display_signing_success() {
     // TODO Add view
     view_idle(0);
 }
 
-void view_display_signing_error()
-{
+void view_display_signing_error() {
     // TODO Add view
     view_idle(0);
 }

@@ -1,5 +1,4 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
 *   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,21 +34,19 @@ typedef unsigned char byte;
 // Context that keeps all the parsed data together. That includes:
 //  - parsed json tokens
 //  - re-created SendMsg struct with indices pointing to tokens in parsed json
-typedef struct
-{
+typedef struct {
     // Tokens
-    bool        CorrectFormat;
-    byte        NumberOfTokens;
-    jsmntok_t   Tokens[MAX_NUMBER_OF_TOKENS];
+    bool CorrectFormat;
+    byte NumberOfTokens;
+    jsmntok_t Tokens[MAX_NUMBER_OF_TOKENS];
 } parsed_json_t;
 
 
-typedef struct
-{
-    const parsed_json_t* parsed_transaction;
+typedef struct {
+    const parsed_json_t *parsed_transaction;
     unsigned short max_chars_per_key_line;
     unsigned short max_chars_per_value_line;
-    const char* transaction;
+    const char *transaction;
 } parsing_context_t;
 
 //---------------------------------------------
@@ -57,56 +54,55 @@ typedef struct
 
 // Parse json to create a token representation
 void json_parse(
-        parsed_json_t* parsed_json,
-        const char* transaction);
+        parsed_json_t *parsed_json,
+        const char *transaction);
 
 // Get number of elements in array
 int array_get_element_count(
         int array_token_index,
-        const parsed_json_t* parsed_transaction);
+        const parsed_json_t *parsed_transaction);
 
 // Get token index of the nth array's element
 int array_get_nth_element(
         int array_token_index,
         int element_index,
-        const parsed_json_t* parsed_transaction);
+        const parsed_json_t *parsed_transaction);
 
 // Get number of elements (key/value pairs) in object
 int object_get_element_count(
         int object_token_index,
-        const parsed_json_t* parsed_transaction);
+        const parsed_json_t *parsed_transaction);
 
 // Get token index for the nth key
 int object_get_nth_key(
         int object_token_index,
         int object_element_index,
-        const parsed_json_t* parsed_transaction);
+        const parsed_json_t *parsed_transaction);
 
 // Get token index for the nth value
 int object_get_nth_value(
         int object_token_index,
         int object_element_index,
-        const parsed_json_t* parsed_transaction);
+        const parsed_json_t *parsed_transaction);
 
 // Get token index for the value that matched given key
 int object_get_value(
         int object_token_index,
-        const char* key_name,
-        const parsed_json_t* parsed_transaction,
-        const char* transaction);
+        const char *key_name,
+        const parsed_json_t *parsed_transaction,
+        const char *transaction);
 
 
 /// FIXME: Move all this code to a separate file
 // Update value characters from json transaction read from the token_index element.
 // Value is only updated if current_item_index (which is incremented internally) matches item_index_to_display
 // If value is updated, we also update view_scrolling_total_size to value string length.
-int display_value(
-        char* value, // output
-        int value_length,
-        int token_index, // input
-        int* current_item_index, // input / output
-        int item_index_to_display,
-        int* chunk_index);   // input
+int display_value(char *value, // output
+                  int value_length,
+                  int token_index, // input
+                  int *current_item_index, // input / output
+                  int item_index_to_display,
+                  int *chunk_index);   // input
 
 // Update key characters from json transaction read from the token_index element.
 void display_key(
@@ -124,8 +120,7 @@ int display_arbitrary_item(
         int token_index,
         int* chunk_index); // input
 
-int display_get_arbitrary_items_count(
-        int token_index);
+int display_get_arbitrary_items_count(int token_index);
 
 int transaction_get_display_key_value(
         char* key, // output
@@ -136,10 +131,11 @@ int transaction_get_display_key_value(
         int* chunk_index); // input
 
 int transaction_get_display_pages();
-//---------------------------------------------
 
+//---------------------------------------------
 // Delegates
-typedef void(*copy_delegate)(void* dst, const void* source, unsigned int size);
+
+typedef void(*copy_delegate)(void *dst, const void *source, size_t size);
 void set_copy_delegate(copy_delegate delegate);
 void set_parsing_context(parsing_context_t context);
 
