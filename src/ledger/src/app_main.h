@@ -33,8 +33,8 @@
 #define INS_SIGN_SECP256K1              3
 
 #ifdef FEATURE_ED25519
-    #define INS_PUBLIC_KEY_ED25519          2
-    #define INS_SIGN_ED25519                4
+#define INS_PUBLIC_KEY_ED25519          2
+#define INS_SIGN_ED25519                4
 #endif
 
 #define INS_HASH_TEST                   100
@@ -42,10 +42,12 @@
 #define INS_SIGN_SECP256K1_TEST         103
 
 #ifdef FEATURE_ED25519
-    #define INS_PUBLIC_KEY_ED25519_TEST     102
-    #define INS_SIGN_ED25519_TEST           104
+#define INS_PUBLIC_KEY_ED25519_TEST     102
+#define INS_SIGN_ED25519_TEST           104
 #endif
 
 void app_init();
+
 void app_main();
+
 bool extractBip32(uint8_t *depth, uint32_t path[10], uint32_t rx, uint32_t offset);

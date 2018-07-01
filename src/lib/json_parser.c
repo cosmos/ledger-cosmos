@@ -1,5 +1,4 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
 *   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,26 +24,21 @@ int alt_bytes_pages = 0;
 copy_delegate copy_fct = NULL;
 parsing_context_t parsing_context;
 
-void set_copy_delegate(copy_delegate delegate)
-{
+void set_copy_delegate(copy_delegate delegate) {
     copy_fct = delegate;
 }
 
-void set_parsing_context(parsing_context_t context)
-{
+void set_parsing_context(parsing_context_t context) {
     parsing_context = context;
 }
 
 //---------------------------------------------
 
-void json_parse(
-        parsed_json_t* parsed_json,
-        const char* transaction)
-{
+void json_parse(parsed_json_t *parsed_json, const char *transaction) {
     jsmn_parser parser;
     jsmn_init(&parser);
 
-    parsed_json->NumberOfTokens = jsmn_parse(
+    int num_tokens = jsmn_parse(
             &parser,
             transaction,
             strlen(transaction),
@@ -52,19 +46,22 @@ void json_parse(
             MAX_NUMBER_OF_TOKENS);
 
     parsed_json->CorrectFormat = false;
-    if (parsed_json->NumberOfTokens >= 1
-        &&
-            parsed_json->Tokens[0].type != JSMN_OBJECT) {
 
+    if (num_tokens > 255) {
+        return;
+    }
+
+    parsed_json->NumberOfTokens = (byte) num_tokens;
+    if (parsed_json->NumberOfTokens >= 1 &&
+        parsed_json->Tokens[0].type != JSMN_OBJECT) {
         parsed_json->CorrectFormat = true;
     }
 }
 
 int json_validate(
-        const char* transaction,
-        char* errorMsg,
-        int errMsgLength)
-{
+        const char *transaction,
+        char *errorMsg,
+        int errMsgLength) {
     strcpy(errorMsg, "Not implemented.");
     // Here we make sure that json have correct format according to the spec
     return -1;
@@ -72,8 +69,7 @@ int json_validate(
 
 int array_get_element_count(
         int array_token_index,
-        const parsed_json_t* parsed_transaction)
-{
+        const parsed_json_t *parsed_transaction) {
     jsmntok_t array_token = parsed_transaction->Tokens[array_token_index];
     int token_index = array_token_index;
     int element_count = 0;
@@ -100,8 +96,7 @@ int array_get_element_count(
 int array_get_nth_element(
         int array_token_index,
         int element_index,
-        const parsed_json_t* parsed_transaction)
-{
+        const parsed_json_t *parsed_transaction) {
     jsmntok_t array_token = parsed_transaction->Tokens[array_token_index];
     int token_index = array_token_index;
     int element_count = 0;
@@ -130,8 +125,7 @@ int array_get_nth_element(
 
 int object_get_element_count(
         int object_token_index,
-        const parsed_json_t* parsed_transaction)
-{
+        const parsed_json_t *parsed_transaction) {
     jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
     int token_index = object_token_index;
     int element_count = 0;
@@ -156,11 +150,9 @@ int object_get_element_count(
     return element_count;
 }
 
-int object_get_nth_key(
-        int object_token_index,
-        int object_element_index,
-        const parsed_json_t* parsed_transaction)
-{
+int object_get_nth_key(int object_token_index,
+                       int object_element_index,
+                       const parsed_json_t *parsed_transaction) {
     jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
     int token_index = object_token_index;
     int element_count = 0;
@@ -180,7 +172,7 @@ int object_get_nth_key(
         }
         prev_element_end = value_token.end;
         if (element_count == object_element_index) {
-            return token_index-1;
+            return token_index - 1;
         }
         element_count++;
     }
@@ -188,11 +180,9 @@ int object_get_nth_key(
     return -1;
 }
 
-int object_get_nth_value(
-        int object_token_index,
-        int object_element_index,
-        const parsed_json_t* parsed_transaction)
-{
+int object_get_nth_value(int object_token_index,
+                         int object_element_index,
+                         const parsed_json_t *parsed_transaction) {
     int key_index = object_get_nth_key(object_token_index, object_element_index, parsed_transaction);
     if (key_index != -1) {
         return key_index + 1;
@@ -200,12 +190,10 @@ int object_get_nth_value(
     return -1;
 }
 
-int object_get_value(
-        int object_token_index,
-        const char* key_name,
-        const parsed_json_t* parsed_transaction,
-        const char* transaction)
-{
+int object_get_value(int object_token_index,
+                     const char *key_name,
+                     const parsed_json_t *parsed_transaction,
+                     const char *transaction) {
     int length = strlen(key_name);
     jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
     int token_index = object_token_index;
@@ -224,7 +212,7 @@ int object_get_value(
             continue;
         }
         prev_element_end = value_token.end;
-        char* cmper = (char*)(transaction + key_token.start);
+        char *cmper = (char *) (transaction + key_token.start);
         if (memcmp(key_name, cmper, length) == 0) {
             return token_index;
         }
@@ -237,11 +225,10 @@ int object_get_value(
 // TODO: Move to a separate file
 // Transaction parsing helper functions
 //--------------------------------------
-void update(
-        char* msg,// output
-        int msg_length,
-        int token_index,
-        int* chunk_index) // input
+void update(char *msg,// output
+            int msg_length,
+            int token_index,
+            int *chunk_index) // input
 {
     int length = parsing_context.parsed_transaction->Tokens[token_index].end -
                  parsing_context.parsed_transaction->Tokens[token_index].start;
@@ -263,19 +250,17 @@ void update(
                 (msg_length - 1) * chunk_to_display,
                 length);
         msg[length] = '\0';
-    }
-    else {
+    } else {
         msg[0] = '\0';
     }
 }
 
-int display_value(
-        char* value,
-        int value_length,
-        int token_index,
-        int* current_item_index,
-        int item_index_to_display,
-        int* chunk_index) {
+int display_value(char *value,
+                  int value_length,
+                  int token_index,
+                  int *current_item_index,
+                  int item_index_to_display,
+                  int *chunk_index) {
 
     if (*current_item_index == item_index_to_display) {
 
@@ -288,30 +273,29 @@ int display_value(
 }
 
 void display_key(
-        char* key,
-        int token_index)
-{
-    unsigned int key_size = parsing_context.parsed_transaction->Tokens[token_index].end - parsing_context.parsed_transaction->Tokens[token_index].start;
-    const char* address_ptr = parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start;
+        char *key,
+        int token_index) {
+    unsigned int key_size = parsing_context.parsed_transaction->Tokens[token_index].end -
+                            parsing_context.parsed_transaction->Tokens[token_index].start;
+    const char *address_ptr =
+            parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start;
     // FIXME: bounds checking!
     copy_fct(key, address_ptr, key_size);
     key[key_size] = '\0';
 }
 
-void append_keys(char* key, const char* temp_key)
-{
+void append_keys(char *key, const char *temp_key) {
     int size = strlen(key);
     if (size > 0) {
         key[size] = '/';
         size++;
     }
-    strcpy(key+size, temp_key);
+    strcpy(key + size, temp_key);
 }
 
-void remove_last(char* key)
-{
+void remove_last(char *key) {
     int size = strlen(key);
-    char* last = key + size;
+    char *last = key + size;
     while (last > key) {
         if (*last == '/') {
             *last = '\0';
@@ -324,14 +308,13 @@ void remove_last(char* key)
 
 int display_arbitrary_item_inner(
         int item_index_to_display, //input
-        char* key, // output
-        char* value, // output
+        char *key, // output
+        char *value, // output
         int value_length,
         int token_index, // input
-        int* current_item_index, // input
+        int *current_item_index, // input
         int level,
-        int* chunk_index)
-{
+        int *chunk_index) {
 //    if level == 2
 //    show value as json-encoded string
 //    else
@@ -354,8 +337,7 @@ int display_arbitrary_item_inner(
                 current_item_index,
                 item_index_to_display,
                 chunk_index);
-    }
-    else {
+    } else {
         switch (parsing_context.parsed_transaction->Tokens[token_index].type) {
             case JSMN_STRING:
                 return display_value(
@@ -441,8 +423,7 @@ int display_arbitrary_item_inner(
 }
 
 int display_get_arbitrary_items_count(
-        int token_index)
-{
+        int token_index) {
     int number_of_items = 0;
     int chunk_index = 0;
     char dummy[1];
@@ -461,12 +442,11 @@ int display_get_arbitrary_items_count(
 
 int display_arbitrary_item(
         int item_index_to_display, //input
-        char* key, // output
-        char* value, // output
+        char *key, // output
+        char *value, // output
         int value_length,
         int token_index,
-        int* chunk_index)
-{
+        int *chunk_index) {
     int current_item_index = 0;
     return display_arbitrary_item_inner(
             item_index_to_display,
@@ -480,28 +460,31 @@ int display_arbitrary_item(
 }
 
 int transaction_get_display_key_value(
-        char* key, // output
-        char* value, // output
+        char *key, // output
+        char *value, // output
         int value_length,
         int index,
-        int* chunk_index) // input/output
+        int *chunk_index) // input/output
 {
     switch (index) {
         case 0: {
             copy_fct(key, "chain_id", sizeof("chain_id"));
-            int token_index = object_get_value(0, "chain_id", parsing_context.parsed_transaction, parsing_context.transaction);
+            int token_index = object_get_value(0, "chain_id", parsing_context.parsed_transaction,
+                                               parsing_context.transaction);
             update(value, value_length, token_index, chunk_index);
             break;
         }
         case 1: {
             copy_fct(key, "sequences", sizeof("sequences"));
-            int token_index = object_get_value(0, "sequences", parsing_context.parsed_transaction, parsing_context.transaction);
+            int token_index = object_get_value(0, "sequences", parsing_context.parsed_transaction,
+                                               parsing_context.transaction);
             update(value, value_length, token_index, chunk_index);
             break;
         }
         case 2: {
             copy_fct(key, "fee_bytes", sizeof("fee_bytes"));
-            int token_index = object_get_value(0, "fee_bytes", parsing_context.parsed_transaction, parsing_context.transaction);
+            int token_index = object_get_value(0, "fee_bytes", parsing_context.parsed_transaction,
+                                               parsing_context.transaction);
             update(value, value_length, token_index, chunk_index);
             break;
         }
@@ -524,8 +507,7 @@ int transaction_get_display_key_value(
                 int length = strlen(full_key);
                 copy_fct(key, full_key, length);
                 key[length] = '\0';
-            }
-            else {
+            } else {
                 int token_index = object_get_value(0, "alt_bytes", parsing_context.parsed_transaction,
                                                    parsing_context.transaction);
                 char full_key[parsing_context.max_chars_per_key_line];
@@ -549,10 +531,11 @@ int transaction_get_display_key_value(
     return 0;
 }
 
-int transaction_get_display_pages()
-{
-    int token_index_mb = object_get_value(0, "msg_bytes", parsing_context.parsed_transaction, parsing_context.transaction);
-    int token_index_ab = object_get_value(0, "alt_bytes", parsing_context.parsed_transaction, parsing_context.transaction);
+int transaction_get_display_pages() {
+    int token_index_mb = object_get_value(0, "msg_bytes", parsing_context.parsed_transaction,
+                                          parsing_context.transaction);
+    int token_index_ab = object_get_value(0, "alt_bytes", parsing_context.parsed_transaction,
+                                          parsing_context.transaction);
 
     msg_bytes_pages = display_get_arbitrary_items_count(token_index_mb);
     alt_bytes_pages = display_get_arbitrary_items_count(token_index_ab);

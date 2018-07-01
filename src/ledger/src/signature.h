@@ -15,30 +15,31 @@
 *  limitations under the License.
 ********************************************************************************/
 #pragma once
+
 #include "os.h"
 
 void keys_secp256k1(
-        cx_ecfp_public_key_t* publicKey,
-        cx_ecfp_private_key_t* privateKey,
+        cx_ecfp_public_key_t *publicKey,
+        cx_ecfp_private_key_t *privateKey,
         const uint8_t privateKeyData[32]);
 
 void keys_ed25519(
-        cx_ecfp_public_key_t* publicKey,
-        cx_ecfp_private_key_t* privateKey,
+        cx_ecfp_public_key_t *publicKey,
+        cx_ecfp_private_key_t *privateKey,
         const uint8_t privateKeyData[32]);
 
 int sign_secp256k1(
-        const uint8_t* message,
+        const uint8_t *message,
         unsigned int message_length,
-        uint8_t* signature,
+        uint8_t *signature,
         unsigned int signature_capacity,
-        unsigned int* signature_length,
-        cx_ecfp_private_key_t* privateKey);
+        unsigned int *signature_length,
+        cx_ecfp_private_key_t *privateKey);
 
 int sign_ed25519(
-        const uint8_t* message,
+        const uint8_t *message,
         unsigned int message_length,
-        uint8_t* signature,
+        uint8_t *signature,
         unsigned int signature_capacity,
-        unsigned int* signature_length,
-        cx_ecfp_private_key_t* privateKey);
+        unsigned int *signature_length,
+        cx_ecfp_private_key_t *privateKey);

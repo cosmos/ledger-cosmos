@@ -21,8 +21,7 @@ extern "C"
 #include <lib/json_parser.h>
 }
 
-int main()
-{
+int main() {
     parsed_json_t data;
     json_parse(&data, "Topic: \"Hello json world\"");
 
