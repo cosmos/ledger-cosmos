@@ -267,23 +267,29 @@ int display_value(char *value,
     return -1;
 }
 
-void display_key(char *key,
-                 int token_index) {
-    auto key_size = parsing_context.parsed_transaction->Tokens[token_index].end -
-                    parsing_context.parsed_transaction->Tokens[token_index].start;
-    const char *address_ptr =
-            parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start;
-    // FIXME: bounds checking!
+void display_key(
+        char* key,
+        int key_length,
+        int token_index)
+{
+    int key_size = parsing_context.parsed_transaction->Tokens[token_index].end - parsing_context.parsed_transaction->Tokens[token_index].start;
+    const char* address_ptr = parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start;
+    if (key_size >= key_length) {
+        key_size = key_length-1;
+    }
     copy_fct(key, address_ptr, key_size);
     key[key_size] = '\0';
 }
 
-void append_keys(char *key, const char *temp_key) {
-    size_t size = strlen(key);
+void append_keys(char* key, int key_length, const char* temp_key)
+{
+    int size = strlen(key);
+
     if (size > 0) {
         key[size] = '/';
         size++;
     }
+
     strcpy(key + size, temp_key);
 }
 
@@ -300,14 +306,17 @@ void remove_last(char *key) {
     *last = '\0';
 }
 
-int display_arbitrary_item_inner(int item_index_to_display, //input
-                                 char *key, // output
-                                 char *value, // output
-                                 int value_length,
-                                 int token_index, // input
-                                 int *current_item_index, // input
-                                 int level,
-                                 int *chunk_index) {
+int display_arbitrary_item_inner(
+        int item_index_to_display, //input
+        char* key, // output
+        int key_length,
+        char* value, // output
+        int value_length,
+        int token_index, // input
+        int* current_item_index, // input
+        int level,
+        int* chunk_index)
+{
 //    if level == 2
 //    show value as json-encoded string
 //    else
@@ -360,14 +369,16 @@ int display_arbitrary_item_inner(int item_index_to_display, //input
                         char key_temp[20];
                         display_key(
                                 key_temp,
+                                sizeof(key_temp),
                                 key_index);
 
-                        append_keys(key, key_temp);
+                        append_keys(key, key_length, key_temp);
                     }
 
                     int found = display_arbitrary_item_inner(
                             item_index_to_display,
                             key,
+                            key_length,
                             value,
                             value_length,
                             value_index,
@@ -392,6 +403,7 @@ int display_arbitrary_item_inner(int item_index_to_display, //input
                     int found = display_arbitrary_item_inner(
                             item_index_to_display,
                             key,
+                            key_length,
                             value,
                             value_length,
                             element_index,
@@ -422,6 +434,7 @@ int display_get_arbitrary_items_count(int token_index) {
     display_arbitrary_item_inner(
             -1,
             dummy,
+            1,
             dummy,
             1,
             token_index,
@@ -432,16 +445,20 @@ int display_get_arbitrary_items_count(int token_index) {
     return number_of_items;
 }
 
-int display_arbitrary_item(int item_index_to_display, //input
-                           char *key, // output
-                           char *value, // output
-                           int value_length,
-                           int token_index,
-                           int *chunk_index) {
+int display_arbitrary_item(
+        int item_index_to_display, //input
+        char* key, // output
+        int key_length,
+        char* value, // output
+        int value_length,
+        int token_index,
+        int* chunk_index)
+{
     int current_item_index = 0;
     return display_arbitrary_item_inner(
             item_index_to_display,
             key,
+            key_length,
             value,
             value_length,
             token_index,
@@ -450,13 +467,15 @@ int display_arbitrary_item(int item_index_to_display, //input
             chunk_index);
 }
 
-int transaction_get_display_key_value(char *key, // output
-                                      char *value, // output
-                                      int value_length,
-                                      int index,
-                                      int *chunk_index) // input/output
+int transaction_get_display_key_value(
+        char* key, // output
+        int key_length,
+        char* value, // output
+        int value_length,
+        int page_index,
+        int* chunk_index) // input/output
 {
-    switch (index) {
+    switch (page_index) {
         case 0: {
             copy_fct(key, "chain_id", sizeof("chain_id"));
             int token_index = object_get_value(0, "chain_id", parsing_context.parsed_transaction,
@@ -479,41 +498,38 @@ int transaction_get_display_key_value(char *key, // output
             break;
         }
         default: {
-            if (index - 3 < msg_bytes_pages) {
-                int token_index = object_get_value(0, "msg_bytes", parsing_context.parsed_transaction,
+            if (page_index - 3 < msg_bytes_pages) {
+                int token_index = object_get_value(0,
+                                                   "msg_bytes",
+                                                   parsing_context.parsed_transaction,
                                                    parsing_context.transaction);
 
-                char full_key[parsing_context.max_chars_per_key_line];
-                copy_fct(full_key, "msg_bytes", sizeof("msg_bytes"));
-                full_key[sizeof("msg_bytes")] = '\0';
+                //char full_key[parsing_context.max_chars_per_key_line];
+                copy_fct(key, "msg_bytes", sizeof("msg_bytes"));
+                key[sizeof("msg_bytes")] = '\0';
 
-                display_arbitrary_item(index - 3,
-                                       full_key,
+                display_arbitrary_item(page_index - 3,
+                                       key,
+                                       key_length,
                                        value,
                                        value_length,
                                        token_index,
                                        chunk_index);
-
-                size_t length = strlen(full_key);
-                copy_fct(key, full_key, length);
-                key[length] = '\0';
-            } else {
+            }
+            else {
                 int token_index = object_get_value(0, "alt_bytes", parsing_context.parsed_transaction,
                                                    parsing_context.transaction);
-                char full_key[parsing_context.max_chars_per_key_line];
-                copy_fct(full_key, "alt_bytes", sizeof("alt_bytes"));
-                full_key[sizeof("alt_bytes")] = '\0';
+                //char full_key[parsing_context.max_chars_per_key_line];
+                copy_fct(key, "alt_bytes", sizeof("alt_bytes"));
+                key[sizeof("alt_bytes")] = '\0';
 
-                display_arbitrary_item(index - 3 - msg_bytes_pages,
-                                       full_key,
+                display_arbitrary_item(page_index - 3 - msg_bytes_pages,
+                                       key,
+                                       key_length,
                                        value,
                                        value_length,
                                        token_index,
                                        chunk_index);
-
-                size_t length = strlen(full_key);
-                copy_fct(key, full_key, length);
-                key[length] = '\0';
             }
             break;
         }

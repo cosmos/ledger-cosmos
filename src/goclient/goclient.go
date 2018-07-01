@@ -91,24 +91,24 @@ func GetExampleTxs() []sdk.StdSignMsg {
 		sdk.StdSignMsg{"test-chain-1,test-chain-1,test-chain-1,test-chain-1,test-chain-1,test-chain-1", []int64{1}, sdk.NewStdFee(10000, sdk.Coin{"photonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphoton", 5}), bank.MsgSend{
 			Inputs: []bank.Input{
 				{
-					Address: crypto.Address([]byte("input")),
-					Coins:   sdk.Coins{{"atom", 10}},
+					Address: crypto.Address([]byte("input_1")),
+					Coins:   sdk.Coins{{"atom_A", 10}},
 				},
 				{
-					Address: crypto.Address([]byte("input")),
-					Coins:   sdk.Coins{{"atom", 10}},
+					Address: crypto.Address([]byte("input_2")),
+					Coins:   sdk.Coins{{"atom_B", 20}},
 				},
 				{
-					Address: crypto.Address([]byte("input")),
-					Coins:   sdk.Coins{{"atom", 10}},
+					Address: crypto.Address([]byte("input_3")),
+					Coins:   sdk.Coins{{"atom_C", 30}},
 				},
 				{
-					Address: crypto.Address([]byte("input")),
-					Coins:   sdk.Coins{{"atom", 10}},
+					Address: crypto.Address([]byte("input_4")),
+					Coins:   sdk.Coins{{"atom_D", 40}},
 				},
 				{
-					Address: crypto.Address([]byte("input")),
-					Coins:   sdk.Coins{{"atom", 10}},
+					Address: crypto.Address([]byte("input_5")),
+					Coins:   sdk.Coins{{"atom_E", 50}},
 				},
 			},
 			Outputs: []bank.Output{
