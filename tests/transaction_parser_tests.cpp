@@ -288,7 +288,7 @@ namespace {
         context.max_chars_per_value_line = screen_size;
         context.transaction = transaction;
         set_parsing_context(context);
-        set_copy_delegate([](void *d, const void *s, unsigned int size) { memcpy(d, s, size); });
+        set_copy_delegate([](void *d, const void *s, size_t size) { memcpy(d, s, size); });
     }
 
     void EXPECT_EQ_STR(const char *str1, const char *str2, const char *errorMsg) {

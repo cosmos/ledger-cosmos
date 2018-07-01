@@ -129,7 +129,7 @@ int transaction_get_display_pages();
 //---------------------------------------------
 // Delegates
 
-typedef void(*copy_delegate)(void *dst, const void *source, unsigned int size);
+typedef void(*copy_delegate)(void *dst, const void *source, size_t size);
 void set_copy_delegate(copy_delegate delegate);
 void set_parsing_context(parsing_context_t context);
 
