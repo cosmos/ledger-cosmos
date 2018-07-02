@@ -41,17 +41,16 @@ void set_parsing_context(parsing_context_t context) {
 void update(char *msg,
             int msg_length,
             int token_index,
-            int *chunk_index)
-{
+            int *chunk_index) {
     int length = parsing_context.parsed_transaction->Tokens[token_index].end -
-                 parsing_context.parsed_transaction->Tokens[token_index].start;
+        parsing_context.parsed_transaction->Tokens[token_index].start;
 
     int chunk_to_display = *chunk_index;
     *chunk_index = (length / msg_length) + 1;
 
     if (chunk_to_display >= 0 && chunk_to_display < *chunk_index) {
         length = parsing_context.parsed_transaction->Tokens[token_index].end -
-                 parsing_context.parsed_transaction->Tokens[token_index].start - (msg_length - 1) * chunk_to_display;
+            parsing_context.parsed_transaction->Tokens[token_index].start - (msg_length - 1) * chunk_to_display;
 
         if (length + 1 > msg_length) {
             // Return total number of chunks
@@ -59,7 +58,7 @@ void update(char *msg,
         }
         copy_fct(msg,
                  parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start +
-                 (msg_length - 1) * chunk_to_display,
+                     (msg_length - 1) * chunk_to_display,
                  length);
         msg[length] = '\0';
     } else {
@@ -72,8 +71,7 @@ int display_value(char *value,
                   int token_index,
                   int *current_item_index,
                   int item_index_to_display,
-                  int *chunk_index)
-{
+                  int *chunk_index) {
 
     if (*current_item_index == item_index_to_display) {
 
@@ -85,21 +83,21 @@ int display_value(char *value,
 }
 
 void display_key(
-        char* key,
-        int key_length,
-        int token_index)
-{
-    int key_size = parsing_context.parsed_transaction->Tokens[token_index].end - parsing_context.parsed_transaction->Tokens[token_index].start;
-    const char* address_ptr = parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start;
+    char *key,
+    int key_length,
+    int token_index) {
+    int key_size = parsing_context.parsed_transaction->Tokens[token_index].end
+        - parsing_context.parsed_transaction->Tokens[token_index].start;
+    const char
+        *address_ptr = parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start;
     if (key_size >= key_length) {
-        key_size = key_length-1;
+        key_size = key_length - 1;
     }
     copy_fct(key, address_ptr, key_size);
     key[key_size] = '\0';
 }
 
-void append_keys(char* key, int key_length, const char* temp_key)
-{
+void append_keys(char *key, int key_length, const char *temp_key) {
     int size = strlen(key);
 
     if (size > 0) {
@@ -124,16 +122,15 @@ void remove_last(char *key) {
 }
 
 int display_arbitrary_item_inner(
-        int item_index_to_display,
-        char* key,
-        int key_length,
-        char* value,
-        int value_length,
-        int token_index,
-        int* current_item_index,
-        int level,
-        int* chunk_index)
-{
+    int item_index_to_display,
+    char *key,
+    int key_length,
+    char *value,
+    int value_length,
+    int token_index,
+    int *current_item_index,
+    int level,
+    int *chunk_index) {
 //    if level == 2
 //    show value as json-encoded string
 //    else
@@ -150,94 +147,93 @@ int display_arbitrary_item_inner(
 //    }
     if (level == 2) {
         return display_value(
+            value,
+            value_length,
+            token_index,
+            current_item_index,
+            item_index_to_display,
+            chunk_index);
+    } else {
+        switch (parsing_context.parsed_transaction->Tokens[token_index].type) {
+        case JSMN_STRING:
+            return display_value(
                 value,
                 value_length,
                 token_index,
                 current_item_index,
                 item_index_to_display,
                 chunk_index);
-    } else {
-        switch (parsing_context.parsed_transaction->Tokens[token_index].type) {
-            case JSMN_STRING:
-                return display_value(
-                        value,
-                        value_length,
-                        token_index,
-                        current_item_index,
-                        item_index_to_display,
-                        chunk_index);
 
-            case JSMN_PRIMITIVE:
-                return display_value(
-                        value,
-                        value_length,
-                        token_index,
-                        current_item_index,
-                        item_index_to_display,
-                        chunk_index);
+        case JSMN_PRIMITIVE:
+            return display_value(
+                value,
+                value_length,
+                token_index,
+                current_item_index,
+                item_index_to_display,
+                chunk_index);
 
-            case JSMN_OBJECT: {
-                int el_count = object_get_element_count(token_index, parsing_context.parsed_transaction);
-                for (int i = 0; i < el_count; ++i) {
-                    int key_index = object_get_nth_key(token_index, i, parsing_context.parsed_transaction);
-                    int value_index = object_get_nth_value(token_index, i, parsing_context.parsed_transaction);
+        case JSMN_OBJECT: {
+            int el_count = object_get_element_count(token_index, parsing_context.parsed_transaction);
+            for (int i = 0; i < el_count; ++i) {
+                int key_index = object_get_nth_key(token_index, i, parsing_context.parsed_transaction);
+                int value_index = object_get_nth_value(token_index, i, parsing_context.parsed_transaction);
 
-                    if (item_index_to_display != -1) {
-                        char key_temp[20];
-                        display_key(
-                                key_temp,
-                                sizeof(key_temp),
-                                key_index);
+                if (item_index_to_display != -1) {
+                    char key_temp[20];
+                    display_key(
+                        key_temp,
+                        sizeof(key_temp),
+                        key_index);
 
-                        append_keys(key, key_length, key_temp);
-                    }
+                    append_keys(key, key_length, key_temp);
+                }
 
-                    int found = display_arbitrary_item_inner(
-                            item_index_to_display,
-                            key,
-                            key_length,
-                            value,
-                            value_length,
-                            value_index,
-                            current_item_index,
-                            level + 1,
-                            chunk_index);
+                int found = display_arbitrary_item_inner(
+                    item_index_to_display,
+                    key,
+                    key_length,
+                    value,
+                    value_length,
+                    value_index,
+                    current_item_index,
+                    level + 1,
+                    chunk_index);
 
-                    if (item_index_to_display != -1) {
-                        if (found == item_index_to_display) {
-                            return item_index_to_display;
-                        } else {
-                            remove_last(key);
-                        }
+                if (item_index_to_display != -1) {
+                    if (found == item_index_to_display) {
+                        return item_index_to_display;
+                    } else {
+                        remove_last(key);
                     }
                 }
-                break;
             }
-            case JSMN_ARRAY: {
-                int el_count = array_get_element_count(token_index, parsing_context.parsed_transaction);
-                for (int i = 0; i < el_count; ++i) {
-                    int element_index = array_get_nth_element(token_index, i, parsing_context.parsed_transaction);
-                    int found = display_arbitrary_item_inner(
-                            item_index_to_display,
-                            key,
-                            key_length,
-                            value,
-                            value_length,
-                            element_index,
-                            current_item_index,
-                            level,
-                            chunk_index);
+            break;
+        }
+        case JSMN_ARRAY: {
+            int el_count = array_get_element_count(token_index, parsing_context.parsed_transaction);
+            for (int i = 0; i < el_count; ++i) {
+                int element_index = array_get_nth_element(token_index, i, parsing_context.parsed_transaction);
+                int found = display_arbitrary_item_inner(
+                    item_index_to_display,
+                    key,
+                    key_length,
+                    value,
+                    value_length,
+                    element_index,
+                    current_item_index,
+                    level,
+                    chunk_index);
 
-                    if (item_index_to_display != -1) {
-                        if (found == item_index_to_display) {
-                            return item_index_to_display;
-                        }
+                if (item_index_to_display != -1) {
+                    if (found == item_index_to_display) {
+                        return item_index_to_display;
                     }
                 }
-                break;
             }
-            default:
-                return *current_item_index;
+            break;
+        }
+        default:return *current_item_index;
         }
         // Not found yet, continue parsing
         return -1;
@@ -249,113 +245,110 @@ int display_get_arbitrary_items_count(int token_index) {
     int chunk_index = 0;
     char dummy[1];
     display_arbitrary_item_inner(
-            -1,
-            dummy,
-            1,
-            dummy,
-            1,
-            token_index,
-            &number_of_items,
-            0,
-            &chunk_index);
+        -1,
+        dummy,
+        1,
+        dummy,
+        1,
+        token_index,
+        &number_of_items,
+        0,
+        &chunk_index);
 
     return number_of_items;
 }
 
 int display_arbitrary_item(
-        int item_index_to_display,
-        char* key,
-        int key_length,
-        char* value,
-        int value_length,
-        int token_index,
-        int* chunk_index)
-{
+    int item_index_to_display,
+    char *key,
+    int key_length,
+    char *value,
+    int value_length,
+    int token_index,
+    int *chunk_index) {
     int current_item_index = 0;
     return display_arbitrary_item_inner(
-            item_index_to_display,
-            key,
-            key_length,
-            value,
-            value_length,
-            token_index,
-            &current_item_index,
-            0,
-            chunk_index);
+        item_index_to_display,
+        key,
+        key_length,
+        value,
+        value_length,
+        token_index,
+        &current_item_index,
+        0,
+        chunk_index);
 }
 
 int transaction_get_display_key_value(
-        char* key, // output
-        int key_length,
-        char* value, // output
-        int value_length,
-        int page_index,
-        int* chunk_index) // input/output
+    char *key, // output
+    int key_length,
+    char *value, // output
+    int value_length,
+    int page_index,
+    int *chunk_index) // input/output
 {
     switch (page_index) {
-        case 0: {
-            copy_fct(key, "chain_id", sizeof("chain_id"));
-            int token_index = object_get_value(0, "chain_id", parsing_context.parsed_transaction,
+    case 0: {
+        copy_fct(key, "chain_id", sizeof("chain_id"));
+        int token_index = object_get_value(0, "chain_id", parsing_context.parsed_transaction,
+                                           parsing_context.transaction);
+        update(value, value_length, token_index, chunk_index);
+        break;
+    }
+    case 1: {
+        copy_fct(key, "sequence", sizeof("sequence"));
+        int token_index = object_get_value(0, "sequence", parsing_context.parsed_transaction,
+                                           parsing_context.transaction);
+        update(value, value_length, token_index, chunk_index);
+        break;
+    }
+    case 2: {
+        copy_fct(key, "fee_bytes", sizeof("fee_bytes"));
+        int token_index = object_get_value(0, "fee_bytes", parsing_context.parsed_transaction,
+                                           parsing_context.transaction);
+        update(value, value_length, token_index, chunk_index);
+        break;
+    }
+    default: {
+        if (page_index - 3 < msg_bytes_pages) {
+            int token_index = object_get_value(0,
+                                               "msg_bytes",
+                                               parsing_context.parsed_transaction,
                                                parsing_context.transaction);
-            update(value, value_length, token_index, chunk_index);
-            break;
-        }
-        case 1: {
-            copy_fct(key, "sequence", sizeof("sequence"));
-            int token_index = object_get_value(0, "sequence", parsing_context.parsed_transaction,
+
+            //char full_key[parsing_context.max_chars_per_key_line];
+            copy_fct(key, "msg_bytes", sizeof("msg_bytes"));
+            key[sizeof("msg_bytes")] = '\0';
+
+            display_arbitrary_item(page_index - 3,
+                                   key,
+                                   key_length,
+                                   value,
+                                   value_length,
+                                   token_index,
+                                   chunk_index);
+        } else {
+            int token_index = object_get_value(0, "alt_bytes", parsing_context.parsed_transaction,
                                                parsing_context.transaction);
-            update(value, value_length, token_index, chunk_index);
-            break;
-        }
-        case 2: {
-            copy_fct(key, "fee_bytes", sizeof("fee_bytes"));
-            int token_index = object_get_value(0, "fee_bytes", parsing_context.parsed_transaction,
-                                               parsing_context.transaction);
-            update(value, value_length, token_index, chunk_index);
-            break;
-        }
-        default: {
-            if (page_index - 3 < msg_bytes_pages) {
-                int token_index = object_get_value(0,
-                                                   "msg_bytes",
-                                                   parsing_context.parsed_transaction,
-                                                   parsing_context.transaction);
+            //char full_key[parsing_context.max_chars_per_key_line];
+            copy_fct(key, "alt_bytes", sizeof("alt_bytes"));
+            key[sizeof("alt_bytes")] = '\0';
 
-                //char full_key[parsing_context.max_chars_per_key_line];
-                copy_fct(key, "msg_bytes", sizeof("msg_bytes"));
-                key[sizeof("msg_bytes")] = '\0';
-
-                display_arbitrary_item(page_index - 3,
-                                       key,
-                                       key_length,
-                                       value,
-                                       value_length,
-                                       token_index,
-                                       chunk_index);
-            }
-            else {
-                int token_index = object_get_value(0, "alt_bytes", parsing_context.parsed_transaction,
-                                                   parsing_context.transaction);
-                //char full_key[parsing_context.max_chars_per_key_line];
-                copy_fct(key, "alt_bytes", sizeof("alt_bytes"));
-                key[sizeof("alt_bytes")] = '\0';
-
-                display_arbitrary_item(page_index - 3 - msg_bytes_pages,
-                                       key,
-                                       key_length,
-                                       value,
-                                       value_length,
-                                       token_index,
-                                       chunk_index);
-            }
-            break;
+            display_arbitrary_item(page_index - 3 - msg_bytes_pages,
+                                   key,
+                                   key_length,
+                                   value,
+                                   value_length,
+                                   token_index,
+                                   chunk_index);
         }
+        break;
+    }
     }
     return 0;
 }
 
-int transaction_get_display_pages()
-{
+int transaction_get_display_pages() {
     int token_index_mb = object_get_value(0, "msg_bytes", parsing_context.parsed_transaction,
                                           parsing_context.transaction);
     int token_index_ab = object_get_value(0, "alt_bytes", parsing_context.parsed_transaction,

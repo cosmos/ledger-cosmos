@@ -21,11 +21,11 @@ void json_parse(parsed_json_t *parsed_json, const char *transaction) {
     jsmn_init(&parser);
 
     int num_tokens = jsmn_parse(
-            &parser,
-            transaction,
-            strlen(transaction),
-            parsed_json->Tokens,
-            MAX_NUMBER_OF_TOKENS);
+        &parser,
+        transaction,
+        strlen(transaction),
+        parsed_json->Tokens,
+        MAX_NUMBER_OF_TOKENS);
 
     parsed_json->CorrectFormat = false;
 

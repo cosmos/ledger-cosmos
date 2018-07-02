@@ -1,5 +1,4 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
 *   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,12 +48,12 @@ void transaction_initialize() {
     append_buffer_delegate update_flash_delegate = &update_flash;
 
     buffering_init(
-            ram_buffer,
-            sizeof(ram_buffer),
-            update_ram_delegate,
-            N_appdata.buffer,
-            sizeof(N_appdata.buffer),
-            update_flash_delegate
+        ram_buffer,
+        sizeof(ram_buffer),
+        update_ram_delegate,
+        N_appdata.buffer,
+        sizeof(N_appdata.buffer),
+        update_flash_delegate
     );
 }
 

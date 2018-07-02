@@ -238,7 +238,7 @@ func testSECP256K1(messages []sdk.StdSignMsg, ledger *ledger_goclient.Ledger) {
 		path := []uint32{44, 60, 0, 0, 0}
 
 		// FIXME: Hard-coding message because StdSignMsg is still base64 encoded.
-		//var msg = []byte("{\"sequences\":[1],\"alt_bytes\":null,\"chain_id\":\"test-chain-1\",\"fee_bytes\":{\"amount\":[{\"amount\":5,\"denom\":\"photon\"}],\"gas\":10000},\"msg_bytes\":{\"inputs\":[{\"address\":\"696E707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}],\"outputs\":[{\"address\":\"6F7574707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}]}}")
+		//var msg = []byte("{\"sequence\":1,\"alt_bytes\":null,\"chain_id\":\"test-chain-1\",\"fee_bytes\":{\"amount\":[{\"amount\":5,\"denom\":\"photon\"}],\"gas\":10000},\"msg_bytes\":{\"inputs\":[{\"address\":\"696E707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}],\"outputs\":[{\"address\":\"6F7574707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}]}}")
 		fmt.Printf("\nMessage: %s\n", message)
 
 		signature, err := ledger.SignSECP256K1(path, message)

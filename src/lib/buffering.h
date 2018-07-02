@@ -35,22 +35,39 @@ typedef struct {
 
 typedef void (*append_buffer_delegate)(buffer_state_t *buffer, uint8_t *data, int size);
 
-void buffering_init(
-        uint8_t *ram_buffer,
-        uint16_t ram_buffer_size,
-        append_buffer_delegate ram,
-        uint8_t *flash_buffer,
-        uint16_t flash_buffer_size,
-        append_buffer_delegate flash);
+/// Initialize buffer
+/// \param ram_buffer
+/// \param ram_buffer_size
+/// \param ram
+/// \param flash_buffer
+/// \param flash_buffer_size
+/// \param flash
+void buffering_init(uint8_t *ram_buffer,
+                    uint16_t ram_buffer_size,
+                    append_buffer_delegate ram,
+                    uint8_t *flash_buffer,
+                    uint16_t flash_buffer_size,
+                    append_buffer_delegate flash);
 
+/// Reset buffer
 void buffering_reset();
 
+/// Append data to the buffer
+/// \param data
+/// \param length
 void buffering_append(uint8_t *data, int length);
 
+/// buffering_get_ram_buffer
+/// \return
 buffer_state_t *buffering_get_ram_buffer();
-buffer_state_t *buffering_get_flash_buffer();
-buffer_state_t *buffering_get_buffer();
 
+/// buffering_get_flash_buffer
+/// \return
+buffer_state_t *buffering_get_flash_buffer();
+
+/// buffering_get_buffer
+/// \return
+buffer_state_t *buffering_get_buffer();
 
 #ifdef __cplusplus
 }
