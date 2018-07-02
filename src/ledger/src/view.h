@@ -40,19 +40,30 @@ typedef void (*delegate_reject_transaction)();
 typedef void (*delegate_sign_transaction)();
 
 //------ Event handlers
+/// view_add_update_transaction_info_event_handler
+/// \param delegate
 void view_add_update_transaction_info_event_handler(delegate_update_transaction_info delegate);
 
+/// view_add_reject_transaction_event_handler
+/// \param delegate
 void view_add_reject_transaction_event_handler(delegate_reject_transaction delegate);
 
+/// view_add_sign_transaction_event_handler
+/// \param delegate
 void view_add_sign_transaction_event_handler(delegate_sign_transaction delegate);
 
-//------ Common functions (TODO review)
+//------ Common functions
+/// view_init
 void view_init(void);
 
+/// view_idle
 void view_idle(unsigned int ignored);
 
+/// view_display_transaction_menu
 void view_display_transaction_menu(unsigned int ignored);
 
+/// view_display_signing_success
 void view_display_signing_success();
 
+/// view_display_signing_error
 void view_display_signing_error();

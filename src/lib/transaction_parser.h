@@ -22,9 +22,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-// Update value characters from json transaction read from the token_index element.
-// Value is only updated if current_item_index (which is incremented internally) matches item_index_to_display
-// If value is updated, we also update view_scrolling_total_size to value string length.
+
+/// Update value characters from json transaction read from the token_index element.
+/// Value is only updated if current_item_index (which is incremented internally) matches item_index_to_display
+/// If value is updated, we also update view_scrolling_total_size to value string length.
+// \param value
+/// \param value_length
+/// \param token_index
+/// \param current_item_index
+/// \param item_index_to_display
+/// \param chunk_index
+/// \return
 int display_value(char *value,
                   int value_length,
                   int token_index,
@@ -32,32 +40,53 @@ int display_value(char *value,
                   int item_index_to_display,
                   int *chunk_index);
 
-// Update key characters from json transaction read from the token_index element.
-void display_key(
-        char* key,
-        int key_length,
-        int token_index);
+/// Update key characters from json transaction read from the token_index element.
+/// \param key
+/// \param key_length
+/// \param token_index
+void display_key(char *key,
+                 int key_length,
+                 int token_index);
 
-// Generic function to display arbitrary json based on the specification
-int display_arbitrary_item(
-        int item_index_to_display,
-        char* key,
-        int key_length,
-        char* value,
-        int value_length,
-        int token_index,
-        int* chunk_index);
+/// Generic function to display arbitrary json based on the specification
+/// \param item_index_to_display
+/// \param key
+/// \param key_length
+/// \param value
+/// \param value_length
+/// \param token_index
+/// \param chunk_index
+/// \return
+int display_arbitrary_item(int item_index_to_display,
+                           char *key,
+                           int key_length,
+                           char *value,
+                           int value_length,
+                           int token_index,
+                           int *chunk_index);
 
+/// display_get_arbitrary_items_count
+/// \param token_index
+/// \return
 int display_get_arbitrary_items_count(int token_index);
 
-int transaction_get_display_key_value(
-        char* key,
-        int key_length,
-        char* value,
-        int value_length,
-        int page_index,
-        int* chunk_index);
+/// transaction_get_display_key_value
+/// \param key
+/// \param key_length
+/// \param value
+/// \param value_length
+/// \param page_index
+/// \param chunk_index
+/// \return
+int transaction_get_display_key_value(char *key,
+                                      int key_length,
+                                      char *value,
+                                      int value_length,
+                                      int page_index,
+                                      int *chunk_index);
 
+/// transaction_get_display_pages
+/// \return
 int transaction_get_display_pages();
 
 //---------------------------------------------

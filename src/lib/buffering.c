@@ -24,13 +24,12 @@ buffer_state_t ram;
 append_buffer_delegate append_flash_buffer = NULL;
 buffer_state_t flash;
 
-void buffering_init(
-        uint8_t *ram_buffer,
-        uint16_t ram_buffer_size,
-        append_buffer_delegate ram_delegate,
-        uint8_t *flash_buffer,
-        uint16_t flash_buffer_size,
-        append_buffer_delegate flash_delegate) {
+void buffering_init(uint8_t *ram_buffer,
+                    uint16_t ram_buffer_size,
+                    append_buffer_delegate ram_delegate,
+                    uint8_t *flash_buffer,
+                    uint16_t flash_buffer_size,
+                    append_buffer_delegate flash_delegate) {
     append_ram_buffer = ram_delegate;
     append_flash_buffer = flash_delegate;
 
@@ -73,7 +72,6 @@ void buffering_append(uint8_t *data, int length) {
         flash.pos += length;
     }
 }
-
 
 buffer_state_t *buffering_get_ram_buffer() {
     return &ram;

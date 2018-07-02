@@ -19,7 +19,6 @@
 
 #include <os_io_seproxyhal.h>
 
-
 __attribute__((section(".boot"))) int
 main(void) {
     // exit critical section

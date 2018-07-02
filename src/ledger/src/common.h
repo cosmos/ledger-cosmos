@@ -1,5 +1,4 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
 *   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");

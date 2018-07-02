@@ -27,6 +27,7 @@ extern "C" {
 
 typedef unsigned char byte;
 
+/// Max number of accepted tokens in the JSON input
 #define MAX_NUMBER_OF_TOKENS    128
 
 //---------------------------------------------
@@ -41,7 +42,6 @@ typedef struct {
     jsmntok_t Tokens[MAX_NUMBER_OF_TOKENS];
 } parsed_json_t;
 
-
 typedef struct {
     const parsed_json_t *parsed_transaction;
     unsigned short max_chars_per_key_line;
@@ -52,45 +52,63 @@ typedef struct {
 //---------------------------------------------
 // NEW JSON PARSER CODE
 
-// Parse json to create a token representation
-void json_parse(
-        parsed_json_t *parsed_json,
-        const char *transaction);
+/// Parse json to create a token representation
+/// \param parsed_json
+/// \param transaction
+void json_parse(parsed_json_t *parsed_json,
+                const char *transaction);
 
-// Get number of elements in array
-int array_get_element_count(
-        int array_token_index,
-        const parsed_json_t *parsed_transaction);
+/// Get number of elements in array
+/// \param array_token_index
+/// \param parsed_transaction
+/// \return
+int array_get_element_count(int array_token_index,
+                            const parsed_json_t *parsed_transaction);
 
-// Get token index of the nth array's element
-int array_get_nth_element(
-        int array_token_index,
-        int element_index,
-        const parsed_json_t *parsed_transaction);
+/// Get token index of the nth array's element
+/// \param array_token_index
+/// \param element_index
+/// \param parsed_transaction
+/// \return
+int array_get_nth_element(int array_token_index,
+                          int element_index,
+                          const parsed_json_t *parsed_transaction);
 
-// Get number of elements (key/value pairs) in object
-int object_get_element_count(
-        int object_token_index,
-        const parsed_json_t *parsed_transaction);
+/// Get number of elements (key/value pairs) in object
+/// \param object_token_index
+/// \param parsed_transaction
+/// \return
+int object_get_element_count(int object_token_index,
+                             const parsed_json_t *parsed_transaction);
 
-// Get token index for the nth key
-int object_get_nth_key(
-        int object_token_index,
-        int object_element_index,
-        const parsed_json_t *parsed_transaction);
+/// Get token index for the nth key
+/// \param object_token_index
+/// \param object_element_index
+/// \param parsed_transaction
+/// \return
+int object_get_nth_key(int object_token_index,
+                       int object_element_index,
+                       const parsed_json_t *parsed_transaction);
 
-// Get token index for the nth value
-int object_get_nth_value(
-        int object_token_index,
-        int object_element_index,
-        const parsed_json_t *parsed_transaction);
+/// Get token index for the nth value
+/// \param object_token_index
+/// \param object_element_index
+/// \param parsed_transaction
+/// \return
+int object_get_nth_value(int object_token_index,
+                         int object_element_index,
+                         const parsed_json_t *parsed_transaction);
 
-// Get token index for the value that matched given key
-int object_get_value(
-        int object_token_index,
-        const char *key_name,
-        const parsed_json_t *parsed_transaction,
-        const char *transaction);
+/// Get token index for the value that matched given key
+/// \param object_token_index
+/// \param key_name
+/// \param parsed_transaction
+/// \param transaction
+/// \return
+int object_get_value(int object_token_index,
+                     const char *key_name,
+                     const parsed_json_t *parsed_transaction,
+                     const char *transaction);
 
 
 #ifdef __cplusplus

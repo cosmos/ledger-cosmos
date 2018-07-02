@@ -1,5 +1,4 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
 *   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,24 +20,28 @@
 
 void transaction_initialize();
 
-// Clears the transaction buffer
+/// Clears the transaction buffer
 void transaction_reset();
 
-// Appends buffer to the end of the current transaction buffer
-// Transaction buffer will grow until it reaches the maximum allowed size
-void transaction_append(
-        unsigned char *buffer,
-        uint32_t length);
+/// Appends buffer to the end of the current transaction buffer
+/// Transaction buffer will grow until it reaches the maximum allowed size
+/// \param buffer
+/// \param length
+void transaction_append(unsigned char *buffer,
+                        uint32_t length);
 
-// Returns size of the raw json transaction buffer
+/// Returns size of the raw json transaction buffer
+/// \return
 uint32_t transaction_get_buffer_length();
 
-// Returns the raw json transaction buffer
+/// Returns the raw json transaction buffer
+/// \return
 uint8_t *transaction_get_buffer();
 
-// Parse json message stored in transaction buffer
-// This function should be called as soon as full buffer data is loaded.
+/// Parse json message stored in transaction buffer
+/// This function should be called as soon as full buffer data is loaded.
 void transaction_parse();
 
-// Returns parsed representation of the transaction message
+/// Returns parsed representation of the transaction message
+/// \return
 parsed_json_t *transaction_get_parsed();
