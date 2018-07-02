@@ -89,6 +89,14 @@ int transaction_get_display_key_value(char *key,
 /// \return
 int transaction_get_display_pages();
 
+/// Validate json transaction
+/// \param parsed_transacton
+/// \param transaction
+/// \return
+const char* json_validate(
+        parsed_json_t* parsed_transaction,
+        const char *transaction);
+
 //---------------------------------------------
 // Delegates
 

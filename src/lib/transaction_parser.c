@@ -16,6 +16,7 @@
 
 #include <jsmn.h>
 #include "transaction_parser.h"
+#include "json_parser.h"
 
 //---------------------------------------------
 
@@ -358,4 +359,96 @@ int transaction_get_display_pages() {
     alt_bytes_pages = display_get_arbitrary_items_count(token_index_ab);
 
     return msg_bytes_pages + alt_bytes_pages + 3;
+}
+
+int is_space(char c)
+{
+    const char space = 0x20; // ' '
+    const char form_feed = 0x0c; // '\f'
+    const char line_feed = 0x0a; // '\n'
+    const char carriage_return  = 0x0d; // '\r'
+    const char horizontal_tab = 0x09; // '\t'
+    const char vertical_tab = 0x0b; //'\v'
+
+    const char whitespaces[] = {space,
+                                form_feed,
+                                line_feed,
+                                carriage_return,
+                                horizontal_tab,
+                                vertical_tab};
+
+    for (int i = 0;i < sizeof(whitespaces); i++) {
+        if (whitespaces[i] == c) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int contains_whitespace(parsed_json_t* parsed_transaction,
+                        const char *transaction) {
+
+
+    int start = 0;
+    // Starting at token 1 because token 0 contains full transaction
+    for (int i = 1; i < parsed_transaction->NumberOfTokens; i++) {
+        int end = parsed_transaction->Tokens[i].start;
+        for (int j = start; j < end;j++ ) {
+            if (is_space(transaction[j]) == 1) {
+                return 1;
+            }
+        }
+        start = parsed_transaction->Tokens[i].end+1;
+    }
+    while (transaction[start] != '\0') {
+        if (is_space(transaction[start]) == 1) {
+            return 1;
+        }
+        start++;
+    }
+    return 0;
+}
+
+const char* json_validate(parsed_json_t* parsed_transaction,
+                          const char *transaction) {
+
+    if (contains_whitespace(parsed_transaction, transaction) == 1) {
+        return "Contains whitespace in the corpus";
+    }
+    if (object_get_value(0,
+                         "chain_id",
+                         parsed_transaction,
+                         transaction) == -1) {
+        return "Missing chain_id";
+    }
+
+    if (object_get_value(0,
+                         "sequence",
+                         parsed_transaction,
+                         transaction) == -1) {
+        return "Missing sequence";
+    }
+
+    if (object_get_value(0,
+                         "fee_bytes",
+                         parsed_transaction,
+                         transaction) == -1) {
+        return "Missing fee_bytes";
+    }
+
+    if (object_get_value(0,
+                         "msg_bytes",
+                         parsed_transaction,
+                         transaction) == -1) {
+        return "Missing msg_bytes";
+    }
+
+    if (object_get_value(0,
+                         "alt_bytes",
+                         parsed_transaction,
+                         transaction) == -1) {
+        return "Missing alt_bytes";
+    }
+
+    return NULL;
 }

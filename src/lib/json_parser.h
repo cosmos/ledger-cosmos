@@ -36,8 +36,7 @@ typedef unsigned char byte;
 //  - parsed json tokens
 //  - re-created SendMsg struct with indices pointing to tokens in parsed json
 typedef struct {
-    // Tokens
-    bool CorrectFormat;
+    bool IsValid;
     byte NumberOfTokens;
     jsmntok_t Tokens[MAX_NUMBER_OF_TOKENS];
 } parsed_json_t;
@@ -58,14 +57,14 @@ typedef struct {
 void json_parse(parsed_json_t *parsed_json,
                 const char *transaction);
 
-/// Get number of elements in array
+/// Get the number of elements in the array
 /// \param array_token_index
 /// \param parsed_transaction
 /// \return
 int array_get_element_count(int array_token_index,
                             const parsed_json_t *parsed_transaction);
 
-/// Get token index of the nth array's element
+/// Get the token index of the nth array's element
 /// \param array_token_index
 /// \param element_index
 /// \param parsed_transaction
@@ -74,15 +73,15 @@ int array_get_nth_element(int array_token_index,
                           int element_index,
                           const parsed_json_t *parsed_transaction);
 
-/// Get number of elements (key/value pairs) in object
-/// \param object_token_index
+/// Get the number of dictionary elements (key/value pairs) under given object
+/// \param object_token_index: token index of the parent object
 /// \param parsed_transaction
 /// \return
 int object_get_element_count(int object_token_index,
                              const parsed_json_t *parsed_transaction);
 
-/// Get token index for the nth key
-/// \param object_token_index
+/// Get the token index for the nth dictionary key
+/// \param object_token_index: token index of the parent object
 /// \param object_element_index
 /// \param parsed_transaction
 /// \return
@@ -90,8 +89,8 @@ int object_get_nth_key(int object_token_index,
                        int object_element_index,
                        const parsed_json_t *parsed_transaction);
 
-/// Get token index for the nth value
-/// \param object_token_index
+/// Get the token index for the nth dictionary value
+/// \param object_token_index: token index of the parent object
 /// \param object_element_index
 /// \param parsed_transaction
 /// \return
@@ -99,9 +98,9 @@ int object_get_nth_value(int object_token_index,
                          int object_element_index,
                          const parsed_json_t *parsed_transaction);
 
-/// Get token index for the value that matched given key
-/// \param object_token_index
-/// \param key_name
+/// Get the token index of the value that matches the given key
+/// \param object_token_index: token index of the parent object
+/// \param key_name: key name of the wanted value
 /// \param parsed_transaction
 /// \param transaction
 /// \return
