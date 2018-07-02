@@ -23,6 +23,7 @@
 #include <string>
 #include <array>
 #include <jsmn.h>
+#include <lib/json_parser.h>
 
 namespace {
 
@@ -761,52 +762,114 @@ TEST(TransactionParserTest, ParseTransaction_OutOfBounds) {
     EXPECT_EQ_STR(value, "", "Wrong value");
 }
 
-//    // TODO: Not yet implemented
-//    TEST(TransactionParserTest, correct_format) {
-//
-//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
-//        char errorMsg[20];
-//        int result = json_validate(transaction, errorMsg, sizeof(errorMsg));
-//        EXPECT_TRUE(result == 0) << "Validation failed, error: " << errorMsg;
-//    }
-//
-//    TEST(TransactionParserTest, incorrect_format_missing_alt_bytes) {
-//
-//        auto transaction = R"({"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
-//        char errorMsg[20];
-//        int result = json_validate(transaction, errorMsg, sizeof(errorMsg));
-//        EXPECT_TRUE(result == -1) << "Validation should fail, alt_bytes are missing";
-//    }
-//
-//    TEST(TransactionParserTest, incorrect_format_missing_chain_id) {
-//
-//        auto transaction = R"({"alt_bytes":null,"fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
-//        char errorMsg[20];
-//        int result = json_validate(transaction, errorMsg, sizeof(errorMsg));
-//        EXPECT_TRUE(result == -1) << "Validation should fail, chain_id is missing";
-//    }
-//
-//    TEST(TransactionParserTest, incorrect_format_missing_fee_bytes) {
-//
-//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
-//        char errorMsg[20];
-//        int result = json_validate(transaction, errorMsg, sizeof(errorMsg));
-//        EXPECT_TRUE(result == -1) << "Validation should fail, fee_bytes are missing";
-//    }
-//
-//    TEST(TransactionParserTest, incorrect_format_missing_msg_bytes) {
-//
-//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"sequence":1})";
-//        char errorMsg[20];
-//        int result = json_validate(transaction, errorMsg, sizeof(errorMsg));
-//        EXPECT_TRUE(result == -1) << "Validation should fail, msg_bytes are missing";
-//    }
-//
-//    TEST(TransactionParserTest, incorrect_format_missing_sequence) {
-//
-//        auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
-//        char errorMsg[20];
-//        int result = json_validate(transaction, errorMsg, sizeof(errorMsg));
-//        EXPECT_TRUE(result == -1) << "Validation should fail, sequence is missing";
-//    }
+TEST(TransactionParserTest, TransactionJsonValidation_CorrectFormat) {
+
+    auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+
+    const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_TRUE(error_msg == NULL) << "Validation failed, error: " << error_msg;
+}
+
+TEST(TransactionParserTest, TransactionJsonValidation_MissingAltBytes) {
+
+    auto transaction = R"({"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+
+    const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_EQ_STR(error_msg, "Missing alt_bytes", "Validation should fail because alt_bytes are missing");
+}
+
+TEST(TransactionParserTest, TransactionJsonValidation_MissingChainId) {
+
+    auto transaction = R"({"alt_bytes":null,"fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+
+    const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_EQ_STR(error_msg, "Missing chain_id", "Validation should fail because chain_id is missing");
+}
+
+TEST(TransactionParserTest, TransactionJsonValidation_MissingFeeBytes) {
+
+    auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+
+    const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_EQ_STR(error_msg, "Missing fee_bytes", "Validation should fail because fee_bytes are missing");
+}
+
+TEST(TransactionParserTest, TransactionJsonValidation_MissingMsgBytes) {
+
+    auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"sequence":1})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+
+    const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_EQ_STR(error_msg, "Missing msg_bytes", "Validation should fail because msg_bytes are missing");
+}
+
+TEST(TransactionParserTest, TransactionJsonValidation_MissingSequence) {
+
+    auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+
+    const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_EQ_STR(error_msg, "Missing sequence", "Validation should fail because sequence is missing");
+}
+
+TEST(TransactionParserTest, TransactionJsonValidation_Spaces_InTheMiddle) {
+
+    auto transaction = R"({"alt_bytes":null,"chain_id" :"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+    EXPECT_FALSE(parsed_transaction.IsValid) << "Json with spaces should fail validation";
+
+    const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_EQ_STR(error_msg, "Contains whitespace in the corpus", "Validation should fail because contains whitespace in the corpus");
+}
+TEST(TransactionParserTest, TransactionJsonValidation_Spaces_AtTheFront) {
+
+    auto transaction = R"({\t"alt_bytes":null,"chain_id" :"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+    EXPECT_FALSE(parsed_transaction.IsValid) << "Json with spaces should fail validation";
+
+    const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_EQ_STR(error_msg, "Contains whitespace in the corpus", "Validation should fail because contains whitespace in the corpus");
+}
+TEST(TransactionParserTest, TransactionJsonValidation_Spaces_AtTheEnd) {
+
+    auto transaction = R"({"alt_bytes":null,"chain_id" :"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1}\r)";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+    EXPECT_FALSE(parsed_transaction.IsValid) << "Json with spaces should fail validation";
+
+    const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_EQ_STR(error_msg, "Contains whitespace in the corpus", "Validation should fail because contains whitespace in the corpus");
+}
+TEST(TransactionParserTest, TransactionJsonValidation_Spaces_Lots) {
+
+    auto transaction = R"({"alt_bytes":null,"chain_id" :"test-chain-1",\t\t"fee_bytes":     {"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+    EXPECT_FALSE(parsed_transaction.IsValid) << "Json with spaces should fail validation";
+
+    const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_EQ_STR(error_msg, "Contains whitespace in the corpus", "Validation should fail because contains whitespace in the corpus");
+}
 }

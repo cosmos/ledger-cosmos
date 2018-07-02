@@ -27,7 +27,7 @@ void json_parse(parsed_json_t *parsed_json, const char *transaction) {
         parsed_json->Tokens,
         MAX_NUMBER_OF_TOKENS);
 
-    parsed_json->CorrectFormat = false;
+    parsed_json->IsValid = false;
 
     if (num_tokens > 255) {
         return;
@@ -36,16 +36,8 @@ void json_parse(parsed_json_t *parsed_json, const char *transaction) {
     parsed_json->NumberOfTokens = (byte) num_tokens;
     if (parsed_json->NumberOfTokens >= 1 &&
         parsed_json->Tokens[0].type != JSMN_OBJECT) {
-        parsed_json->CorrectFormat = true;
+        parsed_json->IsValid = true;
     }
-}
-
-int json_validate(const char *transaction,
-                  char *errorMsg,
-                  int errMsgLength) {
-    strcpy(errorMsg, "Not implemented.");
-    // Here we make sure that json have correct format according to the spec
-    return -1;
 }
 
 int array_get_element_count(int array_token_index,

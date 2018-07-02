@@ -23,6 +23,7 @@
 #include <string>
 #include <array>
 #include <jsmn.h>
+#include <lib/json_parser.h>
 
 namespace {
 std::string exec(const char *cmd) {
@@ -42,7 +43,7 @@ TEST(JsonParserTest, Empty) {
     parsed_json_t parserData = {false};
     json_parse(&parserData, "");
 
-    EXPECT_FALSE(parserData.CorrectFormat);
+    EXPECT_FALSE(parserData.IsValid);
     EXPECT_EQ(0, parserData.NumberOfTokens);
 }
 
@@ -50,7 +51,7 @@ TEST(JsonParserTest, SinglePrimitive) {
     parsed_json_t parserData = {false};
     json_parse(&parserData, "EMPTY");
 
-    EXPECT_TRUE(parserData.CorrectFormat);
+    EXPECT_TRUE(parserData.IsValid);
     EXPECT_EQ(1, parserData.NumberOfTokens);
     EXPECT_TRUE(parserData.Tokens[0].type == jsmntype_t::JSMN_PRIMITIVE);
 }
@@ -59,7 +60,7 @@ TEST(JsonParserTest, KeyValuePrimitives) {
     parsed_json_t parserData = {false};
     json_parse(&parserData, "KEY : VALUE");
 
-    EXPECT_TRUE(parserData.CorrectFormat);
+    EXPECT_TRUE(parserData.IsValid);
     EXPECT_EQ(2, parserData.NumberOfTokens);
     EXPECT_TRUE(parserData.Tokens[0].type == jsmntype_t::JSMN_PRIMITIVE);
     EXPECT_TRUE(parserData.Tokens[1].type == jsmntype_t::JSMN_PRIMITIVE);
@@ -69,7 +70,7 @@ TEST(JsonParserTest, SingleString) {
     parsed_json_t parserData = {false};
     json_parse(&parserData, "\"EMPTY\"");
 
-    EXPECT_TRUE(parserData.CorrectFormat);
+    EXPECT_TRUE(parserData.IsValid);
     EXPECT_EQ(1, parserData.NumberOfTokens);
     EXPECT_TRUE(parserData.Tokens[0].type == jsmntype_t::JSMN_STRING);
 }
@@ -78,7 +79,7 @@ TEST(JsonParserTest, KeyValueStrings) {
     parsed_json_t parserData = {false};
     json_parse(&parserData, R"("KEY" : "VALUE")");
 
-    EXPECT_TRUE(parserData.CorrectFormat);
+    EXPECT_TRUE(parserData.IsValid);
     EXPECT_EQ(2, parserData.NumberOfTokens);
     EXPECT_TRUE(parserData.Tokens[0].type == jsmntype_t::JSMN_STRING);
     EXPECT_TRUE(parserData.Tokens[1].type == jsmntype_t::JSMN_STRING);
@@ -88,7 +89,7 @@ TEST(JsonParserTest, SimpleArray) {
     parsed_json_t parserData = {false};
     json_parse(&parserData, "LIST : [1, 2, 3, 4]");
 
-    EXPECT_TRUE(parserData.CorrectFormat);
+    EXPECT_TRUE(parserData.IsValid);
     EXPECT_EQ(6, parserData.NumberOfTokens);
     EXPECT_TRUE(parserData.Tokens[0].type == jsmntype_t::JSMN_PRIMITIVE);
     EXPECT_TRUE(parserData.Tokens[1].type == jsmntype_t::JSMN_ARRAY);
@@ -102,7 +103,7 @@ TEST(JsonParserTest, MixedArray) {
     parsed_json_t parserData = {false};
     json_parse(&parserData, R"(LIST : [1, "Text", 3, "Another text"])");
 
-    EXPECT_TRUE(parserData.CorrectFormat);
+    EXPECT_TRUE(parserData.IsValid);
     EXPECT_EQ(6, parserData.NumberOfTokens);
     EXPECT_TRUE(parserData.Tokens[0].type == jsmntype_t::JSMN_PRIMITIVE);
     EXPECT_TRUE(parserData.Tokens[1].type == jsmntype_t::JSMN_ARRAY);
@@ -122,7 +123,7 @@ TEST(JsonParserTest, SimpleObject) {
                             "\"total\":123 }"
                             "}");
 
-    EXPECT_TRUE(parserData.CorrectFormat);
+    EXPECT_TRUE(parserData.IsValid);
     EXPECT_EQ(10, parserData.NumberOfTokens);
     EXPECT_TRUE(parserData.Tokens[0].type == jsmntype_t::JSMN_PRIMITIVE);
     EXPECT_TRUE(parserData.Tokens[1].type == jsmntype_t::JSMN_OBJECT);
