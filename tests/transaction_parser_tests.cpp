@@ -834,7 +834,6 @@ TEST(TransactionParserTest, TransactionJsonValidation_Spaces_InTheMiddle) {
 
     parsed_json_t parsed_transaction;
     json_parse(&parsed_transaction, transaction);
-    EXPECT_FALSE(parsed_transaction.IsValid) << "Json with spaces should fail validation";
 
     const char* error_msg = json_validate(&parsed_transaction, transaction);
     EXPECT_EQ_STR(error_msg, "Contains whitespace in the corpus", "Validation should fail because contains whitespace in the corpus");
@@ -845,7 +844,6 @@ TEST(TransactionParserTest, TransactionJsonValidation_Spaces_AtTheFront) {
 
     parsed_json_t parsed_transaction;
     json_parse(&parsed_transaction, transaction);
-    EXPECT_FALSE(parsed_transaction.IsValid) << "Json with spaces should fail validation";
 
     const char* error_msg = json_validate(&parsed_transaction, transaction);
     EXPECT_EQ_STR(error_msg, "Contains whitespace in the corpus", "Validation should fail because contains whitespace in the corpus");
@@ -856,7 +854,6 @@ TEST(TransactionParserTest, TransactionJsonValidation_Spaces_AtTheEnd) {
 
     parsed_json_t parsed_transaction;
     json_parse(&parsed_transaction, transaction);
-    EXPECT_FALSE(parsed_transaction.IsValid) << "Json with spaces should fail validation";
 
     const char* error_msg = json_validate(&parsed_transaction, transaction);
     EXPECT_EQ_STR(error_msg, "Contains whitespace in the corpus", "Validation should fail because contains whitespace in the corpus");
@@ -867,9 +864,19 @@ TEST(TransactionParserTest, TransactionJsonValidation_Spaces_Lots) {
 
     parsed_json_t parsed_transaction;
     json_parse(&parsed_transaction, transaction);
-    EXPECT_FALSE(parsed_transaction.IsValid) << "Json with spaces should fail validation";
 
     const char* error_msg = json_validate(&parsed_transaction, transaction);
     EXPECT_EQ_STR(error_msg, "Contains whitespace in the corpus", "Validation should fail because contains whitespace in the corpus");
+}
+
+TEST(TransactionParserTest, TransactionJsonValidation_AllowSpacesInString) {
+
+    auto transaction = R"({"alt_bytes\t":null,"chain_id\r":"test-chain-1\n","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount\n\n\n\n\n":10,"denom":"atom"}]}]},"sequence\t\t\t\t":1})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+
+    const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_TRUE(error_msg == NULL) << "Validation failed, error: " << error_msg;
 }
 }
