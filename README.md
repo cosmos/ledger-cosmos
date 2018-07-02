@@ -18,7 +18,7 @@ This repo includes:
 
 Continuous integration generates a demo.zip. This includes firmware plus a shell script that installs the firmware. 
 
-**WARNING**: Again! Remember to use this ONLY in a ledger without fund and only for test purposes.
+**WARNING**: Again! Remember to use this ONLY in a ledger without funds and only for testing purposes.
 
 # More info
 
