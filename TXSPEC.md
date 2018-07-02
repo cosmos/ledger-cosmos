@@ -8,7 +8,7 @@ Transactions passed to the Ledger device will be in the following format. The Le
 ```json
 {
   "chain_id": {string},
-  "sequences": [{number}, {number}, ...],
+  "sequence": {number},
   "fee_bytes": {
     "amount": [{"amount": {number}, "denom": {string}}, ...],
     "gas": {number}
@@ -23,18 +23,18 @@ Transactions passed to the Ledger device will be in the following format. The Le
 #### Examples
 
 ```json
-{"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequences":[1]}
+{"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1}
 ```
 
 ```json
-{"alt_bytes":null,"chain_id":"test-chain-2","fee_bytes":{"amount":[{"amount":10,"denom":"photon"}],"gas":10000},"msg_bytes":{"shares":"100"},"sequences":[2]}
+{"alt_bytes":null,"chain_id":"test-chain-2","fee_bytes":{"amount":[{"amount":10,"denom":"photon"}],"gas":10000},"msg_bytes":{"shares":"100"},"sequence":2}
 ```
 
 #### Display Logic
 
 The Ledger device SHOULD pick a suitable display representation for the transaction.
 
-The key type (secp256k1 / ed25519), `chain_id`, `sequences`, and `fee_bytes` should be displayed in that order, each on their own page, autoscrolling if necessary.
+The key type (secp256k1 / ed25519), `chain_id`, `sequence`, and `fee_bytes` should be displayed in that order, each on their own page, autoscrolling if necessary.
 
 `msg_bytes` and `alt_bytes` should be displayed according to the following recursive logic:
 
