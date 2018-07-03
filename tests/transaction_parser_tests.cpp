@@ -30,7 +30,7 @@ namespace {
 TEST(TransactionParserTest, ArrayElementCount_objects) {
 
     auto transaction =
-        R"({"array":[{"amount":5,"denom":"photon"}, {"amount":5,"denom":"photon"}, {"amount":5,"denom":"photon"}])";
+        R"({"array":[{"amount":5,"denom":"photon"}, {"amount":5,"denom":"photon"}, {"amount":5,"denom":"photon"}]})";
 
     parsed_json_t parsed_json;
     json_parse(&parsed_json, transaction);
@@ -40,7 +40,7 @@ TEST(TransactionParserTest, ArrayElementCount_objects) {
 
 TEST(TransactionParserTest, ArrayElementCount_primitives) {
 
-    auto transaction = R"({"array":[1, 2, 3, 4, 5, 6, 7])";
+    auto transaction = R"({"array":[1, 2, 3, 4, 5, 6, 7]})";
 
     parsed_json_t parsed_json;
     json_parse(&parsed_json, transaction);
@@ -50,7 +50,7 @@ TEST(TransactionParserTest, ArrayElementCount_primitives) {
 
 TEST(TransactionParserTest, ArrayElementCount_strings) {
 
-    auto transaction = R"({"array":["hello", "there"])";
+    auto transaction = R"({"array":["hello", "there"]})";
 
     parsed_json_t parsed_json;
     json_parse(&parsed_json, transaction);
@@ -71,7 +71,7 @@ TEST(TransactionParserTest, ArrayElementCount_empty) {
 TEST(TransactionParserTest, ArrayElementGet_objects) {
 
     auto transaction =
-        R"({"array":[{"amount":5,"denom":"photon"}, {"amount":5,"denom":"photon"}, {"amount":5,"denom":"photon"}])";
+        R"({"array":[{"amount":5,"denom":"photon"}, {"amount":5,"denom":"photon"}, {"amount":5,"denom":"photon"}]})";
 
     parsed_json_t parsed_json;
     json_parse(&parsed_json, transaction);
@@ -83,7 +83,7 @@ TEST(TransactionParserTest, ArrayElementGet_objects) {
 
 TEST(TransactionParserTest, ArrayElementGet_primitives) {
 
-    auto transaction = R"({"array":[1, 2, 3, 4, 5, 6, 7])";
+    auto transaction = R"({"array":[1, 2, 3, 4, 5, 6, 7]})";
 
     parsed_json_t parsed_json;
     json_parse(&parsed_json, transaction);
@@ -95,7 +95,7 @@ TEST(TransactionParserTest, ArrayElementGet_primitives) {
 
 TEST(TransactionParserTest, ArrayElementGet_strings) {
 
-    auto transaction = R"({"array":["hello", "there"])";
+    auto transaction = R"({"array":["hello", "there"]})";
 
     parsed_json_t parsed_json;
     json_parse(&parsed_json, transaction);
@@ -294,8 +294,14 @@ void setup_context(
 }
 
 void EXPECT_EQ_STR(const char *str1, const char *str2, const char *errorMsg) {
-    EXPECT_TRUE(strcmp(str1, str2) == 0) << errorMsg << ", expected: " << str2 << ", received: " << str1;
+    if (str1 != NULL & str2 != NULL) {
+        EXPECT_TRUE(strcmp(str1, str2) == 0) << errorMsg << ", expected: " << str2 << ", received: " << str1;
+    }
+    else {
+        FAIL() << "One of the strings is null";
+    }
 }
+
 
 TEST(TransactionParserTest, DisplayArbitraryItem_0) {
 
@@ -850,7 +856,7 @@ TEST(TransactionParserTest, TransactionJsonValidation_Spaces_AtTheFront) {
 }
 TEST(TransactionParserTest, TransactionJsonValidation_Spaces_AtTheEnd) {
 
-    auto transaction = R"({"alt_bytes":null,"chain_id" :"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1}\r)";
+    auto transaction = R"({"alt_bytes":null,"chain_id" :"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1\r})";
 
     parsed_json_t parsed_transaction;
     json_parse(&parsed_transaction, transaction);
@@ -877,6 +883,64 @@ TEST(TransactionParserTest, TransactionJsonValidation_AllowSpacesInString) {
     json_parse(&parsed_transaction, transaction);
 
     const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_TRUE(error_msg == NULL) << "Validation failed, error: " << error_msg;
+}
+
+TEST(TransactionParserTest, TransactionJsonValidation_SortedDictionary) {
+
+    auto transaction = R"({"alt_bytes\t":null,"chain_id\r":"test-chain-1\n","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount\n\n\n\n\n":10,"denom":"atom"}]}]},"sequence\t\t\t\t":1})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+
+    const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_TRUE(error_msg == NULL) << "Validation failed, error: " << error_msg;
+}
+
+TEST(TransactionParserTest, TransactionJsonValidation_NotSortedDictionary_FirstElement) {
+
+    auto transaction = R"({"chain_id":"test-chain-1","alt_bytes":null,"fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+
+    const char* error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_EQ_STR(error_msg, "Dictionaries are not sorted", "Validation should fail because dictionaries are not sorted");
+}
+
+TEST(TransactionParserTest, TransactionJsonValidation_NotSortedDictionary_MiddleElement) {
+
+    auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"denom":"photon","amount":5}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+
+    const char *error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_EQ_STR(error_msg, "Dictionaries are not sorted",
+                  "Validation should fail because dictionaries are not sorted");
+}
+
+TEST(TransactionParserTest, TransactionJsonValidation_NotSortedDictionary_LastElement) {
+
+    auto transaction = R"({"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"sequence":1,"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]}})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+
+    const char *error_msg = json_validate(&parsed_transaction, transaction);
+    EXPECT_EQ_STR(error_msg, "Dictionaries are not sorted",
+                  "Validation should fail because dictionaries are not sorted");
+}
+
+
+TEST(TransactionParserTest, TransactionJsonValidation_CosmosExample) {
+
+    auto transaction = R"({"chain_id":"test-chain-1","sequences":[1],"fee_bytes":{"amount":[{"denom":"photon","amount":5}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}]}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]}]},"alt_bytes":null})";
+
+    parsed_json_t parsed_transaction;
+    json_parse(&parsed_transaction, transaction);
+
+    const char *error_msg = json_validate(&parsed_transaction, transaction);
     EXPECT_TRUE(error_msg == NULL) << "Validation failed, error: " << error_msg;
 }
 }

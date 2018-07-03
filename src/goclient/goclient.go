@@ -73,6 +73,21 @@ func ParseArgs(numberOfSamples int) (int, string, int) {
 
 func GetExampleTxs() []sdk.StdSignMsg {
 	return []sdk.StdSignMsg{
+
+		sdk.StdSignMsg{"test-chain-1", []int64{1}, sdk.NewStdFee(10000, sdk.Coin{"photon", 5}), bank.MsgSend{
+			Inputs: []bank.Input{
+				{
+					Address: crypto.Address([]byte("input")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+			},
+			Outputs: []bank.Output{
+				{
+					Address: crypto.Address([]byte("output")),
+					Coins:   sdk.Coins{{"atom", 10}},
+				},
+			},
+		}},
 		sdk.StdSignMsg{"test-chain-1", []int64{1}, sdk.NewStdFee(10000, sdk.Coin{"photon", 5}), bank.MsgSend{
 			Inputs: []bank.Input{
 				{
@@ -230,50 +245,58 @@ func testED25519(messages []sdk.StdSignMsg, ledger *ledger_goclient.Ledger) {
 	}
 }
 
+func testSECP256K1Message(message []byte, ledger *ledger_goclient.Ledger, i int) {
+
+	path := []uint32{44, 60, 0, 0, 0}
+
+	fmt.Printf("\nMessage: %s\n", message)
+
+	signature, err := ledger.SignSECP256K1(path, message)
+	if err != nil {
+		fmt.Printf("[Sign] Error: %s\n", err)
+		os.Exit(1)
+	}
+
+	pubKey, err := ledger.GetPublicKeySECP256K1(path)
+
+	if err != nil {
+		fmt.Printf("[GetPK] Error: %s\n", err)
+		os.Exit(1)
+	}
+
+	pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
+	if err != nil {
+		fmt.Printf("[ParsePK] Error: %s\n", err)
+		os.Exit(1)
+	}
+
+	sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
+	if err != nil {
+		fmt.Printf("[ParseSig] Error: %s\n", err)
+		os.Exit(1)
+	}
+
+	verified := sig__.Verify(crypto.Sha256(message), pub__)
+	if !verified {
+		fmt.Printf("[VerifySig] Error verifying signature\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("Message %d - Valid signature\n", i)
+}
 func testSECP256K1(messages []sdk.StdSignMsg, ledger *ledger_goclient.Ledger) {
+	fmt.Printf("\nTesting valid messages:\n")
 	for i := 0; i < len(messages); i++ {
 		fmt.Printf("\nMessage %d - Please Sign..\n", i)
 		message := messages[i].Bytes()
-
-		path := []uint32{44, 60, 0, 0, 0}
-
-		// FIXME: Hard-coding message because StdSignMsg is still base64 encoded.
-		//var msg = []byte("{\"sequence\":1,\"alt_bytes\":null,\"chain_id\":\"test-chain-1\",\"fee_bytes\":{\"amount\":[{\"amount\":5,\"denom\":\"photon\"}],\"gas\":10000},\"msg_bytes\":{\"inputs\":[{\"address\":\"696E707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}],\"outputs\":[{\"address\":\"6F7574707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}]}}")
-		fmt.Printf("\nMessage: %s\n", message)
-
-		signature, err := ledger.SignSECP256K1(path, message)
-		if err != nil {
-			fmt.Printf("[Sign] Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		pubKey, err := ledger.GetPublicKeySECP256K1(path)
-
-		if err != nil {
-			fmt.Printf("[GetPK] Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
-		if err != nil {
-			fmt.Printf("[ParsePK] Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
-		if err != nil {
-			fmt.Printf("[ParseSig] Error: %s\n", err)
-			os.Exit(1)
-		}
-
-		verified := sig__.Verify(crypto.Sha256(message), pub__)
-		if !verified {
-			fmt.Printf("[VerifySig] Error verifying signature\n", err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("Message %d - Valid signature\n", i)
+		testSECP256K1Message(message, ledger, i)
 	}
+
+	fmt.Printf("\nTesting invalid messages:\n")
+	var invalid_msg_whitespaces = []byte("{\"sequence\":1,\"alt_bytes\"   :    null,\"chain_id\":\"test-chain-1\",\"fee_bytes\":{\"amount\":[{\"amount\":5,\"denom\":\"photon\"}],\"gas\":10000},\"msg_bytes\":{\"inputs\":[{\"address\":\"696E707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}],\"outputs\":[{\"address\":\"6F7574707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}]}}")
+	testSECP256K1Message(invalid_msg_whitespaces, ledger, 0)
+	var invalid_msg_not_sorted_dictionaries = []byte("{\"sequence\":1,\"alt_bytes\":null,\"chain_id\":\"test-chain-1\",\"fee_bytes\":{\"amount\":[{\"amount\":5,\"denom\":\"photon\"}],\"gas\":10000},\"msg_bytes\":{\"inputs\":[{\"address\":\"696E707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}],\"outputs\":[{\"address\":\"6F7574707574\",\"coins\":[{\"amount\":10,\"denom\":\"atom\"}]}]}}")
+	testSECP256K1Message(invalid_msg_not_sorted_dictionaries, ledger, 1)
 }
 
 func main() {

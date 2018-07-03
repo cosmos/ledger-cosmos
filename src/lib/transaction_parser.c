@@ -20,6 +20,22 @@
 
 //---------------------------------------------
 
+const char space = 0x20; // ' '
+const char form_feed = 0x0c; // '\f'
+const char line_feed = 0x0a; // '\n'
+const char carriage_return  = 0x0d; // '\r'
+const char horizontal_tab = 0x09; // '\t'
+const char vertical_tab = 0x0b; //'\v'
+
+const char whitespaces[] = {space,
+                            form_feed,
+                            line_feed,
+                            carriage_return,
+                            horizontal_tab,
+                            vertical_tab};
+
+//---------------------------------------------
+
 int msg_bytes_pages = 0;
 int alt_bytes_pages = 0;
 
@@ -363,21 +379,7 @@ int transaction_get_display_pages() {
 
 int is_space(char c)
 {
-    const char space = 0x20; // ' '
-    const char form_feed = 0x0c; // '\f'
-    const char line_feed = 0x0a; // '\n'
-    const char carriage_return  = 0x0d; // '\r'
-    const char horizontal_tab = 0x09; // '\t'
-    const char vertical_tab = 0x0b; //'\v'
-
-    const char whitespaces[] = {space,
-                                form_feed,
-                                line_feed,
-                                carriage_return,
-                                horizontal_tab,
-                                vertical_tab};
-
-    for (int i = 0;i < sizeof(whitespaces); i++) {
+    for (unsigned int i = 0;i < sizeof(whitespaces); i++) {
         if (whitespaces[i] == c) {
             return 1;
         }
@@ -388,19 +390,25 @@ int is_space(char c)
 int contains_whitespace(parsed_json_t* parsed_transaction,
                         const char *transaction) {
 
-
     int start = 0;
+    int last_element_index = parsed_transaction->Tokens[0].end;
+
     // Starting at token 1 because token 0 contains full transaction
     for (int i = 1; i < parsed_transaction->NumberOfTokens; i++) {
-        int end = parsed_transaction->Tokens[i].start;
-        for (int j = start; j < end;j++ ) {
-            if (is_space(transaction[j]) == 1) {
-                return 1;
+        if (parsed_transaction->Tokens[i].type != JSMN_UNDEFINED) {
+            int end = parsed_transaction->Tokens[i].start;
+            for (int j = start; j < end; j++) {
+                if (is_space(transaction[j]) == 1) {
+                    return 1;
+                }
             }
+            start = parsed_transaction->Tokens[i].end + 1;
         }
-        start = parsed_transaction->Tokens[i].end+1;
+        else {
+            return 0;
+        }
     }
-    while (transaction[start] != '\0') {
+    while (start <= last_element_index && transaction[start] != '\0') {
         if (is_space(transaction[start]) == 1) {
             return 1;
         }
@@ -409,12 +417,64 @@ int contains_whitespace(parsed_json_t* parsed_transaction,
     return 0;
 }
 
+int is_sorted(int first_index,
+              int second_index,
+              parsed_json_t* parsed_transaction,
+              const char* transaction)
+{
+#if DEBUG_SORTING
+    char first[256];
+    char second[256];
+
+    int size =  parsed_transaction->Tokens[first_index].end - parsed_transaction->Tokens[first_index].start;
+    strncpy(first, transaction + parsed_transaction->Tokens[first_index].start, size);
+    first[size] = '\0';
+    size =  parsed_transaction->Tokens[second_index].end - parsed_transaction->Tokens[second_index].start;
+    strncpy(second, transaction + parsed_transaction->Tokens[second_index].start, size);
+    second[size] = '\0';
+#endif
+
+    if (strcmp(
+            transaction + parsed_transaction->Tokens[first_index].start,
+            transaction + parsed_transaction->Tokens[second_index].start) <= 0) {
+        return 1;
+    }
+    return 0;
+}
+
+int dictionaries_sorted(parsed_json_t* parsed_transaction,
+                        const char* transaction)
+{
+    for (int i = 0; i < parsed_transaction->NumberOfTokens; i++) {
+        if (parsed_transaction->Tokens[i].type == JSMN_OBJECT) {
+
+            int count = object_get_element_count(i, parsed_transaction);
+            if (count > 1) {
+                int prev_token_index = object_get_nth_key(i, 0, parsed_transaction);
+                for (int j = 1; j < count; j++) {
+                    int next_token_index = object_get_nth_key(i, j, parsed_transaction);
+                    if (!is_sorted(prev_token_index, next_token_index, parsed_transaction, transaction)) {
+                        return 0;
+                    }
+                    prev_token_index = next_token_index;
+                }
+            }
+        }
+    }
+    return 1;
+}
+
 const char* json_validate(parsed_json_t* parsed_transaction,
                           const char *transaction) {
 
     if (contains_whitespace(parsed_transaction, transaction) == 1) {
         return "Contains whitespace in the corpus";
     }
+
+    if (dictionaries_sorted(parsed_transaction, transaction) != 1) {
+        return "Dictionaries are not sorted";
+    }
+
     if (object_get_value(0,
                          "chain_id",
                          parsed_transaction,
