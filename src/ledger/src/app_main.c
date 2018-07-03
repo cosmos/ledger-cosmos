@@ -216,6 +216,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     int error_msg_length = strlen(error_msg);
                     os_memmove(G_io_apdu_buffer, error_msg, error_msg_length);
                     *tx += sizeof(error_msg_length);
+                    // FIXME: We need proper error code for this.
                     THROW(APDU_CODE_DATA_INVALID);
                 }
                 view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
@@ -261,6 +262,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                         int error_msg_length = strlen(error_msg);
                         os_memmove(G_io_apdu_buffer, error_msg, error_msg_length);
                         *tx += sizeof(error_msg_length);
+                        // FIXME: We need proper error code for this.
                         THROW(APDU_CODE_DATA_INVALID);
                     }
                     view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);

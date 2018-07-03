@@ -933,6 +933,10 @@ TEST(TransactionParserTest, TransactionJsonValidation_NotSortedDictionary_LastEl
 }
 
 
+// This json has been taken directly from goclient which uses cosmos to serialize a simple transaction
+// This test is currently failing the validation.
+// We are reviewing the validation code and cosmos serialization to find the culprit.
+
 TEST(TransactionParserTest, TransactionJsonValidation_CosmosExample) {
 
     auto transaction = R"({"chain_id":"test-chain-1","sequences":[1],"fee_bytes":{"amount":[{"denom":"photon","amount":5}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"denom":"atom","amount":10}]}],"outputs":[{"address":"6F7574707574","coins":[{"denom":"atom","amount":10}]}]},"alt_bytes":null})";
