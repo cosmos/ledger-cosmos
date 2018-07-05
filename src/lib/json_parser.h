@@ -36,10 +36,14 @@ typedef unsigned char byte;
 //  - parsed json tokens
 //  - re-created SendMsg struct with indices pointing to tokens in parsed json
 typedef struct {
-    bool IsValid;
-    byte NumberOfTokens;
+    int IsValid;
+    int NumberOfTokens;
     jsmntok_t Tokens[MAX_NUMBER_OF_TOKENS];
 } parsed_json_t;
+
+/// Resets parsed_json data structure
+/// \param
+void reset_parsed_json(parsed_json_t*);
 
 typedef struct {
     const parsed_json_t *parsed_transaction;
