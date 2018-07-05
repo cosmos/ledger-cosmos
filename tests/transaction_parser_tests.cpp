@@ -897,6 +897,7 @@ TEST(TransactionParserTest, TransactionJsonValidation_SortedDictionary) {
     EXPECT_TRUE(error_msg == NULL) << "Validation failed, error: " << error_msg;
 }
 
+#ifndef DISABLE_KEY_SORTING_JSON_VALIDATION
 TEST(TransactionParserTest, TransactionJsonValidation_NotSortedDictionary_FirstElement) {
 
     auto transaction = R"({"chain_id":"test-chain-1","alt_bytes":null,"fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1})";
@@ -931,6 +932,7 @@ TEST(TransactionParserTest, TransactionJsonValidation_NotSortedDictionary_LastEl
     EXPECT_EQ_STR(error_msg, "Dictionaries are not sorted",
                   "Validation should fail because dictionaries are not sorted");
 }
+#endif
 
 
 // This json has been taken directly from goclient which uses cosmos to serialize a simple transaction

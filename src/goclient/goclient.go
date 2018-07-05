@@ -73,7 +73,7 @@ func ParseArgs(numberOfSamples int) (int, string, int) {
 
 func GetExampleTxs() []sdk.StdSignMsg {
 	return []sdk.StdSignMsg{
-		
+
 		sdk.StdSignMsg{"test-chain-1", []int64{1}, sdk.NewStdFee(10000, sdk.Coin{"photon", 5}), bank.MsgSend{
 			Inputs: []bank.Input{
 				{

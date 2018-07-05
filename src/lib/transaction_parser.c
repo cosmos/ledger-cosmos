@@ -20,19 +20,14 @@
 
 //---------------------------------------------
 
-const char space = 0x20; // ' '
-const char form_feed = 0x0c; // '\f'
-const char line_feed = 0x0a; // '\n'
-const char carriage_return  = 0x0d; // '\r'
-const char horizontal_tab = 0x09; // '\t'
-const char vertical_tab = 0x0b; //'\v'
-
-const char whitespaces[] = {space,
-                            form_feed,
-                            line_feed,
-                            carriage_return,
-                            horizontal_tab,
-                            vertical_tab};
+const char whitespaces[] = {
+        0x20,// space ' '
+        0x0c, // form_feed '\f'
+        0x0a, // line_feed, '\n'
+        0x0d, // carriage_return, '\r'
+        0x09, // horizontal_tab, '\t'
+        0x0b // vertical_tab, '\v'
+};
 
 //---------------------------------------------
 
@@ -470,10 +465,11 @@ const char* json_validate(parsed_json_t* parsed_transaction,
     if (contains_whitespace(parsed_transaction, transaction) == 1) {
         return "Contains whitespace in the corpus";
     }
-
+#ifndef DISABLE_KEY_SORTING_JSON_VALIDATION
     if (dictionaries_sorted(parsed_transaction, transaction) != 1) {
         return "Dictionaries are not sorted";
     }
+#endif
 
     if (object_get_value(0,
                          "chain_id",
