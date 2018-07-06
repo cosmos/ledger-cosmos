@@ -16,9 +16,17 @@
 
 #include "json_parser.h"
 
+void reset_parsed_json(parsed_json_t* parser_data)
+{
+    memset(parser_data, 0, sizeof(parsed_json_t));
+}
+
 void json_parse(parsed_json_t *parsed_json, const char *transaction) {
+
     jsmn_parser parser;
     jsmn_init(&parser);
+
+    reset_parsed_json(parsed_json);
 
     int num_tokens = jsmn_parse(
         &parser,
@@ -27,21 +35,21 @@ void json_parse(parsed_json_t *parsed_json, const char *transaction) {
         parsed_json->Tokens,
         MAX_NUMBER_OF_TOKENS);
 
-    if (num_tokens > 255) {
-        parsed_json->IsValid = false;
+    parsed_json->NumberOfTokens = 0;
+    parsed_json->IsValid = 0;
+
+    // Parsing error
+    if (num_tokens <= 0) {
         return;
     }
 
-    parsed_json->NumberOfTokens = (byte) num_tokens;
-    if (parsed_json->NumberOfTokens < 1) {
-        parsed_json->IsValid = false;
+    // We cannot support if number of tokens exceeds the limit
+    if (num_tokens > MAX_NUMBER_OF_TOKENS) {
+        return;
     }
-//    else if (parsed_json->Tokens[0].type != JSMN_OBJECT) {
-//        parsed_json->IsValid = false;
-//    }
-     else {
-        parsed_json->IsValid = true;
-    }
+
+    parsed_json->NumberOfTokens = num_tokens;
+    parsed_json->IsValid = true;
 }
 
 int array_get_element_count(int array_token_index,

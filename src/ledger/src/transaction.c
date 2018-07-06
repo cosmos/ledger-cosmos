@@ -73,11 +73,13 @@ uint8_t *transaction_get_buffer() {
     return buffering_get_buffer()->data;
 }
 
-void transaction_parse() {
+const char* transaction_parse() {
     const char *transaction_buffer = (const char *) transaction_get_buffer();
     json_parse(&parsed_transaction, transaction_buffer);
-    // FIXME: Verify is valid. Sorted / whitespaces, etc.
-
+    const char* error_msg = json_validate(&parsed_transaction, transaction_buffer);
+    if (error_msg != NULL) {
+        return error_msg;
+    }
     parsing_context_t context;
     context.transaction = transaction_buffer;
     context.max_chars_per_key_line = MAX_CHARS_PER_KEY_LINE;
@@ -85,6 +87,7 @@ void transaction_parse() {
     context.parsed_transaction = &parsed_transaction;
     set_parsing_context(context);
     set_copy_delegate(&os_memmove);
+    return NULL;
 }
 
 parsed_json_t *transaction_get_parsed() {

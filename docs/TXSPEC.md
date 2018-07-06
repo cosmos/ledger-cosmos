@@ -7,14 +7,14 @@ Transactions passed to the Ledger device will be in the following format. The Le
 
 ```json
 {
+  "alt_bytes": {arbitrary}
   "chain_id": {string},
-  "sequence": {number},
   "fee_bytes": {
     "amount": [{"amount": {number}, "denom": {string}}, ...],
     "gas": {number}
   },
   "msg_bytes": {arbitrary},
-  "alt_bytes": {arbitrary}
+  "sequence": {number}
 }
 ```
 

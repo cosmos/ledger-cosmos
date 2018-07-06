@@ -76,3 +76,4 @@ add_executable(
 )
 
 target_link_libraries(main_example jsmn json_parser)
+add_definitions(-DDISABLE_KEY_SORTING_JSON_VALIDATION)
