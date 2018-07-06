@@ -7,27 +7,26 @@ Transactions passed to the Ledger device will be in the following format. The Le
 
 ```json
 {
-  "alt_bytes": {arbitrary}
+  "account_number": {number},
   "chain_id": {string},
-  "fee_bytes": {
+  "fee": {
     "amount": [{"amount": {number}, "denom": {string}}, ...],
     "gas": {number}
   },
-  "msg_bytes": {arbitrary},
+  "memo": {string},
+  "msgs": [{arbitrary}],
   "sequence": {number}
 }
 ```
 
-`msg_bytes` and `alt_bytes` are arbitary JSON.
+`msgs` is a list of messages, which are arbitrary JSON structures.
 
 #### Examples
 
 ```json
-{"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1}
 ```
 
 ```json
-{"alt_bytes":null,"chain_id":"test-chain-2","fee_bytes":{"amount":[{"amount":10,"denom":"photon"}],"gas":10000},"msg_bytes":{"shares":"100"},"sequence":2}
 ```
 
 #### Display Logic
