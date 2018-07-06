@@ -241,32 +241,32 @@ func testSECP256K1Message(message []byte, ledger *ledger_goclient.Ledger, i int)
 	signature, err := ledger.SignSECP256K1(path, message)
 	if err != nil {
 		fmt.Printf("[Sign] Error: %s\n", err)
-		os.Exit(1)
+		return
 	}
 
 	pubKey, err := ledger.GetPublicKeySECP256K1(path)
 
 	if err != nil {
 		fmt.Printf("[GetPK] Error: %s\n", err)
-		os.Exit(1)
+		return
 	}
 
 	pub__, err := secp256k1.ParsePubKey(pubKey[:], secp256k1.S256())
 	if err != nil {
 		fmt.Printf("[ParsePK] Error: %s\n", err)
-		os.Exit(1)
+		return
 	}
 
 	sig__, err := secp256k1.ParseDERSignature(signature[:], secp256k1.S256())
 	if err != nil {
 		fmt.Printf("[ParseSig] Error: %s\n", err)
-		os.Exit(1)
+		return
 	}
 
 	verified := sig__.Verify(crypto.Sha256(message), pub__)
 	if !verified {
 		fmt.Printf("[VerifySig] Error verifying signature\n", err)
-		os.Exit(1)
+		return
 	}
 
 	fmt.Printf("Message %d - Valid signature\n", i)
