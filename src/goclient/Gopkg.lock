@@ -261,10 +261,10 @@
   version = "v0.8.2"
 
 [[projects]]
-  branch = "master"
+  branch = "brejski/log_error"
   name = "github.com/zondax/ledger-goclient"
   packages = ["."]
-  revision = "70ff7af35fb7c74823f41d2cc28c90acecc202fa"
+  revision = "3c14b93d4cb286b99340fe11c2cd92dbe0b4d00e"
 
 [[projects]]
   branch = "master"
@@ -358,6 +358,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9d67518c636d3e5009e280d72cac43f86c0aab5e02ad57a19822bbf2efb0e206"
+  inputs-digest = "71ab4e0e64560017a6784d363f7aeca4d16d326d77348d69a09af0b1d352e378"
   solver-name = "gps-cdcl"
   solver-version = 1

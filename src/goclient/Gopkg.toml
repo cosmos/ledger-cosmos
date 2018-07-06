@@ -39,7 +39,7 @@
 
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"
-  branch = "master"
+  branch = "brejski/log_error"
 
 # this got updated and broke, so locked to an old working commit ...
 [[override]]
