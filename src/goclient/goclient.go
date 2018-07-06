@@ -21,6 +21,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,11 +29,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/tendermint/ed25519"
-	"github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/zondax/ledger-goclient"
 	"os"
 	"strconv"
-	"encoding/hex"
 )
 
 func PrintSampleFunc(message bank.MsgSend, output string) {
