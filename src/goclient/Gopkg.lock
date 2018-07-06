@@ -11,16 +11,15 @@
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "98769ddbdf2429380fdc54bd5465bf22293213e0"
+  revision = "fdfc19097e7ac6b57035062056f5b7b4638b8898"
 
 [[projects]]
   branch = "master"
   name = "github.com/btcsuite/btcutil"
   packages = ["bech32"]
-  revision = "d4cc87b860166d00d6b5b9e0d3b3d71d6088d4d4"
+  revision = "ab6388e0c60ae4834a1f57511e20c17b5f78be4b"
 
 [[projects]]
-  branch = "cwgoes/simplify-sign-bytes"
   name = "github.com/cosmos/cosmos-sdk"
   packages = [
     "baseapp",
@@ -37,7 +36,7 @@
     "x/stake/tags",
     "x/stake/types"
   ]
-  revision = "512e532fbaa24aba82ac87e973372762ff96b6c7"
+  revision = "3805c35affa591a16b083aa949a7a920793d5795"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -185,10 +184,10 @@
   version = "0.10.1"
 
 [[projects]]
-  branch = "develop"
   name = "github.com/tendermint/iavl"
   packages = ["."]
-  revision = "35ed2f12aed83f4d12e31d200eab81839edf4163"
+  revision = "9e5dc3e61f70b285bb25414452d47aca1ff34c1d"
+  version = "v0.8.2-rc0"
 
 [[projects]]
   name = "github.com/tendermint/tendermint"
@@ -302,6 +301,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ad48b289f00a549af5b607032c6d01ce47bc0002197180165493381d23ce163a"
+  inputs-digest = "b284fca87a865b4ab25f1a3d4f958ee2c7150163723226b507633a90b99dea0a"
   solver-name = "gps-cdcl"
   solver-version = 1

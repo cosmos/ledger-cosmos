@@ -27,11 +27,7 @@
 
 [[constraint]]
   name = "github.com/cosmos/cosmos-sdk"
-  branch = "cwgoes/simplify-sign-bytes"
-
-[[override]]
-  name = "github.com/tendermint/iavl"
-  branch = "develop"
+  revision = "3805c35affa591a16b083aa949a7a920793d5795"
 
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"
