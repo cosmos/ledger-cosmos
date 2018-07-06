@@ -11,7 +11,7 @@
   branch = "master"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
-  revision = "86fed781132ac890ee03e906e4ecd5d6fa180c64"
+  revision = "98769ddbdf2429380fdc54bd5465bf22293213e0"
 
 [[projects]]
   branch = "master"
@@ -20,21 +20,24 @@
   revision = "d4cc87b860166d00d6b5b9e0d3b3d71d6088d4d4"
 
 [[projects]]
-  branch = "develop"
+  branch = "cwgoes/simplify-sign-bytes"
   name = "github.com/cosmos/cosmos-sdk"
   packages = [
+    "baseapp",
     "store",
     "types",
+    "version",
     "wire",
     "x/auth",
     "x/bank",
     "x/ibc",
+    "x/mock",
     "x/stake",
     "x/stake/keeper",
     "x/stake/tags",
     "x/stake/types"
   ]
-  revision = "86d7b8f981ec8da0ee6bafe5accbe37a5f429dde"
+  revision = "512e532fbaa24aba82ac87e973372762ff96b6c7"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -96,6 +99,12 @@
   revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
+  name = "github.com/inconshreveable/mousetrap"
+  packages = ["."]
+  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+  version = "v1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/jmhodges/levigo"
   packages = ["."]
@@ -118,6 +127,18 @@
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/spf13/cobra"
+  packages = ["."]
+  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
+  version = "v0.0.3"
+
+[[projects]]
+  name = "github.com/spf13/pflag"
+  packages = ["."]
+  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
+  version = "v1.0.1"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -172,6 +193,7 @@
 [[projects]]
   name = "github.com/tendermint/tendermint"
   packages = [
+    "abci/server",
     "abci/types",
     "crypto",
     "crypto/merkle",
@@ -280,6 +302,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f89aad84063c1953325a85e76302d462391101f9cd530938e1a4743d79f96ac5"
+  inputs-digest = "ad48b289f00a549af5b607032c6d01ce47bc0002197180165493381d23ce163a"
   solver-name = "gps-cdcl"
   solver-version = 1
