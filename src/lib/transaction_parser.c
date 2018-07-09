@@ -15,6 +15,7 @@
 ********************************************************************************/
 
 #include <jsmn.h>
+#include <stdio.h>
 #include "transaction_parser.h"
 #include "json_parser.h"
 
@@ -352,10 +353,7 @@ int transaction_get_display_key_value(
                 subpage_to_display -= count;
             }
 
-            //char full_key[parsing_context.max_chars_per_key_line];
-            //copy_fct(key, "msg_bytes", sizeof("msg_bytes"));
-            strcpy(key, "msgs_1");
-            //key[sizeof("msg_bytes")] = '\0';
+            sprintf(key, "msgs_%d", msgs_array_index+1);
 
             display_arbitrary_item(subpage_to_display,
                                    key,
@@ -480,11 +478,11 @@ const char* json_validate(parsed_json_t* parsed_transaction,
     if (contains_whitespace(parsed_transaction, transaction) == 1) {
         return "Contains whitespace in the corpus";
     }
-#ifndef DISABLE_KEY_SORTING_JSON_VALIDATION
+//#ifndef DISABLE_KEY_SORTING_JSON_VALIDATION
     if (dictionaries_sorted(parsed_transaction, transaction) != 1) {
         return "Dictionaries are not sorted";
     }
-#endif
+//#endif
 
     if (object_get_value(0,
                          "chain_id",
@@ -504,28 +502,28 @@ const char* json_validate(parsed_json_t* parsed_transaction,
                          "fee",
                          parsed_transaction,
                          transaction) == -1) {
-        return "Missing fee_bytes";
+        return "Missing fee";
     }
 
     if (object_get_value(0,
                          "msgs",
                          parsed_transaction,
                          transaction) == -1) {
-        return "Missing msg_bytes";
+        return "Missing msgs";
     }
 
     if (object_get_value(0,
                          "account_number",
                          parsed_transaction,
                          transaction) == -1) {
-        return "Missing alt_bytes";
+        return "Missing account_number";
     }
 
     if (object_get_value(0,
                          "memo",
                          parsed_transaction,
                          transaction) == -1) {
-        return "Missing alt_bytes";
+        return "Missing memo";
     }
 
     return NULL;

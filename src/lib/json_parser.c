@@ -14,6 +14,7 @@
 *  limitations under the License.
 ********************************************************************************/
 
+#include <jsmn.h>
 #include "json_parser.h"
 
 void reset_parsed_json(parsed_json_t* parser_data)
@@ -195,7 +196,8 @@ int object_get_value(int object_token_index,
         }
         prev_element_end = value_token.end;
         char *cmper = (char *) (transaction + key_token.start);
-        if (memcmp(key_name, cmper, length) == 0) {
+        int cmper_l = key_token.end - key_token.start;
+        if (memcmp(key_name, cmper, length) == 0 && cmper_l == length) {
             return token_index;
         }
     }
