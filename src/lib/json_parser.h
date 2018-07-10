@@ -59,7 +59,8 @@ typedef struct {
 /// Parse json to create a token representation
 /// \param parsed_json
 /// \param transaction
-void json_parse(parsed_json_t *parsed_json,
+/// \return Error message
+const char* json_parse(parsed_json_t *parsed_json,
                 const char *transaction);
 
 /// Get the number of elements in the array
