@@ -353,7 +353,7 @@ int transaction_get_display_key_value(
                 subpage_to_display -= count;
             }
 
-            sprintf(key, "msgs_%d", msgs_array_index+1);
+            snprintf(key, key_length, "msgs_%d", msgs_array_index+1);
 
             display_arbitrary_item(subpage_to_display,
                                    key,
@@ -478,11 +478,10 @@ const char* json_validate(parsed_json_t* parsed_transaction,
     if (contains_whitespace(parsed_transaction, transaction) == 1) {
         return "Contains whitespace in the corpus";
     }
-//#ifndef DISABLE_KEY_SORTING_JSON_VALIDATION
+
     if (dictionaries_sorted(parsed_transaction, transaction) != 1) {
         return "Dictionaries are not sorted";
     }
-//#endif
 
     if (object_get_value(0,
                          "chain_id",
