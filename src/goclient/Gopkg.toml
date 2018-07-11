@@ -27,7 +27,7 @@
 
 [[constraint]]
   name = "github.com/cosmos/cosmos-sdk"
-  revision = "3805c35affa591a16b083aa949a7a920793d5795"
+  revision = "3f15ae7b15751c53fd238bf8337fbb13845c51d7"
 
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"

@@ -78,13 +78,13 @@ func GetExampleTxs() []auth.StdSignMsg {
 		auth.StdSignMsg{"test-chain-1", int64(0), int64(1), auth.NewStdFee(10000, sdk.Coin{"photon", sdk.NewInt(5)}), []sdk.Msg{bank.MsgSend{
 			Inputs: []bank.Input{
 				{
-					Address: crypto.Address([]byte("input")),
+					Address: sdk.AccAddress([]byte("input")),
 					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 			},
 			Outputs: []bank.Output{
 				{
-					Address: crypto.Address([]byte("output")),
+					Address: sdk.AccAddress([]byte("output")),
 					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 			},
@@ -93,57 +93,57 @@ func GetExampleTxs() []auth.StdSignMsg {
 		auth.StdSignMsg{"test-chain-1,test-chain-1,test-chain-1,test-chain-1,test-chain-1,test-chain-1", int64(0), int64(1), auth.NewStdFee(10000, sdk.Coin{"photonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphoton", sdk.NewInt(5)}), []sdk.Msg{bank.MsgSend{
 			Inputs: []bank.Input{
 				{
-					Address: crypto.Address([]byte("input_1")),
+					Address: sdk.AccAddress([]byte("input_1")),
 					Coins:   sdk.Coins{{"atom_A", sdk.NewInt(10)}},
 				},
 				{
-					Address: crypto.Address([]byte("input_2")),
+					Address: sdk.AccAddress([]byte("input_2")),
 					Coins:   sdk.Coins{{"atom_B", sdk.NewInt(20)}},
 				},
 				{
-					Address: crypto.Address([]byte("input_3")),
+					Address: sdk.AccAddress([]byte("input_3")),
 					Coins:   sdk.Coins{{"atom_C", sdk.NewInt(30)}},
 				},
 				{
-					Address: crypto.Address([]byte("input_4")),
+					Address: sdk.AccAddress([]byte("input_4")),
 					Coins:   sdk.Coins{{"atom_D", sdk.NewInt(40)}},
 				},
 				{
-					Address: crypto.Address([]byte("input_5")),
+					Address: sdk.AccAddress([]byte("input_5")),
 					Coins:   sdk.Coins{{"atom_E", sdk.NewInt(50)}},
 				},
 			},
 			Outputs: []bank.Output{
 				{
-					Address: crypto.Address([]byte("output")),
+					Address: sdk.AccAddress([]byte("output")),
 					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 				{
-					Address: crypto.Address([]byte("output")),
+					Address: sdk.AccAddress([]byte("output")),
 					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 				{
-					Address: crypto.Address([]byte("output")),
+					Address: sdk.AccAddress([]byte("output")),
 					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 				{
-					Address: crypto.Address([]byte("output")),
+					Address: sdk.AccAddress([]byte("output")),
 					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 				{
-					Address: crypto.Address([]byte("output")),
+					Address: sdk.AccAddress([]byte("output")),
 					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 			},
 		}}, "testmemo"},
 		auth.StdSignMsg{"test-chain-2", int64(0), int64(2), auth.NewStdFee(10000, sdk.Coin{"photon", sdk.NewInt(10)}), []sdk.Msg{stake.MsgBeginUnbonding{
-			DelegatorAddr: sdk.Address([]byte("delegator")),
-			ValidatorAddr: sdk.Address([]byte("candidate")),
+			DelegatorAddr: sdk.AccAddress([]byte("delegator")),
+			ValidatorAddr: sdk.AccAddress([]byte("candidate")),
 			SharesAmount:  sdk.NewRat(100),
 		}}, "testmemo"},
 		auth.StdSignMsg{"test-chain-3", int64(1), int64(3), auth.NewStdFee(5000, sdk.Coin{"photon", sdk.NewInt(25)}), []sdk.Msg{ibc.IBCTransferMsg{ibc.IBCPacket{
-			SrcAddr:   sdk.Address([]byte("source")),
-			DestAddr:  sdk.Address([]byte("dest")),
+			SrcAddr:   sdk.AccAddress([]byte("source")),
+			DestAddr:  sdk.AccAddress([]byte("dest")),
 			Coins:     sdk.Coins{sdk.Coin{"steak", sdk.NewInt(5)}},
 			SrcChain:  "cosmos-hub",
 			DestChain: "peggy",
