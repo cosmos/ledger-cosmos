@@ -215,7 +215,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                 if (error_msg != NULL) {
                     int error_msg_length = strlen(error_msg);
                     os_memmove(G_io_apdu_buffer, error_msg, error_msg_length);
-                    *tx += sizeof(error_msg_length);
+                    *tx += (error_msg_length);
                     THROW(APDU_CODE_BAD_KEY_HANDLE);
                 }
                 view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);

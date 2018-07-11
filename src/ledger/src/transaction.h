@@ -36,7 +36,7 @@ uint32_t transaction_get_buffer_length();
 
 /// Returns the raw json transaction buffer
 /// \return
-uint8_t *transaction_get_buffer();
+uint8_t* transaction_get_buffer();
 
 /// Parse json message stored in transaction buffer
 /// This function should be called as soon as full buffer data is loaded.
