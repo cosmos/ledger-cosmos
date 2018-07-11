@@ -203,7 +203,7 @@ TEST(JsonParserTest, ArrayElementGet_primitives) {
     EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_PRIMITIVE) << "Wrong token type returned";
 }
 
-TEST(JsonParserTest, ArrayElementGet_strings) {
+TEST(TransactionParserTest, ArrayElementGet_strings) {
 
     auto transaction = R"({"array":["hello", "there"]})";
 
@@ -215,7 +215,7 @@ TEST(JsonParserTest, ArrayElementGet_strings) {
     EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_STRING) << "Wrong token type returned";
 }
 
-TEST(JsonParserTest, ArrayElementGet_empty) {
+TEST(TransactionParserTest, ArrayElementGet_empty) {
 
     auto transaction = R"({"array":[])";
 
@@ -226,7 +226,7 @@ TEST(JsonParserTest, ArrayElementGet_empty) {
     EXPECT_EQ(token_index, -1) << "Token index should be invalid (not found).";
 }
 
-TEST(JsonParserTest, ArrayElementGet_out_of_bounds_negative) {
+TEST(TransactionParserTest, ArrayElementGet_out_of_bounds_negative) {
 
     auto transaction = R"({"array":["hello", "there"])";
 
@@ -237,7 +237,7 @@ TEST(JsonParserTest, ArrayElementGet_out_of_bounds_negative) {
     EXPECT_EQ(token_index, -1) << "Token index should be invalid (not found).";
 }
 
-TEST(JsonParserTest, ArrayElementGet_out_of_bounds) {
+TEST(TransactionParserTest, ArrayElementGet_out_of_bounds) {
 
     auto transaction = R"({"array":["hello", "there"])";
 
@@ -248,7 +248,7 @@ TEST(JsonParserTest, ArrayElementGet_out_of_bounds) {
     EXPECT_EQ(token_index, -1) << "Token index should be invalid (not found).";
 }
 
-TEST(JsonParserTest, ObjectElementCount_primitives) {
+TEST(TransactionParserTest, ObjectElementCount_primitives) {
 
     auto transaction = R"({"age":36, "height":185, "year":1981})";
 
@@ -258,7 +258,7 @@ TEST(JsonParserTest, ObjectElementCount_primitives) {
     EXPECT_EQ(object_get_element_count(0, &parsed_json), 3) << "Wrong number of object elements";
 }
 
-TEST(JsonParserTest, ObjectElementCount_string) {
+TEST(TransactionParserTest, ObjectElementCount_string) {
 
     auto transaction = R"({"age":"36", "height":"185", "year":"1981", "month":"july"})";
 
@@ -268,7 +268,7 @@ TEST(JsonParserTest, ObjectElementCount_string) {
     EXPECT_EQ(object_get_element_count(0, &parsed_json), 4) << "Wrong number of object elements";
 }
 
-TEST(JsonParserTest, ObjectElementCount_array) {
+TEST(TransactionParserTest, ObjectElementCount_array) {
 
     auto transaction = R"({ "ages":[36, 31, 10, 2],
                             "heights":[185, 164, 154, 132],
@@ -281,7 +281,7 @@ TEST(JsonParserTest, ObjectElementCount_array) {
     EXPECT_EQ(object_get_element_count(0, &parsed_json), 4) << "Wrong number of object elements";
 }
 
-TEST(JsonParserTest, ObjectElementCount_object) {
+TEST(TransactionParserTest, ObjectElementCount_object) {
 
     auto transaction = R"({"person1":{"age":36, "height":185, "year":1981},
                            "person2":{"age":36, "height":185, "year":1981},
@@ -293,7 +293,7 @@ TEST(JsonParserTest, ObjectElementCount_object) {
     EXPECT_EQ(object_get_element_count(0, &parsed_json), 3) << "Wrong number of object elements";
 }
 
-TEST(JsonParserTest, ObjectElementCount_deep) {
+TEST(TransactionParserTest, ObjectElementCount_deep) {
 
     auto transaction = R"({"person1":{"age":{"age":36, "height":185, "year":1981}, "height":{"age":36, "height":185, "year":1981}, "year":1981},
                            "person2":{"age":{"age":36, "height":185, "year":1981}, "height":{"age":36, "height":185, "year":1981}, "year":1981},
@@ -305,7 +305,7 @@ TEST(JsonParserTest, ObjectElementCount_deep) {
     EXPECT_EQ(object_get_element_count(0, &parsed_json), 3) << "Wrong number of object elements";
 }
 
-TEST(JsonParserTest, ObjectElementGet_primitives) {
+TEST(TransactionParserTest, ObjectElementGet_primitives) {
 
     auto transaction = R"({"age":36, "height":185, "year":1981})";
 
@@ -319,7 +319,7 @@ TEST(JsonParserTest, ObjectElementGet_primitives) {
                         << "Wrong key returned";
 }
 
-TEST(JsonParserTest, ObjectElementGet_string) {
+TEST(TransactionParserTest, ObjectElementGet_string) {
 
     auto transaction = R"({"age":"36", "height":"185", "year":"1981", "month":"july"})";
 
@@ -333,7 +333,7 @@ TEST(JsonParserTest, ObjectElementGet_string) {
                         << "Wrong key returned";
 }
 
-TEST(JsonParserTest, ObjectElementGet_out_of_bounds_negative) {
+TEST(TransactionParserTest, ObjectElementGet_out_of_bounds_negative) {
 
     auto transaction = R"({"age":36, "height":185, "year":1981})";
 
@@ -344,7 +344,7 @@ TEST(JsonParserTest, ObjectElementGet_out_of_bounds_negative) {
     EXPECT_EQ(token_index, -1) << "Wrong token index, should be invalid";
 }
 
-TEST(JsonParserTest, ObjectElementGet_out_of_bounds) {
+TEST(TransactionParserTest, ObjectElementGet_out_of_bounds) {
 
     auto transaction = R"({"age":36, "height":185, "year":1981})";
 
@@ -355,7 +355,7 @@ TEST(JsonParserTest, ObjectElementGet_out_of_bounds) {
     EXPECT_EQ(token_index, -1) << "Wrong token index, should be invalid";
 }
 
-TEST(JsonParserTest, ObjectElementGet_array) {
+TEST(TransactionParserTest, ObjectElementGet_array) {
 
     auto transaction = R"({ "ages":[36, 31, 10, 2],
                             "heights":[185, 164, 154, 132],
@@ -372,7 +372,7 @@ TEST(JsonParserTest, ObjectElementGet_array) {
     EXPECT_EQ(array_get_element_count(token_index, &parsed_json), 5) << "Wrong number of array elements";
 }
 
-TEST(JsonParserTest, ObjectGetValueCorrectFormat) {
+TEST(TransactionParserTest, ObjectGetValueCorrectFormat) {
 
     auto transaction =
             R"({"account_number":"0","chain_id":"test-chain-1","fee":{"amount":[{"amount":"5","denom":"photon"}],"gas":"10000"},"memo":"testmemo","msgs":[{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]}],"sequence":"1"})";

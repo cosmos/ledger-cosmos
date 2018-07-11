@@ -59,9 +59,20 @@ typedef struct {
 /// Parse json to create a token representation
 /// \param parsed_json
 /// \param transaction
+/// \param transaction_length
 /// \return Error message
-const char* json_parse(parsed_json_t *parsed_json,
-                const char *transaction);
+const char* json_parse_s(
+        parsed_json_t *parsed_json,
+        const char *transaction,
+        int transaction_length);
+
+/// Parse json to create a token representation
+/// \param parsed_json
+/// \param transaction
+/// \return Error message
+const char* json_parse(
+        parsed_json_t *parsed_json,
+        const char *transaction);
 
 /// Get the number of elements in the array
 /// \param array_token_index

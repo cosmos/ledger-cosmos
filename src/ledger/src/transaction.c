@@ -75,7 +75,7 @@ uint8_t *transaction_get_buffer() {
 
 const char* transaction_parse() {
     const char *transaction_buffer = (const char *) transaction_get_buffer();
-    const char* error_msg = json_parse(&parsed_transaction, transaction_buffer);
+    const char* error_msg = json_parse_s(&parsed_transaction, transaction_buffer, transaction_get_buffer_length());
     if (error_msg != NULL) {
         return error_msg;
     }

@@ -22,7 +22,16 @@ void reset_parsed_json(parsed_json_t* parser_data)
     memset(parser_data, 0, sizeof(parsed_json_t));
 }
 
-const char* json_parse(parsed_json_t *parsed_json, const char *transaction) {
+const char* json_parse(
+        parsed_json_t *parsed_json,
+        const char *transaction) {
+    return json_parse_s(parsed_json, transaction, strlen(transaction));
+
+}
+const char* json_parse_s(
+        parsed_json_t *parsed_json,
+        const char *transaction,
+        int transaction_length) {
 
     jsmn_parser parser;
     jsmn_init(&parser);
@@ -32,7 +41,7 @@ const char* json_parse(parsed_json_t *parsed_json, const char *transaction) {
     int num_tokens = jsmn_parse(
         &parser,
         transaction,
-        strlen(transaction),
+        transaction_length,
         parsed_json->Tokens,
         MAX_NUMBER_OF_TOKENS);
 

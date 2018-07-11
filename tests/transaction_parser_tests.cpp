@@ -85,7 +85,7 @@ TEST(TransactionParserTest, DisplayArbitraryItem_1) {
         R"({"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]})";
 
     parsed_json_t parsed_json;
-    json_parse(&parsed_json, transaction);
+        json_parse(&parsed_json, transaction);
 
     constexpr int screen_size = 100;
     char key[screen_size] = "";
