@@ -48,14 +48,16 @@ void display_key(char *key,
                  int key_length,
                  int token_index);
 
-/// Generic function to display arbitrary json based on the specification
-/// \param item_index_to_display
-/// \param key
-/// \param key_length
-/// \param value
-/// \param value_length
-/// \param token_index
-/// \param chunk_index
+/// Helper function that gets key and value by parsing
+/// `msgs` blob basd on TXSpec
+
+/// \param item_index_to_display, index of the recursive parsing logic
+/// \param key, an array that will be filled with key string
+/// \param key_length, size of the key array
+/// \param value, an array that will be filled with value string
+/// \param value_length, size of the value array
+/// \param token_index, index of the token that points to a single msg json element
+/// \param chunk_index, [optional] value is split into chunks if it's very long, here we specify which chunk we should use
 /// \return
 int display_arbitrary_item(int item_index_to_display,
                            char *key,
@@ -65,18 +67,19 @@ int display_arbitrary_item(int item_index_to_display,
                            int token_index,
                            int *chunk_index);
 
-/// display_get_arbitrary_items_count
+/// Returns number of pages that we'll have for the recursive parsing of a single msg json blob.
 /// \param token_index
 /// \return
 int display_get_arbitrary_items_count(int token_index);
 
-/// transaction_get_display_key_value
-/// \param key
-/// \param key_length
-/// \param value
-/// \param value_length
-/// \param page_index
-/// \param chunk_index
+/// This is the main function called from ledger that updates key and value strings
+/// that are going to be displayed in the UI.
+/// \param key, an array that will be filled with key string
+/// \param key_length, size of the key array
+/// \param value, an array that will be filled with value string
+/// \param value_length, size of the value array
+/// \param page_index, index of the UI page for which key and value will be returned
+/// \param chunk_index, [optional] value is split into chunks if it's very long, here we specify which chunk we should use
 /// \return
 int transaction_get_display_key_value(char *key,
                                       int key_length,
@@ -85,7 +88,7 @@ int transaction_get_display_key_value(char *key,
                                       int page_index,
                                       int *chunk_index);
 
-/// transaction_get_display_pages
+/// Return number of UI pages that we'll have for the current json transaction.
 /// \return
 int transaction_get_display_pages();
 

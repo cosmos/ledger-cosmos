@@ -15,6 +15,7 @@
 ********************************************************************************/
 
 #include <jsmn.h>
+#include <stdio.h>
 #include "transaction_parser.h"
 #include "json_parser.h"
 
@@ -31,8 +32,8 @@ const char whitespaces[] = {
 
 //---------------------------------------------
 
-int msg_bytes_pages = 0;
-int alt_bytes_pages = 0;
+int msgs_total_pages = 0;
+int msgs_array_elements = 0;
 
 //---------------------------------------------
 
@@ -292,84 +293,96 @@ int display_arbitrary_item(
 }
 
 int transaction_get_display_key_value(
-    char *key, // output
+    char *key,
     int key_length,
-    char *value, // output
+    char *value,
     int value_length,
     int page_index,
-    int *chunk_index) // input/output
+    int *chunk_index)
 {
-    switch (page_index) {
-    case 0: {
-        copy_fct(key, "chain_id", sizeof("chain_id"));
-        int token_index = object_get_value(0, "chain_id", parsing_context.parsed_transaction,
-                                           parsing_context.transaction);
-        update(value, value_length, token_index, chunk_index);
-        break;
-    }
-    case 1: {
-        copy_fct(key, "sequence", sizeof("sequence"));
-        int token_index = object_get_value(0, "sequence", parsing_context.parsed_transaction,
-                                           parsing_context.transaction);
-        update(value, value_length, token_index, chunk_index);
-        break;
-    }
-    case 2: {
-        copy_fct(key, "fee_bytes", sizeof("fee_bytes"));
-        int token_index = object_get_value(0, "fee_bytes", parsing_context.parsed_transaction,
-                                           parsing_context.transaction);
-        update(value, value_length, token_index, chunk_index);
-        break;
-    }
-    default: {
-        if (page_index - 3 < msg_bytes_pages) {
-            int token_index = object_get_value(0,
-                                               "msg_bytes",
-                                               parsing_context.parsed_transaction,
-                                               parsing_context.transaction);
+    const int non_msg_pages_count = 5;
+    if (page_index >= 0 && page_index < non_msg_pages_count) {
+        const char *key_name;
+        switch (page_index) {
+            case 0:
+                key_name = "chain_id";
+                break;
+            case 1:
+                key_name = "account_number";
+                break;
+            case 2:
+                key_name = "sequence";
+                break;
+            case 3:
+                key_name = "fee";
+                break;
+            case 4:
+                key_name = "memo";
+                break;
+        }
 
-            //char full_key[parsing_context.max_chars_per_key_line];
-            copy_fct(key, "msg_bytes", sizeof("msg_bytes"));
-            key[sizeof("msg_bytes")] = '\0';
+        strcpy(key, key_name);
+        int token_index = object_get_value(ROOT_TOKEN_INDEX,
+                                           key_name,
+                                           parsing_context.parsed_transaction,
+                                           parsing_context.transaction);
+        update(value, value_length, token_index, chunk_index);
+    }
+    else {
+        int msgs_page_to_display = page_index - non_msg_pages_count;
+        int subpage_to_display = msgs_page_to_display;
+        if (msgs_page_to_display < msgs_total_pages) {
+            int msgs_array_token_index = object_get_value(
+                    ROOT_TOKEN_INDEX,
+                    "msgs",
+                    parsing_context.parsed_transaction,
+                    parsing_context.transaction);
 
-            display_arbitrary_item(page_index - 3,
+            int total = 0;
+            int msgs_array_index = 0;
+            int msgs_token_index = 0;
+            for (int i=0 ; i < msgs_array_elements; i++) {
+                int token_index_of_msg = array_get_nth_element(msgs_array_token_index, i, parsing_context.parsed_transaction);
+                int count = display_get_arbitrary_items_count(token_index_of_msg);
+                total += count;
+                if (msgs_page_to_display < total) {
+                    msgs_token_index = token_index_of_msg;
+                    msgs_array_index = i;
+                    break;
+                }
+                subpage_to_display -= count;
+            }
+
+            snprintf(key, key_length, "msgs_%d", msgs_array_index+1);
+
+            display_arbitrary_item(subpage_to_display,
                                    key,
                                    key_length,
                                    value,
                                    value_length,
-                                   token_index,
-                                   chunk_index);
-        } else {
-            int token_index = object_get_value(0, "alt_bytes", parsing_context.parsed_transaction,
-                                               parsing_context.transaction);
-            //char full_key[parsing_context.max_chars_per_key_line];
-            copy_fct(key, "alt_bytes", sizeof("alt_bytes"));
-            key[sizeof("alt_bytes")] = '\0';
-
-            display_arbitrary_item(page_index - 3 - msg_bytes_pages,
-                                   key,
-                                   key_length,
-                                   value,
-                                   value_length,
-                                   token_index,
+                                   msgs_token_index,
                                    chunk_index);
         }
-        break;
-    }
     }
     return 0;
 }
 
 int transaction_get_display_pages() {
-    int token_index_mb = object_get_value(0, "msg_bytes", parsing_context.parsed_transaction,
-                                          parsing_context.transaction);
-    int token_index_ab = object_get_value(0, "alt_bytes", parsing_context.parsed_transaction,
-                                          parsing_context.transaction);
 
-    msg_bytes_pages = display_get_arbitrary_items_count(token_index_mb);
-    alt_bytes_pages = display_get_arbitrary_items_count(token_index_ab);
+    int msgs_token_index = object_get_value(
+            ROOT_TOKEN_INDEX,
+            "msgs",
+            parsing_context.parsed_transaction,
+            parsing_context.transaction);
 
-    return msg_bytes_pages + alt_bytes_pages + 3;
+    msgs_array_elements = array_get_element_count(msgs_token_index, parsing_context.parsed_transaction);
+
+    msgs_total_pages = 0;
+    for (int i=0; i < msgs_array_elements; i++) {
+        int token_index_of_msg = array_get_nth_element(msgs_token_index, i, parsing_context.parsed_transaction);
+        msgs_total_pages += display_get_arbitrary_items_count(token_index_of_msg);
+    }
+    return msgs_total_pages + 5;
 }
 
 int is_space(char c)
@@ -465,11 +478,10 @@ const char* json_validate(parsed_json_t* parsed_transaction,
     if (contains_whitespace(parsed_transaction, transaction) == 1) {
         return "Contains whitespace in the corpus";
     }
-#ifndef DISABLE_KEY_SORTING_JSON_VALIDATION
+
     if (dictionaries_sorted(parsed_transaction, transaction) != 1) {
         return "Dictionaries are not sorted";
     }
-#endif
 
     if (object_get_value(0,
                          "chain_id",
@@ -486,24 +498,31 @@ const char* json_validate(parsed_json_t* parsed_transaction,
     }
 
     if (object_get_value(0,
-                         "fee_bytes",
+                         "fee",
                          parsed_transaction,
                          transaction) == -1) {
-        return "Missing fee_bytes";
+        return "Missing fee";
     }
 
     if (object_get_value(0,
-                         "msg_bytes",
+                         "msgs",
                          parsed_transaction,
                          transaction) == -1) {
-        return "Missing msg_bytes";
+        return "Missing msgs";
     }
 
     if (object_get_value(0,
-                         "alt_bytes",
+                         "account_number",
                          parsed_transaction,
                          transaction) == -1) {
-        return "Missing alt_bytes";
+        return "Missing account_number";
+    }
+
+    if (object_get_value(0,
+                         "memo",
+                         parsed_transaction,
+                         transaction) == -1) {
+        return "Missing memo";
     }
 
     return NULL;

@@ -103,6 +103,7 @@ Line2 contains the title - key element from the json transaction for a particula
 Line3 contains the value - value element from the json transaction for a particular page.
 
 ##### Here's the page breakdown for a simple json transaction:
+
 Screen 1. (default)
 ```
 LINE1: [left icon]  SECP256K1 - 01/08         [right icon]
@@ -110,60 +111,60 @@ LINE2:                chain_id
 LINE3:              test-chain-1
 ```
 
-Screen 2. 
+Screen 2.
 ```
-LINE1: [left icon]  SECP256K1 - 02/08         [right icon]
-LINE2:                   sequences
-LINE3:                      [1]
+LINE1: [left icon]  SECP256K1 - 02/09         [right icon]
+LINE2:               account_number           
+LINE3:                     238                
 ```
 
 Screen 3. 
 ```
-LINE1: [left icon]  SECP256K1 - 03/08         [right icon]
-LINE2:                  fee_bytes
-LINE3: {"amount":[{"denom":"photon", "amount":5}], "gas":10000}
+LINE1: [left icon]  SECP256K1 - 03/09         [right icon]
+LINE2:                   sequence
+LINE3:                      1
 ```
 
 Screen 4. 
 ```
-LINE1: [left icon]    SECP256K1 - 03/08       [right icon]
-LINE2:                  fee_bytes
+LINE1: [left icon]  SECP256K1 - 04/09         [right icon]
+LINE2:                      fee
 LINE3: {"amount":[{"denom":"photon", "amount":5}], "gas":10000}
 ```
 
 Screen 5. 
 ```
-LINE1: [left icon]     SECP256K1 - 04/08      [right icon]
-LINE2:            msg_bytes/inputs/address
+LINE1: [left icon]     SECP256K1 - 05/09      [right icon]
+LINE2:              msgs/0/inputs/address
 LINE3:                69FE2314BAC34EF
 ```
 
 Screen 6. 
 ```
-LINE1: [left icon]     SECP256K1 - 05/08      [right icon]
-LINE2:            msg_bytes/inputs/coins
+LINE1: [left icon]     SECP256K1 - 06/08      [right icon]
+LINE2:              msgs/0/inputs/coins
 LINE3:                69FE2314BAC34EF
 ```
 
 Screen 7. 
 ```
-LINE1: [left icon]     SECP256K1 - 06/08      [right icon]
-LINE2:            msg_bytes/outputs/address
+LINE1: [left icon]     SECP256K1 - 07/08      [right icon]
+LINE2:              msgs/0/outputs/address
 LINE3:                69FE2314BAC34EF
 ```
 
 Screen 8. 
 ```
-LINE1: [left icon]     SECP256K1 - 07/08      [right icon]
-LINE2:            msg_bytes/outputs/coins
+LINE1: [left icon]     SECP256K1 - 08/09      [right icon]
+LINE2:              msgs/0/outputs/coins
 LINE3:                69FE2314BAC34EF
 ```
 
 Screen 9. 
 ```
-LINE1: [left icon]     SECP256K1 - 08/08      [right icon]
-LINE2:                     alt_bytes
-LINE3:                        null
+LINE1: [left icon]     SECP256K1 - 09/09      [right icon]
+LINE2:                        memo
+LINE3:                     for_coffee
 ```
 
 #### Scrolling
@@ -178,14 +179,14 @@ Here's an example:
 Screen 3. 
 ```
 LINE1: [left icon]       SECP256K1 - 03/08         [right icon]
-LINE2:                   fee_bytes - 01/02
+LINE2:                    fee - 01/02
 LINE3:            {"amount":[{"denom":"photon", "a [first 256 bytes of the value]
 ```
 
 Screen 3a. 
 ```
 LINE1: [left icon]       SECP256K1 - 03/08         [right icon]
-LINE2:                   fee_bytes - 02/02
+LINE2:                    fee - 02/02
 LINE3:               mount":5}], "gas":10000}     [the next 256 bytes of the value]
 ```
 

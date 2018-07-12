@@ -27,15 +27,7 @@
 
 [[constraint]]
   name = "github.com/cosmos/cosmos-sdk"
-  branch = "cwgoes/ledger-integration"
-
-[[constraint]]
-  name = "github.com/tendermint/go-crypto"
-  version = "~0.6.2"
-
-[[override]]
-  name = "github.com/tendermint/iavl"
-  branch = "develop"
+  revision = "3f15ae7b15751c53fd238bf8337fbb13845c51d7"
 
 [[constraint]]
   name = "github.com/zondax/ledger-goclient"

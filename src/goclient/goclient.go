@@ -21,18 +21,19 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	secp256k1 "github.com/btcsuite/btcd/btcec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/ibc"
 	"github.com/cosmos/cosmos-sdk/x/stake"
 	"github.com/tendermint/ed25519"
-	"github.com/tendermint/go-crypto"
+	"github.com/tendermint/tendermint/crypto"
 	"github.com/zondax/ledger-goclient"
 	"os"
 	"strconv"
-	"encoding/hex"
 )
 
 func PrintSampleFunc(message bank.MsgSend, output string) {
@@ -71,82 +72,82 @@ func ParseArgs(numberOfSamples int) (int, string, int) {
 	return sampleIndex, sampleOutput, 0
 }
 
-func GetExampleTxs() []sdk.StdSignMsg {
-	return []sdk.StdSignMsg{
+func GetExampleTxs() []auth.StdSignMsg {
+	return []auth.StdSignMsg{
 
-		sdk.StdSignMsg{"test-chain-1", []int64{1}, sdk.NewStdFee(10000, sdk.Coin{"photon", 5}), bank.MsgSend{
+		auth.StdSignMsg{"test-chain-1", int64(0), int64(1), auth.NewStdFee(10000, sdk.Coin{"photon", sdk.NewInt(5)}), []sdk.Msg{bank.MsgSend{
 			Inputs: []bank.Input{
 				{
-					Address: crypto.Address([]byte("input")),
-					Coins:   sdk.Coins{{"atom", 10}},
+					Address: sdk.AccAddress([]byte("input")),
+					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 			},
 			Outputs: []bank.Output{
 				{
-					Address: crypto.Address([]byte("output")),
-					Coins:   sdk.Coins{{"atom", 10}},
+					Address: sdk.AccAddress([]byte("output")),
+					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 			},
-		}},
+		}}, "testmemo"},
 		// Long message to test writing to nvram
-		sdk.StdSignMsg{"test-chain-1,test-chain-1,test-chain-1,test-chain-1,test-chain-1,test-chain-1", []int64{1}, sdk.NewStdFee(10000, sdk.Coin{"photonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphoton", 5}), bank.MsgSend{
+		auth.StdSignMsg{"test-chain-1,test-chain-1,test-chain-1,test-chain-1,test-chain-1,test-chain-1", int64(0), int64(1), auth.NewStdFee(10000, sdk.Coin{"photonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphotonphoton", sdk.NewInt(5)}), []sdk.Msg{bank.MsgSend{
 			Inputs: []bank.Input{
 				{
-					Address: crypto.Address([]byte("input_1")),
-					Coins:   sdk.Coins{{"atom_A", 10}},
+					Address: sdk.AccAddress([]byte("input_1")),
+					Coins:   sdk.Coins{{"atom_A", sdk.NewInt(10)}},
 				},
 				{
-					Address: crypto.Address([]byte("input_2")),
-					Coins:   sdk.Coins{{"atom_B", 20}},
+					Address: sdk.AccAddress([]byte("input_2")),
+					Coins:   sdk.Coins{{"atom_B", sdk.NewInt(20)}},
 				},
 				{
-					Address: crypto.Address([]byte("input_3")),
-					Coins:   sdk.Coins{{"atom_C", 30}},
+					Address: sdk.AccAddress([]byte("input_3")),
+					Coins:   sdk.Coins{{"atom_C", sdk.NewInt(30)}},
 				},
 				{
-					Address: crypto.Address([]byte("input_4")),
-					Coins:   sdk.Coins{{"atom_D", 40}},
+					Address: sdk.AccAddress([]byte("input_4")),
+					Coins:   sdk.Coins{{"atom_D", sdk.NewInt(40)}},
 				},
 				{
-					Address: crypto.Address([]byte("input_5")),
-					Coins:   sdk.Coins{{"atom_E", 50}},
+					Address: sdk.AccAddress([]byte("input_5")),
+					Coins:   sdk.Coins{{"atom_E", sdk.NewInt(50)}},
 				},
 			},
 			Outputs: []bank.Output{
 				{
-					Address: crypto.Address([]byte("output")),
-					Coins:   sdk.Coins{{"atom", 10}},
+					Address: sdk.AccAddress([]byte("output")),
+					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 				{
-					Address: crypto.Address([]byte("output")),
-					Coins:   sdk.Coins{{"atom", 10}},
+					Address: sdk.AccAddress([]byte("output")),
+					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 				{
-					Address: crypto.Address([]byte("output")),
-					Coins:   sdk.Coins{{"atom", 10}},
+					Address: sdk.AccAddress([]byte("output")),
+					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 				{
-					Address: crypto.Address([]byte("output")),
-					Coins:   sdk.Coins{{"atom", 10}},
+					Address: sdk.AccAddress([]byte("output")),
+					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 				{
-					Address: crypto.Address([]byte("output")),
-					Coins:   sdk.Coins{{"atom", 10}},
+					Address: sdk.AccAddress([]byte("output")),
+					Coins:   sdk.Coins{{"atom", sdk.NewInt(10)}},
 				},
 			},
-		}},
-		sdk.StdSignMsg{"test-chain-2", []int64{2}, sdk.NewStdFee(10000, sdk.Coin{"photon", 10}), stake.MsgUnbond{
-			DelegatorAddr: sdk.Address([]byte("delegator")),
-			CandidateAddr: sdk.Address([]byte("candidate")),
-			Shares:        "100",
-		}},
-		sdk.StdSignMsg{"test-chain-3", []int64{3}, sdk.NewStdFee(5000, sdk.Coin{"photon", 25}), ibc.IBCTransferMsg{ibc.IBCPacket{
-			SrcAddr:   sdk.Address([]byte("source")),
-			DestAddr:  sdk.Address([]byte("dest")),
-			Coins:     sdk.Coins{sdk.Coin{"steak", 5}},
+		}}, "testmemo"},
+		auth.StdSignMsg{"test-chain-2", int64(0), int64(2), auth.NewStdFee(10000, sdk.Coin{"photon", sdk.NewInt(10)}), []sdk.Msg{stake.MsgBeginUnbonding{
+			DelegatorAddr: sdk.AccAddress([]byte("delegator")),
+			ValidatorAddr: sdk.AccAddress([]byte("candidate")),
+			SharesAmount:  sdk.NewRat(100),
+		}}, "testmemo"},
+		auth.StdSignMsg{"test-chain-3", int64(1), int64(3), auth.NewStdFee(5000, sdk.Coin{"photon", sdk.NewInt(25)}), []sdk.Msg{ibc.IBCTransferMsg{ibc.IBCPacket{
+			SrcAddr:   sdk.AccAddress([]byte("source")),
+			DestAddr:  sdk.AccAddress([]byte("dest")),
+			Coins:     sdk.Coins{sdk.Coin{"steak", sdk.NewInt(5)}},
 			SrcChain:  "cosmos-hub",
 			DestChain: "peggy",
-		}}},
+		}}}, "testmemo"},
 	}
 }
 
@@ -186,7 +187,7 @@ func testTendermintED25519(messages []bank.MsgSend, ledger *ledger_goclient.Ledg
 	}
 }
 
-func testED25519(messages []sdk.StdSignMsg, ledger *ledger_goclient.Ledger) {
+func testED25519(messages []auth.StdSignMsg, ledger *ledger_goclient.Ledger) {
 	//// Now the same with ed25519
 	for i := 0; i < len(messages); i++ {
 		fmt.Printf("\nMessage %d - Please Sign..\n", i)
@@ -270,7 +271,7 @@ func testSECP256K1Message(message []byte, ledger *ledger_goclient.Ledger, i int)
 
 	fmt.Printf("Message %d - Valid signature\n", i)
 }
-func testSECP256K1(messages []sdk.StdSignMsg, ledger *ledger_goclient.Ledger) {
+func testSECP256K1(messages []auth.StdSignMsg, ledger *ledger_goclient.Ledger) {
 	fmt.Printf("\nTesting valid messages:\n")
 	for i := 0; i < len(messages); i++ {
 		fmt.Printf("\nMessage %d - Please Sign..\n", i)

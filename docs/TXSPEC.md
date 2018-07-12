@@ -7,36 +7,35 @@ Transactions passed to the Ledger device will be in the following format. The Le
 
 ```json
 {
-  "alt_bytes": {arbitrary}
+  "account_number": {number},
   "chain_id": {string},
-  "fee_bytes": {
+  "fee": {
     "amount": [{"amount": {number}, "denom": {string}}, ...],
     "gas": {number}
   },
-  "msg_bytes": {arbitrary},
+  "memo": {string},
+  "msgs": [{arbitrary}],
   "sequence": {number}
 }
 ```
 
-`msg_bytes` and `alt_bytes` are arbitary JSON.
+`msgs` is a list of messages, which are arbitrary JSON structures.
 
 #### Examples
 
 ```json
-{"alt_bytes":null,"chain_id":"test-chain-1","fee_bytes":{"amount":[{"amount":5,"denom":"photon"}],"gas":10000},"msg_bytes":{"inputs":[{"address":"696E707574","coins":[{"amount":10,"denom":"atom"}]}],"outputs":[{"address":"6F7574707574","coins":[{"amount":10,"denom":"atom"}]}]},"sequence":1}
 ```
 
 ```json
-{"alt_bytes":null,"chain_id":"test-chain-2","fee_bytes":{"amount":[{"amount":10,"denom":"photon"}],"gas":10000},"msg_bytes":{"shares":"100"},"sequence":2}
 ```
 
 #### Display Logic
 
 The Ledger device SHOULD pick a suitable display representation for the transaction.
 
-The key type (secp256k1 / ed25519), `chain_id`, `sequence`, and `fee_bytes` should be displayed in that order, each on their own page, autoscrolling if necessary.
+The key type (secp256k1 / ed25519), `chain_id`, `account_number`, `sequence`, `fee`, and `memo` should be displayed in that order, each on their own page, autoscrolling if necessary.
 
-`msg_bytes` and `alt_bytes` should be displayed according to the following recursive logic:
+`msgs` should be iterated through and each displayed according to the following recursive logic:
 
 ```
 display (json, level)
@@ -56,7 +55,7 @@ display (json, level)
     }
 ```
 
-starting at level 0, e.g. `display(msg_bytes, 0)` and `display(alt_bytes, 0)`.
+starting at level 0, e.g. `display(msgs[0], 0)`.
 
 ### Validation
 

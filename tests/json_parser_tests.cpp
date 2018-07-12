@@ -136,4 +136,260 @@ TEST(JsonParserTest, SimpleObject) {
     EXPECT_TRUE(parserData.Tokens[8].type == jsmntype_t::JSMN_STRING);
     EXPECT_TRUE(parserData.Tokens[9].type == jsmntype_t::JSMN_PRIMITIVE);
 }
+
+TEST(JsonParserTest, ArrayElementCount_objects) {
+
+    auto transaction =
+            R"({"array":[{"amount":5,"denom":"photon"}, {"amount":5,"denom":"photon"}, {"amount":5,"denom":"photon"}]})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    EXPECT_EQ(array_get_element_count(2, &parsed_json), 3) << "Wrong number of array elements";
+}
+
+TEST(JsonParserTest, ArrayElementCount_primitives) {
+
+    auto transaction = R"({"array":[1, 2, 3, 4, 5, 6, 7]})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    EXPECT_EQ(array_get_element_count(2, &parsed_json), 7) << "Wrong number of array elements";
+}
+
+TEST(JsonParserTest, ArrayElementCount_strings) {
+
+    auto transaction = R"({"array":["hello", "there"]})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    EXPECT_EQ(array_get_element_count(2, &parsed_json), 2) << "Wrong number of array elements";
+}
+
+TEST(JsonParserTest, ArrayElementCount_empty) {
+
+    auto transaction = R"({"array":[])";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    EXPECT_EQ(array_get_element_count(2, &parsed_json), 0) << "Wrong number of array elements";
+}
+
+TEST(JsonParserTest, ArrayElementGet_objects) {
+
+    auto transaction =
+            R"({"array":[{"amount":5,"denom":"photon"}, {"amount":5,"denom":"photon"}, {"amount":5,"denom":"photon"}]})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    int token_index = array_get_nth_element(2, 1, &parsed_json);
+    EXPECT_EQ(token_index, 8) << "Wrong token index returned";
+    EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_OBJECT) << "Wrong token type returned";
+}
+
+TEST(JsonParserTest, ArrayElementGet_primitives) {
+
+    auto transaction = R"({"array":[1, 2, 3, 4, 5, 6, 7]})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    int token_index = array_get_nth_element(2, 5, &parsed_json);
+    EXPECT_EQ(token_index, 8) << "Wrong token index returned";
+    EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_PRIMITIVE) << "Wrong token type returned";
+}
+
+TEST(TransactionParserTest, ArrayElementGet_strings) {
+
+    auto transaction = R"({"array":["hello", "there"]})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    int token_index = array_get_nth_element(2, 0, &parsed_json);
+    EXPECT_EQ(token_index, 3) << "Wrong token index returned";
+    EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_STRING) << "Wrong token type returned";
+}
+
+TEST(TransactionParserTest, ArrayElementGet_empty) {
+
+    auto transaction = R"({"array":[])";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    int token_index = array_get_nth_element(2, 0, &parsed_json);
+    EXPECT_EQ(token_index, -1) << "Token index should be invalid (not found).";
+}
+
+TEST(TransactionParserTest, ArrayElementGet_out_of_bounds_negative) {
+
+    auto transaction = R"({"array":["hello", "there"])";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    int token_index = array_get_nth_element(2, -1, &parsed_json);
+    EXPECT_EQ(token_index, -1) << "Token index should be invalid (not found).";
+}
+
+TEST(TransactionParserTest, ArrayElementGet_out_of_bounds) {
+
+    auto transaction = R"({"array":["hello", "there"])";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    int token_index = array_get_nth_element(2, 3, &parsed_json);
+    EXPECT_EQ(token_index, -1) << "Token index should be invalid (not found).";
+}
+
+TEST(TransactionParserTest, ObjectElementCount_primitives) {
+
+    auto transaction = R"({"age":36, "height":185, "year":1981})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    EXPECT_EQ(object_get_element_count(0, &parsed_json), 3) << "Wrong number of object elements";
+}
+
+TEST(TransactionParserTest, ObjectElementCount_string) {
+
+    auto transaction = R"({"age":"36", "height":"185", "year":"1981", "month":"july"})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    EXPECT_EQ(object_get_element_count(0, &parsed_json), 4) << "Wrong number of object elements";
+}
+
+TEST(TransactionParserTest, ObjectElementCount_array) {
+
+    auto transaction = R"({ "ages":[36, 31, 10, 2],
+                            "heights":[185, 164, 154, 132],
+                            "years":[1981, 1985, 2008, 2016],
+                            "months":["july", "august", "february", "july"]})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    EXPECT_EQ(object_get_element_count(0, &parsed_json), 4) << "Wrong number of object elements";
+}
+
+TEST(TransactionParserTest, ObjectElementCount_object) {
+
+    auto transaction = R"({"person1":{"age":36, "height":185, "year":1981},
+                           "person2":{"age":36, "height":185, "year":1981},
+                           "person3":{"age":36, "height":185, "year":1981}})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    EXPECT_EQ(object_get_element_count(0, &parsed_json), 3) << "Wrong number of object elements";
+}
+
+TEST(TransactionParserTest, ObjectElementCount_deep) {
+
+    auto transaction = R"({"person1":{"age":{"age":36, "height":185, "year":1981}, "height":{"age":36, "height":185, "year":1981}, "year":1981},
+                           "person2":{"age":{"age":36, "height":185, "year":1981}, "height":{"age":36, "height":185, "year":1981}, "year":1981},
+                           "person3":{"age":{"age":36, "height":185, "year":1981}, "height":{"age":36, "height":185, "year":1981}, "year":1981}})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    EXPECT_EQ(object_get_element_count(0, &parsed_json), 3) << "Wrong number of object elements";
+}
+
+TEST(TransactionParserTest, ObjectElementGet_primitives) {
+
+    auto transaction = R"({"age":36, "height":185, "year":1981})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    int token_index = object_get_nth_key(0, 0, &parsed_json);
+    EXPECT_EQ(token_index, 1) << "Wrong token index";
+    EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_STRING) << "Wrong token type returned";
+    EXPECT_EQ(memcmp(transaction + parsed_json.Tokens[token_index].start, "age", strlen("age")), 0)
+                        << "Wrong key returned";
+}
+
+TEST(TransactionParserTest, ObjectElementGet_string) {
+
+    auto transaction = R"({"age":"36", "height":"185", "year":"1981", "month":"july"})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    int token_index = object_get_nth_value(0, 3, &parsed_json);
+    EXPECT_EQ(token_index, 8) << "Wrong token index";
+    EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_STRING) << "Wrong token type returned";
+    EXPECT_EQ(memcmp(transaction + parsed_json.Tokens[token_index].start, "july", strlen("july")), 0)
+                        << "Wrong key returned";
+}
+
+TEST(TransactionParserTest, ObjectElementGet_out_of_bounds_negative) {
+
+    auto transaction = R"({"age":36, "height":185, "year":1981})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    int token_index = object_get_nth_key(0, -1, &parsed_json);
+    EXPECT_EQ(token_index, -1) << "Wrong token index, should be invalid";
+}
+
+TEST(TransactionParserTest, ObjectElementGet_out_of_bounds) {
+
+    auto transaction = R"({"age":36, "height":185, "year":1981})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    int token_index = object_get_nth_key(0, 5, &parsed_json);
+    EXPECT_EQ(token_index, -1) << "Wrong token index, should be invalid";
+}
+
+TEST(TransactionParserTest, ObjectElementGet_array) {
+
+    auto transaction = R"({ "ages":[36, 31, 10, 2],
+                            "heights":[185, 164, 154, 132],
+                            "years":[1981, 1985, 2008, 2016, 2022],
+                            "months":["july", "august", "february", "july"]})";
+
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    int token_index = object_get_value(0, "years", &parsed_json, transaction);
+
+    EXPECT_EQ(token_index, 14) << "Wrong token index";
+    EXPECT_EQ(parsed_json.Tokens[token_index].type, JSMN_ARRAY) << "Wrong token type returned";
+    EXPECT_EQ(array_get_element_count(token_index, &parsed_json), 5) << "Wrong number of array elements";
+}
+
+TEST(TransactionParserTest, ObjectGetValueCorrectFormat) {
+
+    auto transaction =
+            R"({"account_number":"0","chain_id":"test-chain-1","fee":{"amount":[{"amount":"5","denom":"photon"}],"gas":"10000"},"memo":"testmemo","msgs":[{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]}],"sequence":"1"})";
+    parsed_json_t parsed_json;
+    json_parse(&parsed_json, transaction);
+
+    int token_index = object_get_value(0, "alt_bytes", &parsed_json, transaction);
+    EXPECT_EQ(token_index, -1) << "Wrong token index"; // alt_bytes should not be found
+    token_index = object_get_value(0, "account_number", &parsed_json, transaction);
+    EXPECT_EQ(token_index, 2) << "Wrong token index"; // alt_bytes should not be found
+    token_index = object_get_value(0, "chain_id", &parsed_json, transaction);
+    EXPECT_EQ(token_index, 4) << "Wrong token index";
+    token_index = object_get_value(0, "fee", &parsed_json, transaction);
+    EXPECT_EQ(token_index, 6) << "Wrong token index";
+    token_index = object_get_value(0, "msgs", &parsed_json, transaction);
+    EXPECT_EQ(token_index, 19) << "Wrong token index";
+    token_index = object_get_value(0, "sequence", &parsed_json, transaction);
+    EXPECT_EQ(token_index, 46) << "Wrong token index";
+}
 }
