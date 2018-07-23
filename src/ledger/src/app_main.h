@@ -26,7 +26,7 @@
 #define OFFSET_INS                  1  //< Instruction offset
 #define OFFSET_PCK_INDEX            2  //< Package index offset
 #define OFFSET_PCK_COUNT            3  //< Package count offset
-#define OFFSET_DATA                 4  //< Data offset
+#define OFFSET_DATA                 5  //< Data offset
 
 #define INS_GET_VERSION                 0
 #define INS_PUBLIC_KEY_SECP256K1        1
