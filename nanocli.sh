@@ -28,15 +28,12 @@ handle_config()
     case "${os_string}" in
         Linux*)
             sudo apt-get install libusb-1.0.0 libudev-dev
-            pip install --upgrade setuptools
-            pip install -U --no-cache ledgerblue ecpy==0.8.2
-            pip install git+https://github.com/LedgerHQ/blue-loader-python.git
+            pip install -U setuptools
+            pip install -U --no-cache ledgerblue ecpy
             ;;
         Darwin*)
             brew install libusb
-            pip install --upgrade setuptools --user python
-            pip install -U --no-cache ledgerblue ecpy==0.8.2 --user python
-            pip install git+https://github.com/LedgerHQ/blue-loader-python.git
+            pip install -U ledgerblue ecpy
             ;;
         *)
             echo "OS not recognized"

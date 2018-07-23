@@ -168,6 +168,10 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                 THROW(APDU_CODE_CLA_NOT_SUPPORTED);
             }
 
+            if (rx<5) {
+                THROW(APDU_CODE_WRONG_LENGTH);
+            }
+
             switch (G_io_apdu_buffer[OFFSET_INS]) {
             case INS_GET_VERSION: {
 #ifdef TESTING_ENABLED
@@ -184,7 +188,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
             }
 
             case INS_PUBLIC_KEY_SECP256K1: {
-                if (!extractBip32(&bip32_depth, bip32_path, rx, 2)) {
+                if (!extractBip32(&bip32_depth, bip32_path, rx, OFFSET_DATA)) {
                     THROW(APDU_CODE_DATA_INVALID);
                 }
 
@@ -211,7 +215,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                 if (!process_chunk(tx, rx, true))
                     THROW(APDU_CODE_OK);
 
-                const char* error_msg = transaction_parse();
+                const char *error_msg = transaction_parse();
                 if (error_msg != NULL) {
                     int error_msg_length = strlen(error_msg);
                     os_memmove(G_io_apdu_buffer, error_msg, error_msg_length);
@@ -227,7 +231,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
 #ifdef FEATURE_ED25519
                 case INS_PUBLIC_KEY_ED25519: {
-                    if (!extractBip32(&bip32_depth, bip32_path, rx, 2)) {
+                    if (!extractBip32(&bip32_depth, bip32_path, rx, OFFSET_DATA)) {
                         THROW(APDU_CODE_DATA_INVALID);
                     }
 

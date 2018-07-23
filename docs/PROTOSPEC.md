@@ -87,8 +87,8 @@ The general structure of commands and responses is as follows:
 | ----- | -------- | ---------------------- | -------- |
 | CLA   | byte (1) | Application Identifier | 0x55     |
 | INS   | byte (1) | Instruction ID         | 0x03     |
-| P1    | byte (1) | Parameter 1            | ignored  |
-| P2    | byte (1) | Parameter 2            | ignored  |
+| P1    | byte (1) | Packet Current Index   | ignored  |
+| P2    | byte (1) | Packet Total Count     | ignored  |
 | L     | byte (1) | Bytes in payload       | 0        |
 
 #### Response

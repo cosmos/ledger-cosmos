@@ -29,7 +29,7 @@ include $(BOLOS_SDK)/Makefile.defines
 APPNAME = "COSMOS"
 APPVERSION_M=0
 APPVERSION_N=0
-APPVERSION_P=9
+APPVERSION_P=10
 
 # FIXME: There is currently a problem running ledgerBlue.setupCustomCA which needs to be fixed.
 #APP_LOAD_PARAMS = --appFlags 0x00 --delete --signApp --signPrivateKey 0130a1c6fa9154cad78d91a8ecbbdbba7e1efbff01840997949130bba5cb38cd $(COMMON_LOAD_PARAMS)
@@ -62,6 +62,8 @@ DEFINES   += APPVERSION=\"$(APPVERSION)\"
 DEFINES   += HAVE_BOLOS_APP_STACK_CANARY
 DEFINES   += LEDGER_SPECIFIC
 DEFINES   += TESTING_ENABLED
+
+#Feature temporarily disabled
 #DEFINES   += FEATURE_ED25519
 
 # Compiler, assembler, and linker
