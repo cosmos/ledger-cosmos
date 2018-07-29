@@ -33,37 +33,41 @@ APPVERSION_P=10
 
 # FIXME: There is currently a problem running ledgerBlue.setupCustomCA which needs to be fixed.
 #APP_LOAD_PARAMS = --appFlags 0x00 --delete --signApp --signPrivateKey 0130a1c6fa9154cad78d91a8ecbbdbba7e1efbff01840997949130bba5cb38cd $(COMMON_LOAD_PARAMS)
-APP_LOAD_PARAMS = --appFlags 0x00 $(COMMON_LOAD_PARAMS)
+APP_LOAD_PARAMS = --appFlags 0x00 --delete $(COMMON_LOAD_PARAMS)
 
-#prepare hsm generation
 ICONNAME=$(CURDIR)/glyphs/icon_app.gif
 
 ############
 # Platform
 
+DEFINES   += UNUSED\(x\)=\(void\)x
+
 APPVERSION=$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)
+DEFINES   += APPVERSION=\"$(APPVERSION)\"
 
 DEFINES += OS_IO_SEPROXYHAL IO_SEPROXYHAL_BUFFER_SIZE_B=128
+DEFINES += HAVE_IO_USB HAVE_L4_USBLIB IO_USB_MAX_ENDPOINTS=7 IO_HID_EP_LENGTH=64 HAVE_USB_APDU
+
 DEFINES += HAVE_BAGL HAVE_SPRINTF
-#DEFINES += HAVE_PRINTF
 DEFINES += PRINTF\(...\)=
 DEFINES += HAVE_IO_USB HAVE_L4_USBLIB IO_USB_MAX_ENDPOINTS=7 IO_HID_EP_LENGTH=64 HAVE_USB_APDU
+
 DEFINES += LEDGER_MAJOR_VERSION=$(APPVERSION_M) LEDGER_MINOR_VERSION=$(APPVERSION_N) LEDGER_PATCH_VERSION=$(APPVERSION_P)
 
-DEFINES += TESTING_ENABLED
-
-DEFINES   += HAVE_U2F
+SDK_SOURCE_PATH += lib_u2f
+DEFINES   += HAVE_U2F HAVE_IO_U2F
 DEFINES   += USB_SEGMENT_SIZE=64
-DEFINES   += BLE_SEGMENT_SIZE=32 #max MTU, min 20
+DEFINES   += U2F_PROXY_MAGIC=\"CSM\"
 DEFINES   += U2F_MAX_MESSAGE_SIZE=264 #257+5+2
-DEFINES   += UNUSED\(x\)=\(void\)x
-DEFINES   += APPVERSION=\"$(APPVERSION)\"
+
+#DEFINES   += BLE_SEGMENT_SIZE=32 #max MTU, min 20
 
 DEFINES   += HAVE_BOLOS_APP_STACK_CANARY
 DEFINES   += LEDGER_SPECIFIC
 DEFINES   += TESTING_ENABLED
 
 #Feature temporarily disabled
+DEFINES += TESTING_ENABLED
 #DEFINES   += FEATURE_ED25519
 
 # Compiler, assembler, and linker
@@ -93,13 +97,13 @@ AS := $(GCCPATH)arm-none-eabi-gcc
 AFLAGS +=
 
 LD       := $(GCCPATH)arm-none-eabi-gcc
-LDFLAGS  += -O3 -Os -s
+LDFLAGS  += -O3 -s
 LDLIBS   += -lm -lgcc -lc
 
 ##########################
 
 APP_SOURCE_PATH += src $(JSMN_LIB)/src $(JSON_PARSER_LIB) ../../deps/ledger-zxlib/include
-SDK_SOURCE_PATH += lib_stusb lib_stusb_impl
+SDK_SOURCE_PATH += lib_stusb lib_u2f lib_stusb_impl
 
 #include $(BOLOS_SDK)/Makefile.glyphs
 
