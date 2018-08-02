@@ -1,14 +1,13 @@
 Cosmos App - Ledger Nano S
-# Development
 
-## Get source
+# Get source
 Apart from cloning, be sure you get all the submodules, by calling:
 ```
 git submodule update --init --recursive
 ```
 or alternatively using ```fix_submodules.sh``` script which can be found in the tools folder.
 
-## Dependencies
+# Dependencies
 
 ### Ledger Nano S
 
@@ -81,17 +80,13 @@ Additionally you will need to:
 ```
 brew install libusb
 ```
-
 # Building
-
-## Local builds
-
 There are different local builds:
 
  - Generic C++ code and run unit tests
  - BOLOS firmware
 
-#### Generic C++ Code / Tests
+## Generic C++ Code / Tests
 
 This is useful when you want to make changes to libraries, run unit tests, etc. It will build all common libraries and unit tests.
 
@@ -104,7 +99,7 @@ cmake . && make
 export GTEST_COLOR=1 && ctest -VV
 ```
 
-#### BOLOS / Ledger firmware
+## BOLOS / Ledger firmware
 In order to keep builds reproducible, a bash script is provided.
  The script will build the firmware in a docker container and leave the binary in the correct directory.
 
@@ -116,7 +111,7 @@ The following command will build the app firmware inside a container. All output
 ```
 
 **Upload the app to the device**
-The following command will upload the application to the ledger. _Warning: The application must be deleted before uploading._
+The following command will upload the application to the ledger. _Warning: The application will be deleted before uploading._
 ```
 ./nanocli.sh load
 ```
