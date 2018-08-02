@@ -203,37 +203,3 @@ Switches back to the 'View Transaction' page
 Same as Left click, unless we are in the 'Value Chunk Preview', in which case we step out from the 'Value Chunk Preview' and skip to the previous screen.
 ##### Right hold
 Same as Right click, unless we are in the 'Value Chunk Preview', in which case we step out from the 'Value Chunk Preview' and skip to the next screen.
-
-## Known issues:
-We currently don't scroll the key (in line 2) and only display its first 20 characters. The key can be longer though.
-Unfortunately scrolling 2 lines at the same time seems to be impossible in Ledger (TODO: confirm this).
-We need a way of scrolling the key or some other way of displaying the full key string.
-
-Here's the proposed solution:
-
-```
-IF key is longer than 20 characters
-THEN 
-    scroll the KEY in line 2
-    IF value in line 3 is longer than 20 characters
-    THEN
-        display "DBL-CLICK TO VIEW" in line 3
-    ELSE
-        display the VALUE in line 3
-```
-
-Screen 'Scrolling Key'. 
-```
-LINE1: [left icon]       SECP256K1 - 03/08         [right icon]
-LINE2:                ...scrolling long key... 
-LINE3:                   DBL-CLICK TO VIEW     
-```
-     
-In this mode we have to double click to switch to the VALUE preview.
-In VALUE preview mode we scroll the VALUE in line 3 and only 
-display the last 20 characters for the KEY.
-```
-LINE1: [left icon]       SECP256K1 - 03/08         [right icon]
-LINE2:                   cropped_key 02/03
-LINE3:                  ...scrolling value....    
-```
