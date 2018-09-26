@@ -55,7 +55,8 @@ void buffering_reset();
 /// Append data to the buffer
 /// \param data
 /// \param length
-void buffering_append(uint8_t *data, int length);
+/// \return It returns an error message if the buffer is too small.
+char* buffering_append(uint8_t *data, int length);
 
 /// buffering_get_ram_buffer
 /// \return

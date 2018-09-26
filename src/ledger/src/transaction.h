@@ -27,8 +27,10 @@ void transaction_reset();
 /// Transaction buffer will grow until it reaches the maximum allowed size
 /// \param buffer
 /// \param length
-void transaction_append(unsigned char *buffer,
-                        uint32_t length);
+/// \return It returns an error message if the buffer is too small.
+char* transaction_append(
+        unsigned char *buffer,
+        uint32_t length);
 
 /// Returns size of the raw json transaction buffer
 /// \return

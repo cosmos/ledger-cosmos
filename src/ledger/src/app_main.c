@@ -152,7 +152,9 @@ bool process_chunk(volatile uint32_t *tx, uint32_t rx, bool getBip32) {
         }
     }
 
-    transaction_append(&(G_io_apdu_buffer[offset]), rx - offset);
+    if (transaction_append(&(G_io_apdu_buffer[offset]), rx - offset) != NULL) {
+        THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
+    }
 
     return packageIndex == packageCount;
 }
@@ -202,7 +204,8 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     bip32_path, bip32_depth,
                     privateKeyData, NULL);
                 keys_secp256k1(&publicKey, &privateKey, privateKeyData);
-                memset(privateKeyData, 0, 32);
+                memset(privateKeyData, 0, sizeof(privateKeyData));
+                memset(&privateKey, 0, sizeof(privateKey));
 
                 os_memmove(G_io_apdu_buffer, publicKey.W, 65);
                 *tx += 65;
