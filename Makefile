@@ -102,12 +102,18 @@ LDLIBS   += -lm -lgcc -lc
 
 ##########################
 
-APP_SOURCE_PATH += src $(JSMN_LIB)/src $(JSON_PARSER_LIB) deps/ledger-zxlib/include
+APP_SOURCE_PATH += src deps/jsmn/src lib deps/ledger-zxlib/include
 SDK_SOURCE_PATH += lib_stusb lib_u2f lib_stusb_impl
 
 #include $(BOLOS_SDK)/Makefile.glyphs
 
-all: default
+.PHONY: submodules default
+
+all: submodules default
+
+submodules:
+	@echo "Updating submodules -----"
+	git submodule update --init --recursive
 
 load: all
 	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
