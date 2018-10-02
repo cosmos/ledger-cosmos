@@ -48,3 +48,13 @@ src/goclient/goclient
 src/ledger/pkgdemo/loaddemo\.sh
 
 src/ledger/pkgdemo/app\.hex
+
+obj/app\.elf
+
+debug/app\.map
+
+debug/app\.asm
+
+bin/app\.hex
+
+bin/app\.elf
