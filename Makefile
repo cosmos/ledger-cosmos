@@ -33,7 +33,7 @@ APPVERSION_P=1
 
 # FIXME: There is currently a problem running ledgerBlue.setupCustomCA which needs to be fixed.
 #APP_LOAD_PARAMS = --appFlags 0x00 --delete --signApp --signPrivateKey 0130a1c6fa9154cad78d91a8ecbbdbba7e1efbff01840997949130bba5cb38cd $(COMMON_LOAD_PARAMS)
-APP_LOAD_PARAMS = --appFlags 0x00 --delete $(COMMON_LOAD_PARAMS)
+APP_LOAD_PARAMS = --appFlags 0x00 --delete $(COMMON_LOAD_PARAMS) --path "44'/118'"
 
 ICONNAME=$(CURDIR)/icon.gif
 
