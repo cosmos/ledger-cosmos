@@ -112,8 +112,8 @@ SDK_SOURCE_PATH += lib_stusb lib_u2f lib_stusb_impl
 all: submodules default
 
 submodules:
-	@echo "Updating submodules -----"
-	git submodule update --init --recursive
+	#@echo "Updating submodules -----"
+	#git submodule update --init --recursive
 
 load: all
 	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
@@ -131,3 +131,7 @@ include $(BOLOS_SDK)/Makefile.rules
 
 #add dependency on custom makefile filename
 dep/%.d: %.c Makefile.genericwallet
+
+
+listvariants:
+	@echo VARIANTS COIN cosmos
