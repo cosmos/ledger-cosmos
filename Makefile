@@ -20,21 +20,19 @@ ifeq ($(BOLOS_SDK),)
 $(error BOLOS_SDK is not set)
 endif
 
+dummy_submodules := $(shell git submodule update --init --recursive)
+
 SCRIPT_LD:=$(CURDIR)/script.ld
 
 include $(BOLOS_SDK)/Makefile.defines
 
 # Main app configuration
-
 APPNAME = "COSMOS"
 APPVERSION_M=0
 APPVERSION_N=1
 APPVERSION_P=1
 
-# FIXME: There is currently a problem running ledgerBlue.setupCustomCA which needs to be fixed.
-#APP_LOAD_PARAMS = --appFlags 0x00 --delete --signApp --signPrivateKey 0130a1c6fa9154cad78d91a8ecbbdbba7e1efbff01840997949130bba5cb38cd $(COMMON_LOAD_PARAMS)
 APP_LOAD_PARAMS = --appFlags 0x00 --delete $(COMMON_LOAD_PARAMS) --path "44'/118'"
-
 ICONNAME=$(CURDIR)/icon.gif
 
 ############
@@ -104,23 +102,16 @@ SDK_SOURCE_PATH += lib_stusb lib_u2f lib_stusb_impl
 
 #include $(BOLOS_SDK)/Makefile.glyphs
 
-.PHONY: submodules default
+all: default
 
-all: submodules default
-
-submodules:
-	#@echo "Updating submodules -----"
-	#git submodule update --init --recursive
-
-load: all
+load:
 	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
 delete:
 	python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
 
-package: all
+package:
 	./pkgdemo.sh ${APPNAME} ${APPVERSION} ${ICONNAME}
-
 
 # Import generic rules from the SDK
 
