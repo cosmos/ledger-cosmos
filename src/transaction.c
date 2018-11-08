@@ -25,7 +25,7 @@
 uint8_t ram_buffer[RAM_BUFFER_SIZE];
 
 // Flash
-#define FLASH_BUFFER_SIZE 16384
+#define FLASH_BUFFER_SIZE 10000
 typedef struct {
     uint8_t buffer[FLASH_BUFFER_SIZE];
 } storage_t;

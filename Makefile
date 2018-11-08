@@ -20,21 +20,19 @@ ifeq ($(BOLOS_SDK),)
 $(error BOLOS_SDK is not set)
 endif
 
+dummy_submodules := $(shell git submodule update --init --recursive)
+
 SCRIPT_LD:=$(CURDIR)/script.ld
 
 include $(BOLOS_SDK)/Makefile.defines
 
 # Main app configuration
-
 APPNAME = "COSMOS"
 APPVERSION_M=0
 APPVERSION_N=1
 APPVERSION_P=1
 
-# FIXME: There is currently a problem running ledgerBlue.setupCustomCA which needs to be fixed.
-#APP_LOAD_PARAMS = --appFlags 0x00 --delete --signApp --signPrivateKey 0130a1c6fa9154cad78d91a8ecbbdbba7e1efbff01840997949130bba5cb38cd $(COMMON_LOAD_PARAMS)
-APP_LOAD_PARAMS = --appFlags 0x00 --delete $(COMMON_LOAD_PARAMS)
-
+APP_LOAD_PARAMS = --appFlags 0x00 --delete $(COMMON_LOAD_PARAMS) --path "44'/118'"
 ICONNAME=$(CURDIR)/icon.gif
 
 ############
@@ -60,15 +58,12 @@ DEFINES   += USB_SEGMENT_SIZE=64
 DEFINES   += U2F_PROXY_MAGIC=\"CSM\"
 DEFINES   += U2F_MAX_MESSAGE_SIZE=264 #257+5+2
 
-#DEFINES   += BLE_SEGMENT_SIZE=32 #max MTU, min 20
-
 DEFINES   += HAVE_BOLOS_APP_STACK_CANARY
 DEFINES   += LEDGER_SPECIFIC
-DEFINES   += TESTING_ENABLED
 
 #Feature temporarily disabled
-DEFINES += TESTING_ENABLED
-#DEFINES   += FEATURE_ED25519
+#DEFINES += TESTING_ENABLED
+#DEFINES += FEATURE_ED25519
 
 # Compiler, assembler, and linker
 
@@ -107,23 +102,16 @@ SDK_SOURCE_PATH += lib_stusb lib_u2f lib_stusb_impl
 
 #include $(BOLOS_SDK)/Makefile.glyphs
 
-.PHONY: submodules default
+all: default
 
-all: submodules default
-
-submodules:
-	@echo "Updating submodules -----"
-	git submodule update --init --recursive
-
-load: all
+load:
 	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
 delete:
 	python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
 
-package: all
+package:
 	./pkgdemo.sh ${APPNAME} ${APPVERSION} ${ICONNAME}
-
 
 # Import generic rules from the SDK
 
@@ -131,3 +119,7 @@ include $(BOLOS_SDK)/Makefile.rules
 
 #add dependency on custom makefile filename
 dep/%.d: %.c Makefile.genericwallet
+
+
+listvariants:
+	@echo VARIANTS COIN cosmos
