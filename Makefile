@@ -28,9 +28,9 @@ include $(BOLOS_SDK)/Makefile.defines
 
 # Main app configuration
 APPNAME = "COSMOS"
-APPVERSION_M=0
-APPVERSION_N=1
-APPVERSION_P=1
+APPVERSION_M=1
+APPVERSION_N=0
+APPVERSION_P=0
 
 APP_LOAD_PARAMS = --appFlags 0x00 --delete $(COMMON_LOAD_PARAMS) --path "44'/118'"
 ICONNAME=$(CURDIR)/icon.gif
@@ -97,7 +97,7 @@ LDLIBS   += -lm -lgcc -lc
 
 ##########################
 
-APP_SOURCE_PATH += src deps/jsmn/src lib deps/ledger-zxlib/include
+APP_SOURCE_PATH += src deps/jsmn/src lib deps/ledger-zxlib/include deps/ledger-zxlib/src
 SDK_SOURCE_PATH += lib_stusb lib_u2f lib_stusb_impl
 
 #include $(BOLOS_SDK)/Makefile.glyphs
