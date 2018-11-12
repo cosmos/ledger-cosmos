@@ -467,6 +467,8 @@ void sign_transaction() {
     }
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
 void app_main() {
     volatile uint32_t rx = 0, tx = 0, flags = 0;
 
@@ -509,4 +511,4 @@ void app_main() {
         END_TRY;
     }
 }
-
+#pragma clang diagnostic pop
