@@ -97,7 +97,7 @@ LDLIBS   += -lm -lgcc -lc
 
 ##########################
 
-APP_SOURCE_PATH += src deps/jsmn/src lib deps/ledger-zxlib/include deps/ledger-zxlib/src
+APP_SOURCE_PATH += src deps/jsmn/src deps/ledger-zxlib/include deps/ledger-zxlib/src
 SDK_SOURCE_PATH += lib_stusb lib_u2f lib_stusb_impl
 
 #include $(BOLOS_SDK)/Makefile.glyphs
