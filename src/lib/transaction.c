@@ -15,7 +15,7 @@
 ********************************************************************************/
 
 #include "transaction.h"
-#include "view.h"
+#include "../view.h"
 #include "apdu_codes.h"
 #include "json_parser.h"
 #include "buffering.h"
