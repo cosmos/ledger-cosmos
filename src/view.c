@@ -427,11 +427,9 @@ void view_display_transaction_menu(unsigned int numberOfTransactionPages) {
 }
 
 void view_display_signing_success() {
-    // TODO Add view
     view_idle(0);
 }
 
 void view_display_signing_error() {
-    // TODO Add view
     view_idle(0);
 }
