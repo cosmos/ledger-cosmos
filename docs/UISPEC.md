@@ -26,6 +26,8 @@ LINE2:                      Tendermint
 LINE3: [tendermint icon]    Cosmos TEST!   [down icon]
 ```
 
+Note: Test only appears when the app has been compiled in test mode.
+
 Screen 2.
 ```
 LINE1:

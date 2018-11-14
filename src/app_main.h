@@ -21,7 +21,6 @@
 #include "common.h"
 
 #define CLA                             0x55
-#define CLA_TEST                        0xF5
 
 #define OFFSET_CLA                      0
 #define OFFSET_INS                      1  //< Instruction offset
@@ -30,23 +29,13 @@
 #define OFFSET_DATA                     5  //< Data offset
 
 #define INS_GET_VERSION                 0
-
 #define INS_PUBLIC_KEY_SECP256K1        1
 #define INS_SIGN_SECP256K1              2
 
-#ifdef FEATURE_ED25519
-#define INS_PUBLIC_KEY_ED25519          11
-#define INS_SIGN_ED25519                12
-#endif
-
+#ifdef TESTING_ENABLED
 #define INS_HASH_TEST                   100
-
 #define INS_PUBLIC_KEY_SECP256K1_TEST   101
 #define INS_SIGN_SECP256K1_TEST         102
-#ifdef FEATURE_ED25519
-#define INS_PUBLIC_KEY_ED25519_TEST     111
-#define INS_SIGN_ED25519_TEST           112
-
 #endif
 
 void app_init();
