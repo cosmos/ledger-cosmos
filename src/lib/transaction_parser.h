@@ -14,8 +14,7 @@
 *  limitations under the License.
 ********************************************************************************/
 
-#ifndef CI_TEST_TRANSACTIONPARSER_H
-#define CI_TEST_TRANSACTIONPARSER_H
+#pragma once
 
 #include "json_parser.h"
 
@@ -112,4 +111,3 @@ void set_parsing_context(parsing_context_t context);
 #ifdef __cplusplus
 }
 #endif
-#endif //CI_TEST_TRANSACTIONPARSER_H

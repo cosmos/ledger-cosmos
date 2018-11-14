@@ -14,8 +14,7 @@
 *  limitations under the License.
 ********************************************************************************/
 
-#ifndef CI_TEST_JSONPARSER_H
-#define CI_TEST_JSONPARSER_H
+#pragma once
 
 #include <jsmn.h>
 #include <stdbool.h>
@@ -130,4 +129,3 @@ int object_get_value(int object_token_index,
 #ifdef __cplusplus
 }
 #endif
-#endif //CI_TEST_JSONPARSER_H

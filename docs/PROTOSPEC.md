@@ -44,7 +44,7 @@ The general structure of commands and responses is as follows:
 
 | Field | Type     | Content                | Expected |
 | ----- | -------- | ---------------------- | -------- |
-| CLA   | byte (1) | Application Identifier |          |
+| CLA   | byte (1) | Application Identifier | 0x55     |
 | INS   | byte (1) | Instruction ID         | 0x00     |
 | P1    | byte (1) | Parameter 1            | ignored  |
 | P2    | byte (1) | Parameter 2            | ignored  |
@@ -54,7 +54,7 @@ The general structure of commands and responses is as follows:
 
 | Field   | Type     | Content       | Note                            |
 | ------- | -------- | ------------- | ------------------------------- |
-| MODE    | byte (1) | Test Mode     | 0xFF means test mode is enabled |
+| CLA     | byte (1) | Test Mode     | 0xFF means test mode is enabled |
 | MAJOR   | byte (1) | Version Major |                                 |
 | MINOR   | byte (1) | Version Minor |                                 |
 | PATCH   | byte (1) | Version Patch |                                 |
@@ -66,7 +66,7 @@ The general structure of commands and responses is as follows:
 
 | Field | Type     | Content                | Expected |
 | ----- | -------- | ---------------------- | -------- |
-| CLA   | byte (1) | Application Identifier |          |
+| CLA   | byte (1) | Application Identifier | 0x55     |
 | INS   | byte (1) | Instruction ID         | 0x01     |
 | P1    | byte (1) | Parameter 1            | ignored  |
 | P2    | byte (1) | Parameter 2            | ignored  |
@@ -86,7 +86,7 @@ The general structure of commands and responses is as follows:
 | Field | Type     | Content                | Expected |
 | ----- | -------- | ---------------------- | -------- |
 | CLA   | byte (1) | Application Identifier | 0x55     |
-| INS   | byte (1) | Instruction ID         | 0x03     |
+| INS   | byte (1) | Instruction ID         | 0x02     |
 | P1    | byte (1) | Packet Current Index   | ignored  |
 | P2    | byte (1) | Packet Total Count     | ignored  |
 | L     | byte (1) | Bytes in payload       | 0        |

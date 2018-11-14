@@ -1,13 +1,13 @@
-Cosmos App - Ledger Nano S
+#Cosmos User App for Ledger Nano S
 
-# Get source
+## Get source
 Apart from cloning, be sure you get all the submodules, by calling:
 ```
 git submodule update --init --recursive
 ```
 or alternatively using ```fix_submodules.sh``` script which can be found in the tools folder.
 
-# Dependencies
+## Dependencies
 
 ### Ledger Nano S
 
@@ -107,13 +107,13 @@ In order to keep builds reproducible, a bash script is provided.
 
 The following command will build the app firmware inside a container. All output will be available to the host.
 ```
-./nanocli.sh make
+./nanocli.sh umake
 ```
 
 **Upload the app to the device**
 The following command will upload the application to the ledger. _Warning: The application will be deleted before uploading._
 ```
-./nanocli.sh load
+./nanocli.sh uload
 ```
 
 ## Continuous Integration (debugging CI issues)
@@ -133,4 +133,3 @@ circleci build --job build_ledger
 ```
 circleci build --job build_go
 ```
-

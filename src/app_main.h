@@ -20,33 +20,23 @@
 #include "apdu_codes.h"
 #include "common.h"
 
-#define CLA                         0x55
+#define CLA                             0x55
 
-#define OFFSET_CLA                  0
-#define OFFSET_INS                  1  //< Instruction offset
-#define OFFSET_PCK_INDEX            2  //< Package index offset
-#define OFFSET_PCK_COUNT            3  //< Package count offset
-#define OFFSET_DATA                 5  //< Data offset
+#define OFFSET_CLA                      0
+#define OFFSET_INS                      1  //< Instruction offset
+#define OFFSET_PCK_INDEX                2  //< Package index offset
+#define OFFSET_PCK_COUNT                3  //< Package count offset
+#define OFFSET_DATA                     5  //< Data offset
 
 #define INS_GET_VERSION                 0
 #define INS_PUBLIC_KEY_SECP256K1        1
-#define INS_SIGN_SECP256K1              3
+#define INS_SIGN_SECP256K1              2
 
-#ifdef FEATURE_ED25519
-#define INS_PUBLIC_KEY_ED25519          2
-#define INS_SIGN_ED25519                4
-#endif
-
+#ifdef TESTING_ENABLED
 #define INS_HASH_TEST                   100
 #define INS_PUBLIC_KEY_SECP256K1_TEST   101
-#define INS_SIGN_SECP256K1_TEST         103
-
-#ifdef FEATURE_ED25519
-#define INS_PUBLIC_KEY_ED25519_TEST     102
-#define INS_SIGN_ED25519_TEST           104
+#define INS_SIGN_SECP256K1_TEST         102
 #endif
 
 void app_init();
-
 void app_main();
-
