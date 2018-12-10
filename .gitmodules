@@ -3,7 +3,7 @@
 	url = https://github.com/LedgerHQ/nanos-secure-sdk.git
 [submodule "deps/jsmn"]
 	path = deps/jsmn
-	url = https://github.com/brejski/jsmn.git
+	url = https://github.com/ZondaX/jsmn.git
 [submodule "deps/ledger-zxlib"]
 	path = deps/ledger-zxlib
 	url = https://github.com/ZondaX/ledger-zxlib
