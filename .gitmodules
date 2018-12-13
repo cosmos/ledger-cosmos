@@ -1,6 +1,3 @@
 [submodule "deps/nanos-secure-sdk"]
 	path = deps/nanos-secure-sdk
 	url = https://github.com/LedgerHQ/nanos-secure-sdk.git
-[submodule "deps/ledger-zxlib"]
-	path = deps/ledger-zxlib
-	url = https://github.com/ZondaX/ledger-zxlib
