@@ -377,16 +377,14 @@ void update_transaction_page_info() {
             transactionDetailsCurrentPage + 1,
             transactionDetailsPageCount);
         break;
-#ifdef FEATURE_ED25519
-        case ED25519:
-            snprintf(
-                    (char *) pageInfo,
-                    sizeof(pageInfo),
-                    "ED25519 - %02d/%02d",
-                    transactionDetailsCurrentPage + 1,
-                    transactionDetailsPageCount);
-            break;
-#endif
+    default:
+        snprintf(
+            (char *) pageInfo,
+            sizeof(pageInfo),
+            "INVALID - %02d/%02d",
+            transactionDetailsCurrentPage + 1,
+            transactionDetailsPageCount);
+        break;
     }
 }
 
@@ -429,11 +427,9 @@ void view_display_transaction_menu(unsigned int numberOfTransactionPages) {
 }
 
 void view_display_signing_success() {
-    // TODO Add view
     view_idle(0);
 }
 
 void view_display_signing_error() {
-    // TODO Add view
     view_idle(0);
 }

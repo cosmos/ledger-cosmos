@@ -17,9 +17,7 @@
 
 typedef enum {
     SECP256K1 = 0,
-#ifdef FEATURE_ED25519
-    ED25519
-#endif
+    ED25519 = 1
 } sigtype_t;
 
 extern sigtype_t current_sigtype;
