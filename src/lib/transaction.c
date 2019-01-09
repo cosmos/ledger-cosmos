@@ -61,7 +61,7 @@ void transaction_reset() {
     buffering_reset();
 }
 
-char* transaction_append(unsigned char *buffer, uint32_t length) {
+uint32_t transaction_append(unsigned char *buffer, uint32_t length) {
     return buffering_append(buffer, length);
 }
 
