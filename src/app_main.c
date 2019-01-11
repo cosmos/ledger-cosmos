@@ -151,7 +151,7 @@ bool process_chunk(volatile uint32_t *tx, uint32_t rx, bool getBip32) {
         }
     }
 
-    if (transaction_append(&(G_io_apdu_buffer[offset]), rx - offset) != NULL) {
+    if (transaction_append(&(G_io_apdu_buffer[offset]), rx - offset) != rx - offset) {
         THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
     }
 
