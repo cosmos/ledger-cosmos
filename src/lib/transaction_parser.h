@@ -74,16 +74,16 @@ int display_get_arbitrary_items_count(int token_index);
 /// This is the main function called from ledger that updates key and value strings
 /// that are going to be displayed in the UI.
 /// \param key, an array that will be filled with key string
-/// \param key_length, size of the key array
+/// \param max_key_length, size of the key array
 /// \param value, an array that will be filled with value string
-/// \param value_length, size of the value array
+/// \param max_value_length, size of the value array
 /// \param page_index, index of the UI page for which key and value will be returned
 /// \param chunk_index, [optional] value is split into chunks if it's very long, here we specify which chunk we should use
 /// \return
 int transaction_get_display_key_value(char *key,
-                                      int key_length,
+                                      int max_key_length,
                                       char *value,
-                                      int value_length,
+                                      int max_value_length,
                                       int page_index,
                                       int *chunk_index);
 

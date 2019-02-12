@@ -19,6 +19,8 @@
 #include "view.h"
 #include "lib/transaction.h"
 #include "signature.h"
+#include "zxmacros.h"
+#include "bech32.h"
 
 #include <os_io_seproxyhal.h>
 #include <os.h>
@@ -40,35 +42,39 @@ uint8_t bip32_depth;
 uint32_t bip32_path[10];
 sigtype_t current_sigtype;
 
+char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
+uint8_t bech32_hrp_len;
+
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
 unsigned char io_event(unsigned char channel) {
     switch (G_io_seproxyhal_spi_buffer[0]) {
-    case SEPROXYHAL_TAG_FINGER_EVENT: //
-        UX_FINGER_EVENT(G_io_seproxyhal_spi_buffer);
-        break;
+        case SEPROXYHAL_TAG_FINGER_EVENT: //
+            UX_FINGER_EVENT(G_io_seproxyhal_spi_buffer);
+            break;
 
-    case SEPROXYHAL_TAG_BUTTON_PUSH_EVENT: // for Nano S
-        UX_BUTTON_PUSH_EVENT(G_io_seproxyhal_spi_buffer);
-        break;
+        case SEPROXYHAL_TAG_BUTTON_PUSH_EVENT: // for Nano S
+            UX_BUTTON_PUSH_EVENT(G_io_seproxyhal_spi_buffer);
+            break;
 
-    case SEPROXYHAL_TAG_DISPLAY_PROCESSED_EVENT:
-        if (!UX_DISPLAYED())
-            UX_DISPLAYED_EVENT();
-        break;
+        case SEPROXYHAL_TAG_DISPLAY_PROCESSED_EVENT:
+            if (!UX_DISPLAYED())
+                UX_DISPLAYED_EVENT();
+            break;
 
-    case SEPROXYHAL_TAG_TICKER_EVENT: { //
-        UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {
-            if (UX_ALLOWED) {
-                UX_REDISPLAY();
-            }
-        });
-        break;
-    }
+        case SEPROXYHAL_TAG_TICKER_EVENT: { //
+            UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {
+                    if (UX_ALLOWED) {
+                        UX_REDISPLAY();
+                    }
+            });
+            break;
+        }
 
-        // unknown events are acknowledged
-    default:UX_DEFAULT_EVENT();
-        break;
+            // unknown events are acknowledged
+        default:
+            UX_DEFAULT_EVENT();
+            break;
     }
     if (!io_seproxyhal_spi_is_status_sent()) {
         io_seproxyhal_general_status();
@@ -78,24 +84,26 @@ unsigned char io_event(unsigned char channel) {
 
 unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
     switch (channel & ~(IO_FLAGS)) {
-    case CHANNEL_KEYBOARD:break;
+        case CHANNEL_KEYBOARD:
+            break;
 
-        // multiplexed io exchange over a SPI channel and TLV encapsulated protocol
-    case CHANNEL_SPI:
-        if (tx_len) {
-            io_seproxyhal_spi_send(G_io_apdu_buffer, tx_len);
+            // multiplexed io exchange over a SPI channel and TLV encapsulated protocol
+        case CHANNEL_SPI:
+            if (tx_len) {
+                io_seproxyhal_spi_send(G_io_apdu_buffer, tx_len);
 
-            if (channel & IO_RESET_AFTER_REPLIED) {
-                reset();
+                if (channel & IO_RESET_AFTER_REPLIED) {
+                    reset();
+                }
+                return 0; // nothing received from the master so far (it's a tx
+                // transaction)
+            } else {
+                return io_seproxyhal_spi_recv(G_io_apdu_buffer,
+                                              sizeof(G_io_apdu_buffer), 0);
             }
-            return 0; // nothing received from the master so far (it's a tx
-            // transaction)
-        } else {
-            return io_seproxyhal_spi_recv(G_io_apdu_buffer,
-                                          sizeof(G_io_apdu_buffer), 0);
-        }
 
-    default:THROW(INVALID_PARAMETER);
+        default:
+            THROW(INVALID_PARAMETER);
     }
     return 0;
 }
@@ -122,13 +130,34 @@ bool extractBip32(uint8_t *depth, uint32_t path[10], uint32_t rx, uint32_t offse
     return 1;
 }
 
-void extractPubKey(unsigned char *outputBuffer, cx_ecfp_public_key_t *pubKey) {
-    for (int i = 0; i < 32; i++) {
-        outputBuffer[i] = pubKey->W[64 - i];
+bool extractHRP(uint8_t *len, char *hrp, uint32_t rx, uint32_t offset) {
+    if (rx < offset + 1) {
+        THROW(APDU_CODE_DATA_INVALID);
     }
-    if ((pubKey->W[32] & 1) != 0) {
-        outputBuffer[31] |= 0x80;
+
+    *len = G_io_apdu_buffer[offset];
+
+    if (*len == 0 || *len > MAX_BECH32_HRP_LEN) {
+        THROW(APDU_CODE_DATA_INVALID);
     }
+
+    memcpy(hrp, G_io_apdu_buffer + offset + 1, *len);
+    hrp[*len] = 0; // zero terminate
+    return 1;
+}
+
+void getPubKey(cx_ecfp_public_key_t *publicKey) {
+    cx_ecfp_private_key_t privateKey;
+    uint8_t privateKeyData[32];
+
+    // Generate keys
+    os_perso_derive_node_bip32(
+            CX_CURVE_256K1,
+            bip32_path, bip32_depth,
+            privateKeyData, NULL);
+    keys_secp256k1(publicKey, &privateKey, privateKeyData);
+    memset(privateKeyData, 0, sizeof(privateKeyData));
+    memset(&privateKey, 0, sizeof(privateKey));
 }
 
 bool process_chunk(volatile uint32_t *tx, uint32_t rx, bool getBip32) {
@@ -158,6 +187,92 @@ bool process_chunk(volatile uint32_t *tx, uint32_t rx, bool getBip32) {
     return packageIndex == packageCount;
 }
 
+//region View Transaction Handlers
+
+int getTxData(
+        char *title, int max_title_length,
+        char *key, int max_key_length,
+        char *value, int max_value_length,
+        int page_index,
+        int chunk_index,
+        int *page_count_out,
+        int *chunk_count_out) {
+
+    *page_count_out = transaction_get_display_pages();
+
+    switch (current_sigtype) {
+        case SECP256K1:
+            snprintf(title, max_title_length, "SECP256K1 %02d/%02d", page_index + 1, *page_count_out);
+            break;
+        default:
+            snprintf(title, max_title_length, "INVALID!");
+            break;
+    }
+
+    // The API is different so we need to temporarily send chunk_index => chunk_count_out
+    *chunk_count_out = chunk_index;
+    transaction_get_display_key_value(
+            key, max_key_length,
+            value, max_value_length,
+            page_index,
+            chunk_count_out);
+
+    return 0;
+}
+
+//endregion
+
+//region View Address Handlers
+
+void ripemd160_32(uint8_t *out, uint8_t *in) {
+    cx_ripemd160_t rip160;
+    cx_ripemd160_init(&rip160);
+    cx_hash(&rip160.header, CX_LAST, in, CX_SHA256_SIZE, out, CX_RIPEMD160_SIZE);
+}
+
+#define PK_COMPRESSED_LEN 33
+
+void get_pk_compressed(uint8_t *pkc) {
+    cx_ecfp_public_key_t publicKey;
+    // Modify the last part of the path
+    getPubKey(&publicKey);
+    // "Compress" public key in place
+    publicKey.W[0] = publicKey.W[64] & 1 ? 0x03 : 0x02;
+    memcpy(pkc, publicKey.W, PK_COMPRESSED_LEN);
+}
+
+int getAddrData(
+        char *title, int max_title_length,
+        char *key, int max_key_length,
+        char *value, int max_value_length,
+        int page_index,
+        int chunk_index,
+        int *page_count_out,
+        int *chunk_count_out) {
+
+    *page_count_out = 0x7FFFFFFF;
+    *chunk_count_out = 1;
+
+    snprintf(title, max_title_length, "Account %d", bip32_path[2] & 0x7FFFFFF);
+    snprintf(key, max_key_length, "index %d", page_index);
+
+    bip32_path[bip32_depth - 1] = page_index;
+    uint8_t tmp[PK_COMPRESSED_LEN];
+    get_pk_compressed(tmp);
+
+    // Convert pubkey to address
+    uint8_t hashed_pk[CX_RIPEMD160_SIZE];
+    cx_hash_sha256(tmp, PK_COMPRESSED_LEN, tmp, CX_SHA256_SIZE);
+    ripemd160_32(hashed_pk, tmp);
+
+    // Convert address to bech32
+    bech32EncodeFromBytes(value, bech32_hrp, hashed_pk, CX_RIPEMD160_SIZE);
+
+    return 0;
+}
+
+//endregion
+
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     uint16_t sw = 0;
 
@@ -174,62 +289,73 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
             }
 
             switch (G_io_apdu_buffer[OFFSET_INS]) {
-            case INS_GET_VERSION: {
+                case INS_GET_VERSION: {
 #ifdef TESTING_ENABLED
-                G_io_apdu_buffer[0] = 0xFF;
+                    G_io_apdu_buffer[0] = 0xFF;
 #else
-                G_io_apdu_buffer[0] = 0;
+                    G_io_apdu_buffer[0] = 0;
 #endif
-                G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
-                G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
-                G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
-                *tx += 4;
-                THROW(APDU_CODE_OK);
-                break;
-            }
-
-            case INS_PUBLIC_KEY_SECP256K1: {
-                if (!extractBip32(&bip32_depth, bip32_path, rx, OFFSET_DATA)) {
-                    THROW(APDU_CODE_DATA_INVALID);
-                }
-
-                cx_ecfp_public_key_t publicKey;
-                cx_ecfp_private_key_t privateKey;
-                uint8_t privateKeyData[32];
-
-                // Generate keys
-                os_perso_derive_node_bip32(
-                    CX_CURVE_256K1,
-                    bip32_path, bip32_depth,
-                    privateKeyData, NULL);
-                keys_secp256k1(&publicKey, &privateKey, privateKeyData);
-                memset(privateKeyData, 0, sizeof(privateKeyData));
-                memset(&privateKey, 0, sizeof(privateKey));
-
-                os_memmove(G_io_apdu_buffer, publicKey.W, 65);
-                *tx += 65;
-
-                THROW(APDU_CODE_OK);
-            }
-
-            case INS_SIGN_SECP256K1: {
-                current_sigtype = SECP256K1;
-                if (!process_chunk(tx, rx, true))
+                    G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
+                    G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
+                    G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
+                    *tx += 4;
                     THROW(APDU_CODE_OK);
-
-                const char *error_msg = transaction_parse();
-                if (error_msg != NULL) {
-                    int error_msg_length = strlen(error_msg);
-                    os_memmove(G_io_apdu_buffer, error_msg, error_msg_length);
-                    *tx += (error_msg_length);
-                    THROW(APDU_CODE_BAD_KEY_HANDLE);
+                    break;
                 }
-                view_add_update_transaction_info_event_handler(&transaction_get_display_key_value);
-                view_display_transaction_menu(transaction_get_display_pages());
 
-                *flags |= IO_ASYNCH_REPLY;
-                break;
-            }
+                case INS_PUBLIC_KEY_SECP256K1: {
+                    if (!extractBip32(&bip32_depth, bip32_path, rx, OFFSET_DATA)) {
+                        THROW(APDU_CODE_DATA_INVALID);
+                    }
+
+                    cx_ecfp_public_key_t publicKey;
+                    getPubKey(&publicKey);
+
+                    os_memmove(G_io_apdu_buffer, publicKey.W, 65);
+                    *tx += 65;
+
+                    THROW(APDU_CODE_OK);
+                }
+
+                case INS_SHOW_ADDR_SECP256K1: {
+                    // Parse arguments
+                    if (!extractHRP(&bech32_hrp_len, bech32_hrp, rx, OFFSET_DATA)) {
+                        THROW(APDU_CODE_DATA_INVALID);
+                    }
+
+                    if (!extractBip32(&bip32_depth, bip32_path, rx, OFFSET_DATA + bech32_hrp_len + 1)) {
+                        THROW(APDU_CODE_DATA_INVALID);
+                    }
+
+                    if (bip32_depth != 5) {
+                        // Only paths in the form 44'/118'/{account}'/0/{index} are supported
+                        THROW(APDU_CODE_DATA_INVALID);
+                    }
+
+                    view_addr_show(bip32_path[4] & 0x7FFFFFF);
+
+////                    THROW(APDU_CODE_OK);
+                    *flags |= IO_ASYNCH_REPLY;
+                }
+
+                case INS_SIGN_SECP256K1: {
+                    current_sigtype = SECP256K1;
+                    if (!process_chunk(tx, rx, true))
+                        THROW(APDU_CODE_OK);
+
+                    const char *error_msg = transaction_parse();
+                    if (error_msg != NULL) {
+                        int error_msg_length = strlen(error_msg);
+                        os_memmove(G_io_apdu_buffer, error_msg, error_msg_length);
+                        *tx += (error_msg_length);
+                        THROW(APDU_CODE_BAD_KEY_HANDLE);
+                    }
+
+                    view_display_tx_menu(0);
+
+                    *flags |= IO_ASYNCH_REPLY;
+                    break;
+                }
 
 #ifdef TESTING_ENABLED
                 case INS_HASH_TEST: {
@@ -287,7 +413,8 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                 break;
 #endif
 
-            default:THROW(APDU_CODE_INS_NOT_SUPPORTED);
+                default:
+                    THROW(APDU_CODE_INS_NOT_SUPPORTED);
             }
         }
         CATCH(EXCEPTION_IO_RESET)
@@ -297,11 +424,13 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
         CATCH_OTHER(e)
         {
             switch (e & 0xF000) {
-            case 0x6000:
-            case APDU_CODE_OK:sw = e;
-                break;
-            default:sw = 0x6800 | (e & 0x7FF);
-                break;
+                case 0x6000:
+                case APDU_CODE_OK:
+                    sw = e;
+                    break;
+                default:
+                    sw = 0x6800 | (e & 0x7FF);
+                    break;
             }
             G_io_apdu_buffer[*tx] = sw >> 8;
             G_io_apdu_buffer[*tx + 1] = sw;
@@ -329,26 +458,26 @@ void sign_transaction() {
     unsigned int length = 0;
     int result = 0;
     switch (current_sigtype) {
-    case SECP256K1:
-        os_perso_derive_node_bip32(
-            CX_CURVE_256K1,
-            bip32_path, bip32_depth,
-            privateKeyData, NULL);
+        case SECP256K1:
+            os_perso_derive_node_bip32(
+                    CX_CURVE_256K1,
+                    bip32_path, bip32_depth,
+                    privateKeyData, NULL);
 
-        keys_secp256k1(&publicKey, &privateKey, privateKeyData);
-        memset(privateKeyData, 0, 32);
+            keys_secp256k1(&publicKey, &privateKey, privateKeyData);
+            memset(privateKeyData, 0, 32);
 
-        result = sign_secp256k1(
-            transaction_get_buffer(),
-            transaction_get_buffer_length(),
-            G_io_apdu_buffer,
-            IO_APDU_BUFFER_SIZE,
-            &length,
-            &privateKey);
-        break;
-    default:
-        THROW(APDU_CODE_INS_NOT_SUPPORTED);
-        break;
+            result = sign_secp256k1(
+                    transaction_get_buffer(),
+                    transaction_get_buffer_length(),
+                    G_io_apdu_buffer,
+                    IO_APDU_BUFFER_SIZE,
+                    &length,
+                    &privateKey);
+            break;
+        default:
+            THROW(APDU_CODE_INS_NOT_SUPPORTED);
+            break;
     }
     if (result == 1) {
         set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
@@ -363,11 +492,12 @@ void sign_transaction() {
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
+
 void app_main() {
     volatile uint32_t rx = 0, tx = 0, flags = 0;
 
-    view_add_reject_transaction_event_handler(&reject_transaction);
-    view_add_sign_transaction_event_handler(&sign_transaction);
+    view_set_tx_event_handlers(&getTxData, &sign_transaction, &reject_transaction);
+    view_set_addr_event_handlers(&getAddrData);
 
     for (;;) {
         volatile uint16_t sw = 0;
@@ -389,11 +519,13 @@ void app_main() {
             CATCH_OTHER(e);
             {
                 switch (e & 0xF000) {
-                case 0x6000:
-                case 0x9000:sw = e;
-                    break;
-                default:sw = 0x6800 | (e & 0x7FF);
-                    break;
+                    case 0x6000:
+                    case 0x9000:
+                        sw = e;
+                        break;
+                    default:
+                        sw = 0x6800 | (e & 0x7FF);
+                        break;
                 }
                 G_io_apdu_buffer[tx] = sw >> 8;
                 G_io_apdu_buffer[tx + 1] = sw;
@@ -405,4 +537,5 @@ void app_main() {
         END_TRY;
     }
 }
+
 #pragma clang diagnostic pop
