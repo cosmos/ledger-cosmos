@@ -26,14 +26,6 @@ void keys_secp256k1(cx_ecfp_public_key_t *publicKey,
                     cx_ecfp_private_key_t *privateKey,
                     const uint8_t privateKeyData[32]);
 
-/// keys_ed25519
-/// \param publicKey
-/// \param privateKey
-/// \param privateKeyData
-void keys_ed25519(cx_ecfp_public_key_t *publicKey,
-                  cx_ecfp_private_key_t *privateKey,
-                  const uint8_t privateKeyData[32]);
-
 /// sign_secp256k1
 /// \param message
 /// \param message_length
@@ -48,18 +40,3 @@ int sign_secp256k1(const uint8_t *message,
                    unsigned int signature_capacity,
                    unsigned int *signature_length,
                    cx_ecfp_private_key_t *privateKey);
-
-/// sign_ed25519
-/// \param message
-/// \param message_length
-/// \param signature
-/// \param signature_capacity
-/// \param signature_length
-/// \param privateKey
-/// \return
-int sign_ed25519(const uint8_t *message,
-                 unsigned int message_length,
-                 uint8_t *signature,
-                 unsigned int signature_capacity,
-                 unsigned int *signature_length,
-                 cx_ecfp_private_key_t *privateKey);
