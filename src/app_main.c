@@ -351,7 +351,8 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                         THROW(APDU_CODE_BAD_KEY_HANDLE);
                     }
 
-                    view_display_tx_menu(0);
+                    view_tx_show(0);
+                    //view_display_tx_menu(0);
 
                     *flags |= IO_ASYNCH_REPLY;
                     break;

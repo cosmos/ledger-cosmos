@@ -53,6 +53,9 @@ void view_idle(unsigned int ignored);
 /// view_display_tx_menu
 void view_display_tx_menu(unsigned int ignored);
 
+/// view_tx_show
+void view_tx_show(unsigned int unused);
+
 /// view_addr_show
 void view_addr_show(unsigned int unused);
 
