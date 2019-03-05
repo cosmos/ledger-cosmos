@@ -31,6 +31,7 @@
 #define INS_GET_VERSION                 0
 #define INS_PUBLIC_KEY_SECP256K1        1
 #define INS_SIGN_SECP256K1              2
+#define INS_SHOW_ADDR_SECP256K1         3
 
 #ifdef TESTING_ENABLED
 #define INS_HASH_TEST                   100
@@ -38,5 +39,8 @@
 #define INS_SIGN_SECP256K1_TEST         102
 #endif
 
+#define MAX_BECH32_HRP_LEN              83
+
 void app_init();
+
 void app_main();

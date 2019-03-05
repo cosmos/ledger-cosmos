@@ -294,9 +294,9 @@ int display_arbitrary_item(
 
 int transaction_get_display_key_value(
     char *key,
-    int key_length,
+    int max_key_length,
     char *value,
-    int value_length,
+    int max_value_length,
     int page_index,
     int *chunk_index)
 {
@@ -319,6 +319,8 @@ int transaction_get_display_key_value(
             case 4:
                 key_name = "memo";
                 break;
+            default:
+                key_name = "????";
         }
 
         strcpy(key, key_name);
@@ -326,7 +328,7 @@ int transaction_get_display_key_value(
                                            key_name,
                                            parsing_context.parsed_transaction,
                                            parsing_context.transaction);
-        update(value, value_length, token_index, chunk_index);
+        update(value, max_value_length, token_index, chunk_index);
     }
     else {
         int msgs_page_to_display = page_index - non_msg_pages_count;
@@ -353,13 +355,13 @@ int transaction_get_display_key_value(
                 subpage_to_display -= count;
             }
 
-            snprintf(key, key_length, "msgs_%d", msgs_array_index+1);
+            snprintf(key, max_key_length, "msgs_%d", msgs_array_index+1);
 
             display_arbitrary_item(subpage_to_display,
                                    key,
-                                   key_length,
+                                   max_key_length,
                                    value,
-                                   value_length,
+                                   max_value_length,
                                    msgs_token_index,
                                    chunk_index);
         }
@@ -368,7 +370,6 @@ int transaction_get_display_key_value(
 }
 
 int transaction_get_display_pages() {
-
     int msgs_token_index = object_get_value(
             ROOT_TOKEN_INDEX,
             "msgs",

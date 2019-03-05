@@ -18,10 +18,7 @@
 
 #include "os.h"
 #include "cx.h"
-
-#define MAX_CHARS_PER_KEY_LINE      64
-#define MAX_CHARS_PER_VALUE_LINE    128
-#define MAX_SCREEN_LINE_WIDTH       22
+#include "view_ctl.h"
 
 enum UI_STATE {
     UI_IDLE,
@@ -31,22 +28,20 @@ enum UI_STATE {
 extern enum UI_STATE view_uiState;
 
 //------ Delegates definitions
-typedef int (*delegate_update_transaction_info)(char*,int, char*, int, int, int*);
-typedef void (*delegate_reject_transaction)();
-typedef void (*delegate_sign_transaction)();
+typedef void (*delegate_reject_tx)();
+
+typedef void (*delegate_sign_tx)();
 
 //------ Event handlers
-/// view_add_update_transaction_info_event_handler
+/// view_set_sign_tx_event_handler
 /// \param delegate
-void view_add_update_transaction_info_event_handler(delegate_update_transaction_info delegate);
+void view_set_tx_event_handlers(viewctl_delegate_update ehUpdate,
+                                delegate_sign_tx ehSign,
+                                delegate_reject_tx ehReject);
 
-/// view_add_reject_transaction_event_handler
+/// view_set_addr_event_handlers
 /// \param delegate
-void view_add_reject_transaction_event_handler(delegate_reject_transaction delegate);
-
-/// view_add_sign_transaction_event_handler
-/// \param delegate
-void view_add_sign_transaction_event_handler(delegate_sign_transaction delegate);
+void view_set_addr_event_handlers(viewctl_delegate_update ehUpdate);
 
 //------ Common functions
 /// view_init
@@ -55,8 +50,14 @@ void view_init(void);
 /// view_idle
 void view_idle(unsigned int ignored);
 
-/// view_display_transaction_menu
-void view_display_transaction_menu(unsigned int ignored);
+/// view_display_tx_menu
+void view_display_tx_menu(unsigned int ignored);
+
+/// view_tx_show
+void view_tx_show(unsigned int unused);
+
+/// view_addr_show
+void view_addr_show(unsigned int unused);
 
 /// view_display_signing_success
 void view_display_signing_success();
