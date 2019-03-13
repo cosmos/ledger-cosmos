@@ -22,6 +22,7 @@
 
 #include "glyphs.h"
 #include "bagl.h"
+#include "zxmacros.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -267,6 +268,11 @@ void viewctl_display_page() {
         default:
             break;
     }
+
+    // fix possible utf8 issues
+    asciify((char *) viewctl_Title);
+    asciify((char *) viewctl_DataKey);
+    asciify((char *) viewctl_DataValue);
 
     if (viewctl_scrolling_mode == VALUE_SCROLLING) {
         UX_DISPLAY(bagl_ui_view_info_valuescrolling, ui_view_info_prepro);
