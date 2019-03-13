@@ -34,7 +34,12 @@ void __logstack() {}
 
 #endif
 
-size_t asciify(const char *utf8_in, char *ascii_only_out) {
+size_t asciify(char *utf8_in_ascii_out)
+{
+    return asciify_ext(utf8_in_ascii_out, utf8_in_ascii_out);
+}
+
+size_t asciify_ext(const char *utf8_in, char *ascii_only_out) {
     void *p = (void *) utf8_in;
     char *q = ascii_only_out;
 
