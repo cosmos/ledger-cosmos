@@ -22,7 +22,7 @@ namespace {
         char *want = input;
         char have[50];
 
-        asciify(input, have);
+        asciify_ext(input, have);
 
         EXPECT_STREQ(input, have);
     }
@@ -34,7 +34,7 @@ namespace {
 
         EXPECT_EQ(5, strlen(input));
 
-        size_t ascii_len = asciify(input, have);
+        size_t ascii_len = asciify_ext(input, have);
         std::cout << have << std::endl;
 
         EXPECT_EQ(strlen(want), ascii_len);
@@ -48,7 +48,7 @@ namespace {
 
         EXPECT_EQ(11, strlen(input));
 
-        size_t ascii_len = asciify(input, have);
+        size_t ascii_len = asciify_ext(input, have);
         std::cout << have << std::endl;
 
         EXPECT_EQ(strlen(want), ascii_len);
@@ -62,11 +62,58 @@ namespace {
 
         EXPECT_EQ(15, strlen(input));
 
-        size_t ascii_len = asciify(input, have);
+        size_t ascii_len = asciify_ext(input, have);
         std::cout << have << std::endl;
 
         EXPECT_EQ(strlen(want), ascii_len);
         EXPECT_STREQ(want, have);
+    }
+
+    TEST(ASCIIFY, inplace_pure) {
+        char data[] = "This is only ascii";
+        char want[] = "This is only ascii";
+
+        asciify(data);
+        EXPECT_STREQ(want, data);
+    }
+
+    TEST(ASCIIFY, inplace_ascii_below_32) {
+        char data[] = "\05test";
+        char want[] = ".test";
+
+        EXPECT_EQ(5, strlen(data));
+
+        size_t ascii_len = asciify(data);
+        std::cout << data << std::endl;
+
+        EXPECT_EQ(strlen(want), ascii_len);
+        EXPECT_STREQ(want, data);
+    }
+
+    TEST(ASCIIFY, inplace_extended) {
+        char data[] = "cumpleaños";
+        char want[] = "cumplea.os";
+
+        EXPECT_EQ(11, strlen(data));
+
+        size_t ascii_len = asciify(data);
+        std::cout << data << std::endl;
+
+        EXPECT_EQ(strlen(want), ascii_len);
+        EXPECT_STREQ(want, data);
+    }
+
+    TEST(ASCIIFY, inplace_utf8) {
+        char data[] = "哈Something哈";
+        char want[] = ".Something.";
+
+        EXPECT_EQ(15, strlen(data));
+
+        size_t ascii_len = asciify(data);
+        std::cout << data << std::endl;
+
+        EXPECT_EQ(strlen(want), ascii_len);
+        EXPECT_STREQ(want, data);
     }
 
 }
