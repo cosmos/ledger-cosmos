@@ -14,6 +14,7 @@
 *  limitations under the License.
 ********************************************************************************/
 #include "zxmacros.h"
+#include "utf8.h"
 
 #ifdef LEDGER_SPECIFIC
 #include <stdio.h>
@@ -28,5 +29,24 @@ void __logstack()
     LOG(buffer);
 }
 #else
+
 void __logstack() {}
+
 #endif
+
+size_t asciify(const char *utf8_in, char *ascii_only_out) {
+    void *p = (void *) utf8_in;
+    char *q = ascii_only_out;
+
+    // utf8valid returns zero on success
+    while (*((char *) p) && utf8valid(p) == 0) {
+        utf8_int32_t tmp_codepoint = 0;
+        p = utf8codepoint(p, &tmp_codepoint);
+        *q = (tmp_codepoint >= 32 && tmp_codepoint <= 0x7F)? tmp_codepoint : '.';
+        q++;
+    }
+
+    // Terminate string
+    *q = 0;
+    return q - ascii_only_out;
+}
