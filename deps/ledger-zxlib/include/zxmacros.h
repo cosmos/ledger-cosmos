@@ -15,6 +15,11 @@
 ********************************************************************************/
 
 #pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <inttypes.h>
 
 #include <stdint.h>
@@ -202,3 +207,11 @@ __INLINE uint64_t uint64_from_BEarray(const uint8_t data[8]) {
     }
     return result;
 }
+
+size_t asciify(char *utf8_in);
+
+size_t asciify_ext(const char *utf8_in, char *ascii_only_out);
+
+#ifdef __cplusplus
+}
+#endif
