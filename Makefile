@@ -27,10 +27,10 @@ SCRIPT_LD:=$(CURDIR)/script.ld
 include $(BOLOS_SDK)/Makefile.defines
 
 # Main app configuration
-APPNAME = "COSMOS"
+APPNAME = "Cosmos"
 APPVERSION_M=1
-APPVERSION_N=1
-APPVERSION_P=2
+APPVERSION_N=2
+APPVERSION_P=1
 
 APP_LOAD_PARAMS = --appFlags 0x00 --delete $(COMMON_LOAD_PARAMS) --path "44'/118'"
 ICONNAME=$(CURDIR)/icon.gif
