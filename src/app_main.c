@@ -290,6 +290,9 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
             switch (G_io_apdu_buffer[OFFSET_INS]) {
                 case INS_GET_VERSION: {
+                    unsigned int UX_ALLOWED = (ux.params.len != BOLOS_UX_IGNORE && \
+                                       ux.params.len != BOLOS_UX_CONTINUE);    \
+
 #ifdef TESTING_ENABLED
                     G_io_apdu_buffer[0] = 0xFF;
 #else
@@ -298,7 +301,9 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
                     G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
                     G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
-                    *tx += 4;
+                    G_io_apdu_buffer[4] = !UX_ALLOWED;
+
+                    *tx += 5;
                     THROW(APDU_CODE_OK);
                     break;
                 }
