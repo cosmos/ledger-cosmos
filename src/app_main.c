@@ -330,9 +330,24 @@ int addr_getData(char *title, int max_title_length,
 }
 
 void addr_accept() {
+    int pos = 0;
+    // Send pubkey
+    get_pk_compressed(G_io_apdu_buffer + pos);
+    pos += PK_COMPRESSED_LEN;
+
+    // Send bech32 addr
+    strcpy((char *) (G_io_apdu_buffer + pos), (char *)viewctl_DataValue);
+    pos += strlen((char *)viewctl_DataValue);
+
+    set_code(G_io_apdu_buffer, pos, APDU_CODE_OK);
+    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, pos + 2);
+    view_idle(0);
 }
 
 void addr_reject() {
+    set_code(G_io_apdu_buffer, 0, APDU_CODE_COMMAND_NOT_ALLOWED);
+    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
+    view_idle(0);
 }
 
 //endregion
@@ -387,9 +402,31 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     *tx += 65;
 
                     THROW(APDU_CODE_OK);
+                    break;
                 }
 
                 case INS_SHOW_ADDR_SECP256K1: {
+                    // Parse arguments
+                    if (!extractHRP(&bech32_hrp_len, bech32_hrp, rx, OFFSET_DATA)) {
+                        THROW(APDU_CODE_DATA_INVALID);
+                    }
+
+                    if (!extractBip32(&bip32_depth, bip32_path, rx, OFFSET_DATA + bech32_hrp_len + 1)) {
+                        THROW(APDU_CODE_DATA_INVALID);
+                    }
+
+                    if (!validateCosmosPath(bip32_depth, bip32_path)) {
+                        THROW(APDU_CODE_DATA_INVALID);
+                    }
+
+                    view_set_handlers(addr_getData, NULL, NULL);
+                    view_addr_show(bip32_path[4] & 0x7FFFFFF);
+
+                    *flags |= IO_ASYNCH_REPLY;
+                    break;
+                }
+
+                case INS_GET_ADDR_SECP256K1: {
                     // Parse arguments
                     if (!extractHRP(&bech32_hrp_len, bech32_hrp, rx, OFFSET_DATA)) {
                         THROW(APDU_CODE_DATA_INVALID);
@@ -407,26 +444,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     view_addr_confirm(bip32_path[4] & 0x7FFFFFF);
 
                     *flags |= IO_ASYNCH_REPLY;
-                }
-
-                case INS_GET_ADDR_SECP256K1: {
-                    // Parse arguments
-                    if (!extractHRP(&bech32_hrp_len, bech32_hrp, rx, OFFSET_DATA)) {
-                        THROW(APDU_CODE_DATA_INVALID);
-                    }
-
-                    if (!extractBip32(&bip32_depth, bip32_path, rx, OFFSET_DATA + bech32_hrp_len + 1)) {
-                        THROW(APDU_CODE_DATA_INVALID);
-                    }
-
-                    if (!validateCosmosPath(bip32_depth, bip32_path)) {
-                        THROW(APDU_CODE_DATA_INVALID);
-                    }
-
-                    view_set_handlers(addr_getData, NULL, NULL);
-                    view_addr_confirm(bip32_path[4] & 0x7FFFFFF);
-
-                    *flags |= IO_ASYNCH_REPLY;
+                    break;
                 }
 
                 case INS_SIGN_SECP256K1: {
