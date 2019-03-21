@@ -63,7 +63,7 @@ The general structure of commands and responses is as follows:
 
 --------------
 
-### PUBLIC_KEY_SECP256K1
+### PUBLIC_KEY_SECP256K1  (deprecated)
 
 #### Command
 
@@ -175,3 +175,11 @@ First three items in the derivation path will be hardened automatically hardened
 | Path[PL-1] | byte (4)       | Derivation Path Data   |              |
 
 First three items in the derivation path will be hardened automatically hardened
+
+#### Response
+
+| Field   | Type      | Content     | Note                     |
+|---------|-----------|-------------|--------------------------|
+| PK      | byte (33) | Compressed Public Key  |                          |
+| ADDR    | byte (65) | Bech 32 addr  |                          |
+| SW1-SW2 | byte (2)  | Return code | see list of return codes |
