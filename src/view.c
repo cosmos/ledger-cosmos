@@ -17,7 +17,8 @@
 
 #include "view.h"
 #include "view_templates.h"
-#include "view_ctl.h"
+#include "view_expl.h"
+#include "view_conf.h"
 #include "common.h"
 
 #include "glyphs.h"
@@ -31,10 +32,6 @@
 
 ux_state_t ux;
 enum UI_STATE view_uiState;
-
-void view_tx_show();
-
-void view_sign_transaction(unsigned int unused);
 
 void reject(unsigned int unused);
 
@@ -69,22 +66,16 @@ const ux_menu_entry_t menu_about[] = {
 //------ View elements
 
 //------ Event handlers
-viewctl_delegate_update ehUpdateTx = NULL;
-delegate_sign_tx ehSignTx = NULL;
-delegate_reject_tx ehRejectTx = NULL;
+viewctl_delegate_getData ehGetData = NULL;
+viewctl_delegate_accept ehAccept = NULL;
+viewctl_delegate_reject ehReject = NULL;
 
-void view_set_tx_event_handlers(viewctl_delegate_update ehUpdate,
-                                delegate_sign_tx ehSign,
-                                delegate_reject_tx ehReject) {
-    ehSignTx = ehSign;
-    ehRejectTx = ehReject;
-    ehUpdateTx = ehUpdate;
-}
-
-viewctl_delegate_update ehUpdateAddr = NULL;
-
-void view_set_addr_event_handlers(viewctl_delegate_update ehUpdate) {
-    ehUpdateAddr = ehUpdate;
+void view_set_handlers(viewctl_delegate_getData func_getData,
+                       viewctl_delegate_accept func_accept,
+                       viewctl_delegate_reject func_reject) {
+    ehGetData = func_getData;
+    ehAccept = func_accept;
+    ehReject = func_reject;
 }
 
 // ------ Event handlers
@@ -93,14 +84,13 @@ void io_seproxyhal_display(const bagl_element_t *element) {
     io_seproxyhal_display_default((bagl_element_t *) element);
 }
 
-void view_tx_show(unsigned int unused) {
-    UNUSED(unused);
-    if (ehUpdateAddr == NULL) { return; }
+void view_tx_show(unsigned int start_page) {
+    if (ehGetData == NULL) { return; }
 
-    viewctl_start(ehUpdateTx,
-                  NULL,
-                  view_display_tx_menu,
-                  0);
+    viewexpl_start(start_page,
+                   ehGetData,
+                   NULL,
+                   view_display_tx_menu);
 }
 
 void view_addr_exit(unsigned int unused) {
@@ -111,27 +101,34 @@ void view_addr_exit(unsigned int unused) {
 }
 
 void view_addr_show(unsigned int start_page) {
-    if (ehUpdateAddr == NULL) { return; }
+    viewexpl_start(start_page,
+                   ehGetData,   // update
+                   NULL,           // ready
+                   view_addr_exit // exit
+    );
+}
 
-    viewctl_start(ehUpdateAddr,
-                  NULL,
-                  view_addr_exit,
-                  start_page);
+void view_addr_confirm(unsigned int start_page) {
+    viewconf_start(start_page,
+                   ehGetData,   // update
+                   NULL,        // ready
+                   NULL,        // exit
+                   ehAccept,
+                   ehReject);
 }
 
 /////////////////////////////////
 
 void view_sign_transaction(unsigned int unused) {
     UNUSED(unused);
-
-    if (ehSignTx != NULL) {
-        ehSignTx();
+    if (ehAccept != NULL) {
+        ehAccept();
     }
 }
 
 void reject(unsigned int unused) {
-    if (ehRejectTx != NULL) {
-        ehRejectTx();
+    if (ehReject != NULL) {
+        ehReject();
     }
 }
 

@@ -18,7 +18,9 @@
 
 #include "os.h"
 #include "cx.h"
-#include "view_ctl.h"
+#include "view_common.h"
+#include "view_expl.h"
+#include "view_conf.h"
 
 enum UI_STATE {
     UI_IDLE,
@@ -27,21 +29,11 @@ enum UI_STATE {
 
 extern enum UI_STATE view_uiState;
 
-//------ Delegates definitions
-typedef void (*delegate_reject_tx)();
-
-typedef void (*delegate_sign_tx)();
-
 //------ Event handlers
-/// view_set_sign_tx_event_handler
-/// \param delegate
-void view_set_tx_event_handlers(viewctl_delegate_update ehUpdate,
-                                delegate_sign_tx ehSign,
-                                delegate_reject_tx ehReject);
-
-/// view_set_addr_event_handlers
-/// \param delegate
-void view_set_addr_event_handlers(viewctl_delegate_update ehUpdate);
+/// view_set_handlers
+void view_set_handlers(viewctl_delegate_getData func_getData,
+                       viewctl_delegate_accept func_accept,
+                       viewctl_delegate_reject func_reject);
 
 //------ Common functions
 /// view_init
@@ -54,10 +46,16 @@ void view_idle(unsigned int ignored);
 void view_display_tx_menu(unsigned int ignored);
 
 /// view_tx_show
-void view_tx_show(unsigned int unused);
+void view_tx_show(unsigned int start_page);
+
+/// view_sign_transaction
+void view_sign_transaction(unsigned int start_page);
 
 /// view_addr_show
-void view_addr_show(unsigned int unused);
+void view_addr_show(unsigned int start_page);
+
+/// view_addr_confirm
+void view_addr_confirm(unsigned int start_page);
 
 /// view_display_signing_success
 void view_display_signing_success();
