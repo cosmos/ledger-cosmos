@@ -46,12 +46,9 @@ const char* json_parse_s(
         MAX_NUMBER_OF_TOKENS);
 
     switch (num_tokens) {
-        /* Not enough tokens were provided */
-        case JSMN_ERROR_NOMEM: return "PARSER ERROR: JSMN_ERROR_NOMEM";
-        /* Invalid character inside JSON string */
-        case JSMN_ERROR_INVAL: return "PARSER ERROR: JSMN_ERROR_INVAL";
-        /* The string is not a full JSON packet, more bytes expected */
-        case JSMN_ERROR_PART: return "PARSER ERROR: JSMN_ERROR_PART";
+        case JSMN_ERROR_NOMEM: return "NOMEM: JSON string contains too many tokens";
+        case JSMN_ERROR_INVAL: return "Invalid character in JSON string";
+        case JSMN_ERROR_PART: return "JSON string is not complete";
     }
 
     parsed_json->NumberOfTokens = 0;
@@ -59,12 +56,12 @@ const char* json_parse_s(
 
     // Parsing error
     if (num_tokens <= 0) {
-        return "PARSER ERROR: UNKNOWN.";
+        return "Unknown parser error";
     }
 
     // We cannot support if number of tokens exceeds the limit
     if (num_tokens > MAX_NUMBER_OF_TOKENS) {
-        return "PARSER ERROR: REACHED MAX NUMBER OF TOKENS.";
+        return "TOK: JSON string contains too many tokens";
     }
 
     parsed_json->NumberOfTokens = num_tokens;
