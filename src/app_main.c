@@ -386,25 +386,25 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     break;
                 }
 
-                // DEPRECATED
-//                case INS_PUBLIC_KEY_SECP256K1: {
-//                    if (!extractBip32(&bip32_depth, bip32_path, rx, OFFSET_DATA)) {
-//                        THROW(APDU_CODE_DATA_INVALID);
-//                    }
-//
-//                    if (!validateCosmosPath(bip32_depth, bip32_path)) {
-//                        THROW(APDU_CODE_DATA_INVALID);
-//                    }
-//
-//                    cx_ecfp_public_key_t publicKey;
-//                    getPubKey(&publicKey);
-//
-//                    os_memmove(G_io_apdu_buffer, publicKey.W, 65);
-//                    *tx += 65;
-//
-//                    THROW(APDU_CODE_OK);
-//                    break;
-//                }
+                // INS_PUBLIC_KEY_SECP256K1 will be deprecated in the near future
+                case INS_PUBLIC_KEY_SECP256K1: {
+                    if (!extractBip32(&bip32_depth, bip32_path, rx, OFFSET_DATA)) {
+                        THROW(APDU_CODE_DATA_INVALID);
+                    }
+
+                    if (!validateCosmosPath(bip32_depth, bip32_path)) {
+                        THROW(APDU_CODE_DATA_INVALID);
+                    }
+
+                    cx_ecfp_public_key_t publicKey;
+                    getPubKey(&publicKey);
+
+                    os_memmove(G_io_apdu_buffer, publicKey.W, 65);
+                    *tx += 65;
+
+                    THROW(APDU_CODE_OK);
+                    break;
+                }
 
                 case INS_SHOW_ADDR_SECP256K1: {
                     // Parse arguments
