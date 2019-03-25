@@ -477,53 +477,53 @@ const char* json_validate(parsed_json_t* parsed_transaction,
                           const char *transaction) {
 
     if (contains_whitespace(parsed_transaction, transaction) == 1) {
-        return "Contains whitespace in the corpus";
+        return "JSON Contains whitespace in the corpus";
     }
 
     if (dictionaries_sorted(parsed_transaction, transaction) != 1) {
-        return "Dictionaries are not sorted";
+        return "JSON Dictionaries are not sorted";
     }
 
     if (object_get_value(0,
                          "chain_id",
                          parsed_transaction,
                          transaction) == -1) {
-        return "Missing chain_id";
+        return "JSON Missing chain_id";
     }
 
     if (object_get_value(0,
                          "sequence",
                          parsed_transaction,
                          transaction) == -1) {
-        return "Missing sequence";
+        return "JSON Missing sequence";
     }
 
     if (object_get_value(0,
                          "fee",
                          parsed_transaction,
                          transaction) == -1) {
-        return "Missing fee";
+        return "JSON Missing fee";
     }
 
     if (object_get_value(0,
                          "msgs",
                          parsed_transaction,
                          transaction) == -1) {
-        return "Missing msgs";
+        return "JSON Missing msgs";
     }
 
     if (object_get_value(0,
                          "account_number",
                          parsed_transaction,
                          transaction) == -1) {
-        return "Missing account_number";
+        return "JSON Missing account_number";
     }
 
     if (object_get_value(0,
                          "memo",
                          parsed_transaction,
                          transaction) == -1) {
-        return "Missing memo";
+        return "JSON Missing memo";
     }
 
     return NULL;

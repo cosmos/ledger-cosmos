@@ -17,7 +17,7 @@
 
 #include "view.h"
 #include "view_templates.h"
-#include "view_ctl.h"
+#include "view_expl.h"
 #include "common.h"
 
 #include "glyphs.h"
@@ -29,66 +29,42 @@
 
 void viewctl_display_page();
 
+enum UI_DISPLAY_MODE viewctl_scrolling_mode;
+
 volatile char viewctl_DataKey[MAX_CHARS_PER_KEY_LINE];
 volatile char viewctl_DataValue[MAX_CHARS_PER_VALUE_LINE];
 volatile char viewctl_Title[MAX_SCREEN_LINE_WIDTH];
 const char *dblClickInfo = "DBL-CLICK TO VIEW";
 
-enum UI_DISPLAY_MODE viewctl_scrolling_mode;
-
-// Index of the currently displayed page
 int viewctl_DetailsCurrentPage;
-// Total number of displayable pages
 int viewctl_DetailsPageCount;
-
-// Below data is used to help split long messages that are scrolled
-// into smaller chunks so they fit the memory buffer
-// Index of currently displayed value chunk
 int viewctl_ChunksIndex;
-// Total number of displayable value chunks
 int viewctl_ChunksCount;
 
-viewctl_delegate_update viewctl_ehUpdate = NULL;
-
+viewctl_delegate_getData viewctl_ehGetData = NULL;
 viewctl_delegate_ready viewctl_ehReady = NULL;
-
 viewctl_delegate_exit viewctl_ehExit = NULL;
-
-//------ View elements
-static const bagl_element_t bagl_ui_view_info_valuescrolling[] = {
-        UI_FillRectangle(0, 0, 0, 128, 32, 0x000000, 0xFFFFFF),
-        UI_Icon(0, 0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT),
-        UI_Icon(0, 128 - 7, 0, 7, 7, BAGL_GLYPH_ICON_RIGHT),
-        UI_LabelLine(1, 0, 8, 128, 11, 0xFFFFFF, 0x000000, (const char *) viewctl_Title),
-        UI_LabelLine(1, 0, 19, 128, 11, 0xFFFFFF, 0x000000, (const char *) viewctl_DataKey),
-        UI_LabelLineScrolling(2, 16, 30, 96, 11, 0xFFFFFF, 0x000000, (const char *) viewctl_DataValue),
-};
-
-static const bagl_element_t bagl_ui_view_info_keyscrolling[] = {
-        UI_FillRectangle(0, 0, 0, 128, 32, 0x000000, 0xFFFFFF),
-        UI_Icon(0, 0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT),
-        UI_Icon(0, 128 - 7, 0, 7, 7, BAGL_GLYPH_ICON_RIGHT),
-        UI_LabelLine(1, 0, 8, 128, 11, 0xFFFFFF, 0x000000, (const char *) viewctl_Title),
-        UI_LabelLine(1, 0, 30, 128, 11, 0xFFFFFF, 0x000000, (const char *) viewctl_DataValue),
-        UI_LabelLineScrolling(2, 16, 19, 96, 11, 0xFFFFFF, 0x000000, (const char *) viewctl_DataKey),
-};
+viewctl_delegate_display_ux viewctl_display_ux = NULL;
 
 //------ External functions
 
-void viewctl_start(viewctl_delegate_update ehUpdate,
+void viewctl_start(int start_page,
+                   viewctl_delegate_getData func_getData,
                    viewctl_delegate_ready ehReady,
                    viewctl_delegate_exit ehExit,
-                   int start_page) {
+                   viewctl_delegate_display_ux func_display_ux) {
 
-    viewctl_ehUpdate = ehUpdate;
+    viewctl_ehGetData = func_getData;
     viewctl_ehReady = ehReady;
     viewctl_ehExit = ehExit;
+    viewctl_display_ux = func_display_ux;
 
     viewctl_scrolling_mode = PENDING;
     viewctl_DetailsCurrentPage = start_page;
 
     viewctl_ChunksIndex = 0;
     viewctl_ChunksCount = 1;
+
     viewctl_display_page();
 
     // TODO: Should this happen here?
@@ -151,61 +127,6 @@ void menu_right() {
     }
 }
 
-static unsigned int bagl_ui_view_info_keyscrolling_button(unsigned int button_mask,
-                                                          unsigned int button_mask_counter) {
-    switch (button_mask) {
-        // Press both left and right to switch to value scrolling
-        case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT: {
-            if (viewctl_scrolling_mode == KEY_SCROLLING_NO_VALUE) {
-                viewctl_display_page();
-            } else {
-                viewctl_ehExit(0);
-            }
-            break;
-        }
-
-            // Press left to progress to the previous element
-        case BUTTON_EVT_RELEASED | BUTTON_LEFT: {
-            if (viewctl_ChunksIndex > 0) {
-                submenu_left();
-            } else {
-                menu_left();
-            }
-            break;
-        }
-
-            // Hold left to progress to the previous element quickly
-            // It also steps out from the value chunk page view mode
-        case BUTTON_EVT_FAST | BUTTON_LEFT: {
-            menu_left();
-            break;
-        }
-
-            // Press right to progress to the next element
-        case BUTTON_EVT_RELEASED | BUTTON_RIGHT: {
-            if (viewctl_ChunksIndex < viewctl_ChunksCount - 1) {
-                submenu_right();
-            } else {
-                menu_right();
-            }
-            break;
-        }
-
-            // Hold right to progress to the next element quickly
-            // It also steps out from the value chunk page view mode
-        case BUTTON_EVT_FAST | BUTTON_RIGHT: {
-            menu_right();
-            break;
-        }
-    }
-    return 0;
-}
-
-static unsigned int bagl_ui_view_info_valuescrolling_button(unsigned int button_mask,
-                                                            unsigned int button_mask_counter) {
-    return bagl_ui_view_info_keyscrolling_button(button_mask, button_mask_counter);
-}
-
 void viewctl_crop_key() {
     int offset = strlen((char *) viewctl_DataKey) - MAX_SCREEN_LINE_WIDTH;
     if (offset > 0) {
@@ -219,12 +140,12 @@ void viewctl_crop_key() {
 }
 
 void viewctl_display_page() {
-    if (viewctl_ehUpdate == NULL) {
+    if (viewctl_ehGetData == NULL) {
         return;
     }
 
     // Read key and value strings from json
-    viewctl_ehUpdate(
+    viewctl_ehGetData(
             (char *) viewctl_Title,
             sizeof(viewctl_Title),
             (char *) viewctl_DataKey,
@@ -274,9 +195,5 @@ void viewctl_display_page() {
     asciify((char *) viewctl_DataKey);
     asciify((char *) viewctl_DataValue);
 
-    if (viewctl_scrolling_mode == VALUE_SCROLLING) {
-        UX_DISPLAY(bagl_ui_view_info_valuescrolling, ui_view_info_prepro);
-    } else {
-        UX_DISPLAY(bagl_ui_view_info_keyscrolling, ui_view_info_prepro);
-    }
+    viewctl_display_ux();
 }
