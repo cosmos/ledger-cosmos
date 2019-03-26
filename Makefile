@@ -30,7 +30,7 @@ include $(BOLOS_SDK)/Makefile.defines
 APPNAME = "Cosmos"
 APPVERSION_M=1
 APPVERSION_N=3
-APPVERSION_P=0
+APPVERSION_P=1
 
 APP_LOAD_PARAMS = --appFlags 0x00 --delete $(COMMON_LOAD_PARAMS) --path "44'/118'"
 ICONNAME=$(CURDIR)/icon.gif
