@@ -235,7 +235,7 @@ int display_arbitrary_item_inner(
                     value_length,
                     element_index,
                     current_item_index,
-                    level,
+                    level + 1,
                     chunk_index);
 
                 if (item_index_to_display != -1) {
