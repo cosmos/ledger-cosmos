@@ -17,6 +17,7 @@
 #pragma once
 
 #include "json_parser.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,19 +34,19 @@ extern "C" {
 /// \param chunk_index
 /// \return
 int display_value(char *value,
-                  int value_length,
-                  int token_index,
-                  int *current_item_index,
-                  int item_index_to_display,
-                  int *chunk_index);
+                  int16_t value_length,
+                  int16_t token_index,
+                  int16_t *current_item_index,
+                  int16_t item_index_to_display,
+                  int16_t *chunk_index);
 
 /// Update key characters from json transaction read from the token_index element.
 /// \param key
 /// \param key_length
 /// \param token_index
 void display_key(char *key,
-                 int key_length,
-                 int token_index);
+                 int16_t key_length,
+                 int16_t token_index);
 
 /// Helper function that gets key and value by parsing
 /// `msgs` blob basd on TXSpec
@@ -58,18 +59,18 @@ void display_key(char *key,
 /// \param token_index, index of the token that points to a single msg json element
 /// \param chunk_index, [optional] value is split into chunks if it's very long, here we specify which chunk we should use
 /// \return
-int display_arbitrary_item(int item_index_to_display,
+int display_arbitrary_item(int16_t item_index_to_display,
                            char *key,
-                           int key_length,
+                           int16_t key_length,
                            char *value,
-                           int value_length,
-                           int token_index,
-                           int *chunk_index);
+                           int16_t value_length,
+                           int16_t token_index,
+                           int16_t *chunk_index);
 
 /// Returns number of pages that we'll have for the recursive parsing of a single msg json blob.
 /// \param token_index
 /// \return
-int display_get_arbitrary_items_count(int token_index);
+int display_get_arbitrary_items_count(int16_t token_index);
 
 /// This is the main function called from ledger that updates key and value strings
 /// that are going to be displayed in the UI.
@@ -81,11 +82,11 @@ int display_get_arbitrary_items_count(int token_index);
 /// \param chunk_index, [optional] value is split into chunks if it's very long, here we specify which chunk we should use
 /// \return
 int transaction_get_display_key_value(char *key,
-                                      int max_key_length,
+                                      int16_t max_key_length,
                                       char *value,
-                                      int max_value_length,
-                                      int page_index,
-                                      int *chunk_index);
+                                      int16_t max_value_length,
+                                      int16_t page_index,
+                                      int16_t *chunk_index);
 
 /// Return number of UI pages that we'll have for the current json transaction.
 /// \return
@@ -95,8 +96,8 @@ int transaction_get_display_pages();
 /// \param parsed_transacton
 /// \param transaction
 /// \return
-const char* json_validate(
-        parsed_json_t* parsed_transaction,
+const char *json_validate(
+        parsed_json_t *parsed_transaction,
         const char *transaction);
 
 //---------------------------------------------

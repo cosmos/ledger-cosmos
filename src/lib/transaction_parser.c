@@ -52,18 +52,18 @@ void set_parsing_context(parsing_context_t context) {
 // Transaction parsing helper functions
 //--------------------------------------
 void update(char *msg,
-            int msg_length,
-            int token_index,
-            int *chunk_index) {
+            int16_t msg_length,
+            int16_t token_index,
+            int16_t *chunk_index) {
     int length = parsing_context.parsed_transaction->Tokens[token_index].end -
-        parsing_context.parsed_transaction->Tokens[token_index].start;
+                 parsing_context.parsed_transaction->Tokens[token_index].start;
 
     int chunk_to_display = *chunk_index;
     *chunk_index = (length / msg_length) + 1;
 
     if (chunk_to_display >= 0 && chunk_to_display < *chunk_index) {
         length = parsing_context.parsed_transaction->Tokens[token_index].end -
-            parsing_context.parsed_transaction->Tokens[token_index].start - (msg_length - 1) * chunk_to_display;
+                 parsing_context.parsed_transaction->Tokens[token_index].start - (msg_length - 1) * chunk_to_display;
 
         if (length + 1 > msg_length) {
             // Return total number of chunks
@@ -71,7 +71,7 @@ void update(char *msg,
         }
         copy_fct(msg,
                  parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start +
-                     (msg_length - 1) * chunk_to_display,
+                 (msg_length - 1) * chunk_to_display,
                  length);
         msg[length] = '\0';
     } else {
@@ -80,29 +80,29 @@ void update(char *msg,
 }
 
 int display_value(char *value,
-                  int value_length,
-                  int token_index,
-                  int *current_item_index,
-                  int item_index_to_display,
-                  int *chunk_index) {
+                  int16_t value_length,
+                  int16_t token_index,
+                  int16_t *current_item_index,
+                  int16_t item_index_to_display,
+                  int16_t *chunk_index) {
 
     if (*current_item_index == item_index_to_display) {
-
         update(value, value_length, token_index, chunk_index);
         return item_index_to_display;
     }
+
     *current_item_index = *current_item_index + 1;
     return -1;
 }
 
 void display_key(
-    char *key,
-    int key_length,
-    int token_index) {
+        char *key,
+        int16_t key_length,
+        int16_t token_index) {
     int key_size = parsing_context.parsed_transaction->Tokens[token_index].end
-        - parsing_context.parsed_transaction->Tokens[token_index].start;
+                   - parsing_context.parsed_transaction->Tokens[token_index].start;
     const char
-        *address_ptr = parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start;
+            *address_ptr = parsing_context.transaction + parsing_context.parsed_transaction->Tokens[token_index].start;
     if (key_size >= key_length) {
         key_size = key_length - 1;
     }
@@ -110,7 +110,7 @@ void display_key(
     key[key_size] = '\0';
 }
 
-void append_keys(char *key, int key_length, const char *temp_key) {
+void append_keys(char *key, int16_t key_length, const char *temp_key) {
     int size = strlen(key);
 
     if (size > 0) {
@@ -134,16 +134,21 @@ void remove_last(char *key) {
     *last = '\0';
 }
 
-int display_arbitrary_item_inner(
-    int item_index_to_display,
-    char *key,
-    int key_length,
-    char *value,
-    int value_length,
-    int token_index,
-    int *current_item_index,
-    int level,
-    int *chunk_index) {
+// in order to reduce stack size usage
+typedef struct {
+    int16_t item_index_to_display;
+    char *key;
+    char *value;
+    int16_t key_length;
+    int16_t value_length;
+} display_arbitrary_params_t;
+
+
+int display_arbitrary_item_inner(display_arbitrary_params_t *p,
+                                 int16_t token_index, int16_t *current_item_index,
+                                 uint8_t level, int16_t *chunk_index,
+                                 uint8_t depth) {
+
 //    if level == 2
 //    show value as json-encoded string
 //    else
@@ -158,33 +163,23 @@ int display_arbitrary_item_inner(
 //        otherwise:
 //        show value as json-encoded string
 //    }
-    if (level == 2) {
-        return display_value(
-            value,
-            value_length,
-            token_index,
-            current_item_index,
-            item_index_to_display,
-            chunk_index);
-    } else {
-        switch (parsing_context.parsed_transaction->Tokens[token_index].type) {
-        case JSMN_STRING:
-            return display_value(
-                value,
-                value_length,
-                token_index,
-                current_item_index,
-                item_index_to_display,
-                chunk_index);
 
+    if (level >= 2 || depth >= 4) {
+        return display_value(p->value, p->value_length,
+                             token_index, current_item_index,
+                             p->item_index_to_display, chunk_index);
+    }
+
+    switch (parsing_context.parsed_transaction->Tokens[token_index].type) {
+        case JSMN_STRING:
         case JSMN_PRIMITIVE:
             return display_value(
-                value,
-                value_length,
-                token_index,
-                current_item_index,
-                item_index_to_display,
-                chunk_index);
+                    p->value,
+                    p->value_length,
+                    token_index,
+                    current_item_index,
+                    p->item_index_to_display,
+                    chunk_index);
 
         case JSMN_OBJECT: {
             int el_count = object_get_element_count(token_index, parsing_context.parsed_transaction);
@@ -192,32 +187,29 @@ int display_arbitrary_item_inner(
                 int key_index = object_get_nth_key(token_index, i, parsing_context.parsed_transaction);
                 int value_index = object_get_nth_value(token_index, i, parsing_context.parsed_transaction);
 
-                if (item_index_to_display != -1) {
+                if (p->item_index_to_display != -1) {
                     char key_temp[20];
                     display_key(
-                        key_temp,
-                        sizeof(key_temp),
-                        key_index);
+                            key_temp,
+                            sizeof(key_temp),
+                            key_index);
 
-                    append_keys(key, key_length, key_temp);
+                    append_keys(p->key, p->key_length, key_temp);
                 }
 
                 int found = display_arbitrary_item_inner(
-                    item_index_to_display,
-                    key,
-                    key_length,
-                    value,
-                    value_length,
-                    value_index,
-                    current_item_index,
-                    level + 1,
-                    chunk_index);
+                        p,
+                        value_index,
+                        current_item_index,
+                        level + 1,
+                        chunk_index,
+                        depth + 1);
 
-                if (item_index_to_display != -1) {
-                    if (found == item_index_to_display) {
-                        return item_index_to_display;
+                if (p->item_index_to_display != -1) {
+                    if (found == p->item_index_to_display) {
+                        return p->item_index_to_display;
                     } else {
-                        remove_last(key);
+                        remove_last(p->key);
                     }
                 }
             }
@@ -225,81 +217,75 @@ int display_arbitrary_item_inner(
         }
         case JSMN_ARRAY: {
             int el_count = array_get_element_count(token_index, parsing_context.parsed_transaction);
+
             for (int i = 0; i < el_count; ++i) {
                 int element_index = array_get_nth_element(token_index, i, parsing_context.parsed_transaction);
-                int found = display_arbitrary_item_inner(
-                    item_index_to_display,
-                    key,
-                    key_length,
-                    value,
-                    value_length,
-                    element_index,
-                    current_item_index,
-                    level,
-                    chunk_index);
+                int found = display_arbitrary_item_inner(p,
+                                                         element_index, current_item_index,
+                                                         level, chunk_index, depth + 1);
 
-                if (item_index_to_display != -1) {
-                    if (found == item_index_to_display) {
-                        return item_index_to_display;
+                if (p->item_index_to_display != -1) {
+                    if (found == p->item_index_to_display) {
+                        return p->item_index_to_display;
                     }
                 }
             }
             break;
         }
-        default:return *current_item_index;
-        }
-        // Not found yet, continue parsing
-        return -1;
+        default:
+            return *current_item_index;
     }
+    // Not found yet, continue parsing
+    return -1;
 }
 
-int display_get_arbitrary_items_count(int token_index) {
-    int number_of_items = 0;
-    int chunk_index = 0;
+int display_get_arbitrary_items_count(int16_t token_index) {
+    display_arbitrary_params_t params;
+
+    int16_t number_of_items = 0;
+    int16_t chunk_index = 0;
     char dummy[1];
-    display_arbitrary_item_inner(
-        -1,
-        dummy,
-        1,
-        dummy,
-        1,
-        token_index,
-        &number_of_items,
-        0,
-        &chunk_index);
+
+    params.item_index_to_display = -1;
+    params.key = dummy;
+    params.value = dummy;
+    params.key_length = 1;
+    params.value_length = 1;
+
+    const int8_t start_level = 0;
+    const int8_t start_depth = 0;
+
+    display_arbitrary_item_inner(&params,
+                                 token_index, &number_of_items,
+                                 start_level, &chunk_index, start_depth);
 
     return number_of_items;
 }
 
-int display_arbitrary_item(
-    int item_index_to_display,
-    char *key,
-    int key_length,
-    char *value,
-    int value_length,
-    int token_index,
-    int *chunk_index) {
-    int current_item_index = 0;
-    return display_arbitrary_item_inner(
-        item_index_to_display,
-        key,
-        key_length,
-        value,
-        value_length,
-        token_index,
-        &current_item_index,
-        0,
-        chunk_index);
+int display_arbitrary_item(int16_t item_index_to_display,
+                           char *key, int16_t key_length,
+                           char *value, int16_t value_length,
+                           int16_t token_index, int16_t *chunk_index) {
+
+    display_arbitrary_params_t params;
+    params.item_index_to_display = item_index_to_display;
+    params.key = key;
+    params.value = value;
+    params.key_length = key_length;
+    params.value_length = value_length;
+
+    int16_t current_item_index = 0;
+
+    const int8_t start_level = 0;
+    const int8_t start_depth = 0;
+    return display_arbitrary_item_inner(&params,
+                                        token_index, &current_item_index,
+                                        start_level, chunk_index, start_depth);
 }
 
-int transaction_get_display_key_value(
-    char *key,
-    int max_key_length,
-    char *value,
-    int max_value_length,
-    int page_index,
-    int *chunk_index)
-{
+int transaction_get_display_key_value(char *key, int16_t max_key_length,
+                                      char *value, int16_t max_value_length,
+                                      int16_t page_index, int16_t *chunk_index) {
     const int non_msg_pages_count = 5;
     if (page_index >= 0 && page_index < non_msg_pages_count) {
         const char *key_name;
@@ -329,8 +315,7 @@ int transaction_get_display_key_value(
                                            parsing_context.parsed_transaction,
                                            parsing_context.transaction);
         update(value, max_value_length, token_index, chunk_index);
-    }
-    else {
+    } else {
         int msgs_page_to_display = page_index - non_msg_pages_count;
         int subpage_to_display = msgs_page_to_display;
         if (msgs_page_to_display < msgs_total_pages) {
@@ -343,8 +328,9 @@ int transaction_get_display_key_value(
             int total = 0;
             int msgs_array_index = 0;
             int msgs_token_index = 0;
-            for (int i=0 ; i < msgs_array_elements; i++) {
-                int token_index_of_msg = array_get_nth_element(msgs_array_token_index, i, parsing_context.parsed_transaction);
+            for (int i = 0; i < msgs_array_elements; i++) {
+                int token_index_of_msg = array_get_nth_element(msgs_array_token_index, i,
+                                                               parsing_context.parsed_transaction);
                 int count = display_get_arbitrary_items_count(token_index_of_msg);
                 total += count;
                 if (msgs_page_to_display < total) {
@@ -355,7 +341,7 @@ int transaction_get_display_key_value(
                 subpage_to_display -= count;
             }
 
-            snprintf(key, max_key_length, "msgs_%d", msgs_array_index+1);
+            snprintf(key, max_key_length, "msgs_%d", msgs_array_index + 1);
 
             display_arbitrary_item(subpage_to_display,
                                    key,
@@ -379,16 +365,15 @@ int transaction_get_display_pages() {
     msgs_array_elements = array_get_element_count(msgs_token_index, parsing_context.parsed_transaction);
 
     msgs_total_pages = 0;
-    for (int i=0; i < msgs_array_elements; i++) {
+    for (int i = 0; i < msgs_array_elements; i++) {
         int token_index_of_msg = array_get_nth_element(msgs_token_index, i, parsing_context.parsed_transaction);
         msgs_total_pages += display_get_arbitrary_items_count(token_index_of_msg);
     }
     return msgs_total_pages + 5;
 }
 
-int is_space(char c)
-{
-    for (unsigned int i = 0;i < sizeof(whitespaces); i++) {
+int is_space(char c) {
+    for (unsigned int i = 0; i < sizeof(whitespaces); i++) {
         if (whitespaces[i] == c) {
             return 1;
         }
@@ -396,7 +381,7 @@ int is_space(char c)
     return 0;
 }
 
-int contains_whitespace(parsed_json_t* parsed_transaction,
+int contains_whitespace(parsed_json_t *parsed_transaction,
                         const char *transaction) {
 
     int start = 0;
@@ -412,8 +397,7 @@ int contains_whitespace(parsed_json_t* parsed_transaction,
                 }
             }
             start = parsed_transaction->Tokens[i].end + 1;
-        }
-        else {
+        } else {
             return 0;
         }
     }
@@ -426,11 +410,10 @@ int contains_whitespace(parsed_json_t* parsed_transaction,
     return 0;
 }
 
-int is_sorted(int first_index,
-              int second_index,
-              parsed_json_t* parsed_transaction,
-              const char* transaction)
-{
+int is_sorted(int16_t first_index,
+              int16_t second_index,
+              parsed_json_t *parsed_transaction,
+              const char *transaction) {
 #if DEBUG_SORTING
     char first[256];
     char second[256];
@@ -451,9 +434,8 @@ int is_sorted(int first_index,
     return 0;
 }
 
-int dictionaries_sorted(parsed_json_t* parsed_transaction,
-                        const char* transaction)
-{
+int dictionaries_sorted(parsed_json_t *parsed_transaction,
+                        const char *transaction) {
     for (int i = 0; i < parsed_transaction->NumberOfTokens; i++) {
         if (parsed_transaction->Tokens[i].type == JSMN_OBJECT) {
 
@@ -473,7 +455,7 @@ int dictionaries_sorted(parsed_json_t* parsed_transaction,
     return 1;
 }
 
-const char* json_validate(parsed_json_t* parsed_transaction,
+const char *json_validate(parsed_json_t *parsed_transaction,
                           const char *transaction) {
 
     if (contains_whitespace(parsed_transaction, transaction) == 1) {
