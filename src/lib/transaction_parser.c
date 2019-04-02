@@ -19,7 +19,7 @@
 #include "transaction_parser.h"
 #include "json_parser.h"
 
-#define MAX_RECURSION_DEPTH  5
+#define MAX_RECURSION_DEPTH  3
 #define MAX_TREE_LEVEL       2
 
 //---------------------------------------------
@@ -80,7 +80,10 @@ int16_t update(char *out, const int16_t out_len, const int16_t token_index, uint
     const int16_t token_start = parsing_context.parsed_tx->Tokens[token_index].start;
     const int16_t token_end = parsing_context.parsed_tx->Tokens[token_index].end;
     const int16_t token_len = token_end - token_start;
-    const int16_t num_chunks = (token_len / (out_len - 1)) + 1;
+
+    int16_t num_chunks = (token_len / (out_len - 1)) + 1;
+    if (token_len > 0 && (token_len % (out_len - 1) == 0))
+        num_chunks--;
 
     out[0] = '\0';  // flush
     if (chunk_to_display < num_chunks) {
@@ -277,60 +280,66 @@ int16_t transaction_get_display_key_value(char *key, int16_t max_key_length,
                                                parsing_context.tx);
 
         return update(value, max_value_length, token_index, chunk_index);
-    } else {
-        int16_t msgs_page_to_display = page_index - non_msg_pages_count;
-        int16_t subpage_to_display = msgs_page_to_display;
-        if (msgs_page_to_display < msgs_total_pages) {
-            int16_t msgs_array_token_index = object_get_value(
-                    ROOT_TOKEN_INDEX,
-                    "msgs",
-                    parsing_context.parsed_tx,
-                    parsing_context.tx);
-
-            int16_t total = 0;
-            int16_t msgs_array_index = 0;
-            int16_t msgs_token_index = 0;
-            for (int16_t i = 0; i < msgs_array_elements; i++) {
-                int16_t token_index_of_msg = array_get_nth_element(msgs_array_token_index, i,
-                                                                   parsing_context.parsed_tx);
-                int16_t count = display_get_arbitrary_items_count(token_index_of_msg);
-                total += count;
-                if (msgs_page_to_display < total) {
-                    msgs_token_index = token_index_of_msg;
-                    msgs_array_index = i;
-                    break;
-                }
-                subpage_to_display -= count;
-            }
-
-            snprintf(key, max_key_length, "msgs_%d", msgs_array_index + 1);
-
-            return display_arbitrary_item(subpage_to_display,
-                                          key,
-                                          max_key_length,
-                                          value,
-                                          max_value_length,
-                                          msgs_token_index,
-                                          chunk_index);
-        }
     }
+
+    int16_t msgs_page_to_display = page_index - non_msg_pages_count;
+    int16_t subpage_to_display = msgs_page_to_display;
+
+    // FIXME: cache?
+    transaction_get_display_pages();
+
+    if (msgs_page_to_display < msgs_total_pages) {
+        int16_t msgs_array_token_index = object_get_value(
+                ROOT_TOKEN_INDEX,
+                "msgs",
+                parsing_context.parsed_tx,
+                parsing_context.tx);
+
+        int16_t total = 0;
+        int16_t msgs_array_index = 0;
+        int16_t msgs_token_index = 0;
+
+        for (int16_t i = 0; i < msgs_array_elements; i++) {
+            int16_t token_index_of_msg = array_get_nth_element(msgs_array_token_index, i,
+                                                               parsing_context.parsed_tx);
+            int16_t count = display_get_arbitrary_items_count(token_index_of_msg);
+            total += count;
+            if (msgs_page_to_display < total) {
+                msgs_token_index = token_index_of_msg;
+                msgs_array_index = i;
+                break;
+            }
+            subpage_to_display -= count;
+        }
+
+        snprintf(key, max_key_length, "msgs_%d/", msgs_array_index + 1);
+        int16_t prefix_len = strlen(key);
+        return display_arbitrary_item(subpage_to_display,
+                                      key + prefix_len,
+                                      max_key_length - prefix_len,
+                                      value,
+                                      max_value_length,
+                                      msgs_token_index,
+                                      chunk_index);
+    }
+
     return -1;
 }
 
 int16_t transaction_get_display_pages() {
-    int16_t msgs_token_index = object_get_value(
-            ROOT_TOKEN_INDEX,
-            "msgs",
-            parsing_context.parsed_tx,
-            parsing_context.tx);
+    int16_t msgs_token_index = object_get_value(ROOT_TOKEN_INDEX,
+                                                "msgs",
+                                                parsing_context.parsed_tx,
+                                                parsing_context.tx);
 
     msgs_array_elements = array_get_element_count(msgs_token_index, parsing_context.parsed_tx);
-
     msgs_total_pages = 0;
+
     for (int16_t i = 0; i < msgs_array_elements; i++) {
         int16_t token_index_of_msg = array_get_nth_element(msgs_token_index, i, parsing_context.parsed_tx);
         msgs_total_pages += display_get_arbitrary_items_count(token_index_of_msg);
     }
+
     return msgs_total_pages + 5;
 }
 
