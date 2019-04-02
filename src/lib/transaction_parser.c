@@ -19,6 +19,9 @@
 #include "transaction_parser.h"
 #include "json_parser.h"
 
+#define MAX_RECURSION_DEPTH  5
+#define MAX_TREE_LEVEL       5
+
 //---------------------------------------------
 
 const char whitespaces[] = {
@@ -60,8 +63,7 @@ void strcat_s(char *dst, uint16_t dst_max, const char *src, uint16_t src_size) {
         src_size = space_left - 1;
     }
 
-    if (src_size > 0)
-    {
+    if (src_size > 0) {
         // Check bounds
         copy_fct(p, src, src_size);
     }
@@ -73,44 +75,37 @@ void strcat_s(char *dst, uint16_t dst_max, const char *src, uint16_t src_size) {
 //--------------------------------------
 // Transaction parsing helper functions
 //--------------------------------------
-void update(char *msg,
-            const int16_t msg_length,
-            const int16_t token_index,
-            int16_t *chunk_index) {
+int16_t update(char *out, const int16_t out_len, const int16_t token_index, uint16_t chunk_to_display) {
 
     const int16_t token_start = parsing_context.parsed_tx->Tokens[token_index].start;
     const int16_t token_end = parsing_context.parsed_tx->Tokens[token_index].end;
-    int16_t length = token_end - token_start;
+    const int16_t token_len = token_end - token_start;
+    const int16_t num_chunks = (token_len / (out_len - 1)) + 1;
 
-    int16_t chunk_to_display = *chunk_index;
-    *chunk_index = (length / msg_length) + 1;
-
-    if (chunk_to_display < 0 || chunk_to_display >= *chunk_index) {
-        msg[0] = '\0';
-        return;
+    out[0] = '\0';  // flush
+    if (chunk_to_display < num_chunks) {
+        const int16_t chunk_start = token_start + chunk_to_display * (out_len - 1);
+        int16_t chunk_len = token_end - chunk_start;
+        if (chunk_len > out_len - 1) {
+            chunk_len = out_len - 1;
+        }
+        copy_fct(out, parsing_context.tx + chunk_start, chunk_len);
+        out[chunk_len] = 0;
     }
 
-    length -= (msg_length - 1) * chunk_to_display;
-    if (length >= msg_length) {
-        length = msg_length - 1;
-    }
-
-    const char *address_ptr = parsing_context.tx + token_start + (msg_length - 1) * chunk_to_display;
-    copy_fct(msg, address_ptr, length);
-    msg[length] = '\0';
+    return num_chunks;
 }
 
 ///// Update value characters from json transaction read from the token_index element.
 ///// Value is only updated if current_item_index (which is incremented internally) matches item_index_to_display
 ///// If value is updated, we also update view_scrolling_total_size to value string length.
 int16_t retrieve_value(display_context_params_t *p, int16_t token_index) {
-
-    if (*p->current_item_index == p->item_index_to_display) {
+    if (p->current_item_index == p->item_index_to_display) {
         update(p->value, p->value_length, token_index, p->chunk_index);
         return p->item_index_to_display;
     }
 
-    *p->current_item_index = *p->current_item_index + 1;
+    p->current_item_index++;
     return -1;
 }
 
@@ -129,24 +124,9 @@ void append_key_item(display_context_params_t *p, int16_t token_index) {
     strcat_s(p->key, p->key_length, address_ptr, new_item_size);
 }
 
-void remove_last(char *key) {
-    size_t size = strlen(key);
-    char *last = key + size;
-    while (last > key) {
-        if (*last == '/') {
-            *last = '\0';
-            return;
-        }
-        last--;
-    }
-    *last = '\0';
-}
-
-
 int16_t display_arbitrary_item_inner(display_context_params_t *p, int16_t token_index, uint8_t level, uint8_t depth) {
-
 //    if level == 2
-//    show value as json-encoded string
+//        show value as json-encoded string
 //    else
 //    switch typeof(json) {
 //        case object:
@@ -160,18 +140,20 @@ int16_t display_arbitrary_item_inner(display_context_params_t *p, int16_t token_
 //        show value as json-encoded string
 //    }
 
-    if (level >= 2 || depth >= 3) {
+    const jsmntype_t token_type = parsing_context.parsed_tx->Tokens[token_index].type;
+
+    if (level >= MAX_TREE_LEVEL ||
+        depth >= MAX_RECURSION_DEPTH ||
+        token_type == JSMN_STRING ||
+        token_type == JSMN_PRIMITIVE) {
+        // Early bail out
         return retrieve_value(p, token_index);
     }
 
     const int16_t el_count = object_get_element_count(token_index, parsing_context.parsed_tx);
     const int16_t key_len = strlen(p->key);
 
-    switch (parsing_context.parsed_tx->Tokens[token_index].type) {
-        case JSMN_STRING:
-        case JSMN_PRIMITIVE:
-            return retrieve_value(p, token_index);
-
+    switch (token_type) {
         case JSMN_OBJECT: {
             for (int16_t i = 0; i < el_count; ++i) {
                 int16_t key_index = object_get_nth_key(token_index, i, parsing_context.parsed_tx);
@@ -183,10 +165,8 @@ int16_t display_arbitrary_item_inner(display_context_params_t *p, int16_t token_
                 }
 
                 int16_t found = display_arbitrary_item_inner(p, value_index, level + 1, depth + 1);
-                if (p->item_index_to_display != -1) {
-                    if (found == p->item_index_to_display) {
-                        return p->item_index_to_display;
-                    }
+                if (p->item_index_to_display != -1 && p->item_index_to_display == found) {
+                    return found;
                 }
             }
             break;
@@ -194,19 +174,18 @@ int16_t display_arbitrary_item_inner(display_context_params_t *p, int16_t token_
         case JSMN_ARRAY: {
             for (int16_t i = 0; i < el_count; ++i) {
                 int16_t element_index = array_get_nth_element(token_index, i, parsing_context.parsed_tx);
-                int16_t found = display_arbitrary_item_inner(p, element_index, level, depth + 1);
 
-                if (p->item_index_to_display != -1) {
-                    if (found == p->item_index_to_display) {
-                        return p->item_index_to_display;
-                    }
+                int16_t found = display_arbitrary_item_inner(p, element_index, level, depth + 1);
+                if (p->item_index_to_display != -1 && p->item_index_to_display == found) {
+                    return found;
                 }
             }
             break;
         }
         default:
-            return *p->current_item_index;
+            return p->current_item_index;
     }
+
     // Not found yet, continue parsing
     return -1;
 }
@@ -223,8 +202,9 @@ int16_t display_get_arbitrary_items_count(int16_t token_index) {
     params.value = dummy;
     params.key_length = 1;
     params.value_length = 1;
-    params.current_item_index = &number_of_items;
-    params.chunk_index = &chunk_index;
+    params.current_item_index = number_of_items;
+    params.chunk_index = chunk_index;
+    params.num_chunks = 0;
 
     const int8_t start_level = 0;
     const int8_t start_depth = 0;
@@ -236,7 +216,9 @@ int16_t display_get_arbitrary_items_count(int16_t token_index) {
 int16_t display_arbitrary_item(int16_t item_index_to_display,
                                char *key, int16_t key_length,
                                char *value, int16_t value_length,
-                               int16_t token_index, int16_t *chunk_index) {
+                               int16_t token_index, int16_t chunk_index) {
+
+    // TODO: Simplify chunk index vs chunk max
 
     int16_t current_item_index = 0;
 
@@ -246,20 +228,22 @@ int16_t display_arbitrary_item(int16_t item_index_to_display,
     params.value = value;
     params.key_length = key_length;
     params.value_length = value_length;
-    params.current_item_index = &current_item_index;
+    params.current_item_index = current_item_index;
     params.chunk_index = chunk_index;
 
-    params.key[0]=0;
-    params.value[0]=0;
+    params.key[0] = 0;
+    params.value[0] = 0;
 
     const int8_t start_level = 0;
     const int8_t start_depth = 0;
+
     return display_arbitrary_item_inner(&params, token_index, start_level, start_depth);
 }
 
 int16_t transaction_get_display_key_value(char *key, int16_t max_key_length,
                                           char *value, int16_t max_value_length,
-                                          int16_t page_index, int16_t *chunk_index) {
+                                          int16_t page_index,
+                                          int16_t chunk_index) {
     const int16_t non_msg_pages_count = 5;
     if (page_index >= 0 && page_index < non_msg_pages_count) {
         const char *key_name;
@@ -288,6 +272,7 @@ int16_t transaction_get_display_key_value(char *key, int16_t max_key_length,
                                                key_name,
                                                parsing_context.parsed_tx,
                                                parsing_context.tx);
+
         update(value, max_value_length, token_index, chunk_index);
     } else {
         int16_t msgs_page_to_display = page_index - non_msg_pages_count;
