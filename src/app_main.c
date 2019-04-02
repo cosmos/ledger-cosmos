@@ -222,13 +222,14 @@ int tx_getData(
     }
 
     // The API is different so we need to temporarily send chunk_index => chunk_count_out
-    *chunk_count_out = chunk_index;
+    int16_t tmp = chunk_index;
     transaction_get_display_key_value(
             key, max_key_length,
             value, max_value_length,
             page_index,
-            chunk_count_out);
+            &tmp);
 
+    *chunk_count_out = tmp;
     return 0;
 }
 
