@@ -20,7 +20,7 @@
 #include "json_parser.h"
 
 #define MAX_RECURSION_DEPTH  5
-#define MAX_TREE_LEVEL       5
+#define MAX_TREE_LEVEL       2
 
 //---------------------------------------------
 
@@ -86,6 +86,11 @@ int16_t update(char *out, const int16_t out_len, const int16_t token_index, uint
     if (chunk_to_display < num_chunks) {
         const int16_t chunk_start = token_start + chunk_to_display * (out_len - 1);
         int16_t chunk_len = token_end - chunk_start;
+
+        if (chunk_len < 0) {
+            return -1;
+        }
+
         if (chunk_len > out_len - 1) {
             chunk_len = out_len - 1;
         }
@@ -100,12 +105,11 @@ int16_t update(char *out, const int16_t out_len, const int16_t token_index, uint
 ///// Value is only updated if current_item_index (which is incremented internally) matches item_index_to_display
 ///// If value is updated, we also update view_scrolling_total_size to value string length.
 int16_t retrieve_value(display_context_params_t *p, int16_t token_index) {
-    if (p->current_item_index == p->item_index_to_display) {
-        update(p->value, p->value_length, token_index, p->chunk_index);
-        return p->item_index_to_display;
+    if (p->item_index == p->item_index_to_display) {
+        return update(p->value, p->value_length, token_index, p->chunk_index);
     }
 
-    p->current_item_index++;
+    p->item_index++;
     return -1;
 }
 
@@ -165,7 +169,7 @@ int16_t display_arbitrary_item_inner(display_context_params_t *p, int16_t token_
                 }
 
                 int16_t found = display_arbitrary_item_inner(p, value_index, level + 1, depth + 1);
-                if (p->item_index_to_display != -1 && p->item_index_to_display == found) {
+                if (found != -1) {
                     return found;
                 }
             }
@@ -176,41 +180,41 @@ int16_t display_arbitrary_item_inner(display_context_params_t *p, int16_t token_
                 int16_t element_index = array_get_nth_element(token_index, i, parsing_context.parsed_tx);
 
                 int16_t found = display_arbitrary_item_inner(p, element_index, level, depth + 1);
-                if (p->item_index_to_display != -1 && p->item_index_to_display == found) {
+                if (found != -1) {
                     return found;
                 }
             }
             break;
         }
         default:
-            return p->current_item_index;
+            break;
     }
 
     // Not found yet, continue parsing
     return -1;
 }
 
+/// Returns number of pages that we'll have for the recursive parsing of a single msg json blob.
+/// \param token_index
+/// \return
 int16_t display_get_arbitrary_items_count(int16_t token_index) {
-
-    int16_t number_of_items = 0;
-    int16_t chunk_index = 0;
-    char dummy[1];
-
     display_context_params_t params;
-    params.item_index_to_display = -1;
+
+    char dummy[1];
+    params.item_index_to_display = -1;  // set value that wont be found
     params.key = dummy;
     params.value = dummy;
-    params.key_length = 1;
-    params.value_length = 1;
-    params.current_item_index = number_of_items;
-    params.chunk_index = chunk_index;
-    params.num_chunks = 0;
+    params.key_length = 0;
+    params.value_length = 0;
+    params.item_index = 0;
+    params.chunk_index = 0;
 
     const int8_t start_level = 0;
     const int8_t start_depth = 0;
-    display_arbitrary_item_inner(&params, token_index, start_level, start_depth);
 
-    return number_of_items;
+    // To count items we need to traverse the whole tree
+    display_arbitrary_item_inner(&params, token_index, start_level, start_depth);
+    return params.item_index;
 }
 
 int16_t display_arbitrary_item(int16_t item_index_to_display,
@@ -228,7 +232,7 @@ int16_t display_arbitrary_item(int16_t item_index_to_display,
     params.value = value;
     params.key_length = key_length;
     params.value_length = value_length;
-    params.current_item_index = current_item_index;
+    params.item_index = current_item_index;
     params.chunk_index = chunk_index;
 
     params.key[0] = 0;
@@ -242,8 +246,7 @@ int16_t display_arbitrary_item(int16_t item_index_to_display,
 
 int16_t transaction_get_display_key_value(char *key, int16_t max_key_length,
                                           char *value, int16_t max_value_length,
-                                          int16_t page_index,
-                                          int16_t chunk_index) {
+                                          int16_t page_index, int16_t chunk_index) {
     const int16_t non_msg_pages_count = 5;
     if (page_index >= 0 && page_index < non_msg_pages_count) {
         const char *key_name;
@@ -273,7 +276,7 @@ int16_t transaction_get_display_key_value(char *key, int16_t max_key_length,
                                                parsing_context.parsed_tx,
                                                parsing_context.tx);
 
-        update(value, max_value_length, token_index, chunk_index);
+        return update(value, max_value_length, token_index, chunk_index);
     } else {
         int16_t msgs_page_to_display = page_index - non_msg_pages_count;
         int16_t subpage_to_display = msgs_page_to_display;
@@ -302,16 +305,16 @@ int16_t transaction_get_display_key_value(char *key, int16_t max_key_length,
 
             snprintf(key, max_key_length, "msgs_%d", msgs_array_index + 1);
 
-            display_arbitrary_item(subpage_to_display,
-                                   key,
-                                   max_key_length,
-                                   value,
-                                   max_value_length,
-                                   msgs_token_index,
-                                   chunk_index);
+            return display_arbitrary_item(subpage_to_display,
+                                          key,
+                                          max_key_length,
+                                          value,
+                                          max_value_length,
+                                          msgs_token_index,
+                                          chunk_index);
         }
     }
-    return 0;
+    return -1;
 }
 
 int16_t transaction_get_display_pages() {
