@@ -46,10 +46,10 @@ typedef struct {
 void reset_parsed_json(parsed_json_t*);
 
 typedef struct {
-    const parsed_json_t *parsed_transaction;
+    const parsed_json_t *parsed_tx;
     unsigned short max_chars_per_key_line;
     unsigned short max_chars_per_value_line;
-    const char *transaction;
+    const char *tx;
 } parsing_context_t;
 
 //---------------------------------------------
