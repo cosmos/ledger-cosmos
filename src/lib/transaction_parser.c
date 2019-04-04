@@ -49,6 +49,9 @@ void set_copy_delegate(copy_delegate delegate) {
 
 void set_parsing_context(parsing_context_t context) {
     parsing_context = context;
+
+    // reset cached values
+    parsing_context.num_pages = -1;
 }
 
 void strcat_s(char *dst, uint16_t dst_max, const char *src, uint16_t src_size) {
@@ -224,9 +227,6 @@ int16_t display_arbitrary_item(int16_t item_index_to_display,
                                char *key, int16_t key_length,
                                char *value, int16_t value_length,
                                int16_t token_index, int16_t chunk_index) {
-
-    // TODO: Simplify chunk index vs chunk max
-
     int16_t current_item_index = 0;
 
     display_context_params_t params;
@@ -327,6 +327,11 @@ int16_t transaction_get_display_key_value(char *key, int16_t max_key_length,
 }
 
 int16_t transaction_get_display_pages() {
+    if (parsing_context.num_pages > 0) {
+        // return cached value
+        return parsing_context.num_pages;
+    }
+
     int16_t msgs_token_index = object_get_value(ROOT_TOKEN_INDEX,
                                                 "msgs",
                                                 parsing_context.parsed_tx,
@@ -340,7 +345,8 @@ int16_t transaction_get_display_pages() {
         msgs_total_pages += display_get_arbitrary_items_count(token_index_of_msg);
     }
 
-    return msgs_total_pages + 5;
+    parsing_context.num_pages = msgs_total_pages + 5;
+    return parsing_context.num_pages;
 }
 
 int8_t is_space(char c) {
