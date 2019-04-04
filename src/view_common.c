@@ -67,7 +67,6 @@ void viewctl_start(int start_page,
 
     viewctl_display_page();
 
-    // TODO: Should this happen here?
     if (viewctl_ehReady != NULL) {
         ehReady(0);
     }
