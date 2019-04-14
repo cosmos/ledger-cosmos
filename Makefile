@@ -27,7 +27,7 @@ SCRIPT_LD:=$(CURDIR)/script.ld
 include $(BOLOS_SDK)/Makefile.defines
 
 # Main app configuration
-APPNAME = "Cosmos"
+APPNAME = "Terra"
 APPVERSION_M=1
 APPVERSION_N=3
 APPVERSION_P=2
@@ -122,4 +122,4 @@ dep/%.d: %.c Makefile.genericwallet
 
 
 listvariants:
-	@echo VARIANTS COIN cosmos
+	@echo VARIANTS COIN terra

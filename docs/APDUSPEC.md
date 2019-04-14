@@ -1,4 +1,4 @@
-# Cosmos App - Ledger Nano S
+# Terra App - Ledger Nano S
 ## General structure
 
 The general structure of commands and responses is as follows:

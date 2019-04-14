@@ -23,7 +23,7 @@ Screen 1. (default)
 ```
 LINE1:
 LINE2:                      Tendermint
-LINE3: [tendermint icon]    Cosmos TEST!   [down icon]
+LINE3: [tendermint icon]    Terra TEST!   [down icon]
 ```
 
 Note: Test only appears when the app has been compiled in test mode.
@@ -131,7 +131,7 @@ Screen 4.
 ```
 LINE1: [left icon]  SECP256K1 - 04/09         [right icon]
 LINE2:                      fee
-LINE3: {"amount":[{"denom":"photon", "amount":5}], "gas":10000}
+LINE3: {"amount":[{"denom":"luna", "amount":5}], "gas":10000}
 ```
 
 Screen 5. 
@@ -182,7 +182,7 @@ Screen 3.
 ```
 LINE1: [left icon]       SECP256K1 - 03/08         [right icon]
 LINE2:                    fee - 01/02
-LINE3:            {"amount":[{"denom":"photon", "a [first 256 bytes of the value]
+LINE3:            {"amount":[{"denom":"luna", "a [first 256 bytes of the value]
 ```
 
 Screen 3a. 

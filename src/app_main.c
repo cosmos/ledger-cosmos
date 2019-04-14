@@ -131,7 +131,7 @@ bool extractBip32(uint8_t *depth, uint32_t path[10], uint32_t rx, uint32_t offse
     return 1;
 }
 
-bool validateCosmosPath(uint8_t depth, uint32_t path[10]) {
+bool validateTerraPath(uint8_t depth, uint32_t path[10]) {
     // Only paths in the form 44'/118'/{account}'/0/{index} are supported
     if (bip32_depth != 5) {
         return 0;
@@ -389,7 +389,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                         THROW(APDU_CODE_DATA_INVALID);
                     }
 
-                    if (!validateCosmosPath(bip32_depth, bip32_path)) {
+                    if (!validateTerraPath(bip32_depth, bip32_path)) {
                         THROW(APDU_CODE_DATA_INVALID);
                     }
 
@@ -413,7 +413,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                         THROW(APDU_CODE_DATA_INVALID);
                     }
 
-                    if (!validateCosmosPath(bip32_depth, bip32_path)) {
+                    if (!validateTerraPath(bip32_depth, bip32_path)) {
                         THROW(APDU_CODE_DATA_INVALID);
                     }
 
@@ -434,7 +434,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                         THROW(APDU_CODE_DATA_INVALID);
                     }
 
-                    if (!validateCosmosPath(bip32_depth, bip32_path)) {
+                    if (!validateTerraPath(bip32_depth, bip32_path)) {
                         THROW(APDU_CODE_DATA_INVALID);
                     }
 
