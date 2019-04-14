@@ -48,9 +48,9 @@ const ux_menu_entry_t menu_transaction_info[] = {
 
 const ux_menu_entry_t menu_main[] = {
 #ifdef TESTING_ENABLED
-        {NULL, NULL, 0, &C_icon_app, "Tendermint", "Terra TEST!", 33, 12},
+        {NULL, NULL, 0, &C_icon_app, "Terra TEST", NULL, 33, 12},
 #else
-        {NULL, NULL, 0, &C_icon_app, "Tendermint", "Terra", 33, 12},
+        {NULL, NULL, 0, &C_icon_app, "Terra", NULL, 33, 12},
 #endif
 //        {NULL, view_addr_show, 0, NULL, "Test", NULL, 0, 0},
         {menu_about, NULL, 0, NULL, "About", NULL, 0, 0},
