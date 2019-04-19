@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -17,22 +17,25 @@
 #include <jsmn.h>
 #include "json_parser.h"
 
+#if defined(TARGET_NANOS) || defined(TARGET_NANOX)
+    #include "os.h"
+    #define EQUALS(_P, _Q, _LEN) (os_memcmp( PIC(_P), PIC(_Q), (_LEN))==0)
+#else
+    #define EQUALS(_P, _Q, _LEN) (memcmp( (_P), (_Q), (_LEN))==0)
+#endif
+
 void reset_parsed_json(parsed_json_t *parser_data) {
     memset(parser_data, 0, sizeof(parsed_json_t));
 }
 
-const char *json_parse(
-        parsed_json_t *parsed_json,
-        const char *transaction) {
+const char *json_parse(parsed_json_t *parsed_json, const char *transaction) {
     return json_parse_s(parsed_json, transaction, strlen(transaction));
 
 }
 
-const char *json_parse_s(
-        parsed_json_t *parsed_json,
-        const char *transaction,
-        uint16_t transaction_length) {
-
+const char *json_parse_s(parsed_json_t *parsed_json,
+                         const char *transaction,
+                         uint16_t transaction_length) {
     jsmn_parser parser;
     jsmn_init(&parser);
 
@@ -220,17 +223,17 @@ int16_t object_get_value(uint16_t object_token_index,
         return -1;
     }
 
-    size_t length = strlen(key_name);
-    jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
+    const jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
+
     int token_index = object_token_index;
     int prev_element_end = object_token.start;
     token_index++;
-    while (true) {
-        if (token_index >= parsed_transaction->NumberOfTokens) {
-            break;
-        }
-        jsmntok_t key_token = parsed_transaction->Tokens[token_index++];
-        jsmntok_t value_token = parsed_transaction->Tokens[token_index];
+
+    while (token_index < parsed_transaction->NumberOfTokens) {
+        const jsmntok_t key_token = parsed_transaction->Tokens[token_index];
+        token_index++;
+        const jsmntok_t value_token = parsed_transaction->Tokens[token_index];
+
         if (key_token.start > object_token.end) {
             break;
         }
@@ -238,10 +241,11 @@ int16_t object_get_value(uint16_t object_token_index,
             continue;
         }
         prev_element_end = value_token.end;
-        char *cmper = (char *) (transaction + key_token.start);
-        size_t cmper_l = (size_t) (key_token.end - key_token.start);
-        if (memcmp(key_name, cmper, length) == 0 && cmper_l == length) {
-            return token_index;
+
+        if ( ((uint16_t) strlen(key_name)) == (key_token.end - key_token.start)) {
+            if (EQUALS(key_name, transaction + key_token.start, key_token.end - key_token.start)) {
+                return token_index;
+            }
         }
     }
 

@@ -58,3 +58,7 @@ debug/app\.asm
 bin/app\.hex
 
 bin/app\.elf
+
+src/glyphs\.h
+
+src/glyphs\.c

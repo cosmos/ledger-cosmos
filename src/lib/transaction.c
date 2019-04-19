@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -15,10 +15,14 @@
 ********************************************************************************/
 
 #include "transaction.h"
-#include "../view.h"
 #include "apdu_codes.h"
-#include "json_parser.h"
 #include "buffering.h"
+#include "json_parser.h"
+#include "tx_validate.h"
+#include "tx_parser.h"
+
+// TODO: Remove this dependency
+#include "../view.h"
 
 // Ram
 #define RAM_BUFFER_SIZE 416
@@ -30,8 +34,14 @@ typedef struct {
     uint8_t buffer[FLASH_BUFFER_SIZE];
 } storage_t;
 
+#if defined(TARGET_NANOS)
 storage_t N_appdata_impl __attribute__ ((aligned(64)));
 #define N_appdata (*(storage_t *)PIC(&N_appdata_impl))
+
+#elif defined(TARGET_NANOX)
+storage_t const N_appdata_impl __attribute__ ((aligned(64)));
+#define N_appdata (*(volatile storage_t *)PIC(&N_appdata_impl))
+#endif
 
 parsed_json_t parsed_transaction;
 
@@ -91,6 +101,5 @@ const char* transaction_parse() {
     context.parsed_tx = &parsed_transaction;
 
     set_parsing_context(context);
-    set_copy_delegate(&os_memmove);
     return NULL;
 }
