@@ -16,18 +16,15 @@
 ********************************************************************************/
 #pragma once
 
+#include <stdint.h>
+
 #include "os.h"
 #include "cx.h"
 
 #define MAX_CHARS_TITLE             32
 #define MAX_CHARS_PER_KEY_LINE      64
 #define MAX_CHARS_PER_VALUE_LINE    192
-#define MAX_SCREEN_LINE_WIDTH       22
-
-extern volatile char viewctl_DataKey[MAX_CHARS_PER_KEY_LINE];
-extern volatile char viewctl_DataValue[MAX_CHARS_PER_VALUE_LINE];
-extern volatile char viewctl_Title[MAX_SCREEN_LINE_WIDTH];
-extern enum UI_DISPLAY_MODE viewctl_scrolling_mode;
+#define MAX_SCREEN_LINE_WIDTH       19
 
 enum UI_DISPLAY_MODE {
     VALUE_SCROLLING,
@@ -36,27 +33,45 @@ enum UI_DISPLAY_MODE {
     PENDING
 };
 
-// Index of the currently displayed page
-extern int viewctl_DetailsCurrentPage;
-// Total number of displayable pages
-extern int viewctl_DetailsPageCount;
+#if defined(TARGET_NANOX)
+#define MAX_SCREEN_NUM_LINES       4
+#endif
 
-// Below data is used to help split long messages that are scrolled
-// into smaller chunks so they fit the memory buffer
-// Index of currently displayed value chunk
-extern int viewctl_ChunksIndex;
-// Total number of displayable value chunks
-extern int viewctl_ChunksCount;
+typedef struct {
+    enum UI_DISPLAY_MODE scrolling_mode;
+    // Index of the currently displayed page
+    int16_t detailsCurrentPage;
+    // Total number of displayable pages
+    int16_t detailsPageCount;
+
+    // When data goes beyond the limit, it will be split in chunks that
+    // that spread over several pages
+    // Index of currently displayed value chunk
+    int16_t chunksIndex;
+    // Total number of displayable value chunks
+    int16_t chunksCount;
+
+    // DATA
+    char dataKey[MAX_CHARS_PER_KEY_LINE];
+    char dataValue[MAX_CHARS_PER_VALUE_LINE];
+    char title[MAX_SCREEN_LINE_WIDTH];
+
+#if defined(TARGET_NANOX)
+    char dataValueChunk[MAX_SCREEN_NUM_LINES][MAX_SCREEN_LINE_WIDTH+1];
+#endif
+} viewctl_s;
+
+extern viewctl_s viewctl;
 
 // Delegate to update contents
-typedef int (*viewctl_delegate_getData)(
-        char *title, int max_title_length,
-        char *key, int max_key_length,
-        char *value, int max_value_length,
-        int page_index,
-        int chunk_index,
-        int *page_count_out,
-        int *chunk_count_out);
+typedef int16_t (*viewctl_delegate_getData)(
+        char *title, int16_t max_title_length,
+        char *key, int16_t max_key_length,
+        char *value, int16_t max_value_length,
+        int16_t page_index,
+        int16_t chunk_index,
+        int16_t *page_count_out,
+        int16_t *chunk_count_out);
 
 // Delegate to handle exit view event
 typedef void (*viewctl_delegate_exit)(unsigned int ignored);

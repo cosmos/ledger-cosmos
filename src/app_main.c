@@ -16,16 +16,18 @@
 ********************************************************************************/
 
 #include "app_main.h"
-#include "view.h"
-#include "lib/transaction.h"
-#include "signature.h"
-#include "zxmacros.h"
-#include "bech32.h"
 
+#include <string.h>
 #include <os_io_seproxyhal.h>
 #include <os.h>
 
-#include <string.h>
+#include <zxmacros.h>
+#include <bech32.h>
+
+#include "lib/transaction.h"
+#include "lib/tx_display.h"
+#include "view.h"
+#include "signature.h"
 
 #ifdef TESTING_ENABLED
 // Generate using always the same private data
@@ -37,6 +39,13 @@ const uint8_t privateKeyDataTest[] = {
         0x7e, 0x9b, 0x5d, 0x55, 0xbf, 0x81, 0x3b, 0xd4
 };
 #endif
+
+#if defined(TARGET_NANOX)
+#define IS_UX_ALLOWED (G_ux_params.len != BOLOS_UX_IGNORE && G_ux_params.len != BOLOS_UX_CONTINUE)
+#else
+#define IS_UX_ALLOWED (ux.params.len != BOLOS_UX_IGNORE && ux.params.len != BOLOS_UX_CONTINUE)
+#endif
+
 
 uint8_t bip32_depth;
 uint32_t bip32_path[10];
@@ -98,8 +107,7 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
                 return 0; // nothing received from the master so far (it's a tx
                 // transaction)
             } else {
-                return io_seproxyhal_spi_recv(G_io_apdu_buffer,
-                                              sizeof(G_io_apdu_buffer), 0);
+                return io_seproxyhal_spi_recv(G_io_apdu_buffer, sizeof(G_io_apdu_buffer), 0);
             }
 
         default:
@@ -201,32 +209,33 @@ bool process_chunk(volatile uint32_t *tx, uint32_t rx, bool getBip32) {
 
 //region View Transaction Handlers
 
-int tx_getData(
-        char *title, int max_title_length,
-        char *key, int max_key_length,
-        char *value, int max_value_length,
-        int page_index,
-        int chunk_index,
-        int *page_count_out,
-        int *chunk_count_out) {
+int16_t tx_getData(char *title, int16_t max_title_length,
+                   char *key, int16_t max_key_length,
+                   char *value, int16_t max_value_length,
+                   int16_t page_index,
+                   int16_t chunk_index,
+                   int16_t *page_count_out,
+                   int16_t *chunk_count_out) {
+    *page_count_out = tx_display_num_pages();
+    *chunk_count_out = 0;
 
-    *page_count_out = transaction_get_display_pages();
+    if (*page_count_out > 0) {
+        switch (current_sigtype) {
+            case SECP256K1:
+                snprintf(title, max_title_length, "SECP256K1 %02d/%02d", page_index + 1, *page_count_out);
+                break;
+            default:
+                snprintf(title, max_title_length, "INVALID!");
+                break;
+        }
 
-    switch (current_sigtype) {
-        case SECP256K1:
-            snprintf(title, max_title_length, "SECP256K1 %02d/%02d", page_index + 1, *page_count_out);
-            break;
-        default:
-            snprintf(title, max_title_length, "INVALID!");
-            break;
+        INIT_QUERY(key, max_key_length, value, max_value_length, chunk_index)
+        *chunk_count_out = tx_display_get_item(page_index);
+
+        tx_display_make_friendly();
     }
 
-    *chunk_count_out = transaction_get_display_key_value(
-            key, max_key_length,
-            value, max_value_length,
-            page_index, chunk_index);
-
-    return 0;
+    return *chunk_count_out;
 }
 
 void tx_accept_sign() {
@@ -262,11 +271,11 @@ void tx_accept_sign() {
     if (result == 1) {
         set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
         io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
-        view_display_signing_success();
+        view_idle(0);
     } else {
         set_code(G_io_apdu_buffer, length, APDU_CODE_SIGN_VERIFY_ERROR);
         io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
-        view_display_signing_error();
+        view_idle(0);
     }
 }
 
@@ -297,16 +306,18 @@ void get_pk_compressed(uint8_t *pkc) {
     memcpy(pkc, publicKey.W, PK_COMPRESSED_LEN);
 }
 
-int addr_getData(char *title, int max_title_length,
-                 char *key, int max_key_length,
-                 char *value, int max_value_length,
-                 int page_index,
-                 int chunk_index,
-                 int *page_count_out,
-                 int *chunk_count_out) {
+int16_t addr_getData(char *title, int16_t max_title_length,
+                     char *key, int16_t max_key_length,
+                     char *value, int16_t max_value_length,
+                     int16_t page_index,
+                     int16_t chunk_index,
+                     int16_t *page_count_out,
+                     int16_t *chunk_count_out) {
 
-    *page_count_out = 0x7FFFFFFF;
-    *chunk_count_out = 1;
+    if (page_count_out)
+        *page_count_out = 1;
+    if (chunk_count_out)
+        *chunk_count_out = 1;
 
     snprintf(title, max_title_length, "Account %d", bip32_path[2] & 0x7FFFFFF);
     snprintf(key, max_key_length, "index %d", page_index);
@@ -327,14 +338,19 @@ int addr_getData(char *title, int max_title_length,
 }
 
 void addr_accept() {
-    int pos = 0;
     // Send pubkey
-    get_pk_compressed(G_io_apdu_buffer + pos);
-    pos += PK_COMPRESSED_LEN;
+    uint8_t *pk = G_io_apdu_buffer;
+    get_pk_compressed(pk);
+    int pos = PK_COMPRESSED_LEN;
 
-    // Send bech32 addr
-    strcpy((char *) (G_io_apdu_buffer + pos), (char *) viewctl_DataValue);
-    pos += strlen((char *) viewctl_DataValue);
+    // Convert pubkey to bech32 address
+    const char *bech32_out = (char*)(G_io_apdu_buffer + pos);
+    uint8_t hashed_pk[CX_RIPEMD160_SIZE];
+    cx_hash_sha256(pk, PK_COMPRESSED_LEN, pk, CX_SHA256_SIZE);
+    ripemd160_32(hashed_pk, pk);
+
+    bech32EncodeFromBytes( bech32_out, bech32_hrp, hashed_pk, CX_RIPEMD160_SIZE);
+    pos += strlen(bech32_out);
 
     set_code(G_io_apdu_buffer, pos, APDU_CODE_OK);
     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, pos + 2);
@@ -366,8 +382,6 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
             switch (G_io_apdu_buffer[OFFSET_INS]) {
                 case INS_GET_VERSION: {
-                    unsigned int UX_ALLOWED = (ux.params.len != BOLOS_UX_IGNORE && ux.params.len != BOLOS_UX_CONTINUE);
-
 #ifdef TESTING_ENABLED
                     G_io_apdu_buffer[0] = 0xFF;
 #else
@@ -376,7 +390,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
                     G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
                     G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
-                    G_io_apdu_buffer[4] = !UX_ALLOWED;
+                    G_io_apdu_buffer[4] = !IS_UX_ALLOWED;
 
                     *tx += 5;
                     THROW(APDU_CODE_OK);
@@ -400,27 +414,6 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     *tx += 65;
 
                     THROW(APDU_CODE_OK);
-                    break;
-                }
-
-                case INS_SHOW_ADDR_SECP256K1: {
-                    // Parse arguments
-                    if (!extractHRP(&bech32_hrp_len, bech32_hrp, rx, OFFSET_DATA)) {
-                        THROW(APDU_CODE_DATA_INVALID);
-                    }
-
-                    if (!extractBip32(&bip32_depth, bip32_path, rx, OFFSET_DATA + bech32_hrp_len + 1)) {
-                        THROW(APDU_CODE_DATA_INVALID);
-                    }
-
-                    if (!validateCosmosPath(bip32_depth, bip32_path)) {
-                        THROW(APDU_CODE_DATA_INVALID);
-                    }
-
-                    view_set_handlers(addr_getData, NULL, NULL);
-                    view_addr_show(bip32_path[4] & 0x7FFFFFF);
-
-                    *flags |= IO_ASYNCH_REPLY;
                     break;
                 }
 
@@ -457,6 +450,8 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                         *tx += (error_msg_length);
                         THROW(APDU_CODE_BAD_KEY_HANDLE);
                     }
+
+                    tx_display_index_root();
 
                     view_set_handlers(tx_getData, tx_accept_sign, tx_reject);
                     view_tx_show(0);

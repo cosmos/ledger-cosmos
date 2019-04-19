@@ -22,13 +22,6 @@
 #include "view_expl.h"
 #include "view_conf.h"
 
-enum UI_STATE {
-    UI_IDLE,
-    UI_TRANSACTION
-};
-
-extern enum UI_STATE view_uiState;
-
 //------ Event handlers
 /// view_set_handlers
 void view_set_handlers(viewctl_delegate_getData func_getData,
@@ -51,14 +44,13 @@ void view_tx_show(unsigned int start_page);
 /// view_sign_transaction
 void view_sign_transaction(unsigned int start_page);
 
-/// view_addr_show
-void view_addr_show(unsigned int start_page);
-
 /// view_addr_confirm
 void view_addr_confirm(unsigned int start_page);
 
-/// view_display_signing_success
-void view_display_signing_success();
-
-/// view_display_signing_error
-void view_display_signing_error();
+int view_tx_get_data(char *title, int max_title_length,
+                     char *key, int max_key_length,
+                     char *value, int max_value_length,
+                     int page_index,
+                     int chunk_index,
+                     int *page_count_out,
+                     int *chunk_count_out);
