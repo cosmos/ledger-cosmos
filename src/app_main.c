@@ -344,12 +344,14 @@ void addr_accept() {
     int pos = PK_COMPRESSED_LEN;
 
     // Convert pubkey to bech32 address
-    const char *bech32_out = (char*)(G_io_apdu_buffer + pos);
-    uint8_t hashed_pk[CX_RIPEMD160_SIZE];
-    cx_hash_sha256(pk, PK_COMPRESSED_LEN, pk, CX_SHA256_SIZE);
-    ripemd160_32(hashed_pk, pk);
+    char *bech32_out = (char*)(G_io_apdu_buffer + pos);
 
-    bech32EncodeFromBytes( bech32_out, bech32_hrp, hashed_pk, CX_RIPEMD160_SIZE);
+    uint8_t hashed_pk_sha[CX_SHA256_SIZE];
+    uint8_t hashed_pk_rip[CX_RIPEMD160_SIZE];
+    cx_hash_sha256(pk, PK_COMPRESSED_LEN, hashed_pk_sha, CX_SHA256_SIZE);
+    ripemd160_32(hashed_pk_rip, hashed_pk_sha);
+
+    bech32EncodeFromBytes( bech32_out, bech32_hrp, hashed_pk_rip, CX_RIPEMD160_SIZE);
     pos += strlen(bech32_out);
 
     set_code(G_io_apdu_buffer, pos, APDU_CODE_OK);
