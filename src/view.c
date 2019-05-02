@@ -1,6 +1,6 @@
 /*******************************************************************************
 *   (c) 2016 Ledger
-*   (c) 2018 ZondaX GmbH
+*   (c) 2018, 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@
 
 #include "view.h"
 #include "view_templates.h"
-#include "view_ctl.h"
+#include "view_expl.h"
+#include "view_conf.h"
 #include "common.h"
 
 #include "glyphs.h"
@@ -26,17 +27,66 @@
 #include <string.h>
 #include <stdio.h>
 
-#define TRUE  1
-#define FALSE 0
+viewctl_delegate_getData ehGetData = NULL;
+viewctl_delegate_accept ehAccept = NULL;
+viewctl_delegate_reject ehReject = NULL;
 
-ux_state_t ux;
-enum UI_STATE view_uiState;
-
-void view_tx_show();
-
-void view_sign_transaction(unsigned int unused);
+void accept(unsigned int unused);
 
 void reject(unsigned int unused);
+
+#if defined(TARGET_NANOX)
+
+#include "ux.h"
+ux_state_t G_ux;
+bolos_ux_params_t G_ux_params;
+
+union {
+    struct {
+        char account[40];
+        char index[40];
+        char bech32[200];
+    } addr;
+} view;
+
+#ifdef TESTING_ENABLED
+UX_FLOW_DEF_NOCB(ux_idle_flow_1_step, pbb, { &C_icon_app, "Tendermint", "Cosmos (TEST)", });
+#else
+UX_FLOW_DEF_NOCB(ux_idle_flow_1_step, pbb, { &C_icon_app, "Tendermint", "Cosmos", });
+#endif
+UX_FLOW_DEF_NOCB(ux_idle_flow_2_step, bn, { "Version", APPVERSION, });
+UX_FLOW_DEF_VALID(ux_idle_flow_3_step, pb, os_sched_exit(-1), { &C_icon_dashboard, "Quit",});
+const ux_flow_step_t *const ux_idle_flow [] = {
+  &ux_idle_flow_1_step,
+  &ux_idle_flow_2_step,
+  &ux_idle_flow_3_step,
+  FLOW_END_STEP,
+};
+
+UX_FLOW_DEF_VALID(ux_tx_flow_1_step, pbb, view_tx_show(0), { &C_icon_eye, "Review", "Transaction" });
+UX_FLOW_DEF_VALID(ux_tx_flow_2_step, pbb, view_sign_transaction(0), { &C_icon_validate_14, "Sign", "Transaction" });
+UX_FLOW_DEF_VALID(ux_tx_flow_3_step, pbb, reject(0), { &C_icon_crossmark, "Reject", "Transaction" });
+const ux_flow_step_t *const ux_tx_flow [] = {
+  &ux_tx_flow_1_step,
+  &ux_tx_flow_2_step,
+  &ux_tx_flow_3_step,
+  FLOW_END_STEP,
+};
+
+UX_FLOW_DEF_NOCB(ux_addr_flow_1_step, bnn, { "Address Request", view.addr.account, view.addr.index});
+UX_FLOW_DEF_NOCB(ux_addr_flow_2_step, bnnn_paging, { .title = "Address", .text = view.addr.bech32 });
+UX_FLOW_DEF_VALID(ux_addr_flow_3_step, pb, accept(0), { &C_icon_validate_14, "Reply", });
+UX_FLOW_DEF_VALID(ux_addr_flow_4_step, pb, reject(0), { &C_icon_crossmark, "Reject", });
+const ux_flow_step_t *const ux_addr_flow [] = {
+  &ux_addr_flow_1_step,
+  &ux_addr_flow_2_step,
+  &ux_addr_flow_3_step,
+  &ux_addr_flow_4_step,
+  FLOW_END_STEP,
+};
+#else
+// Nano S
+ux_state_t ux;
 
 //------ View elements
 const ux_menu_entry_t menu_main[];
@@ -45,7 +95,7 @@ const ux_menu_entry_t menu_about[];
 const ux_menu_entry_t menu_transaction_info[] = {
         {NULL, view_tx_show, 0, NULL, "View transaction", NULL, 0, 0},
         {NULL, view_sign_transaction, 0, NULL, "Sign transaction", NULL, 0, 0},
-        {NULL, reject, 0, &C_icon_back, "Reject", NULL, 60, 40},
+        {NULL, reject, 0, &C_icon_crossmark, "Reject", NULL, 60, 40},
         UX_MENU_END
 };
 
@@ -66,41 +116,34 @@ const ux_menu_entry_t menu_about[] = {
         {menu_main, NULL, 2, &C_icon_back, "Back", NULL, 61, 40},
         UX_MENU_END
 };
-//------ View elements
+#endif
 
-//------ Event handlers
-viewctl_delegate_update ehUpdateTx = NULL;
-delegate_sign_tx ehSignTx = NULL;
-delegate_reject_tx ehRejectTx = NULL;
+////////////////////////////////
+////////////////////////////////
+////////////////////////////////
 
-void view_set_tx_event_handlers(viewctl_delegate_update ehUpdate,
-                                delegate_sign_tx ehSign,
-                                delegate_reject_tx ehReject) {
-    ehSignTx = ehSign;
-    ehRejectTx = ehReject;
-    ehUpdateTx = ehUpdate;
+void view_init(void) {
+    UX_INIT();
 }
 
-viewctl_delegate_update ehUpdateAddr = NULL;
-
-void view_set_addr_event_handlers(viewctl_delegate_update ehUpdate) {
-    ehUpdateAddr = ehUpdate;
+void view_idle(unsigned int ignored) {
+#if defined(TARGET_NANOS)
+    UX_MENU_DISPLAY(0, menu_main, NULL);
+#elif defined(TARGET_NANOX)
+    if(G_ux.stack_count == 0) {
+        ux_stack_push();
+    }
+    ux_flow_init(0, ux_idle_flow, NULL);
+#endif
 }
 
-// ------ Event handlers
+void view_tx_show(unsigned int start_page) {
+    if (ehGetData == NULL) { return; }
+    viewexpl_start(start_page,
+                   ehGetData,
+                   NULL,
+                   view_display_tx_menu);
 
-void io_seproxyhal_display(const bagl_element_t *element) {
-    io_seproxyhal_display_default((bagl_element_t *) element);
-}
-
-void view_tx_show(unsigned int unused) {
-    UNUSED(unused);
-    if (ehUpdateAddr == NULL) { return; }
-
-    viewctl_start(ehUpdateTx,
-                  NULL,
-                  view_display_tx_menu,
-                  0);
 }
 
 void view_addr_exit(unsigned int unused) {
@@ -110,50 +153,68 @@ void view_addr_exit(unsigned int unused) {
     view_idle(0);
 }
 
-void view_addr_show(unsigned int start_page) {
-    if (ehUpdateAddr == NULL) { return; }
+void view_addr_confirm(unsigned int start_page) {
+#if defined(TARGET_NANOS)
+    viewconf_start(start_page,
+                   ehGetData,   // update
+                   NULL,        // ready
+                   NULL,        // exit
+                   ehAccept,
+                   ehReject);
+#elif defined(TARGET_NANOX)
+    // Retrieve data
+    ehGetData(view.addr.account, sizeof(view.addr.account),
+              view.addr.index, sizeof(view.addr.index),
+              view.addr.bech32, sizeof(view.addr.bech32),
+              start_page, 0, 0, 0);
 
-    viewctl_start(ehUpdateAddr,
-                  NULL,
-                  view_addr_exit,
-                  start_page);
+    if(G_ux.stack_count == 0) {
+        ux_stack_push();
+    }
+
+    ux_flow_init(0, ux_addr_flow, NULL);
+#endif
 }
 
-/////////////////////////////////
-
 void view_sign_transaction(unsigned int unused) {
-    UNUSED(unused);
-
-    if (ehSignTx != NULL) {
-        ehSignTx();
-    }
+    accept(unused);
 }
 
 void reject(unsigned int unused) {
-    if (ehRejectTx != NULL) {
-        ehRejectTx();
+    UNUSED(unused);
+    if (ehReject != NULL) {
+        ehReject();
     }
 }
 
-void view_init(void) {
-    UX_INIT();
-    view_uiState = UI_IDLE;
+void accept(unsigned int unused) {
+    UNUSED(unused);
+    if (ehAccept != NULL) {
+        ehAccept();
+    }
 }
 
-void view_idle(unsigned int ignored) {
-    view_uiState = UI_IDLE;
-    UX_MENU_DISPLAY(0, menu_main, NULL);
-}
+void view_display_tx_menu(unsigned int unused) {
+    UNUSED(unused);
 
-void view_display_tx_menu(unsigned int ignored) {
-    view_uiState = UI_TRANSACTION;
+#if defined(TARGET_NANOS)
     UX_MENU_DISPLAY(0, menu_transaction_info, NULL);
+#elif defined(TARGET_NANOX)
+    if(G_ux.stack_count == 0) {
+        ux_stack_push();
+    }
+    ux_flow_init(0, ux_tx_flow, NULL);
+#endif
 }
 
-void view_display_signing_success() {
-    view_idle(0);
+void view_set_handlers(viewctl_delegate_getData func_getData,
+                       viewctl_delegate_accept func_accept,
+                       viewctl_delegate_reject func_reject) {
+    ehGetData = func_getData;
+    ehAccept = func_accept;
+    ehReject = func_reject;
 }
 
-void view_display_signing_error() {
-    view_idle(0);
+void io_seproxyhal_display(const bagl_element_t *element) {
+    io_seproxyhal_display_default((bagl_element_t *) element);
 }

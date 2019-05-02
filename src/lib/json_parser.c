@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -17,41 +17,44 @@
 #include <jsmn.h>
 #include "json_parser.h"
 
-void reset_parsed_json(parsed_json_t* parser_data)
-{
+#if defined(TARGET_NANOS) || defined(TARGET_NANOX)
+    #include "os.h"
+    #define EQUALS(_P, _Q, _LEN) (os_memcmp( PIC(_P), PIC(_Q), (_LEN))==0)
+#else
+    #define EQUALS(_P, _Q, _LEN) (memcmp( (_P), (_Q), (_LEN))==0)
+#endif
+
+void reset_parsed_json(parsed_json_t *parser_data) {
     memset(parser_data, 0, sizeof(parsed_json_t));
 }
 
-const char* json_parse(
-        parsed_json_t *parsed_json,
-        const char *transaction) {
+const char *json_parse(parsed_json_t *parsed_json, const char *transaction) {
     return json_parse_s(parsed_json, transaction, strlen(transaction));
 
 }
-const char* json_parse_s(
-        parsed_json_t *parsed_json,
-        const char *transaction,
-        int transaction_length) {
 
+const char *json_parse_s(parsed_json_t *parsed_json,
+                         const char *transaction,
+                         uint16_t transaction_length) {
     jsmn_parser parser;
     jsmn_init(&parser);
 
     reset_parsed_json(parsed_json);
 
     int num_tokens = jsmn_parse(
-        &parser,
-        transaction,
-        transaction_length,
-        parsed_json->Tokens,
-        MAX_NUMBER_OF_TOKENS);
+            &parser,
+            transaction,
+            transaction_length,
+            parsed_json->Tokens,
+            MAX_NUMBER_OF_TOKENS);
 
     switch (num_tokens) {
-        /* Not enough tokens were provided */
-        case JSMN_ERROR_NOMEM: return "PARSER ERROR: JSMN_ERROR_NOMEM";
-        /* Invalid character inside JSON string */
-        case JSMN_ERROR_INVAL: return "PARSER ERROR: JSMN_ERROR_INVAL";
-        /* The string is not a full JSON packet, more bytes expected */
-        case JSMN_ERROR_PART: return "PARSER ERROR: JSMN_ERROR_PART";
+        case JSMN_ERROR_NOMEM:
+            return "NOMEM: JSON string contains too many tokens";
+        case JSMN_ERROR_INVAL:
+            return "Invalid character in JSON string";
+        case JSMN_ERROR_PART:
+            return "JSON string is not complete";
     }
 
     parsed_json->NumberOfTokens = 0;
@@ -59,12 +62,12 @@ const char* json_parse_s(
 
     // Parsing error
     if (num_tokens <= 0) {
-        return "PARSER ERROR: UNKNOWN.";
+        return "Unknown parser error";
     }
 
     // We cannot support if number of tokens exceeds the limit
     if (num_tokens > MAX_NUMBER_OF_TOKENS) {
-        return "PARSER ERROR: REACHED MAX NUMBER OF TOKENS.";
+        return "TOK: JSON string contains too many tokens";
     }
 
     parsed_json->NumberOfTokens = num_tokens;
@@ -72,12 +75,16 @@ const char* json_parse_s(
     return NULL;
 }
 
-int array_get_element_count(int array_token_index,
-                            const parsed_json_t *parsed_transaction) {
+uint16_t array_get_element_count(uint16_t array_token_index,
+                                 const parsed_json_t *parsed_transaction) {
+    if (array_token_index < 0 || array_token_index > parsed_transaction->NumberOfTokens) {
+        return 0;
+    }
+
     jsmntok_t array_token = parsed_transaction->Tokens[array_token_index];
-    int token_index = array_token_index;
-    int element_count = 0;
-    int prev_element_end = array_token.start;
+    uint16_t token_index = array_token_index;
+    uint16_t element_count = 0;
+    uint16_t prev_element_end = array_token.start;
     while (true) {
         token_index++;
         if (token_index >= parsed_transaction->NumberOfTokens) {
@@ -97,13 +104,17 @@ int array_get_element_count(int array_token_index,
     return element_count;
 }
 
-int array_get_nth_element(int array_token_index,
-                          int element_index,
-                          const parsed_json_t *parsed_transaction) {
+int16_t array_get_nth_element(uint16_t array_token_index,
+                              uint16_t element_index,
+                              const parsed_json_t *parsed_transaction) {
+    if (array_token_index < 0 || array_token_index > parsed_transaction->NumberOfTokens) {
+        return -1;
+    }
+
     jsmntok_t array_token = parsed_transaction->Tokens[array_token_index];
-    int token_index = array_token_index;
-    int element_count = 0;
-    int prev_element_end = array_token.start;
+    uint16_t token_index = array_token_index;
+    uint16_t element_count = 0;
+    uint16_t prev_element_end = array_token.start;
     while (true) {
         token_index++;
         if (token_index >= parsed_transaction->NumberOfTokens) {
@@ -126,12 +137,16 @@ int array_get_nth_element(int array_token_index,
     return -1;
 }
 
-int object_get_element_count(int object_token_index,
-                             const parsed_json_t *parsed_transaction) {
+uint16_t object_get_element_count(uint16_t object_token_index,
+                                  const parsed_json_t *parsed_transaction) {
+    if (object_token_index < 0 || object_token_index > parsed_transaction->NumberOfTokens) {
+        return 0;
+    }
+
     jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
-    int token_index = object_token_index;
-    int element_count = 0;
-    int prev_element_end = object_token.start;
+    uint16_t token_index = object_token_index;
+    uint16_t element_count = 0;
+    uint16_t prev_element_end = object_token.start;
     token_index++;
     while (true) {
         if (token_index >= parsed_transaction->NumberOfTokens) {
@@ -152,13 +167,17 @@ int object_get_element_count(int object_token_index,
     return element_count;
 }
 
-int object_get_nth_key(int object_token_index,
-                       int object_element_index,
-                       const parsed_json_t *parsed_transaction) {
+int16_t object_get_nth_key(uint16_t object_token_index,
+                           uint16_t object_element_index,
+                           const parsed_json_t *parsed_transaction) {
+    if (object_token_index < 0 || object_token_index > parsed_transaction->NumberOfTokens) {
+        return -1;
+    }
+
     jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
-    int token_index = object_token_index;
-    int element_count = 0;
-    int prev_element_end = object_token.start;
+    uint16_t token_index = object_token_index;
+    uint16_t element_count = 0;
+    uint16_t prev_element_end = object_token.start;
     token_index++;
     while (true) {
         if (token_index >= parsed_transaction->NumberOfTokens) {
@@ -182,9 +201,13 @@ int object_get_nth_key(int object_token_index,
     return -1;
 }
 
-int object_get_nth_value(int object_token_index,
-                         int object_element_index,
-                         const parsed_json_t *parsed_transaction) {
+int16_t object_get_nth_value(uint16_t object_token_index,
+                             uint16_t object_element_index,
+                             const parsed_json_t *parsed_transaction) {
+    if (object_token_index < 0 || object_token_index > parsed_transaction->NumberOfTokens) {
+        return -1;
+    }
+
     int key_index = object_get_nth_key(object_token_index, object_element_index, parsed_transaction);
     if (key_index != -1) {
         return key_index + 1;
@@ -192,21 +215,25 @@ int object_get_nth_value(int object_token_index,
     return -1;
 }
 
-int object_get_value(int object_token_index,
-                     const char *key_name,
-                     const parsed_json_t *parsed_transaction,
-                     const char *transaction) {
-    size_t length = strlen(key_name);
-    jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
+int16_t object_get_value(uint16_t object_token_index,
+                         const char *key_name,
+                         const parsed_json_t *parsed_transaction,
+                         const char *transaction) {
+    if (object_token_index < 0 || object_token_index > parsed_transaction->NumberOfTokens) {
+        return -1;
+    }
+
+    const jsmntok_t object_token = parsed_transaction->Tokens[object_token_index];
+
     int token_index = object_token_index;
     int prev_element_end = object_token.start;
     token_index++;
-    while (true) {
-        if (token_index >= parsed_transaction->NumberOfTokens) {
-            break;
-        }
-        jsmntok_t key_token = parsed_transaction->Tokens[token_index++];
-        jsmntok_t value_token = parsed_transaction->Tokens[token_index];
+
+    while (token_index < parsed_transaction->NumberOfTokens) {
+        const jsmntok_t key_token = parsed_transaction->Tokens[token_index];
+        token_index++;
+        const jsmntok_t value_token = parsed_transaction->Tokens[token_index];
+
         if (key_token.start > object_token.end) {
             break;
         }
@@ -214,10 +241,11 @@ int object_get_value(int object_token_index,
             continue;
         }
         prev_element_end = value_token.end;
-        char *cmper = (char *) (transaction + key_token.start);
-        size_t cmper_l = (size_t)(key_token.end - key_token.start);
-        if (memcmp(key_name, cmper, length) == 0 && cmper_l == length) {
-            return token_index;
+
+        if ( ((uint16_t) strlen(key_name)) == (key_token.end - key_token.start)) {
+            if (EQUALS(key_name, transaction + key_token.start, key_token.end - key_token.start)) {
+                return token_index;
+            }
         }
     }
 

@@ -3,4 +3,4 @@
 
 This is a submodule that only contains the user app according to Ledger specs.
 
-Please refer to the [Ledger-Cosmos](https://github.com/cosmos/ledger-cosmos) for the complete source code (unit tests, integration tests, documentation, etc.)  
+Please refer to the [Ledger-Cosmos](https://github.com/cosmos/ledger-cosmos) for the complete source code, build instructions, etc. (unit tests, integration tests, documentation, etc.)  
