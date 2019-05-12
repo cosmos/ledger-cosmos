@@ -18,7 +18,6 @@
 
 #include <stdbool.h>
 #include "apdu_codes.h"
-#include "common.h"
 
 #define CLA                             0x55
 
@@ -39,8 +38,6 @@
 #define INS_PUBLIC_KEY_SECP256K1_TEST   101
 #define INS_SIGN_SECP256K1_TEST         102
 #endif
-
-#define MAX_BECH32_HRP_LEN              83
 
 void app_init();
 

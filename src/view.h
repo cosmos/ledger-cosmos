@@ -35,17 +35,17 @@ void view_init(void);
 /// view_idle
 void view_idle(unsigned int ignored);
 
-/// view_display_tx_menu
-void view_display_tx_menu(unsigned int ignored);
+/// view_tx_menu
+void view_tx_menu(unsigned int ignored);
 
 /// view_tx_show
 void view_tx_show(unsigned int start_page);
 
-/// view_sign_transaction
-void view_sign_transaction(unsigned int start_page);
-
 /// view_addr_confirm
 void view_addr_confirm(unsigned int start_page);
+
+/// view_addr_show
+void view_addr_show(unsigned int start_page);
 
 int view_tx_get_data(char *title, int max_title_length,
                      char *key, int max_key_length,

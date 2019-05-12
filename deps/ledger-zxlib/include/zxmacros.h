@@ -54,6 +54,11 @@ extern "C" {
     io_seproxyhal_general_status(); \
     WAIT_EVENT()
 
+#if defined(TARGET_NANOX)
+#define IS_UX_ALLOWED (G_ux_params.len != BOLOS_UX_IGNORE && G_ux_params.len != BOLOS_UX_CONTINUE)
+#else
+#define IS_UX_ALLOWED (ux.params.len != BOLOS_UX_IGNORE && ux.params.len != BOLOS_UX_CONTINUE)
+#endif
 
 #define MEMMOVE os_memmove
 #define MEMSET os_memset

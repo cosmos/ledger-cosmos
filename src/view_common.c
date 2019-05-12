@@ -18,7 +18,6 @@
 #include "view.h"
 #include "view_templates.h"
 #include "view_expl.h"
-#include "common.h"
 
 #include "glyphs.h"
 #include "bagl.h"

@@ -45,25 +45,12 @@ storage_t const N_appdata_impl __attribute__ ((aligned(64)));
 
 parsed_json_t parsed_transaction;
 
-void update_ram(buffer_state_t *buffer, uint8_t *data, int size) {
-    os_memmove(buffer->data + buffer->pos, data, size);
-}
-
-void update_flash(buffer_state_t *buffer, uint8_t *data, int size) {
-    nvm_write((void *) buffer->data + buffer->pos, data, size);
-}
-
 void transaction_initialize() {
-    append_buffer_delegate update_ram_delegate = &update_ram;
-    append_buffer_delegate update_flash_delegate = &update_flash;
-
     buffering_init(
         ram_buffer,
         sizeof(ram_buffer),
-        update_ram_delegate,
         N_appdata.buffer,
-        sizeof(N_appdata.buffer),
-        update_flash_delegate
+        sizeof(N_appdata.buffer)
     );
 }
 
