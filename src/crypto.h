@@ -22,6 +22,16 @@
 #define MAX_BECH32_HRP_LEN      83
 #define PK_COMPRESSED_LEN       33
 
+#define BIP32_LEN_DEFAULT   0
+#define BIP32_0_DEFAULT     (0x80000000 | 44)
+#define BIP32_1_DEFAULT     (0x80000000 | 118)
+#define BIP32_2_DEFAULT     (0x80000000 | 0)
+#define BIP32_3_DEFAULT     (0)
+#define BIP32_4_DEFAULT     (0)
+
+#define BIP32_ACCOUNT       (bip32_path[2] & 0x7FFFFFF)
+#define BIP32_INDEX         (bip32_path[4] & 0x7FFFFFF)
+
 typedef enum {
     SECP256K1 = 0,
     ED25519 = 1
@@ -48,3 +58,5 @@ int sign_secp256k1(const uint8_t *message,
 void getPubKey(cx_ecfp_public_key_t *publicKey);
 
 void get_pk_compressed(uint8_t *pkc);
+
+void get_bech32_addr(char *bech32_addr);

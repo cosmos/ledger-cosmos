@@ -109,6 +109,8 @@ void menu_left();
 
 void menu_right();
 
+#define print_title(...) snprintf(viewctl.title, sizeof(viewctl.title), __VA_ARGS__)
+
 #define print_key(...) snprintf(viewctl.dataKey, sizeof(viewctl.dataKey), __VA_ARGS__)
 
 #define print_value(...) snprintf(viewctl.dataValue, sizeof(viewctl.dataValue), __VA_ARGS__)

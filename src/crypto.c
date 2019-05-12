@@ -49,14 +49,14 @@ int sign_secp256k1(const uint8_t *message,
 
     unsigned int info = 0;
     *signature_length = cx_ecdsa_sign(
-        privateKey,
-        CX_RND_RFC6979 | CX_LAST,
-        CX_SHA256,
-        message_digest,
-        CX_SHA256_SIZE,
-        signature,
-        signature_capacity,
-        &info);
+            privateKey,
+            CX_RND_RFC6979 | CX_LAST,
+            CX_SHA256,
+            message_digest,
+            CX_SHA256_SIZE,
+            signature,
+            signature_capacity,
+            &info);
 
     os_memset(&privateKey, 0, sizeof(privateKey));
 #ifdef TESTING_ENABLED
@@ -78,11 +78,10 @@ void getPubKey(cx_ecfp_public_key_t *publicKey) {
     uint8_t privateKeyData[32];
 
     // Generate keys
-    os_perso_derive_node_bip32(
-            CX_CURVE_256K1,
-            bip32_path,
-            bip32_depth,
-            privateKeyData, NULL);
+    os_perso_derive_node_bip32(CX_CURVE_256K1,
+                               bip32_path,
+                               bip32_depth,
+                               privateKeyData, NULL);
 
     keys_secp256k1(publicKey, &privateKey, privateKeyData);
     memset(privateKeyData, 0, sizeof(privateKeyData));

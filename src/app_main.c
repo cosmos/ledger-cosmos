@@ -367,7 +367,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     }
 
                     view_set_handlers(addr_getData, addr_accept, addr_reject);
-                    view_addr_confirm(bip32_path[4] & 0x7FFFFFF);
+                    view_addr_confirm(0);
 
                     *flags |= IO_ASYNCH_REPLY;
                     break;

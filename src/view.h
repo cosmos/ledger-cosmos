@@ -20,7 +20,6 @@
 #include "cx.h"
 #include "view_common.h"
 #include "view_expl.h"
-#include "view_conf.h"
 
 //------ Event handlers
 /// view_set_handlers
@@ -35,22 +34,13 @@ void view_init(void);
 /// view_idle
 void view_idle(unsigned int ignored);
 
-/// view_tx_menu
-void view_tx_menu(unsigned int ignored);
-
 /// view_tx_show
 void view_tx_show(unsigned int start_page);
 
+void view_addr_choose_show(unsigned int _);
+
 /// view_addr_confirm
-void view_addr_confirm(unsigned int start_page);
+void view_addr_confirm(unsigned int _);
 
-/// view_addr_show
-void view_addr_show(unsigned int start_page);
-
-int view_tx_get_data(char *title, int max_title_length,
-                     char *key, int max_key_length,
-                     char *value, int max_value_length,
-                     int page_index,
-                     int chunk_index,
-                     int *page_count_out,
-                     int *chunk_count_out);
+/// view_tx_menu
+void view_tx_menu(unsigned int ignored);

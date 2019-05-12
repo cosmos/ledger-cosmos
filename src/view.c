@@ -18,11 +18,11 @@
 #include "view.h"
 #include "view_templates.h"
 #include "view_expl.h"
-#include "view_conf.h"
 
 #include "glyphs.h"
 #include "bagl.h"
 #include "zxmacros.h"
+#include "crypto.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -31,14 +31,13 @@ viewctl_delegate_getData ehGetData = NULL;
 viewctl_delegate_accept ehAccept = NULL;
 viewctl_delegate_reject ehReject = NULL;
 
-void accept(unsigned int unused) {
-    UNUSED(unused);
-    if (ehAccept != NULL)
-        ehAccept();
+void accept(unsigned int _) {
+    UNUSED(_);
+    if (ehAccept != NULL) ehAccept();
 }
 
-void reject(unsigned int unused) {
-    UNUSED(unused);
+void reject(unsigned int _) {
+    UNUSED(_);
     if (ehReject != NULL) ehReject();
 }
 
@@ -49,18 +48,19 @@ void reject(unsigned int unused) {
 #define VIEW_ADDR_MODE_INDEX 1
 #define VIEW_ADDR_MODE_SHOW 2
 
-void view_addr_refresh();
+void view_addr_choose_refresh();
 
-void view_addr_update();
+void view_addr_choose_update();
 
 struct {
     // modes
     // 0 - select account
     // 1 - select index
     uint8_t mode;
+    // TODO: Move this to bech32
     uint32_t account;
     uint32_t index;
-} view_addr_data;
+} view_addr_choose_data;
 
 
 #if defined(TARGET_NANOX)
@@ -130,77 +130,158 @@ const ux_menu_entry_t menu_main[] = {
 #else
         {NULL, NULL, 0, &C_icon_app, "Tendermint", "Cosmos", 33, 12},
 #endif
-        {NULL, view_addr_show, 0, NULL, "Show Address", NULL, 0, 0},
+        {NULL, view_addr_choose_show, 0, NULL, "Show Address", NULL, 0, 0},
         {NULL, NULL, 0, NULL, "v"APPVERSION, NULL, 0, 0},
         {NULL, os_sched_exit, 0, &C_icon_dashboard, "Quit app", NULL, 50, 29},
         UX_MENU_END
 };
 
-static const bagl_element_t view_addr[] = {
-        UI_BACKGROUND_LEFT_RIGHT_ICONS,
-        UI_LabelLine(UIID_LABEL + 0, 0, 8, 128, 11, UI_WHITE, UI_BLACK, (const char *) viewctl.dataKey),
-        UI_LabelLine(UIID_LABEL + 1, 0, 19, 128, 11, UI_WHITE, UI_BLACK, (const char *) viewctl.dataValue),
+#define UIID_ICONACCEPT 0x50
+#define UIID_ICONREJECT 0x51
+
+static const bagl_element_t view_addr_show[] = {
+        UI_FillRectangle(0, 0, 0, UI_SCREEN_WIDTH, UI_SCREEN_HEIGHT, 0x000000, 0xFFFFFF),
+        UI_Icon(UIID_ICONACCEPT, 0, 0, 7, 7, BAGL_GLYPH_ICON_CROSS),
+        UI_Icon(UIID_ICONREJECT, 128 - 7, 0, 7, 7, BAGL_GLYPH_ICON_CHECK),
+        UI_LabelLine(UIID_LABEL + 0, 0, 8, 128, 11, UI_WHITE, UI_BLACK, (const char *) viewctl.title),
+        UI_LabelLine(UIID_LABEL + 1, 0, 19, 128, 11, UI_WHITE, UI_BLACK, (const char *) viewctl.dataKey),
+        UI_LabelLineScrolling(UIID_LABELSCROLL, 16, 30, 96, 11, UI_WHITE, UI_BLACK, (const char *) viewctl.dataValue),
 };
 
-static unsigned int view_addr_button(unsigned int button_mask, unsigned int button_mask_counter) {
+const bagl_element_t *view_addr_show_prepro(const bagl_element_t *element) {
+    switch (element->component.userid) {
+        case UIID_ICONACCEPT:
+            if (ehReject==NULL)
+                return NULL;
+            break;
+        case UIID_ICONREJECT:
+            if (ehAccept==NULL)
+                return NULL;
+            break;
+        case UIID_LABELSCROLL:
+            UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7)));
+            break;
+    }
+    return element;
+}
+
+static unsigned int view_addr_show_button(
+        unsigned int button_mask,
+        unsigned int button_mask_counter) {
+    switch (button_mask) {
+        case BUTTON_EVT_RELEASED | BUTTON_LEFT:
+            // Press left to progress to the previous element
+            reject(0);
+            break;
+        case BUTTON_EVT_RELEASED | BUTTON_RIGHT:
+            // Press right to progress to the next element
+            accept(0);
+            break;
+    }
+    return 0;
+}
+
+#define UIID_ICONLEFT1  0x50
+#define UIID_ICONRIGHT1 0x51
+#define UIID_ICONLEFT2  0x52
+#define UIID_ICONRIGHT2 0x53
+
+static const bagl_element_t view_addr_choose[] = {
+        UI_FillRectangle(0, 0, 0, UI_SCREEN_WIDTH, UI_SCREEN_HEIGHT, 0x000000, 0xFFFFFF),
+
+        UI_Icon(UIID_ICONLEFT1, 0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT),
+        UI_Icon(UIID_ICONRIGHT1, 128-7, 0, 7, 7, BAGL_GLYPH_ICON_RIGHT),
+        UI_Icon(UIID_ICONLEFT2, 0, 9, 7, 7, BAGL_GLYPH_ICON_LEFT),
+        UI_Icon(UIID_ICONRIGHT2, 128-7, 9, 7, 7, BAGL_GLYPH_ICON_RIGHT),
+
+        UI_LabelLine(UIID_LABEL + 0, 0, 8, 128, 11, UI_WHITE, UI_BLACK, (const char *) viewctl.title),
+        UI_LabelLine(UIID_LABEL + 1, 0, 19, 128, 11, UI_WHITE, UI_BLACK, (const char *) viewctl.dataKey),
+        UI_LabelLineScrolling(UIID_LABELSCROLL, 16, 30, 96, 11, UI_WHITE, UI_BLACK, (const char *) viewctl.dataValue),
+};
+
+const bagl_element_t *view_addr_choose_prepro(const bagl_element_t *element) {
+    switch (element->component.userid) {
+        case UIID_ICONLEFT1:
+        case UIID_ICONRIGHT1:
+            if (view_addr_choose_data.mode != VIEW_ADDR_MODE_ACCOUNT)
+                return NULL;
+            break;
+        case UIID_ICONLEFT2:
+        case UIID_ICONRIGHT2:
+            if (view_addr_choose_data.mode != VIEW_ADDR_MODE_INDEX)
+                return NULL;
+            break;
+        case UIID_LABELSCROLL:
+            UX_CALLBACK_SET_INTERVAL(MAX(3000, 1000 + bagl_label_roundtrip_duration_ms(element, 7)));
+            break;
+    }
+    return element;
+}
+
+static unsigned int view_addr_choose_button(unsigned int button_mask, unsigned int button_mask_counter) {
     switch (button_mask) {
         case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
             // Press both to accept / switch mode
-            switch (view_addr_data.mode) {
+            switch (view_addr_choose_data.mode) {
                 case VIEW_ADDR_MODE_ACCOUNT:
-                    view_addr_data.mode = VIEW_ADDR_MODE_INDEX;
+                    view_addr_choose_data.mode = VIEW_ADDR_MODE_INDEX;
                     break;
                 case VIEW_ADDR_MODE_INDEX:
-                    // TODO: show address
-                    view_idle(0);
+                    bip32_depth = 5;
+                    bip32_path[0] = BIP32_0_DEFAULT;
+                    bip32_path[1] = BIP32_1_DEFAULT;
+                    bip32_path[2] = 0x80000000 | view_addr_choose_data.account;
+                    bip32_path[3] = BIP32_3_DEFAULT;
+                    bip32_path[4] = view_addr_choose_data.index;
+                    view_addr_confirm(0);
                     return 0;
             }
             break;
 
         case BUTTON_EVT_RELEASED | BUTTON_LEFT:
             // Press left -> previous element
-            switch (view_addr_data.mode) {
+            switch (view_addr_choose_data.mode) {
                 case VIEW_ADDR_MODE_ACCOUNT:
-                    view_addr_data.account--;
+                    view_addr_choose_data.account--;
                     break;
                 case VIEW_ADDR_MODE_INDEX:
-                    view_addr_data.index--;
+                    view_addr_choose_data.index--;
                     break;
             }
             break;
 
         case BUTTON_EVT_FAST | BUTTON_LEFT:
             // Hold left -> previous element (fast)
-            switch (view_addr_data.mode) {
+            switch (view_addr_choose_data.mode) {
                 case VIEW_ADDR_MODE_ACCOUNT:
-                    view_addr_data.account -= 10;
+                    view_addr_choose_data.account -= 10;
                     break;
                 case VIEW_ADDR_MODE_INDEX:
-                    view_addr_data.index -= 10;
+                    view_addr_choose_data.index -= 10;
                     break;
             }
             break;
 
         case BUTTON_EVT_RELEASED | BUTTON_RIGHT:
             // Press right -> next element
-            switch (view_addr_data.mode) {
+            switch (view_addr_choose_data.mode) {
                 case VIEW_ADDR_MODE_ACCOUNT:
-                    view_addr_data.account++;
+                    view_addr_choose_data.account++;
                     break;
                 case VIEW_ADDR_MODE_INDEX:
-                    view_addr_data.index++;
+                    view_addr_choose_data.index++;
                     break;
             }
             break;
 
         case BUTTON_EVT_FAST | BUTTON_RIGHT:
             // Press right -> next element (fast)
-            switch (view_addr_data.mode) {
+            switch (view_addr_choose_data.mode) {
                 case VIEW_ADDR_MODE_ACCOUNT:
-                    view_addr_data.account += 10;
+                    view_addr_choose_data.account += 10;
                     break;
                 case VIEW_ADDR_MODE_INDEX:
-                    view_addr_data.index += 10;
+                    view_addr_choose_data.index += 10;
                     break;
             }
             break;
@@ -209,8 +290,8 @@ static unsigned int view_addr_button(unsigned int button_mask, unsigned int butt
             return 0;
     }
 
-    view_addr_update();
-    view_addr_refresh();
+    view_addr_choose_update();
+    view_addr_choose_refresh();
     return 0;
 }
 
@@ -248,60 +329,57 @@ void view_tx_show(unsigned int start_page) {
 
 }
 
-void view_addr_update() {
-    switch (view_addr_data.mode) {
-        case VIEW_ADDR_MODE_ACCOUNT:
-            print_key("Select account");
-            print_value("%u", view_addr_data.account);
-            break;
-        case VIEW_ADDR_MODE_INDEX:
-            print_key("Select index");
-            print_value("%u", view_addr_data.index);
-            break;
-        default:
-            // TODO: show address
-            print_key("Error ??");
-            print_value("??");
-            break;
-    }
+void view_addr_choose_update() {
+    print_title("Account %u", view_addr_choose_data.account);
+    print_key("Index %u", view_addr_choose_data.index);
+    print_value("...");
 }
 
-void view_addr_refresh() {
+void view_addr_choose_refresh() {
 #if defined(TARGET_NANOS)
-    UX_DISPLAY(view_addr, NULL);
+    UX_DISPLAY(view_addr_choose, view_addr_choose_prepro);
 #elif defined(TARGET_NANOX)
     if(G_ux.stack_count == 0) {
         ux_stack_push();
     }
-    // TODO:
     ux_flow_init(0, ux_addr_flow, NULL);
 #endif
 }
 
-void view_addr_show(unsigned int start_page) {
-    view_addr_data.mode = VIEW_ADDR_MODE_ACCOUNT;
-    view_addr_data.account = 0;
-    view_addr_data.index = 0;
-    print_key("");
-    print_value("");
-    view_addr_update();
-    view_addr_refresh();
+void show_idle_menu() {
+    view_idle(0);
 }
 
-void view_addr_confirm(unsigned int start_page) {
+void view_addr_choose_show(unsigned int _) {
+    print_title("");
+    print_key("");
+    print_value("");
+    snprintf(bech32_hrp, MAX_BECH32_HRP_LEN, "cosmos");
+///
+    ehAccept = show_idle_menu;
+    ehReject = NULL;
+
+    view_addr_choose_data.mode = VIEW_ADDR_MODE_ACCOUNT;
+    view_addr_choose_data.account = 0;
+    view_addr_choose_data.index = 0;
+    view_addr_choose_update();
+    view_addr_choose_refresh();
+}
+
+void view_addr_confirm(unsigned int _) {
 #if defined(TARGET_NANOS)
-    viewconf_start(start_page,
-                   ehGetData,   // update
-                   NULL,        // ready
-                   NULL,        // exit
-                   ehAccept,
-                   ehReject);
+    print_title("Account %u", BIP32_ACCOUNT);
+    print_key("Index %u", BIP32_INDEX);
+    print_value("....?....");
+    UX_DISPLAY(view_addr_show, view_addr_show_prepro);
+    UX_WAIT();
+
+    get_bech32_addr(viewctl.dataValue);
+    UX_DISPLAY(view_addr_show, view_addr_show_prepro);
 #elif defined(TARGET_NANOX)
-    // Retrieve data
-    ehGetData(view.addr.account, sizeof(view.addr.account),
-              view.addr.index, sizeof(view.addr.index),
-              view.addr.bech32, sizeof(view.addr.bech32),
-              start_page, 0, 0, 0);
+    snprintf(view.addr.account, sizeof(view.addr.account), "Account %u", BIP32_ACCOUNT);
+    snprintf(view.addr.index, sizeof(view.addr.index), "Index %u", BIP32_INDEX);
+    get_bech32_addr(view.addr.bech32);
 
     if(G_ux.stack_count == 0) {
         ux_stack_push();
