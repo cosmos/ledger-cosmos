@@ -24,17 +24,10 @@ namespace {
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
-        buffering_init(
-                ram_buffer,
-                sizeof(ram_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                },
-                flash_buffer,
-                sizeof(flash_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                });
+        buffering_init(ram_buffer,
+                       sizeof(ram_buffer),
+                       flash_buffer,
+                       sizeof(flash_buffer));
 
         // Data is small enough to fit into ram buffer
         uint8_t small[50];
@@ -54,17 +47,10 @@ namespace {
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
-        buffering_init(
-                ram_buffer,
-                sizeof(ram_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                },
-                flash_buffer,
-                sizeof(flash_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                });
+        buffering_init(ram_buffer,
+                       sizeof(ram_buffer),
+                       flash_buffer,
+                       sizeof(flash_buffer));
 
         // Data is too big to fit into ram buffer, it will be written directly to flash
         uint8_t big[500];
@@ -84,17 +70,10 @@ namespace {
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
-        buffering_init(
-                ram_buffer,
-                sizeof(ram_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                },
-                flash_buffer,
-                sizeof(flash_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                });
+        buffering_init(ram_buffer,
+                       sizeof(ram_buffer),
+                       flash_buffer,
+                       sizeof(flash_buffer));
 
         uint8_t small[40];
         auto num_bytes = buffering_append(small, sizeof(small));
@@ -118,17 +97,10 @@ namespace {
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
-        buffering_init(
-                ram_buffer,
-                sizeof(ram_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                },
-                flash_buffer,
-                sizeof(flash_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                });
+        buffering_init(ram_buffer,
+                       sizeof(ram_buffer),
+                       flash_buffer,
+                       sizeof(flash_buffer));
 
         uint8_t small[100];
         buffering_append(small, sizeof(small));
@@ -152,17 +124,10 @@ namespace {
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
-        buffering_init(
-                ram_buffer,
-                sizeof(ram_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                },
-                flash_buffer,
-                sizeof(flash_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                });
+        buffering_init(ram_buffer,
+                       sizeof(ram_buffer),
+                       flash_buffer,
+                       sizeof(flash_buffer));
 
         uint8_t small1[100];
         for (int i = 0; i < sizeof(small1); i++) {
@@ -193,17 +158,10 @@ namespace {
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
-        buffering_init(
-                ram_buffer,
-                sizeof(ram_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                },
-                flash_buffer,
-                sizeof(flash_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                });
+        buffering_init(ram_buffer,
+                       sizeof(ram_buffer),
+                       flash_buffer,
+                       sizeof(flash_buffer));
 
         uint8_t big[1000];
         auto num_bytes = buffering_append(big, sizeof(big));
@@ -224,17 +182,10 @@ namespace {
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
-        buffering_init(
-                ram_buffer,
-                sizeof(ram_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                },
-                flash_buffer,
-                sizeof(flash_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                });
+        buffering_init(ram_buffer,
+                       sizeof(ram_buffer),
+                       flash_buffer,
+                       sizeof(flash_buffer));
 
         uint8_t big[1101];
         auto num_bytes = buffering_append(big, sizeof(big));
@@ -245,13 +196,9 @@ namespace {
 
         uint8_t ram_buffer[100];
 
-        buffering_init(
-                ram_buffer,
-                sizeof(ram_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                },
-                nullptr, 0, 0);
+        buffering_init(ram_buffer,
+                       sizeof(ram_buffer),
+                       nullptr, 0);
 
         uint8_t small[10];
         auto num_bytes = buffering_append(small, sizeof(small));
@@ -277,17 +224,11 @@ namespace {
     }
 
     TEST(Buffering, NoFlash) {
-
         uint8_t ram_buffer[100];
-        uint8_t flash_buffer[1000];
 
-        buffering_init(
-                ram_buffer,
-                sizeof(ram_buffer),
-                [](buffer_state_t *buffer, uint8_t *data, int size) {
-                    memcpy(buffer->data + buffer->pos, data, size);
-                },
-                nullptr, 0, 0);
+        buffering_init(ram_buffer,
+                       sizeof(ram_buffer),
+                       nullptr, 0);
 
         uint8_t big[1101];
         auto num_bytes = buffering_append(big, sizeof(big));
