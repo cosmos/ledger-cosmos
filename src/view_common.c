@@ -125,6 +125,21 @@ void viewctl_crop_key() {
     }
 }
 
+void viewctl_dataValue_split() {
+#if defined(TARGET_NANOX)
+    const int dataValueLen = strlen(viewctl.dataValue);
+
+    int offset = 0;
+    for (int i = 0; i < MAX_SCREEN_NUM_LINES; i++) {
+        viewctl.dataValueChunk[i][0] = 0;   // clean/terminate strings
+        if (offset < dataValueLen) {
+            snprintf((char *) viewctl.dataValueChunk[i], MAX_SCREEN_LINE_WIDTH, "%s", viewctl.dataValue + offset);
+        }
+        offset += (MAX_SCREEN_LINE_WIDTH - 1);
+    }
+#endif
+}
+
 void viewctl_display_page() {
     if (viewctl_ehGetData == NULL) {
         return;
@@ -152,22 +167,15 @@ void viewctl_display_page() {
         // and add chunk index/count information at the end of the key
         if (viewctl.chunksCount > 1) {
             int position = strlen((char *) viewctl.dataKey);
-            snprintf((char *) viewctl.dataKey + position, sizeof(viewctl.dataKey) - position,
-                     " %d/%d", viewctl.chunksIndex + 1, viewctl.chunksCount);
+            snprintf((char *) viewctl.dataKey + position,
+                     sizeof(viewctl.dataKey) - position,
+                     " %d/%d",
+                     viewctl.chunksIndex + 1,
+                     viewctl.chunksCount);
         }
 
 #if defined(TARGET_NANOX)
-    const int dataValueLen = strlen(viewctl.dataValue);
-
-    int offset = 0;
-    for (int i=0; i<MAX_SCREEN_NUM_LINES; i++){
-        viewctl.dataValueChunk[i][0] = 0;   // clean/terminate strings
-        if (offset<dataValueLen) {
-            snprintf((char *) viewctl.dataValueChunk[i], MAX_SCREEN_LINE_WIDTH, "%s", viewctl.dataValue + offset);
-        }
-        offset+=(MAX_SCREEN_LINE_WIDTH-1);
-    }
-
+        viewctl_dataValue_split();
 #elif defined(TARGET_NANOS)
         switch (viewctl.scrolling_mode) {
         case KEY_SCROLLING_NO_VALUE: {

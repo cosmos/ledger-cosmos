@@ -277,6 +277,12 @@ int16_t addr_getData(char *title, int16_t max_title_length,
 }
 
 void addr_accept() {
+#if defined(TARGET_NANOS)
+    print_key("Returning");
+    print_value("Address...");
+    view_status();
+    UX_WAIT();
+#endif
     // Send pubkey
     uint8_t *pk = G_io_apdu_buffer;
     get_pk_compressed(pk);

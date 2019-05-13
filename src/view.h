@@ -28,19 +28,14 @@ void view_set_handlers(viewctl_delegate_getData func_getData,
                        viewctl_delegate_reject func_reject);
 
 //------ Common functions
-/// view_init
+/// view_init (initializes UI)
 void view_init(void);
 
-/// view_idle
+/// view_idle (idle view - main menu + status)
 void view_idle(unsigned int ignored);
 
-/// view_tx_show
+/// view_tx_show (show/review transaction view)
 void view_tx_show(unsigned int start_page);
 
-void view_addr_choose_show(unsigned int _);
-
-/// view_addr_confirm
+/// view_addr_confirm (show/accept public key + address request)
 void view_addr_confirm(unsigned int _);
-
-/// view_tx_menu
-void view_tx_menu(unsigned int ignored);

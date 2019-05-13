@@ -52,9 +52,9 @@ typedef struct {
     int16_t chunksCount;
 
     // DATA
+    char title[MAX_SCREEN_LINE_WIDTH];
     char dataKey[MAX_CHARS_PER_KEY_LINE];
     char dataValue[MAX_CHARS_PER_VALUE_LINE];
-    char title[MAX_SCREEN_LINE_WIDTH];
 
 #if defined(TARGET_NANOX)
     char dataValueChunk[MAX_SCREEN_NUM_LINES][MAX_SCREEN_LINE_WIDTH+1];
@@ -114,3 +114,5 @@ void menu_right();
 #define print_key(...) snprintf(viewctl.dataKey, sizeof(viewctl.dataKey), __VA_ARGS__)
 
 #define print_value(...) snprintf(viewctl.dataValue, sizeof(viewctl.dataValue), __VA_ARGS__)
+
+void viewctl_dataValue_split();
