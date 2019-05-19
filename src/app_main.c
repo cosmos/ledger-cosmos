@@ -487,6 +487,31 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     END_TRY;
 }
 
+void handle_generic_apdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+    if (rx > 4 && os_memcmp(G_io_apdu_buffer, "\xE0\x01\x00\x00", 4) == 0) {
+        // Respond to get device info command
+        uint8_t *p = G_io_apdu_buffer;
+        // Target ID        4 bytes
+        p[0]=(TARGET_ID >> 24) & 0xFF;
+        p[1]=(TARGET_ID >> 16) & 0xFF;
+        p[2]=(TARGET_ID >> 8) & 0xFF;
+        p[3]=(TARGET_ID >> 0) & 0xFF;
+        p += 4;
+        // SE Version       [length][non-terminated string]
+        *p = os_version(p + 1, 64);
+        p = p + 1 + *p;
+        // Flags            [length][flags]
+        *p = 0;
+        p++;
+        // MCU Version      [length][non-terminated string]
+        *p = os_seph_version(p + 1, 64);
+        p = p + 1 + *p;
+
+        *tx = p - G_io_apdu_buffer;
+        THROW(APDU_CODE_OK);
+    }
+}
+
 void app_init() {
     io_seproxyhal_init();
     USB_power(0);
@@ -514,6 +539,8 @@ void app_main() {
 
                 if (rx == 0)
                     THROW(APDU_CODE_EMPTY_BUFFER);
+
+                handle_generic_apdu(&flags, &tx, rx);
 
                 handleApdu(&flags, &tx, rx);
             }
