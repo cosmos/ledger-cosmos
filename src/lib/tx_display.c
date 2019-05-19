@@ -29,14 +29,21 @@
 // Required pages
 // FIXME: the required root items have been moved to a function due to PIC issues. Refactor and fix
 const char *get_required_root_item(uint8_t i) {
-    switch(i) {
-        case 0: return "chain_id";
-        case 1: return "account_number";
-        case 2: return "sequence";
-        case 3: return "fee";
-        case 4: return "memo";
-        case 5: return "msgs";
-        default: return "?";
+    switch (i) {
+        case 0:
+            return "chain_id";
+        case 1:
+            return "account_number";
+        case 2:
+            return "sequence";
+        case 3:
+            return "fee";
+        case 4:
+            return "memo";
+        case 5:
+            return "msgs";
+        default:
+            return "?";
     }
 }
 
@@ -59,23 +66,70 @@ static const uint16_t root_max_level[NUM_REQUIRED_ROOT_PAGES] = {
 };
 
 static const key_subst_t key_substitutions[NUM_KEY_SUBSTITUTIONS] = {
-        {"chain_id",                    "Chain ID"},
-        {"account_number",              "Account"},
-        {"sequence",                    "Sequence"},
-        {"memo",                        "Memo"},
-        {"fee/amount",                  "Fee"},
-        {"fee/gas",                     "Gas"},
-        {"msgs/inputs/address",         "Source Address"},
-        {"msgs/inputs/coins",           "Source Coins"},
-        {"msgs/outputs/address",        "Dest Address"},
-        {"msgs/outputs/coins",          "Dest Coins"},
-//
-        {"msgs/description",            "Description"},
-        {"msgs/initial_deposit/amount", "Deposit Amount"},
-        {"msgs/initial_deposit/denom",  "Deposit Denom"},
-        {"msgs/proposal_type",          "Proposal"},
-        {"msgs/proposer",               "Proposer"},
-        {"msgs/title",                  "Title"},
+        {"chain_id",                     "Chain ID"},
+        {"account_number",               "Account"},
+        {"sequence",                     "Sequence"},
+        {"memo",                         "Memo"},
+        {"fee/amount",                   "Fee"},
+        {"fee/gas",                      "Gas"},
+        {"msgs/type",                    "Type"},
+
+        // FIXME: Are these obsolete?? multisend?
+        {"msgs/inputs/address",          "Source Address"},
+        {"msgs/inputs/coins",            "Source Coins"},
+        {"msgs/outputs/address",         "Dest Address"},
+        {"msgs/outputs/coins",           "Dest Coins"},
+
+        // MsgSend
+        {"msgs/value/from_address",             "From"},
+        {"msgs/value/to_address",               "To"},
+        {"msgs/value/amount",                   "Amount"},
+
+        // MsgDelegate
+        {"msgs/value/delegator_address", "Delegator"},
+        {"msgs/value/validator_address", "Validator"},
+
+        // MsgUndelegate
+//        {"msgs/value/delegator_address", "Delegator"},
+//        {"msgs/value/validator_address", "Validator"},
+
+        // MsgBeginRedelegate
+//        {"msgs/value/delegator_address", "Delegator"},
+        {"msgs/value/validator_src_address", "Validator Source"},
+        {"msgs/value/validator_dst_address", "Validator Dest"},
+
+        // MsgSubmitProposal
+        {"msgs/value/description",              "Description"},
+        {"msgs/value/initial_deposit/amount",  "Deposit Amount"},
+        {"msgs/value/initial_deposit/denom",   "Deposit Denom"},
+        {"msgs/value/proposal_type",            "Proposal"},
+        {"msgs/value/proposer",                 "Proposer"},
+        {"msgs/value/title",                    "Title"},
+
+        // MsgDeposit
+        {"msgs/value/depositer",                 "Sender"},
+        {"msgs/value/proposal_id",               "Proposal ID"},
+        {"msgs/value/amount",                    "Amount"},
+
+        // MsgVote
+        {"msgs/value/voter",                    "Description"},
+//        {"msgs/value/proposal_id",              "Proposal ID"},
+        {"msgs/value/option",                   "Option"},
+
+        // MsgWithdrawDelegationReward
+//        {"msgs/value/delegator_address", "Delegator"},      // duplicated
+//        {"msgs/value/validator_address", "Validator"},      // duplicated
+};
+
+static const key_subst_t value_substitutions[NUM_VALUE_SUBSTITUTIONS] = {
+        {"cosmos-sdk/MsgSend", "Send"},
+        {"cosmos-sdk/MsgDelegate", "Delegate"},
+        {"cosmos-sdk/MsgUndelegate", "Undelegate"},
+        {"cosmos-sdk/MsgBeginRedelegate", "Redelegate"},
+        {"cosmos-sdk/MsgSubmitProposal", "Propose"},
+        {"cosmos-sdk/MsgDeposit", "Deposit"},
+        {"cosmos-sdk/MsgVote", "Vote"},
+        {"cosmos-sdk/MsgWithdrawDelegationReward", "Withdraw Reward"},
 };
 
 #define STRNCPY_S(DST, SRC, DST_SIZE) \
@@ -182,9 +236,21 @@ void tx_display_make_friendly() {
     // post process keys
     for (int8_t i = 0; i < NUM_KEY_SUBSTITUTIONS; i++) {
         if (!strcmp(tx_ctx.query.out_key, key_substitutions[i].str1)) {
-            STRNCPY_S(tx_ctx.query.out_key, key_substitutions[i].str2, tx_ctx.query.out_key_len);
+            STRNCPY_S(tx_ctx.query.out_key,
+                      key_substitutions[i].str2,
+                      tx_ctx.query.out_key_len);
             break;
         }
     }
+
+    for (int8_t i = 0; i < NUM_VALUE_SUBSTITUTIONS; i++) {
+        if (!strcmp(tx_ctx.query.out_val, value_substitutions[i].str1)) {
+            STRNCPY_S(tx_ctx.query.out_val,
+                      value_substitutions[i].str2,
+                      tx_ctx.query.out_val_len);
+            break;
+        }
+    }
+
 }
 

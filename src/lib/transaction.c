@@ -24,12 +24,18 @@
 // TODO: Remove this dependency
 #include "../view.h"
 
+#if defined(TARGET_NANOX)
+    #define RAM_BUFFER_SIZE 8192
+    #define FLASH_BUFFER_SIZE 16384
+#elif defined(TARGET_NANOS)
+    #define RAM_BUFFER_SIZE 416
+    #define FLASH_BUFFER_SIZE 8192
+#endif
+
 // Ram
-#define RAM_BUFFER_SIZE 416
 uint8_t ram_buffer[RAM_BUFFER_SIZE];
 
 // Flash
-#define FLASH_BUFFER_SIZE 10000
 typedef struct {
     uint8_t buffer[FLASH_BUFFER_SIZE];
 } storage_t;
