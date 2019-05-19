@@ -23,6 +23,7 @@
 #define COPYFUNC os_memmove
 #else
 #define COPYFUNC memcpy
+#define __always_inline
 #endif
 
 // Global context to save memory / stack space in recursive calls

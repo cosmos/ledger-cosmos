@@ -34,6 +34,7 @@ extern "C" {
 
 // we must limit the number
 #if defined(TARGET_NANOS)
+#undef MAX_NUMBER_OF_TOKENS
 #define MAX_NUMBER_OF_TOKENS    128
 #endif
 
