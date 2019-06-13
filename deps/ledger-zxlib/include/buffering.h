@@ -17,36 +17,29 @@
 
 #pragma once
 
-#include <stdint.h>
-#include <stdio.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <stdint.h>
+#include <stdio.h>
 
 typedef struct {
     uint8_t *data;
     uint16_t size;
     uint16_t pos;
     uint8_t in_use: 1;
-    uint8_t initialized : 1;
 } buffer_state_t;
-
-typedef void (*append_buffer_delegate)(buffer_state_t *buffer, uint8_t *data, int size);
 
 /// Initialize buffer
 /// \param ram_buffer
 /// \param ram_buffer_size
-/// \param ram
 /// \param flash_buffer
 /// \param flash_buffer_size
-/// \param flash
 void buffering_init(uint8_t *ram_buffer,
                     uint16_t ram_buffer_size,
-                    append_buffer_delegate ram,
                     uint8_t *flash_buffer,
-                    uint16_t flash_buffer_size,
-                    append_buffer_delegate flash);
+                    uint16_t flash_buffer_size);
 
 /// Reset buffer
 void buffering_reset();

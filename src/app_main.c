@@ -27,7 +27,7 @@
 #include "lib/transaction.h"
 #include "lib/tx_display.h"
 #include "view.h"
-#include "signature.h"
+#include "crypto.h"
 
 #ifdef TESTING_ENABLED
 // Generate using always the same private data
@@ -39,20 +39,6 @@ const uint8_t privateKeyDataTest[] = {
         0x7e, 0x9b, 0x5d, 0x55, 0xbf, 0x81, 0x3b, 0xd4
 };
 #endif
-
-#if defined(TARGET_NANOX)
-#define IS_UX_ALLOWED (G_ux_params.len != BOLOS_UX_IGNORE && G_ux_params.len != BOLOS_UX_CONTINUE)
-#else
-#define IS_UX_ALLOWED (ux.params.len != BOLOS_UX_IGNORE && ux.params.len != BOLOS_UX_CONTINUE)
-#endif
-
-
-uint8_t bip32_depth;
-uint32_t bip32_path[10];
-sigtype_t current_sigtype;
-
-char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
-uint8_t bech32_hrp_len;
 
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
@@ -116,13 +102,6 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
     return 0;
 }
 
-void app_init() {
-    io_seproxyhal_init();
-    USB_power(0);
-    USB_power(1);
-    view_idle(0);
-}
-
 bool extractBip32(uint8_t *depth, uint32_t path[10], uint32_t rx, uint32_t offset) {
     if (rx < offset + 1) {
         return 0;
@@ -164,20 +143,6 @@ bool extractHRP(uint8_t *len, char *hrp, uint32_t rx, uint32_t offset) {
     memcpy(hrp, G_io_apdu_buffer + offset + 1, *len);
     hrp[*len] = 0; // zero terminate
     return 1;
-}
-
-void getPubKey(cx_ecfp_public_key_t *publicKey) {
-    cx_ecfp_private_key_t privateKey;
-    uint8_t privateKeyData[32];
-
-    // Generate keys
-    os_perso_derive_node_bip32(
-            CX_CURVE_256K1,
-            bip32_path, bip32_depth,
-            privateKeyData, NULL);
-    keys_secp256k1(publicKey, &privateKey, privateKeyData);
-    memset(privateKeyData, 0, sizeof(privateKeyData));
-    memset(&privateKey, 0, sizeof(privateKey));
 }
 
 bool process_chunk(volatile uint32_t *tx, uint32_t rx, bool getBip32) {
@@ -222,7 +187,11 @@ int16_t tx_getData(char *title, int16_t max_title_length,
     if (*page_count_out > 0) {
         switch (current_sigtype) {
             case SECP256K1:
-                snprintf(title, max_title_length, "SECP256K1 %02d/%02d", page_index + 1, *page_count_out);
+                snprintf(title,
+                         max_title_length,
+                         "SECP256K1 %02d/%02d",
+                         page_index + 1,
+                         *page_count_out);
                 break;
             default:
                 snprintf(title, max_title_length, "INVALID!");
@@ -248,21 +217,17 @@ void tx_accept_sign() {
     int result = 0;
     switch (current_sigtype) {
         case SECP256K1:
-            os_perso_derive_node_bip32(
-                    CX_CURVE_256K1,
-                    bip32_path, bip32_depth,
-                    privateKeyData, NULL);
-
+            os_perso_derive_node_bip32(CX_CURVE_256K1,
+                                       bip32_path, bip32_depth,
+                                       privateKeyData, NULL);
             keys_secp256k1(&publicKey, &privateKey, privateKeyData);
             memset(privateKeyData, 0, 32);
-
-            result = sign_secp256k1(
-                    transaction_get_buffer(),
-                    transaction_get_buffer_length(),
-                    G_io_apdu_buffer,
-                    IO_APDU_BUFFER_SIZE,
-                    &length,
-                    &privateKey);
+            result = sign_secp256k1(transaction_get_buffer(),
+                                    transaction_get_buffer_length(),
+                                    G_io_apdu_buffer,
+                                    IO_APDU_BUFFER_SIZE,
+                                    &length,
+                                    &privateKey);
             break;
         default:
             THROW(APDU_CODE_INS_NOT_SUPPORTED);
@@ -289,23 +254,6 @@ void tx_reject() {
 
 //region View Address Handlers
 
-void ripemd160_32(uint8_t *out, uint8_t *in) {
-    cx_ripemd160_t rip160;
-    cx_ripemd160_init(&rip160);
-    cx_hash(&rip160.header, CX_LAST, in, CX_SHA256_SIZE, out, CX_RIPEMD160_SIZE);
-}
-
-#define PK_COMPRESSED_LEN 33
-
-void get_pk_compressed(uint8_t *pkc) {
-    cx_ecfp_public_key_t publicKey;
-    // Modify the last part of the path
-    getPubKey(&publicKey);
-    // "Compress" public key in place
-    publicKey.W[0] = publicKey.W[64] & 1 ? 0x03 : 0x02;
-    memcpy(pkc, publicKey.W, PK_COMPRESSED_LEN);
-}
-
 int16_t addr_getData(char *title, int16_t max_title_length,
                      char *key, int16_t max_key_length,
                      char *value, int16_t max_value_length,
@@ -321,37 +269,28 @@ int16_t addr_getData(char *title, int16_t max_title_length,
 
     snprintf(title, max_title_length, "Account %d", bip32_path[2] & 0x7FFFFFF);
     snprintf(key, max_key_length, "index %d", page_index);
-
     bip32_path[bip32_depth - 1] = page_index;
-    uint8_t tmp[PK_COMPRESSED_LEN];
-    get_pk_compressed(tmp);
 
-    // Convert pubkey to address
-    uint8_t hashed_pk[CX_RIPEMD160_SIZE];
-    cx_hash_sha256(tmp, PK_COMPRESSED_LEN, tmp, CX_SHA256_SIZE);
-    ripemd160_32(hashed_pk, tmp);
-
-    // Convert address to bech32
-    bech32EncodeFromBytes(value, bech32_hrp, hashed_pk, CX_RIPEMD160_SIZE);
-
+    // get address from the current bip32_path
+    get_bech32_addr(value);
     return 0;
 }
 
 void addr_accept() {
+#if defined(TARGET_NANOS)
+    print_key("Returning");
+    print_value("Address...");
+    view_status();
+    UX_WAIT();
+#endif
     // Send pubkey
     uint8_t *pk = G_io_apdu_buffer;
     get_pk_compressed(pk);
     int pos = PK_COMPRESSED_LEN;
 
     // Convert pubkey to bech32 address
-    char *bech32_out = (char*)(G_io_apdu_buffer + pos);
-
-    uint8_t hashed_pk_sha[CX_SHA256_SIZE];
-    uint8_t hashed_pk_rip[CX_RIPEMD160_SIZE];
-    cx_hash_sha256(pk, PK_COMPRESSED_LEN, hashed_pk_sha, CX_SHA256_SIZE);
-    ripemd160_32(hashed_pk_rip, hashed_pk_sha);
-
-    bech32EncodeFromBytes( bech32_out, bech32_hrp, hashed_pk_rip, CX_RIPEMD160_SIZE);
+    char *bech32_out = (char *) (G_io_apdu_buffer + pos);
+    get_bech32_addr(bech32_out);
     pos += strlen(bech32_out);
 
     set_code(G_io_apdu_buffer, pos, APDU_CODE_OK);
@@ -434,7 +373,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     }
 
                     view_set_handlers(addr_getData, addr_accept, addr_reject);
-                    view_addr_confirm(bip32_path[4] & 0x7FFFFFF);
+                    view_addr_confirm(0);
 
                     *flags |= IO_ASYNCH_REPLY;
                     break;
@@ -548,6 +487,38 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     END_TRY;
 }
 
+void handle_generic_apdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+    if (rx > 4 && os_memcmp(G_io_apdu_buffer, "\xE0\x01\x00\x00", 4) == 0) {
+        // Respond to get device info command
+        uint8_t *p = G_io_apdu_buffer;
+        // Target ID        4 bytes
+        p[0]=(TARGET_ID >> 24) & 0xFF;
+        p[1]=(TARGET_ID >> 16) & 0xFF;
+        p[2]=(TARGET_ID >> 8) & 0xFF;
+        p[3]=(TARGET_ID >> 0) & 0xFF;
+        p += 4;
+        // SE Version       [length][non-terminated string]
+        *p = os_version(p + 1, 64);
+        p = p + 1 + *p;
+        // Flags            [length][flags]
+        *p = 0;
+        p++;
+        // MCU Version      [length][non-terminated string]
+        *p = os_seph_version(p + 1, 64);
+        p = p + 1 + *p;
+
+        *tx = p - G_io_apdu_buffer;
+        THROW(APDU_CODE_OK);
+    }
+}
+
+void app_init() {
+    io_seproxyhal_init();
+    USB_power(0);
+    USB_power(1);
+    view_idle(0);
+}
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 
@@ -568,6 +539,8 @@ void app_main() {
 
                 if (rx == 0)
                     THROW(APDU_CODE_EMPTY_BUFFER);
+
+                handle_generic_apdu(&flags, &tx, rx);
 
                 handleApdu(&flags, &tx, rx);
             }
