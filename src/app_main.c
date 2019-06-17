@@ -119,11 +119,11 @@ bool extractBip32(uint8_t *depth, uint32_t path[10], uint32_t rx, uint32_t offse
 }
 
 bool validateTerraPath(uint8_t depth, uint32_t path[10]) {
-    // Only paths in the form 44'/118'/{account}'/0/{index} are supported
+    // Only paths in the form 44'/330'/{account}'/0/{index} are supported
     if (bip32_depth != 5) {
         return 0;
     }
-    if (path[0] != 0x8000002c || path[1] != 0x80000076 || path[3] != 0) {
+    if (path[0] != 0x8000002c || path[1] != 0x8000014a || path[3] != 0) {
         return 0;
     }
     return 1;
