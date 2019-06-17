@@ -15,28 +15,48 @@
 *  limitations under the License.
 ********************************************************************************/
 #pragma once
-
+#include <stdint.h>
 #include "os.h"
+#include "cx.h"
 
-/// keys_secp256k1
-/// \param publicKey
-/// \param privateKey
-/// \param privateKeyData
+#define MAX_BECH32_HRP_LEN      83
+#define PK_COMPRESSED_LEN       33
+
+#define BIP32_LEN_DEFAULT   0
+#define BIP32_0_DEFAULT     (0x80000000 | 44)
+#define BIP32_1_DEFAULT     (0x80000000 | 118)
+#define BIP32_2_DEFAULT     (0x80000000 | 0)
+#define BIP32_3_DEFAULT     (0)
+#define BIP32_4_DEFAULT     (0)
+
+#define BIP32_ACCOUNT       (bip32_path[2] & 0x7FFFFFF)
+#define BIP32_INDEX         (bip32_path[4] & 0x7FFFFFF)
+
+typedef enum {
+    SECP256K1 = 0,
+    ED25519 = 1
+} sigtype_t;
+
+extern uint8_t bip32_depth;
+extern uint32_t bip32_path[10];
+extern sigtype_t current_sigtype;
+
+extern char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
+extern uint8_t bech32_hrp_len;
+
 void keys_secp256k1(cx_ecfp_public_key_t *publicKey,
                     cx_ecfp_private_key_t *privateKey,
                     const uint8_t privateKeyData[32]);
 
-/// sign_secp256k1
-/// \param message
-/// \param message_length
-/// \param signature
-/// \param signature_capacity
-/// \param signature_length
-/// \param privateKey
-/// \return
 int sign_secp256k1(const uint8_t *message,
                    unsigned int message_length,
                    uint8_t *signature,
                    unsigned int signature_capacity,
                    unsigned int *signature_length,
                    cx_ecfp_private_key_t *privateKey);
+
+void getPubKey(cx_ecfp_public_key_t *publicKey);
+
+void get_pk_compressed(uint8_t *pkc);
+
+void get_bech32_addr(char *bech32_addr);

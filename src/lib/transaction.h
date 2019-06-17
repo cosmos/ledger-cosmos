@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 ********************************************************************************/
 #pragma once
 
-#include "transaction_parser.h"
 #include "os.h"
 
 void transaction_initialize();

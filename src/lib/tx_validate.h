@@ -1,6 +1,5 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
-*   (c) 2018, 2019 ZondaX GmbH
+*   (c) ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -14,16 +13,22 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
+
 #pragma once
 
-#include "os.h"
-#include "cx.h"
-#include "view_common.h"
+#include "json_parser.h"
+#include <stdint.h>
 
-// Initialize and show control
-void viewconf_start(int start_page,
-                    viewctl_delegate_getData func_update,
-                    viewctl_delegate_ready func_ready,
-                    viewctl_delegate_exit func_exit,
-                    viewctl_delegate_accept func_accept,
-                    viewctl_delegate_reject func_reject);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// Validate json transaction
+/// \param parsed_transacton
+/// \param transaction
+/// \return
+const char *json_validate(parsed_json_t *parsed_transaction, const char *transaction);
+
+#ifdef __cplusplus
+}
+#endif
