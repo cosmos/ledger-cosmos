@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -25,8 +25,19 @@
 extern "C" {
 #endif
 
+#if defined(LEDGER_SPECIFIC)
+#include "bolos_target.h"
+#endif
+
 /// Max number of accepted tokens in the JSON input
+#define MAX_NUMBER_OF_TOKENS   2048
+
+// we must limit the number
+#if defined(TARGET_NANOS)
+#undef MAX_NUMBER_OF_TOKENS
 #define MAX_NUMBER_OF_TOKENS    128
+#endif
+
 #define ROOT_TOKEN_INDEX 0
 
 //---------------------------------------------
@@ -49,9 +60,7 @@ typedef struct {
     uint16_t max_chars_per_key_line;
     uint16_t max_chars_per_value_line;
     const char *tx;
-
-    // cached values
-    int16_t num_pages;
+    uint8_t cache_valid;
 } parsing_context_t;
 
 //---------------------------------------------
@@ -62,18 +71,16 @@ typedef struct {
 /// \param transaction
 /// \param transaction_length
 /// \return Error message
-const char *json_parse_s(
-        parsed_json_t *parsed_json,
-        const char *transaction,
-        uint16_t transaction_length);
+const char *json_parse_s(parsed_json_t *parsed_json,
+                         const char *transaction,
+                         uint16_t transaction_length);
 
 /// Parse json to create a token representation
 /// \param parsed_json
 /// \param transaction
 /// \return Error message
-const char *json_parse(
-        parsed_json_t *parsed_json,
-        const char *transaction);
+const char *json_parse(parsed_json_t *parsed_json,
+                       const char *transaction);
 
 /// Get the number of elements in the array
 /// \param array_token_index

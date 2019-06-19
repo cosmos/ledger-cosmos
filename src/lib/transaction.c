@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -15,45 +15,48 @@
 ********************************************************************************/
 
 #include "transaction.h"
-#include "../view.h"
 #include "apdu_codes.h"
-#include "json_parser.h"
 #include "buffering.h"
+#include "json_parser.h"
+#include "tx_validate.h"
+#include "tx_parser.h"
+
+// TODO: Remove this dependency
+#include "../view.h"
+
+#if defined(TARGET_NANOX)
+    #define RAM_BUFFER_SIZE 8192
+    #define FLASH_BUFFER_SIZE 16384
+#elif defined(TARGET_NANOS)
+    #define RAM_BUFFER_SIZE 416
+    #define FLASH_BUFFER_SIZE 8192
+#endif
 
 // Ram
-#define RAM_BUFFER_SIZE 416
 uint8_t ram_buffer[RAM_BUFFER_SIZE];
 
 // Flash
-#define FLASH_BUFFER_SIZE 10000
 typedef struct {
     uint8_t buffer[FLASH_BUFFER_SIZE];
 } storage_t;
 
+#if defined(TARGET_NANOS)
 storage_t N_appdata_impl __attribute__ ((aligned(64)));
 #define N_appdata (*(storage_t *)PIC(&N_appdata_impl))
 
+#elif defined(TARGET_NANOX)
+storage_t const N_appdata_impl __attribute__ ((aligned(64)));
+#define N_appdata (*(volatile storage_t *)PIC(&N_appdata_impl))
+#endif
+
 parsed_json_t parsed_transaction;
 
-void update_ram(buffer_state_t *buffer, uint8_t *data, int size) {
-    os_memmove(buffer->data + buffer->pos, data, size);
-}
-
-void update_flash(buffer_state_t *buffer, uint8_t *data, int size) {
-    nvm_write((void *) buffer->data + buffer->pos, data, size);
-}
-
 void transaction_initialize() {
-    append_buffer_delegate update_ram_delegate = &update_ram;
-    append_buffer_delegate update_flash_delegate = &update_flash;
-
     buffering_init(
         ram_buffer,
         sizeof(ram_buffer),
-        update_ram_delegate,
         N_appdata.buffer,
-        sizeof(N_appdata.buffer),
-        update_flash_delegate
+        sizeof(N_appdata.buffer)
     );
 }
 
@@ -91,6 +94,5 @@ const char* transaction_parse() {
     context.parsed_tx = &parsed_transaction;
 
     set_parsing_context(context);
-    set_copy_delegate(&os_memmove);
     return NULL;
 }
