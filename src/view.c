@@ -91,9 +91,9 @@ ux_state_t G_ux;
 bolos_ux_params_t G_ux_params;
 
 #ifdef TESTING_ENABLED
-UX_FLOW_DEF_NOCB(ux_idle_flow_1_step, pbb, { &C_icon_app, "Tendermint", "Cosmos TEST!", });
+UX_FLOW_DEF_NOCB(ux_idle_flow_1_step, pbb, { &C_icon_app, "Tendermint", "Terra TEST!", });
 #else
-UX_FLOW_DEF_NOCB(ux_idle_flow_1_step, pbb, { &C_icon_app, "Tendermint", "Cosmos", });
+UX_FLOW_DEF_NOCB(ux_idle_flow_1_step, pbb, { &C_icon_app, "Tendermint", "Terra", });
 #endif
 UX_FLOW_DEF_VALID(ux_idle_flow_2_step, pb, view_addr_choose_show(0), { &C_icon_eye, "Show Address",});
 UX_FLOW_DEF_NOCB(ux_idle_flow_3_step, bn, { "Version", APPVERSION, });
@@ -406,7 +406,7 @@ void view_addr_choose_show(unsigned int _) {
     view_addr_choose_data.status.mode = VIEW_ADDR_MODE_ACCOUNT;
     view_addr_choose_data.account = 0;
     view_addr_choose_data.index = 0;
-    strcpy(bech32_hrp, "cosmos");
+    strcpy(bech32_hrp, "terra");
     ehAccept = show_idle_menu;
     ehReject = NULL;
 

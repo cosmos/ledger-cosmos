@@ -122,14 +122,14 @@ static const key_subst_t key_substitutions[NUM_KEY_SUBSTITUTIONS] = {
 };
 
 static const key_subst_t value_substitutions[NUM_VALUE_SUBSTITUTIONS] = {
-        {"cosmos-sdk/MsgSend", "Send"},
-        {"cosmos-sdk/MsgDelegate", "Delegate"},
-        {"cosmos-sdk/MsgUndelegate", "Undelegate"},
-        {"cosmos-sdk/MsgBeginRedelegate", "Redelegate"},
+        {"pay/MsgSend", "Send"},
+        {"staking/MsgDelegate", "Delegate"},
+        {"staking/MsgUndelegate", "Undelegate"},
+        {"staking/MsgBeginRedelegate", "Redelegate"},
         {"cosmos-sdk/MsgSubmitProposal", "Propose"},
         {"cosmos-sdk/MsgDeposit", "Deposit"},
         {"cosmos-sdk/MsgVote", "Vote"},
-        {"cosmos-sdk/MsgWithdrawDelegationReward", "Withdraw Reward"},
+        {"distribution/MsgWithdrawDelegationReward", "Withdraw Reward"},
 };
 
 #define STRNCPY_S(DST, SRC, DST_SIZE) \
