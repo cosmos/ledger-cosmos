@@ -98,24 +98,6 @@ static const key_subst_t key_substitutions[NUM_KEY_SUBSTITUTIONS] = {
         {"msgs/value/validator_src_address", "Validator Source"},
         {"msgs/value/validator_dst_address", "Validator Dest"},
 
-        // MsgSubmitProposal
-        {"msgs/value/description",              "Description"},
-        {"msgs/value/initial_deposit/amount",  "Deposit Amount"},
-        {"msgs/value/initial_deposit/denom",   "Deposit Denom"},
-        {"msgs/value/proposal_type",            "Proposal"},
-        {"msgs/value/proposer",                 "Proposer"},
-        {"msgs/value/title",                    "Title"},
-
-        // MsgDeposit
-        {"msgs/value/depositer",                 "Sender"},
-        {"msgs/value/proposal_id",               "Proposal ID"},
-        {"msgs/value/amount",                    "Amount"},
-
-        // MsgVote
-        {"msgs/value/voter",                    "Description"},
-//        {"msgs/value/proposal_id",              "Proposal ID"},
-        {"msgs/value/option",                   "Option"},
-
         // MsgWithdrawDelegationReward
 //        {"msgs/value/delegator_address", "Delegator"},      // duplicated
 //        {"msgs/value/validator_address", "Validator"},      // duplicated
@@ -126,9 +108,6 @@ static const key_subst_t value_substitutions[NUM_VALUE_SUBSTITUTIONS] = {
         {"staking/MsgDelegate", "Delegate"},
         {"staking/MsgUndelegate", "Undelegate"},
         {"staking/MsgBeginRedelegate", "Redelegate"},
-        {"cosmos-sdk/MsgSubmitProposal", "Propose"},
-        {"cosmos-sdk/MsgDeposit", "Deposit"},
-        {"cosmos-sdk/MsgVote", "Vote"},
         {"distribution/MsgWithdrawDelegationReward", "Withdraw Reward"},
 };
 

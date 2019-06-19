@@ -27,8 +27,8 @@ extern "C" {
 #define ERR_MUST_INDEX_FIRST -2
 
 #define NUM_REQUIRED_ROOT_PAGES 6
-#define NUM_KEY_SUBSTITUTIONS 29
-#define NUM_VALUE_SUBSTITUTIONS 8
+#define NUM_KEY_SUBSTITUTIONS 18
+#define NUM_VALUE_SUBSTITUTIONS 5
 
 typedef struct {
     char str1[50];

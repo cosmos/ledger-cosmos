@@ -24,7 +24,7 @@
 
 #define BIP32_LEN_DEFAULT   0
 #define BIP32_0_DEFAULT     (0x80000000 | 44)
-#define BIP32_1_DEFAULT     (0x80000000 | 118)
+#define BIP32_1_DEFAULT     (0x80000000 | 330)
 #define BIP32_2_DEFAULT     (0x80000000 | 0)
 #define BIP32_3_DEFAULT     (0)
 #define BIP32_4_DEFAULT     (0)

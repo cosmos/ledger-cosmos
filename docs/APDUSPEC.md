@@ -76,7 +76,7 @@ The general structure of commands and responses is as follows:
 | L          | byte (1) | Bytes in payload       | (depends) |
 | PL         | byte (1) | Derivation Path Length | 3<=PL<=10 |
 | Path[0]    | byte (4) | Derivation Path Data   | 44        |
-| Path[1]    | byte (4) | Derivation Path Data   | 118       |
+| Path[1]    | byte (4) | Derivation Path Data   | 330       |
 | ..         | byte (4) | Derivation Path Data   |           |
 | Path[PL-1] | byte (4) | Derivation Path Data   |           |
 
@@ -114,7 +114,7 @@ All other packets/chunks should contain message to sign
 | ---------- | -------- | ---------------------- | --------- |
 | PL         | byte (1) | Derivation Path Length | 3<=PL<=10 |
 | Path[0]    | byte (4) | Derivation Path Data   | 44        |
-| Path[1]    | byte (4) | Derivation Path Data   | 118       |
+| Path[1]    | byte (4) | Derivation Path Data   | 330       |
 | ..         | byte (4) | Derivation Path Data   |           |
 | Path[PL-1] | byte (4) | Derivation Path Data   |           |
 | Message    | bytes... | Message to Sign        |           |
@@ -149,7 +149,7 @@ All other packets/chunks should contain message to sign
 | HRP        | byte (HRP_LEN) | Bech32 HRP             |                |
 | PL         | byte (1)       | Derivation Path Length | 3<=PL<=10      |
 | Path[0]    | byte (4)       | Derivation Path Data   | 44             |
-| Path[1]    | byte (4)       | Derivation Path Data   | 118            |
+| Path[1]    | byte (4)       | Derivation Path Data   | 330            |
 | ..         | byte (4)       | Derivation Path Data   |                |
 | Path[PL-1] | byte (4)       | Derivation Path Data   |                |
 
