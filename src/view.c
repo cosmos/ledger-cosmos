@@ -167,27 +167,27 @@ static const bagl_element_t view_addr_choose[] = {
                      (const char *) viewctl.dataKey),
 
 #if defined(TARGET_NANOX)
-    UI_Icon(UIID_ICONLEFT1, 2, 28, 4, 7, BAGL_GLYPH_ICON_LEFT),
-    UI_Icon(UIID_ICONRIGHT1, 122, 28, 4, 7, BAGL_GLYPH_ICON_RIGHT),
-    UI_Icon(UIID_ICONLEFT2, 2, 28, 4, 7, BAGL_GLYPH_ICON_LEFT),
-    UI_Icon(UIID_ICONRIGHT2, 122, 28, 4, 7, BAGL_GLYPH_ICON_RIGHT),
+UI_Icon(UIID_ICONLEFT1, 2, 28, 4, 7, BAGL_GLYPH_ICON_LEFT),
+UI_Icon(UIID_ICONRIGHT1, 122, 28, 4, 7, BAGL_GLYPH_ICON_RIGHT),
+UI_Icon(UIID_ICONLEFT2, 2, 28, 4, 7, BAGL_GLYPH_ICON_LEFT),
+UI_Icon(UIID_ICONRIGHT2, 122, 28, 4, 7, BAGL_GLYPH_ICON_RIGHT),
 
-    UI_Icon(UIID_MARKER1, 0, 0, 7, 7, ((const char*)&C_digit_dot)),
-    UI_Icon(UIID_MARKER2, 0, 9, 7, 7, ((const char*)&C_digit_dot)),
+UI_Icon(UIID_MARKER1, 0, 0, 7, 7, ((const char*)&C_digit_dot)),
+UI_Icon(UIID_MARKER2, 0, 9, 7, 7, ((const char*)&C_digit_dot)),
 
-    UI_LabelLine(UIID_LABEL+2, 0, 9 + UI_11PX * 2, UI_SCREEN_WIDTH, UI_11PX, UI_WHITE, UI_BLACK, (const char *) viewctl.dataValueChunk[0]),
-    UI_LabelLine(UIID_LABEL+3, 0, 9 + UI_11PX * 3, UI_SCREEN_WIDTH, UI_11PX, UI_WHITE, UI_BLACK, (const char *) viewctl.dataValueChunk[1]),
-    UI_LabelLine(UIID_LABEL+4, 0, 9 + UI_11PX * 4, UI_SCREEN_WIDTH, UI_11PX, UI_WHITE, UI_BLACK, (const char *) viewctl.dataValueChunk[2]),
-    UI_LabelLine(UIID_LABEL+5, 0, 9 + UI_11PX * 5, UI_SCREEN_WIDTH, UI_11PX, UI_WHITE, UI_BLACK, (const char *) viewctl.dataValueChunk[3]),
+UI_LabelLine(UIID_LABEL+2, 0, 9 + UI_11PX * 2, UI_SCREEN_WIDTH, UI_11PX, UI_WHITE, UI_BLACK, (const char *) viewctl.dataValueChunk[0]),
+UI_LabelLine(UIID_LABEL+3, 0, 9 + UI_11PX * 3, UI_SCREEN_WIDTH, UI_11PX, UI_WHITE, UI_BLACK, (const char *) viewctl.dataValueChunk[1]),
+UI_LabelLine(UIID_LABEL+4, 0, 9 + UI_11PX * 4, UI_SCREEN_WIDTH, UI_11PX, UI_WHITE, UI_BLACK, (const char *) viewctl.dataValueChunk[2]),
+UI_LabelLine(UIID_LABEL+5, 0, 9 + UI_11PX * 5, UI_SCREEN_WIDTH, UI_11PX, UI_WHITE, UI_BLACK, (const char *) viewctl.dataValueChunk[3]),
 #else
-    UI_Icon(UIID_ICONREJECT, 0, 0, 7, 7, BAGL_GLYPH_ICON_CROSS),
-    UI_Icon(UIID_ICONACCEPT, 128 - 7, 0, 7, 7, BAGL_GLYPH_ICON_CHECK),
-    UI_Icon(UIID_ICONLEFT1, 0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT),
-    UI_Icon(UIID_ICONRIGHT1, 128 - 7, 0, 7, 7, BAGL_GLYPH_ICON_RIGHT),
-    UI_Icon(UIID_ICONLEFT2, 0, 9, 7, 7, BAGL_GLYPH_ICON_LEFT),
-    UI_Icon(UIID_ICONRIGHT2, 128 - 7, 9, 7, 7, BAGL_GLYPH_ICON_RIGHT),
+        UI_Icon(UIID_ICONREJECT, 0, 0, 7, 7, BAGL_GLYPH_ICON_CROSS),
+        UI_Icon(UIID_ICONACCEPT, 128 - 7, 0, 7, 7, BAGL_GLYPH_ICON_CHECK),
+        UI_Icon(UIID_ICONLEFT1, 0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT),
+        UI_Icon(UIID_ICONRIGHT1, 128 - 7, 0, 7, 7, BAGL_GLYPH_ICON_RIGHT),
+        UI_Icon(UIID_ICONLEFT2, 0, 9, 7, 7, BAGL_GLYPH_ICON_LEFT),
+        UI_Icon(UIID_ICONRIGHT2, 128 - 7, 9, 7, 7, BAGL_GLYPH_ICON_RIGHT),
 
-    UI_LabelLineScrolling(UIID_LABELSCROLL, 16, 30, 96, 11, UI_WHITE, UI_BLACK, (const char *) viewctl.dataValue),
+        UI_LabelLineScrolling(UIID_LABELSCROLL, 16, 30, 96, 11, UI_WHITE, UI_BLACK, (const char *) viewctl.dataValue),
 #endif
 };
 
@@ -385,13 +385,12 @@ void view_addr_choose_update() {
         view_addr_choose_data.status.mode == VIEW_ADDR_MODE_CONFIRM) {
         print_value("This is a very long string that needs to be scrolled otherwise it does not fit");
 
-        bip32_depth = 5;
-        bip32_path[0] = BIP32_0_DEFAULT;
-        bip32_path[1] = BIP32_1_DEFAULT;
-        bip32_path[2] = 0x80000000 | view_addr_choose_data.account;
-        bip32_path[3] = BIP32_3_DEFAULT;
-        bip32_path[4] = view_addr_choose_data.index;
-        get_bech32_addr(viewctl.dataValue);
+        setBip32Path(BIP32_0_DEFAULT,
+                     BIP32_1_DEFAULT,
+                     0x80000000 | view_addr_choose_data.account,
+                     BIP32_3_DEFAULT,
+                     view_addr_choose_data.index);
+        getBech32Addr(viewctl.dataValue);
     }
 
     viewctl_dataValue_split();
@@ -417,8 +416,8 @@ void view_addr_choose_show(unsigned int _) {
 
 void view_addr_confirm(unsigned int _) {
     view_addr_choose_data.status.mode = VIEW_ADDR_MODE_CONFIRM;
-    view_addr_choose_data.account = BIP32_ACCOUNT;
-    view_addr_choose_data.index = BIP32_INDEX;
+    view_addr_choose_data.account = getBip32Account();
+    view_addr_choose_data.index = getBip32Index();
     view_addr_choose_update();
 
 #if defined(TARGET_NANOS)

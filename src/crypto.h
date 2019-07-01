@@ -15,6 +15,7 @@
 *  limitations under the License.
 ********************************************************************************/
 #pragma once
+
 #include <stdint.h>
 #include "os.h"
 #include "cx.h"
@@ -22,41 +23,38 @@
 #define MAX_BECH32_HRP_LEN      83
 #define PK_COMPRESSED_LEN       33
 
-#define BIP32_LEN_DEFAULT   0
-#define BIP32_0_DEFAULT     (0x80000000 | 44)
-#define BIP32_1_DEFAULT     (0x80000000 | 118)
+#define BIP32_LEN_DEFAULT   5
+#define BIP32_0_DEFAULT     (0x80000000 | 0x2c)
+#define BIP32_1_DEFAULT     (0x80000000 | 0x76)
 #define BIP32_2_DEFAULT     (0x80000000 | 0)
 #define BIP32_3_DEFAULT     (0)
 #define BIP32_4_DEFAULT     (0)
 
-#define BIP32_ACCOUNT       (bip32_path[2] & 0x7FFFFFF)
-#define BIP32_INDEX         (bip32_path[4] & 0x7FFFFFF)
-
-typedef enum {
-    SECP256K1 = 0,
-    ED25519 = 1
-} sigtype_t;
-
-extern uint8_t bip32_depth;
-extern uint32_t bip32_path[10];
-extern sigtype_t current_sigtype;
+#define BIP32_NO_ERROR              0
+#define BIP32_INVALID_LENGTH        -1
+#define BIP32_INVALID_PATH          -2
 
 extern char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
 extern uint8_t bech32_hrp_len;
+extern cx_ecfp_public_key_t publicKey;
 
-void keys_secp256k1(cx_ecfp_public_key_t *publicKey,
-                    cx_ecfp_private_key_t *privateKey,
-                    const uint8_t privateKeyData[32]);
+void crypto_init();
+
+int32_t getBip32Account();
+int32_t getBip32Index();
+void setBip32Index(uint32_t newIndex);
+int8_t setBip32Path(uint32_t path0,
+                    uint32_t path1,
+                    uint32_t path2,
+                    uint32_t path3,
+                    uint32_t path4);
+
+void updatePubKey();
+void getPubKeyCompressed(uint8_t *pkc);
+void getBech32Addr(char *bech32_addr);
 
 int sign_secp256k1(const uint8_t *message,
                    unsigned int message_length,
                    uint8_t *signature,
                    unsigned int signature_capacity,
-                   unsigned int *signature_length,
-                   cx_ecfp_private_key_t *privateKey);
-
-void getPubKey(cx_ecfp_public_key_t *publicKey);
-
-void get_pk_compressed(uint8_t *pkc);
-
-void get_bech32_addr(char *bech32_addr);
+                   unsigned int *signature_length);
