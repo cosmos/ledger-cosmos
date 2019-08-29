@@ -93,6 +93,10 @@ int sign_secp256k1(const uint8_t *message,
     cx_ecfp_private_key_t privateKey;
     uint8_t privateKeyData[32];
 
+    /////////
+    io_seproxyhal_io_heartbeat();
+    /////////
+
     os_perso_derive_node_bip32(CX_CURVE_256K1,
                                bip32.path,
                                BIP32_LEN_DEFAULT,
@@ -100,9 +104,17 @@ int sign_secp256k1(const uint8_t *message,
     keysSecp256k1(&publicKey, &privateKey, privateKeyData);
     memset(privateKeyData, 0, 32);
 
+    /////////
+    io_seproxyhal_io_heartbeat();
+    /////////
+
     // Hash
     uint8_t message_digest[CX_SHA256_SIZE];
     cx_hash_sha256(message, message_length, message_digest, CX_SHA256_SIZE);
+
+    /////////
+    io_seproxyhal_io_heartbeat();
+    /////////
 
     // Sign
     unsigned int info = 0;
@@ -115,6 +127,10 @@ int sign_secp256k1(const uint8_t *message,
             signature,
             signature_capacity,
             &info);
+
+    /////////
+    io_seproxyhal_io_heartbeat();
+    /////////
 
     os_memset(&privateKey, 0, sizeof(privateKey));
 #ifdef TESTING_ENABLED
