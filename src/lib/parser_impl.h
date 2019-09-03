@@ -37,6 +37,11 @@ typedef enum {
 } parser_error_t;
 
 typedef struct {
+    const char *data;
+    uint16_t dataLen;
+    struct {
+        unsigned make_friendly :1;
+    } flags;
 } parser_context_t;
 
 #ifdef __cplusplus

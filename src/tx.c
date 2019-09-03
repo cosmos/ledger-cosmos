@@ -73,6 +73,8 @@ uint8_t *tx_get_buffer() {
 }
 
 const char *tx_parse() {
+    ctx_parsed_tx.flags.make_friendly = 1;
+
     uint8_t err = parser_parse(
         &ctx_parsed_tx,
         tx_get_buffer(),
@@ -82,7 +84,7 @@ const char *tx_parse() {
         return parser_getErrorDescription(err);
     }
 
-    err = parser_validate();
+    err = parser_validate(&ctx_parsed_tx);
     if (err != parser_ok) {
         return parser_getErrorDescription(err);
     }

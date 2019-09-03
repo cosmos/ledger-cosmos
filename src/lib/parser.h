@@ -29,7 +29,7 @@ parser_error_t parser_parse(parser_context_t *ctx,
                             uint8_t *data, uint16_t dataLen);
 
 //// verifies tx fields
-parser_error_t parser_validate();
+parser_error_t parser_validate(parser_context_t *ctx);
 
 //// returns the number of items in the current parsing context
 uint8_t parser_getNumItems(parser_context_t *ctx);

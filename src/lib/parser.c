@@ -15,12 +15,8 @@
 ********************************************************************************/
 
 #include <stdio.h>
-#include "zxmacros.h"
-#include "parser.h"
-#include "cosmos.h"
 
 #include "lib/json_parser.h"
-#include "lib/tx_validate.h"
 #include "lib/tx_parser.h"
 #include "lib/tx_display.h"
 
@@ -34,11 +30,10 @@ parser_error_t parser_parse(parser_context_t *ctx,
                             uint8_t *data,
                             uint16_t dataLen) {
 
-    lastErrorMessage = json_parse_s(&parsed_transaction, (const char *) data, dataLen);
-    if (lastErrorMessage != NULL) {
-        return parser_extended_error;
-    }
-    lastErrorMessage = json_validate(&parsed_transaction, (const char *) data);
+    ctx->data = (const char *) data;
+    ctx->dataLen = dataLen;
+
+    lastErrorMessage = json_parse_s(&parsed_transaction, ctx->data, ctx->dataLen);
     if (lastErrorMessage != NULL) {
         return parser_extended_error;
     }
@@ -84,7 +79,13 @@ const char *parser_getErrorDescription(parser_error_t err) {
     }
 }
 
-parser_error_t parser_validate() {
+parser_error_t parser_validate(parser_context_t *ctx) {
+    lastErrorMessage = json_validate(&parsed_transaction, ctx->data);
+
+    if (lastErrorMessage != NULL) {
+        return parser_extended_error;
+    }
+
     return parser_ok;
 }
 
@@ -112,7 +113,10 @@ parser_error_t parser_getItem(parser_context_t *ctx,
     }
 
     *pageCount = ret;
-//    tx_display_make_friendly();
+
+    if (ctx->flags.make_friendly) {
+        tx_display_make_friendly();
+    }
 
     return err;
 }
