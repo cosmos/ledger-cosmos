@@ -30,7 +30,6 @@ void reset_parsed_json(parsed_json_t *parser_data) {
 
 const char *json_parse(parsed_json_t *parsed_json, const char *transaction) {
     return json_parse_s(parsed_json, transaction, strlen(transaction));
-
 }
 
 const char *json_parse_s(parsed_json_t *parsed_json,

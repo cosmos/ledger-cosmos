@@ -1,6 +1,5 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
-*   (c) 2018, 2019 ZondaX GmbH
+*  (c) 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -16,14 +15,30 @@
 ********************************************************************************/
 #pragma once
 
-#include "os.h"
-#include "cx.h"
-#include "view_common.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-// Initialize and show control
-void viewexpl_start(
-        int start_page,
-        viewctl_delegate_getData delegate_update,
-        viewctl_delegate_ready delegate_ready,
-        viewctl_delegate_exit delegate_exit
-        );
+#include <stdint.h>
+#include <stddef.h>
+
+typedef enum {
+    parser_ok = 0,
+    parser_no_data = 1,
+    parser_extended_error = 2,
+    parser_unexpected_buffer_end = 3,
+    parser_unexpected_wire_type = 4,
+    parser_unexpected_version = 5,
+    parser_unexpected_characters = 6,
+    parser_unexpected_field = 7,
+    parser_duplicated_field = 8,
+    parser_value_out_of_range = 9,
+    parser_unexpected_chain = 10,
+} parser_error_t;
+
+typedef struct {
+} parser_context_t;
+
+#ifdef __cplusplus
+}
+#endif

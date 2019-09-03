@@ -26,29 +26,17 @@
 #endif
 #endif
 
-#include "view_common.h"
-#include "view_expl.h"
-
-//------ Event handlers
-/// view_set_handlers
-void view_set_handlers(viewctl_delegate_getData func_getData,
-                       viewctl_delegate_accept func_accept,
-                       viewctl_delegate_reject func_reject);
-
-//------ Common functions
 /// view_init (initializes UI)
-void view_init(void);
+void view_init();
 
 /// view_idle_show (idle view - main menu + status)
 void view_idle_show(unsigned int ignored);
 
-/// view_status
-void view_status();
+/// view_error (error view)
+void view_error_show();
 
-/// view_tx_show (show/review transaction view)
-void view_sign_show();
-
-/// view_addr_confirm (show/accept public key + address request)
-void view_addr_confirm(unsigned int _);
-
+// shows address in the screen
 void view_address_show();
+
+// Shows review screen + later sign menu
+void view_sign_show();

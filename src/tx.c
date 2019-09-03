@@ -17,19 +17,15 @@
 #include "tx.h"
 #include "apdu_codes.h"
 #include "buffering.h"
-#include "lib/json_parser.h"
-#include "lib/tx_validate.h"
-#include "lib/tx_parser.h"
-
-// TODO: Remove this dependency
-#include "view.h"
+#include "lib/parser.h"
+#include <string.h>
 
 #if defined(TARGET_NANOX)
-    #define RAM_BUFFER_SIZE 8192
-    #define FLASH_BUFFER_SIZE 16384
+#define RAM_BUFFER_SIZE 8192
+#define FLASH_BUFFER_SIZE 16384
 #elif defined(TARGET_NANOS)
-    #define RAM_BUFFER_SIZE 384
-    #define FLASH_BUFFER_SIZE 8192
+#define RAM_BUFFER_SIZE 384
+#define FLASH_BUFFER_SIZE 8192
 #endif
 
 // Ram
@@ -49,7 +45,7 @@ storage_t const N_appdata_impl __attribute__ ((aligned(64)));
 #define N_appdata (*(volatile storage_t *)PIC(&N_appdata_impl))
 #endif
 
-parsed_json_t parsed_transaction;
+parser_context_t ctx_parsed_tx;
 
 void tx_initialize() {
     buffering_init(
@@ -76,23 +72,54 @@ uint8_t *tx_get_buffer() {
     return buffering_get_buffer()->data;
 }
 
-const char* tx_parse() {
-    const char *transaction_buffer = (const char *) tx_get_buffer();
-    const char* error_msg = json_parse_s(&parsed_transaction, transaction_buffer, tx_get_buffer_length());
-    if (error_msg != NULL) {
-        return error_msg;
-    }
-    error_msg = json_validate(&parsed_transaction, transaction_buffer);
-    if (error_msg != NULL) {
-        return error_msg;
+const char *tx_parse() {
+    uint8_t err = parser_parse(
+        &ctx_parsed_tx,
+        tx_get_buffer(),
+        tx_get_buffer_length());
+
+    if (err != parser_ok) {
+        return parser_getErrorDescription(err);
     }
 
-    parsing_context_t context;
-    context.tx = transaction_buffer;
-    context.max_chars_per_key_line = MAX_CHARS_PER_KEY_LINE;
-    context.max_chars_per_value_line = MAX_CHARS_PER_VALUE_LINE;
-    context.parsed_tx = &parsed_transaction;
+    err = parser_validate();
+    if (err != parser_ok) {
+        return parser_getErrorDescription(err);
+    }
 
-    set_parsing_context(context);
     return NULL;
+}
+
+uint8_t tx_getNumItems() {
+    return parser_getNumItems(&ctx_parsed_tx);
+}
+
+tx_error_t tx_getItem(int8_t displayIdx,
+                      char *outKey, uint16_t outKeyLen,
+                      char *outValue, uint16_t outValueLen,
+                      uint8_t pageIdx, uint8_t *pageCount) {
+    tx_error_t err = tx_no_error;
+
+    err = (tx_error_t) parser_getItem(&ctx_parsed_tx,
+                                      displayIdx,
+                                      outKey, outKeyLen,
+                                      outValue, outValueLen,
+                                      pageIdx, pageCount);
+
+    if (*pageCount > 1) {
+        uint8_t keyLen = strlen(outKey);
+        if (keyLen < outKeyLen) {
+            // FIXME: Improve Key Trimming
+            snprintf(outKey + keyLen, outKeyLen - keyLen, " [%d/%d]", pageIdx + 1, *pageCount);
+        }
+    }
+
+    // Convert error codes
+    if (err == parser_no_data)
+        return tx_no_data;
+
+    if (err == parser_ok)
+        return tx_no_error;
+
+    return err;
 }

@@ -26,8 +26,7 @@
 #include "tx.h"
 #include "lib/crypto.h"
 #include "cosmos.h"
-#include <zxmacros.h>
-#include "lib/tx_display.h"
+#include "zxmacros.h"
 
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
@@ -111,7 +110,7 @@ void extractBip32(uint32_t rx, uint32_t offset) {
     }
 }
 
-bool process_chunk(volatile uint32_t *tx, uint32_t rx, bool getBip32) {
+bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
     int packageIndex = G_io_apdu_buffer[OFFSET_PCK_INDEX];
     int packageCount = G_io_apdu_buffer[OFFSET_PCK_COUNT];
 
@@ -124,10 +123,9 @@ bool process_chunk(volatile uint32_t *tx, uint32_t rx, bool getBip32) {
         tx_initialize();
         tx_reset();
 
-        if (getBip32) {
-            extractBip32(rx, OFFSET_DATA);
-            return packageIndex == packageCount;
-        }
+        extractBip32(rx, OFFSET_DATA);
+
+        return packageIndex == packageCount;
     }
 
     if (tx_append(&(G_io_apdu_buffer[offset]), rx - offset) != rx - offset) {
@@ -136,58 +134,6 @@ bool process_chunk(volatile uint32_t *tx, uint32_t rx, bool getBip32) {
 
     return packageIndex == packageCount;
 }
-
-//region View Transaction Handlers
-
-int16_t tx_getData(char *title, int16_t max_title_length,
-                   char *key, int16_t max_key_length,
-                   char *value, int16_t max_value_length,
-                   int16_t page_index,
-                   int16_t chunk_index,
-                   int16_t *page_count_out,
-                   int16_t *chunk_count_out) {
-    *page_count_out = tx_display_num_pages();
-    *chunk_count_out = 0;
-
-    if (*page_count_out > 0) {
-
-        // TODO: remove this title
-        snprintf(title,
-                 max_title_length,
-                 "%02d/%02d",
-                 page_index + 1,
-                 *page_count_out);
-
-        INIT_QUERY(key, max_key_length, value, max_value_length, chunk_index)
-        *chunk_count_out = tx_display_get_item(page_index);
-
-        tx_display_make_friendly();
-    }
-
-    return *chunk_count_out;
-}
-
-void tx_accept_sign() {
-    uint8_t length = app_sign();
-
-    if (length == 0) {
-        set_code(G_io_apdu_buffer, length, APDU_CODE_SIGN_VERIFY_ERROR);
-        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
-        view_idle_show(0);
-    }
-
-    set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
-    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
-    view_idle_show(0);
-}
-
-void tx_reject() {
-    set_code(G_io_apdu_buffer, 0, APDU_CODE_COMMAND_NOT_ALLOWED);
-    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
-    view_idle_show(0);
-}
-
-//endregion
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     uint16_t sw = 0;
@@ -245,20 +191,17 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                 }
 
                 case INS_SIGN_SECP256K1: {
-                    if (!process_chunk(tx, rx, true))
+                    if (!process_chunk(tx, rx))
                         THROW(APDU_CODE_OK);
 
                     const char *error_msg = tx_parse();
+
                     if (error_msg != NULL) {
                         int error_msg_length = strlen(error_msg);
                         os_memmove(G_io_apdu_buffer, error_msg, error_msg_length);
                         *tx += (error_msg_length);
                         THROW(APDU_CODE_DATA_INVALID);
                     }
-
-// FIXME:
-                    tx_display_index_root();
-                    view_set_handlers(tx_getData, tx_accept_sign, tx_reject);
 
                     view_sign_show();
                     *flags |= IO_ASYNCH_REPLY;
