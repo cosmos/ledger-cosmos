@@ -36,7 +36,7 @@ typedef struct {
 } key_subst_t;
 
 typedef struct {
-    int16_t num_pages;
+    int16_t numItems;
     int16_t subroot_start_token[NUM_REQUIRED_ROOT_PAGES];
     uint8_t num_subpages[NUM_REQUIRED_ROOT_PAGES];
 } display_cache_t;
@@ -50,11 +50,11 @@ void tx_display_index_root();
 /// This is the main function called from ledger that updates key and value strings
 /// that are going to be displayed in the UI.
 /// This function assumes that the tx_ctx has been properly set
-int16_t tx_display_get_item(uint16_t page_index);
+int16_t tx_display_get_item(uint16_t itemIndex);
 
 /// Return number of UI pages that we'll have for the current json transaction (only if the tx is valid)
 /// \return number of pages (msg pages + 5 required)
-int16_t tx_display_num_pages();
+int16_t tx_display_numItems();
 
 /// Apply postprocessing rules to key and values
 void tx_display_make_friendly();

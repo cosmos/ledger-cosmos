@@ -106,20 +106,21 @@ tx_error_t tx_getItem(int8_t displayIdx,
                                       outValue, outValueLen,
                                       pageIdx, pageCount);
 
-    if (*pageCount > 1) {
-        uint8_t keyLen = strlen(outKey);
-        if (keyLen < outKeyLen) {
-            // FIXME: Improve Key Trimming
-            snprintf(outKey + keyLen, outKeyLen - keyLen, " [%d/%d]", pageIdx + 1, *pageCount);
-        }
-    }
-
     // Convert error codes
     if (err == parser_no_data)
         return tx_no_data;
 
     if (err == parser_ok)
         return tx_no_error;
+
+    if (*pageCount > 1) {
+        uint8_t keyLen = strlen(outKey);
+        if (keyLen < outKeyLen) {
+            // FIXME: Improve Key Trimming
+            snprintf(outKey + keyLen, outKeyLen - keyLen,
+                     " [%d/%d]", pageIdx + 1, *pageCount);
+        }
+    }
 
     return err;
 }

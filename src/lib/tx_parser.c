@@ -18,14 +18,7 @@
 #include <stdio.h>
 #include "tx_parser.h"
 #include "json_parser.h"
-
-#if defined(TARGET_NANOX) || defined(TARGET_NANOS)
-#include "os.h"
-#define COPYFUNC os_memmove
-#else
-#define COPYFUNC memcpy
-#define __always_inline
-#endif
+#include "zxmacros.h"
 
 // Global context to save memory / stack space in recursive calls
 parsing_context_t parsing_context;
@@ -52,7 +45,7 @@ __always_inline void strcat_chunk_s(char *dst, uint16_t dst_max, const char *src
 
     if (src_chunk_size > 0) {
         // Check bounds
-        COPYFUNC(dst + prev_size, src_chunk, src_chunk_size);
+        MEMCPY(dst + prev_size, src_chunk, src_chunk_size);
         // terminate
         *(dst + prev_size + src_chunk_size) = 0;
     }
@@ -83,7 +76,7 @@ __always_inline int16_t tx_get_value(const int16_t token_index) {
     if (chunk_len > tx_ctx.query.out_val_len - 1) {
         chunk_len = tx_ctx.query.out_val_len - 1;
     }
-    COPYFUNC(tx_ctx.query.out_val, parsing_context.tx + chunk_start, chunk_len);
+    MEMCPY(tx_ctx.query.out_val, parsing_context.tx + chunk_start, chunk_len);
     tx_ctx.query.out_val[chunk_len] = 0;
 
     return num_chunks;

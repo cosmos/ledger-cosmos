@@ -148,7 +148,7 @@ void tx_display_index_root() {
     }
 
     // Clear values
-    display_cache.num_pages = 0;
+    display_cache.numItems = 0;
     memset(display_cache.num_subpages, 0, NUM_REQUIRED_ROOT_PAGES);
     memset(display_cache.subroot_start_token, TX_TOKEN_NOT_FOUND, NUM_REQUIRED_ROOT_PAGES);
 
@@ -183,7 +183,7 @@ void tx_display_index_root() {
                 tx_ctx.query.item_index++;
             }
         };
-        display_cache.num_pages += display_cache.num_subpages[idx];
+        display_cache.numItems += display_cache.num_subpages[idx];
 
         if (display_cache.num_subpages[idx] == 0) {
             break;
@@ -193,13 +193,13 @@ void tx_display_index_root() {
     parsing_context.cache_valid = 1;
 }
 
-int16_t tx_display_num_pages() {
+int16_t tx_display_numItems() {
     tx_display_index_root();
-    return display_cache.num_pages;
+    return display_cache.numItems;
 }
 
 // This function assumes that the tx_ctx has been set properly
-int16_t tx_display_get_item(uint16_t page_index) {
+int16_t tx_display_get_item(uint16_t itemIndex) {
     if (!parsing_context.cache_valid) {
         return ERR_MUST_INDEX_FIRST;
     }
@@ -207,13 +207,13 @@ int16_t tx_display_get_item(uint16_t page_index) {
     // TODO: Verify it has been properly set?
     tx_ctx.query.out_key[0] = 0;
     tx_ctx.query.out_val[0] = 0;
-    if (page_index < 0 || page_index >= display_cache.num_pages) {
+    if (itemIndex < 0 || itemIndex >= display_cache.numItems) {
         return -1;
     }
 
     tx_ctx.query.item_index = 0;
     uint16_t root_index = 0;
-    for (uint16_t i = 0; i < page_index; i++) {
+    for (uint16_t i = 0; i < itemIndex; i++) {
         tx_ctx.query.item_index++;
         if (tx_ctx.query.item_index >= display_cache.num_subpages[root_index]) {
             tx_ctx.query.item_index = 0;

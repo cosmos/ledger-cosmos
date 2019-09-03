@@ -15,7 +15,7 @@
 ********************************************************************************/
 
 #include <stdio.h>
-#include <zxmacros.h>
+#include "zxmacros.h"
 #include "parser.h"
 #include "cosmos.h"
 
@@ -89,7 +89,7 @@ parser_error_t parser_validate() {
 }
 
 uint8_t parser_getNumItems(parser_context_t *ctx) {
-    return tx_display_num_pages();
+    return tx_display_numItems();
 }
 
 parser_error_t parser_getItem(parser_context_t *ctx,
@@ -103,9 +103,16 @@ parser_error_t parser_getItem(parser_context_t *ctx,
 
     parser_error_t err = parser_ok;
 
-    INIT_QUERY(outKey, outKeyLen, outValue, outValueLen, displayIdx)
-    * pageCount = tx_display_get_item(pageIdx);
-    tx_display_make_friendly();
+    INIT_QUERY(outKey, outKeyLen, outValue, outValueLen, pageIdx)
+
+    int16_t ret = tx_display_get_item(displayIdx);
+
+    if (ret < 0 || ret > 255) {
+        return parser_unexpected_buffer_end;
+    }
+
+    *pageCount = ret;
+//    tx_display_make_friendly();
 
     return err;
 }
