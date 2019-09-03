@@ -1,6 +1,5 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
-*   (c) 2018 ZondaX GmbH
+*   (c) 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -14,6 +13,7 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
+
 #pragma once
 
 #include <zxmacros.h>
@@ -29,7 +29,6 @@ extern "C" {
 extern uint32_t bip32Path[BIP32_LEN_DEFAULT];
 extern char *hrp;
 
-#define BIP32_LEN_DEFAULT   5
 #define PUBKEY_LEN 33
 
 uint8_t extractHRP(uint32_t rx, uint32_t offset);
@@ -38,7 +37,8 @@ void crypto_set_hrp(char *p);
 
 uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len);
 
-uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen);
+uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen,
+                     const uint8_t *message, uint16_t messageLen);
 
 #ifdef __cplusplus
 }

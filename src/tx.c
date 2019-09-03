@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) ZondaX GmbH
+*  (c) 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -14,15 +14,15 @@
 *  limitations under the License.
 ********************************************************************************/
 
-#include "transaction.h"
+#include "tx.h"
 #include "apdu_codes.h"
 #include "buffering.h"
-#include "json_parser.h"
-#include "tx_validate.h"
-#include "tx_parser.h"
+#include "lib/json_parser.h"
+#include "lib/tx_validate.h"
+#include "lib/tx_parser.h"
 
 // TODO: Remove this dependency
-#include "../view.h"
+#include "view.h"
 
 #if defined(TARGET_NANOX)
     #define RAM_BUFFER_SIZE 8192
@@ -51,7 +51,7 @@ storage_t const N_appdata_impl __attribute__ ((aligned(64)));
 
 parsed_json_t parsed_transaction;
 
-void transaction_initialize() {
+void tx_initialize() {
     buffering_init(
         ram_buffer,
         sizeof(ram_buffer),
@@ -60,25 +60,25 @@ void transaction_initialize() {
     );
 }
 
-void transaction_reset() {
+void tx_reset() {
     buffering_reset();
 }
 
-uint32_t transaction_append(unsigned char *buffer, uint32_t length) {
+uint32_t tx_append(unsigned char *buffer, uint32_t length) {
     return buffering_append(buffer, length);
 }
 
-uint32_t transaction_get_buffer_length() {
+uint32_t tx_get_buffer_length() {
     return buffering_get_buffer()->pos;
 }
 
-uint8_t *transaction_get_buffer() {
+uint8_t *tx_get_buffer() {
     return buffering_get_buffer()->data;
 }
 
-const char* transaction_parse() {
-    const char *transaction_buffer = (const char *) transaction_get_buffer();
-    const char* error_msg = json_parse_s(&parsed_transaction, transaction_buffer, transaction_get_buffer_length());
+const char* tx_parse() {
+    const char *transaction_buffer = (const char *) tx_get_buffer();
+    const char* error_msg = json_parse_s(&parsed_transaction, transaction_buffer, tx_get_buffer_length());
     if (error_msg != NULL) {
         return error_msg;
     }

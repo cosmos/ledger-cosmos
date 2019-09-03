@@ -17,14 +17,14 @@
 
 #include "actions.h"
 #include "lib/crypto.h"
-#include "transaction.h"
+#include "tx.h"
 #include "apdu_codes.h"
 #include <os_io_seproxyhal.h>
 
 uint8_t app_sign() {
     uint8_t *signature = G_io_apdu_buffer;
-    const uint8_t *message = transaction_get_buffer();
-    const uint16_t messageLength = transaction_get_buffer_length();
+    const uint8_t *message = tx_get_buffer();
+    const uint16_t messageLength = tx_get_buffer_length();
 
     return crypto_sign(signature, IO_APDU_BUFFER_SIZE - 2, message, messageLength);
 }

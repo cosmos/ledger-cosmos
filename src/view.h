@@ -1,6 +1,6 @@
 /*******************************************************************************
+*   (c) 2018,2019 ZondaX GmbH
 *   (c) 2016 Ledger
-*   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -16,8 +16,16 @@
 ********************************************************************************/
 #pragma once
 
+#include <stdint.h>
+
+#if defined(LEDGER_SPECIFIC)
+#include "bolos_target.h"
+#if defined(BOLOS_SDK)
 #include "os.h"
 #include "cx.h"
+#endif
+#endif
+
 #include "view_common.h"
 #include "view_expl.h"
 

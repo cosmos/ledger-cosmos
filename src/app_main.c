@@ -23,7 +23,7 @@
 
 #include "view.h"
 #include "actions.h"
-#include "lib/transaction.h"
+#include "tx.h"
 #include "lib/crypto.h"
 #include "cosmos.h"
 #include <zxmacros.h>
@@ -121,8 +121,8 @@ bool process_chunk(volatile uint32_t *tx, uint32_t rx, bool getBip32) {
     }
 
     if (packageIndex == 1) {
-        transaction_initialize();
-        transaction_reset();
+        tx_initialize();
+        tx_reset();
 
         if (getBip32) {
             extractBip32(rx, OFFSET_DATA);
@@ -130,7 +130,7 @@ bool process_chunk(volatile uint32_t *tx, uint32_t rx, bool getBip32) {
         }
     }
 
-    if (transaction_append(&(G_io_apdu_buffer[offset]), rx - offset) != rx - offset) {
+    if (tx_append(&(G_io_apdu_buffer[offset]), rx - offset) != rx - offset) {
         THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
     }
 
@@ -248,7 +248,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     if (!process_chunk(tx, rx, true))
                         THROW(APDU_CODE_OK);
 
-                    const char *error_msg = transaction_parse();
+                    const char *error_msg = tx_parse();
                     if (error_msg != NULL) {
                         int error_msg_length = strlen(error_msg);
                         os_memmove(G_io_apdu_buffer, error_msg, error_msg_length);
