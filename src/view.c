@@ -22,7 +22,8 @@
 #include "glyphs.h"
 #include "bagl.h"
 #include "zxmacros.h"
-#include "crypto.h"
+#include "lib/crypto.h"
+#include "cosmos.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -405,7 +406,9 @@ void view_addr_choose_show(unsigned int _) {
     view_addr_choose_data.status.mode = VIEW_ADDR_MODE_ACCOUNT;
     view_addr_choose_data.account = 0;
     view_addr_choose_data.index = 0;
-    strcpy(bech32_hrp, "cosmos");
+
+    crypto_set_hrp("cosmos");
+
     ehAccept = show_idle_menu;
     ehReject = NULL;
 

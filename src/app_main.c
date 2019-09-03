@@ -24,10 +24,12 @@
 #include <zxmacros.h>
 #include <bech32.h>
 
+#include "actions.h"
+
 #include "lib/transaction.h"
 #include "lib/tx_display.h"
 #include "view.h"
-#include "crypto.h"
+#include "lib/crypto.h"
 
 #ifdef TESTING_ENABLED
 // Generate using always the same private data
@@ -59,9 +61,9 @@ unsigned char io_event(unsigned char channel) {
 
         case SEPROXYHAL_TAG_TICKER_EVENT: { //
             UX_TICKER_EVENT(G_io_seproxyhal_spi_buffer, {
-                    if (UX_ALLOWED) {
-                        UX_REDISPLAY();
-                    }
+                if (UX_ALLOWED) {
+                    UX_REDISPLAY();
+                }
             });
             break;
         }
@@ -102,9 +104,9 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
     return 0;
 }
 
+void extractBip32(uint32_t rx, uint32_t offset) {
 #define UINT32_FROM_LE(p) ( (*(p+3) << 24) + (*(p+2) << 16) + (*(p+1) << 8) + (*(p+0)))
 
-void extractBip32(uint32_t rx, uint32_t offset) {
     if (rx < offset + 1) {
         THROW(APDU_CODE_DATA_INVALID);
     }
@@ -119,7 +121,7 @@ void extractBip32(uint32_t rx, uint32_t offset) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 
-    uint8_t *p = (uint8_t *) (G_io_apdu_buffer + offset + 1);
+    uint8_t *p = (uint8_t * )(G_io_apdu_buffer + offset + 1);
 
     if (setBip32Path(UINT32_FROM_LE(p + 0),
                      UINT32_FROM_LE(p + 4),
@@ -128,21 +130,6 @@ void extractBip32(uint32_t rx, uint32_t offset) {
                      UINT32_FROM_LE(p + 16)) != BIP32_NO_ERROR) {
         THROW(APDU_CODE_DATA_INVALID);
     }
-}
-
-void extractHRP(uint8_t *len, char *hrp, uint32_t rx, uint32_t offset) {
-    if (rx < offset + 1) {
-        THROW(APDU_CODE_DATA_INVALID);
-    }
-
-    *len = G_io_apdu_buffer[offset];
-
-    if (*len == 0 || *len > MAX_BECH32_HRP_LEN) {
-        THROW(APDU_CODE_DATA_INVALID);
-    }
-
-    memcpy(hrp, G_io_apdu_buffer + offset + 1, *len);
-    hrp[*len] = 0; // zero terminate
 }
 
 bool process_chunk(volatile uint32_t *tx, uint32_t rx, bool getBip32) {
@@ -201,22 +188,17 @@ int16_t tx_getData(char *title, int16_t max_title_length,
 }
 
 void tx_accept_sign() {
-    unsigned int length = 0;
-    int result = sign_secp256k1(transaction_get_buffer(),
-                                transaction_get_buffer_length(),
-                                G_io_apdu_buffer,
-                                IO_APDU_BUFFER_SIZE,
-                                &length);
+    uint8_t length = app_sign();
 
-    if (result == 1) {
-        set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
-        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
-        view_idle(0);
-    } else {
+    if (length == 0) {
         set_code(G_io_apdu_buffer, length, APDU_CODE_SIGN_VERIFY_ERROR);
         io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
         view_idle(0);
     }
+
+    set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
+    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
+    view_idle(0);
 }
 
 void tx_reject() {
@@ -332,8 +314,8 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
                 case INS_GET_ADDR_SECP256K1: {
                     // Parse arguments
-                    extractHRP(&bech32_hrp_len, bech32_hrp, rx, OFFSET_DATA);
-                    extractBip32(rx, OFFSET_DATA + 1 + bech32_hrp_len);
+                    uint8_t len = extractHRP(rx, OFFSET_DATA);
+                    extractBip32(rx, OFFSET_DATA + 1 + len);
 
                     view_set_handlers(addr_getData, addr_accept, addr_reject);
                     view_addr_confirm(0);

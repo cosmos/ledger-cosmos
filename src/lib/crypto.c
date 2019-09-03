@@ -18,6 +18,7 @@
 
 #include "apdu_codes.h"
 #include "zxmacros.h"
+#include "cosmos.h"
 
 typedef struct {
     unsigned int cached : 1;
@@ -74,6 +75,25 @@ void setBip32Index(uint32_t newIndex) {
     bip32.path[4] = newIndex;
 }
 
+uint8_t extractHRP(uint32_t rx, uint32_t offset) {
+    MEMSET(bech32_hrp, 0, MAX_BECH32_HRP_LEN);
+
+    if (rx < offset + 1) {
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    bech32_hrp_len = G_io_apdu_buffer[offset];
+
+    if (bech32_hrp_len == 0 || bech32_hrp_len > MAX_BECH32_HRP_LEN) {
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    memcpy(bech32_hrp, G_io_apdu_buffer + offset + 1, bech32_hrp_len);
+    bech32_hrp[bech32_hrp_len] = 0;     // zero terminate
+
+    return bech32_hrp_len;
+}
+
 void keysSecp256k1(cx_ecfp_public_key_t *publicKey,
                    cx_ecfp_private_key_t *privateKey,
                    const uint8_t *privateKeyData) {
@@ -82,12 +102,7 @@ void keysSecp256k1(cx_ecfp_public_key_t *publicKey,
     cx_ecfp_generate_pair(CX_CURVE_256K1, publicKey, privateKey, 1);
 }
 
-int sign_secp256k1(const uint8_t *message,
-                   unsigned int message_length,
-                   uint8_t *signature,
-                   unsigned int signature_capacity,
-                   unsigned int *signature_length) {
-
+uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen) {
     // Generate keys
     cx_ecfp_public_key_t publicKey;
     cx_ecfp_private_key_t privateKey;
@@ -110,7 +125,7 @@ int sign_secp256k1(const uint8_t *message,
 
     // Hash
     uint8_t message_digest[CX_SHA256_SIZE];
-    cx_hash_sha256(message, message_length, message_digest, CX_SHA256_SIZE);
+    cx_hash_sha256(message, messageLen, message_digest, CX_SHA256_SIZE);
 
     /////////
     io_seproxyhal_io_heartbeat();
@@ -118,33 +133,22 @@ int sign_secp256k1(const uint8_t *message,
 
     // Sign
     unsigned int info = 0;
-    *signature_length = cx_ecdsa_sign(
-            &privateKey,
-            CX_RND_RFC6979 | CX_LAST,
-            CX_SHA256,
-            message_digest,
-            CX_SHA256_SIZE,
-            signature,
-            signature_capacity,
-            &info);
+    int signatureLength = cx_ecdsa_sign(
+        &privateKey,
+        CX_RND_RFC6979 | CX_LAST,
+        CX_SHA256,
+        message_digest,
+        CX_SHA256_SIZE,
+        signature,
+        signatureMaxlen,
+        &info);
 
     /////////
     io_seproxyhal_io_heartbeat();
     /////////
 
     os_memset(&privateKey, 0, sizeof(privateKey));
-#ifdef TESTING_ENABLED
-    return cx_ecdsa_verify(
-            &publicKey,
-            CX_LAST,
-            CX_SHA256,
-            message_digest,
-            CX_SHA256_SIZE,
-            signature,
-            *signature_length);
-#else
-    return 1;
-#endif
+    return signatureLength;
 }
 
 void updatePubKey() {
@@ -186,4 +190,38 @@ void getBech32Addr(char *bech32_addr) {
     ripemd160_32(hashed_pk, tmp);
 
     bech32EncodeFromBytes(bech32_addr, bech32_hrp, hashed_pk, CX_RIPEMD160_SIZE);
+}
+
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+void crypto_set_hrp(char *p) {
+    bech32_hrp_len = strlen(p);
+    if (bech32_hrp_len < MAX_BECH32_HRP_LEN) {
+        strcpy(bech32_hrp, p);
+    }
+}
+
+uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
+////    if (buffer_len < ED25519_PK_LEN + 30) {
+////        return 0;
+////    }
+////
+////    // extract pubkey (first 32 bytes)
+////    crypto_extractPublicKey(bip32Path, buffer);
+////
+////    char tmp[IOV_PK_PREFIX_LEN + ED25519_PK_LEN];
+////    strcpy(tmp, IOV_PK_PREFIX);
+////    MEMCPY(tmp + IOV_PK_PREFIX_LEN, buffer, ED25519_PK_LEN);
+////
+////    //
+////    uint8_t hash[CX_SHA256_SIZE];
+////    cx_hash_sha256((uint8_t *) tmp, IOV_PK_PREFIX_LEN + ED25519_PK_LEN,
+////                   hash, CX_SHA256_SIZE);
+////
+////    char *addr = (char *) (buffer + ED25519_PK_LEN);
+////    bech32EncodeFromBytes(addr, hrp, hash, 20);
+//    return ED25519_PK_LEN + strlen(addr);
+    return 0;
 }

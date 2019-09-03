@@ -16,26 +16,21 @@
 ********************************************************************************/
 #pragma once
 
-#include <stdint.h>
-#include "os.h"
-#include "cx.h"
+#include <zxmacros.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define MAX_BECH32_HRP_LEN      83
 #define PK_COMPRESSED_LEN       33
 
 #define BIP32_LEN_DEFAULT   5
-#define BIP32_0_DEFAULT     (0x80000000 | 0x2c)
-#define BIP32_1_DEFAULT     (0x80000000 | 0x76)
-#define BIP32_2_DEFAULT     (0x80000000 | 0)
-#define BIP32_3_DEFAULT     (0)
-#define BIP32_4_DEFAULT     (0)
 
 #define BIP32_NO_ERROR              0
 #define BIP32_INVALID_LENGTH        -1
 #define BIP32_INVALID_PATH          -2
 
-extern char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
-extern uint8_t bech32_hrp_len;
 extern cx_ecfp_public_key_t publicKey;
 
 void crypto_init();
@@ -53,8 +48,21 @@ void updatePubKey();
 void getPubKeyCompressed(uint8_t *pkc);
 void getBech32Addr(char *bech32_addr);
 
-int sign_secp256k1(const uint8_t *message,
-                   unsigned int message_length,
-                   uint8_t *signature,
-                   unsigned int signature_capacity,
-                   unsigned int *signature_length);
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////
+
+extern uint32_t bip32Path[BIP32_LEN_DEFAULT];
+extern char *hrp;
+
+uint8_t extractHRP(uint32_t rx, uint32_t offset);
+
+void crypto_set_hrp(char *p);
+
+uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len);
+
+uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen);
+
+#ifdef __cplusplus
+}
+#endif
