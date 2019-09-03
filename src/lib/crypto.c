@@ -21,20 +21,10 @@
 #include "zxmacros.h"
 #include "cosmos.h"
 
-typedef struct {
-    unsigned int cached : 1;
-    unsigned int valid : 1;
-    uint32_t path[BIP32_LEN_DEFAULT];
-} bip32_t;
+uint32_t bip32Path[BIP32_LEN_DEFAULT];
 
-bip32_t bip32;
 uint8_t bech32_hrp_len;
 char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
-
-void crypto_init() {
-    bip32.valid = 0;
-    bip32.cached = 0;
-}
 
 #define SAFE_HEARTBEAT(X)  io_seproxyhal_io_heartbeat(); X; io_seproxyhal_io_heartbeat();
 
@@ -45,7 +35,7 @@ void crypto_extractPublicKey(uint32_t bip32Path[BIP32_LEN_DEFAULT], uint8_t *pub
     uint8_t privateKeyData[32];
 
     SAFE_HEARTBEAT(os_perso_derive_node_bip32(CX_CURVE_256K1,
-                                              bip32.path,
+                                              bip32Path,
                                               BIP32_LEN_DEFAULT,
                                               privateKeyData, NULL));
 
@@ -78,7 +68,7 @@ uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
     SAFE_HEARTBEAT(os_perso_derive_node_bip32(CX_CURVE_256K1,
-                                              bip32.path,
+                                              bip32Path,
                                               BIP32_LEN_DEFAULT,
                                               privateKeyData, NULL));
 
@@ -118,44 +108,6 @@ uint16_t crypto_sign(uint8_t *signature,
 }
 
 #endif
-
-int8_t setBip32Path(uint32_t path0,
-                    uint32_t path1,
-                    uint32_t path2,
-                    uint32_t path3,
-                    uint32_t path4) {
-    // Only paths in the form 44'/118'/{account}'/0/{index} are supported
-    bip32.valid = 0;
-    bip32.cached = 0;
-
-    bip32.path[0] = path0;
-    bip32.path[1] = path1;
-    bip32.path[2] = path2;
-    bip32.path[3] = path3;
-    bip32.path[4] = path4;
-
-    if (bip32.path[0] != BIP32_0_DEFAULT ||
-        bip32.path[1] != BIP32_1_DEFAULT ||
-        bip32.path[3] != BIP32_3_DEFAULT) {
-        return BIP32_INVALID_PATH;
-    }
-
-    bip32.valid = 1;
-    return BIP32_NO_ERROR;
-}
-
-int32_t getBip32Account() {
-    return (bip32.path[2] & 0x7FFFFFF);
-}
-
-int32_t getBip32Index() {
-    return (bip32.path[4] & 0x7FFFFFF);
-}
-
-void setBip32Index(uint32_t newIndex) {
-    bip32.cached = 0;
-    bip32.path[4] = newIndex;
-}
 
 uint8_t extractHRP(uint32_t rx, uint32_t offset) {
     MEMSET(bech32_hrp, 0, MAX_BECH32_HRP_LEN);
@@ -205,7 +157,7 @@ uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
     ripemd160_32(hashed2_pk, hashed1_pk);
 
     char *addr = (char *) (buffer + PUBKEY_LEN);
-    bech32EncodeFromBytes(bech32_addr, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE);
+    bech32EncodeFromBytes(addr, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE);
 
     return PUBKEY_LEN + strlen(addr);
 }

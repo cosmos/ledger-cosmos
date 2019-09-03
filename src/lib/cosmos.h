@@ -22,6 +22,8 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
+#define BIP32_LEN_DEFAULT       5
+
 #define BIP32_0_DEFAULT     (0x80000000 | 0x2c)
 #define BIP32_1_DEFAULT     (0x80000000 | 0x76)
 #define BIP32_2_DEFAULT     (0x80000000 | 0)

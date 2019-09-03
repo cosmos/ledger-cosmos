@@ -24,6 +24,7 @@
 #include <zxmacros.h>
 
 #include "actions.h"
+#include "cosmos.h"
 
 #include "lib/transaction.h"
 #include "lib/tx_display.h"
@@ -105,8 +106,7 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
 
 void extractBip32(uint32_t rx, uint32_t offset) {
 #define UINT32_FROM_LE(p) ( (*(p+3) << 24) + (*(p+2) << 16) + (*(p+1) << 8) + (*(p+0)))
-
-    if (rx < offset + 1) {
+    if ((rx - offset) < 1 + 4 * BIP32_LEN_DEFAULT) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 
@@ -115,18 +115,12 @@ void extractBip32(uint32_t rx, uint32_t offset) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 
-    const uint16_t req_offset = offset + 1 + 4 * BIP32_LEN_DEFAULT;
-    if (rx < req_offset) {
-        THROW(APDU_CODE_DATA_INVALID);
-    }
-
     uint8_t *p = (uint8_t * )(G_io_apdu_buffer + offset + 1);
+    memcpy(bip32Path, p, 4 * BIP32_LEN_DEFAULT);
 
-    if (setBip32Path(UINT32_FROM_LE(p + 0),
-                     UINT32_FROM_LE(p + 4),
-                     UINT32_FROM_LE(p + 8),
-                     UINT32_FROM_LE(p + 12),
-                     UINT32_FROM_LE(p + 16)) != BIP32_NO_ERROR) {
+    if (bip32Path[0] != BIP32_0_DEFAULT ||
+        bip32Path[1] != BIP32_1_DEFAULT ||
+        bip32Path[3] != BIP32_3_DEFAULT) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 }
@@ -201,60 +195,6 @@ void tx_accept_sign() {
 }
 
 void tx_reject() {
-    set_code(G_io_apdu_buffer, 0, APDU_CODE_COMMAND_NOT_ALLOWED);
-    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
-    view_idle(0);
-}
-
-//endregion
-
-//region View Address Handlers
-
-int16_t addr_getData(char *title, int16_t max_title_length,
-                     char *key, int16_t max_key_length,
-                     char *value, int16_t max_value_length,
-                     int16_t page_index,
-                     int16_t chunk_index,
-                     int16_t *page_count_out,
-                     int16_t *chunk_count_out) {
-
-    if (page_count_out)
-        *page_count_out = 1;
-    if (chunk_count_out)
-        *chunk_count_out = 1;
-
-    snprintf(title, max_title_length, "Account %d", getBip32Account());
-    snprintf(key, max_key_length, "index %d", page_index);
-
-    // get address from the current bip32_path
-    setBip32Index(page_index);
-    getBech32Addr(value);
-    return 0;
-}
-
-void addr_accept() {
-#if defined(TARGET_NANOS)
-    print_key("Returning");
-    print_value("Address...");
-    view_status();
-    UX_WAIT();
-#endif
-    // Send pubkey
-    uint8_t *pk = G_io_apdu_buffer;
-    getPubKeyCompressed(pk);
-    int pos = PK_COMPRESSED_LEN;
-
-    // Convert pubkey to bech32 address
-    char *bech32_out = (char *) (G_io_apdu_buffer + pos);
-    getBech32Addr(bech32_out);
-    pos += strlen(bech32_out);
-
-    set_code(G_io_apdu_buffer, pos, APDU_CODE_OK);
-    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, pos + 2);
-    view_idle(0);
-}
-
-void addr_reject() {
     set_code(G_io_apdu_buffer, 0, APDU_CODE_COMMAND_NOT_ALLOWED);
     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
     view_idle(0);
@@ -397,7 +337,6 @@ void app_init() {
     io_seproxyhal_init();
     USB_power(0);
     USB_power(1);
-    crypto_init();
     view_idle(0);
 }
 

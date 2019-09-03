@@ -17,6 +17,7 @@
 #pragma once
 
 #include <zxmacros.h>
+#include "cosmos.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,33 +26,11 @@ extern "C" {
 #define MAX_BECH32_HRP_LEN      83
 #define PK_COMPRESSED_LEN       33
 
-#define BIP32_LEN_DEFAULT   5
-#define PUBKEY_LEN 33
-
-#define BIP32_NO_ERROR              0
-#define BIP32_INVALID_LENGTH        -1
-#define BIP32_INVALID_PATH          -2
-
-void crypto_init();
-
-int32_t getBip32Account();
-int32_t getBip32Index();
-void setBip32Index(uint32_t newIndex);
-int8_t setBip32Path(uint32_t path0,
-                    uint32_t path1,
-                    uint32_t path2,
-                    uint32_t path3,
-                    uint32_t path4);
-
-void getPubKeyCompressed(uint8_t *pkc);
-void getBech32Addr(char *bech32_addr);
-
-//////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////
-
 extern uint32_t bip32Path[BIP32_LEN_DEFAULT];
 extern char *hrp;
+
+#define BIP32_LEN_DEFAULT   5
+#define PUBKEY_LEN 33
 
 uint8_t extractHRP(uint32_t rx, uint32_t offset);
 
