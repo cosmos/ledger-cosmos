@@ -1,6 +1,6 @@
 /*******************************************************************************
+*   (c) 2018, 2019 ZondaX GmbH
 *   (c) 2016 Ledger
-*   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -21,26 +21,13 @@
 #include <os_io_seproxyhal.h>
 #include <os.h>
 
-#include <zxmacros.h>
-
-#include "actions.h"
-#include "cosmos.h"
-
-#include "lib/transaction.h"
-#include "lib/tx_display.h"
 #include "view.h"
+#include "actions.h"
+#include "lib/transaction.h"
 #include "lib/crypto.h"
-
-#ifdef TESTING_ENABLED
-// Generate using always the same private data
-// to allow for reproducible results
-const uint8_t privateKeyDataTest[] = {
-        0x75, 0x56, 0x0e, 0x4d, 0xde, 0xa0, 0x63, 0x05,
-        0xc3, 0x6e, 0x2e, 0xb5, 0xf7, 0x2a, 0xca, 0x71,
-        0x2d, 0x13, 0x4c, 0xc2, 0xa0, 0x59, 0xbf, 0xe8,
-        0x7e, 0x9b, 0x5d, 0x55, 0xbf, 0x81, 0x3b, 0xd4
-};
-#endif
+#include "cosmos.h"
+#include <zxmacros.h>
+#include "lib/tx_display.h"
 
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
@@ -105,7 +92,6 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
 }
 
 void extractBip32(uint32_t rx, uint32_t offset) {
-#define UINT32_FROM_LE(p) ( (*(p+3) << 24) + (*(p+2) << 16) + (*(p+1) << 8) + (*(p+0)))
     if ((rx - offset) < 1 + 4 * BIP32_LEN_DEFAULT) {
         THROW(APDU_CODE_DATA_INVALID);
     }
@@ -137,6 +123,7 @@ bool process_chunk(volatile uint32_t *tx, uint32_t rx, bool getBip32) {
     if (packageIndex == 1) {
         transaction_initialize();
         transaction_reset();
+
         if (getBip32) {
             extractBip32(rx, OFFSET_DATA);
             return packageIndex == packageCount;
@@ -186,18 +173,18 @@ void tx_accept_sign() {
     if (length == 0) {
         set_code(G_io_apdu_buffer, length, APDU_CODE_SIGN_VERIFY_ERROR);
         io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
-        view_idle(0);
+        view_idle_show(0);
     }
 
     set_code(G_io_apdu_buffer, length, APDU_CODE_OK);
     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, length + 2);
-    view_idle(0);
+    view_idle_show(0);
 }
 
 void tx_reject() {
     set_code(G_io_apdu_buffer, 0, APDU_CODE_COMMAND_NOT_ALLOWED);
     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
-    view_idle(0);
+    view_idle_show(0);
 }
 
 //endregion
@@ -213,7 +200,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                 THROW(APDU_CODE_CLA_NOT_SUPPORTED);
             }
 
-            if (rx < 5) {
+            if (rx < APDU_MIN_LENGTH) {
                 THROW(APDU_CODE_WRONG_LENGTH);
             }
 
@@ -240,10 +227,10 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                 }
 
                 case INS_GET_ADDR_SECP256K1: {
-                    // Parse arguments
-                    uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
                     uint8_t len = extractHRP(rx, OFFSET_DATA);
                     extractBip32(rx, OFFSET_DATA + 1 + len);
+
+                    uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
 
                     if (requireConfirmation) {
                         app_fill_address();
@@ -266,14 +253,14 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                         int error_msg_length = strlen(error_msg);
                         os_memmove(G_io_apdu_buffer, error_msg, error_msg_length);
                         *tx += (error_msg_length);
-                        THROW(APDU_CODE_BAD_KEY_HANDLE);
+                        THROW(APDU_CODE_DATA_INVALID);
                     }
 
+// FIXME:
                     tx_display_index_root();
-
                     view_set_handlers(tx_getData, tx_accept_sign, tx_reject);
-                    view_tx_show(0);
 
+                    view_sign_show();
                     *flags |= IO_ASYNCH_REPLY;
                     break;
                 }
@@ -337,7 +324,7 @@ void app_init() {
     io_seproxyhal_init();
     USB_power(0);
     USB_power(1);
-    view_idle(0);
+    view_idle_show(0);
 }
 
 #pragma clang diagnostic push

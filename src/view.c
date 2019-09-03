@@ -61,7 +61,7 @@ void reject(unsigned int _) {
 }
 
 void show_idle_menu() {
-    view_idle(0);
+    view_idle_show(0);
 }
 
 void view_tx_menu(unsigned int _);
@@ -114,26 +114,26 @@ const ux_flow_step_t *const ux_addr_flow [] = {
 ux_state_t ux;
 
 const ux_menu_entry_t menu_transaction_info[] = {
-        {NULL, view_tx_show, 0, NULL, "View transaction", NULL, 0, 0},
-        {NULL, accept, 0, NULL, "Sign transaction", NULL, 0, 0},
-        {NULL, reject, 0, &C_icon_crossmark, "Reject", NULL, 60, 40},
-        UX_MENU_END
+    {NULL, view_sign_show, 0, NULL, "View transaction", NULL, 0, 0},
+    {NULL, accept, 0, NULL, "Sign transaction", NULL, 0, 0},
+    {NULL, reject, 0, &C_icon_crossmark, "Reject", NULL, 60, 40},
+    UX_MENU_END
 };
 
 const ux_menu_entry_t menu_main[] = {
 #ifdef TESTING_ENABLED
-        {NULL, NULL, 0, &C_icon_app, "Tendermint", "Cosmos TEST!", 33, 12},
+    {NULL, NULL, 0, &C_icon_app, "Tendermint", "Cosmos TEST!", 33, 12},
 #else
-        {NULL, NULL, 0, &C_icon_app, "Tendermint", "Cosmos", 33, 12},
+    {NULL, NULL, 0, &C_icon_app, "Tendermint", "Cosmos", 33, 12},
 #endif
-        {NULL, NULL, 0, NULL, "v"APPVERSION, NULL, 0, 0},
-        {NULL, os_sched_exit, 0, &C_icon_dashboard, "Quit app", NULL, 50, 29},
-        UX_MENU_END
+    {NULL, NULL, 0, NULL, "v"APPVERSION, NULL, 0, 0},
+    {NULL, os_sched_exit, 0, &C_icon_dashboard, "Quit app", NULL, 50, 29},
+    UX_MENU_END
 };
 
 const ux_menu_entry_t menu_status[] = {
-        {NULL, NULL, 0, &C_icon_app, viewctl.dataKey, viewctl.dataValue, 33, 12},
-        UX_MENU_END
+    {NULL, NULL, 0, &C_icon_app, viewctl.dataKey, viewctl.dataValue, 33, 12},
+    UX_MENU_END
 };
 
 #endif
@@ -150,7 +150,7 @@ void view_init(void) {
     UX_INIT();
 }
 
-void view_idle(unsigned int ignored) {
+void view_idle_show(unsigned int ignored) {
 #if defined(TARGET_NANOS)
     UX_MENU_DISPLAY(0, menu_main, NULL);
 #elif defined(TARGET_NANOX)
@@ -167,9 +167,9 @@ void view_status(unsigned int ignored) {
 #endif
 }
 
-void view_tx_show(unsigned int start_page) {
+void view_sign_show(unsigned int ignored) {
     if (ehGetData == NULL) { return; }
-    viewexpl_start(start_page,
+    viewexpl_start(0,
                    ehGetData,
                    NULL,
                    view_tx_menu);
@@ -198,6 +198,7 @@ void view_set_handlers(viewctl_delegate_getData func_getData,
 }
 
 const char *address;
+
 void view_address_show() {
     // Address has been placed in the output buffer
     address = (char *) (G_io_apdu_buffer + PUBKEY_LEN);

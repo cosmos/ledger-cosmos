@@ -31,14 +31,14 @@ void view_set_handlers(viewctl_delegate_getData func_getData,
 /// view_init (initializes UI)
 void view_init(void);
 
-/// view_idle (idle view - main menu + status)
-void view_idle(unsigned int ignored);
+/// view_idle_show (idle view - main menu + status)
+void view_idle_show(unsigned int ignored);
 
 /// view_status
 void view_status();
 
 /// view_tx_show (show/review transaction view)
-void view_tx_show(unsigned int start_page);
+void view_sign_show();
 
 /// view_addr_confirm (show/accept public key + address request)
 void view_addr_confirm(unsigned int _);
