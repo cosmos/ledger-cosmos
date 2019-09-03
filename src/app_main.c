@@ -22,7 +22,6 @@
 #include <os.h>
 
 #include <zxmacros.h>
-#include <bech32.h>
 
 #include "actions.h"
 
@@ -300,27 +299,21 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     break;
                 }
 
-                    // INS_PUBLIC_KEY_SECP256K1 will be deprecated in the near future
-                case INS_PUBLIC_KEY_SECP256K1: {
-                    extractBip32(rx, OFFSET_DATA);
-
-                    updatePubKey();
-                    os_memmove(G_io_apdu_buffer, publicKey.W, 65);
-                    *tx += 65;
-
-                    THROW(APDU_CODE_OK);
-                    break;
-                }
-
                 case INS_GET_ADDR_SECP256K1: {
                     // Parse arguments
+                    uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
                     uint8_t len = extractHRP(rx, OFFSET_DATA);
                     extractBip32(rx, OFFSET_DATA + 1 + len);
 
-                    view_set_handlers(addr_getData, addr_accept, addr_reject);
-                    view_addr_confirm(0);
+                    if (requireConfirmation) {
+                        app_fill_address();
+                        view_address_show();
+                        *flags |= IO_ASYNCH_REPLY;
+                        break;
+                    }
 
-                    *flags |= IO_ASYNCH_REPLY;
+                    *tx = app_fill_address();
+                    THROW(APDU_CODE_OK);
                     break;
                 }
 

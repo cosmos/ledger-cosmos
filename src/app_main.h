@@ -23,14 +23,17 @@
 
 #define OFFSET_CLA                      0
 #define OFFSET_INS                      1  //< Instruction offset
-#define OFFSET_PCK_INDEX                2  //< Package index offset
-#define OFFSET_PCK_COUNT                3  //< Package count offset
+#define OFFSET_P1                       2  //< P1
+#define OFFSET_P2                       3  //< P2
+#define OFFSET_DATA_LEN                 4  //< Data Length
 #define OFFSET_DATA                     5  //< Data offset
 
+#define OFFSET_PCK_INDEX                OFFSET_P1  //< Package index offset
+#define OFFSET_PCK_COUNT                OFFSET_P2  //< Package count offset
+#define APDU_MIN_LENGTH                 5
+
 #define INS_GET_VERSION                 0
-#define INS_PUBLIC_KEY_SECP256K1        1  // It will be deprecated in the near future
 #define INS_SIGN_SECP256K1              2
-//#define INS_SHOW_ADDR_SECP256K1         3 DEPRECATED
 #define INS_GET_ADDR_SECP256K1          4
 
 #ifdef TESTING_ENABLED

@@ -453,3 +453,12 @@ void view_set_handlers(viewctl_delegate_getData func_getData,
     ehAccept = func_accept;
     ehReject = func_reject;
 }
+
+const char *address;
+void view_address_show() {
+    // Address has been placed in the output buffer
+    address = (char *) (G_io_apdu_buffer + PUBKEY_LEN);
+
+    // FIXME:
+    //view_address_show_impl();
+}

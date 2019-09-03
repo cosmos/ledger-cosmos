@@ -26,12 +26,11 @@ extern "C" {
 #define PK_COMPRESSED_LEN       33
 
 #define BIP32_LEN_DEFAULT   5
+#define PUBKEY_LEN 33
 
 #define BIP32_NO_ERROR              0
 #define BIP32_INVALID_LENGTH        -1
 #define BIP32_INVALID_PATH          -2
-
-extern cx_ecfp_public_key_t publicKey;
 
 void crypto_init();
 
@@ -44,7 +43,6 @@ int8_t setBip32Path(uint32_t path0,
                     uint32_t path3,
                     uint32_t path4);
 
-void updatePubKey();
 void getPubKeyCompressed(uint8_t *pkc);
 void getBech32Addr(char *bech32_addr);
 

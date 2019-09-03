@@ -42,3 +42,5 @@ void view_tx_show(unsigned int start_page);
 
 /// view_addr_confirm (show/accept public key + address request)
 void view_addr_confirm(unsigned int _);
+
+void view_address_show();
