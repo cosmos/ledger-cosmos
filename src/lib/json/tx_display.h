@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) ZondaX GmbH
+*   (c) 2018, 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -17,16 +17,9 @@
 #pragma once
 #include <stdint.h>
 
-#include "json/json_parser.h"
-#include "tx_parser.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define NUM_REQUIRED_ROOT_PAGES 6
-#define NUM_KEY_SUBSTITUTIONS 29
-#define NUM_VALUE_SUBSTITUTIONS 8
 
 /// This is the main function called from ledger that updates key and value strings
 /// that are going to be displayed in the UI.

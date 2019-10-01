@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) ZondaX GmbH
+*   (c) 2018, 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -48,38 +48,38 @@ __always_inline int16_t tx_get_value(const int16_t token_index) {
     const int16_t token_end = parser_tx_obj.json.tokens[token_index].end;
     const int16_t token_len = token_end - token_start;
 
-    int16_t num_chunks = (token_len / (parser_tx_obj.tx_ctx.query.out_val_len - 1)) + 1;
-    if (token_len > 0 && (token_len % (parser_tx_obj.tx_ctx.query.out_val_len - 1) == 0))
+    int16_t num_chunks = (token_len / (parser_tx_obj.query.out_val_len - 1)) + 1;
+    if (token_len > 0 && (token_len % (parser_tx_obj.query.out_val_len - 1) == 0))
         num_chunks--;
 
-    parser_tx_obj.tx_ctx.query.out_val[0] = '\0';  // flush
-    if (parser_tx_obj.tx_ctx.query.chunk_index >= num_chunks) {
+    parser_tx_obj.query.out_val[0] = '\0';  // flush
+    if (parser_tx_obj.query.chunk_index >= num_chunks) {
         return TX_TOKEN_NOT_FOUND;
     }
 
     const int16_t chunk_start =
-        token_start + parser_tx_obj.tx_ctx.query.chunk_index * (parser_tx_obj.tx_ctx.query.out_val_len - 1);
+        token_start + parser_tx_obj.query.chunk_index * (parser_tx_obj.query.out_val_len - 1);
     int16_t chunk_len = token_end - chunk_start;
 
     if (chunk_len < 0) {
         return TX_TOKEN_NOT_FOUND;
     }
 
-    if (chunk_len > parser_tx_obj.tx_ctx.query.out_val_len - 1) {
-        chunk_len = parser_tx_obj.tx_ctx.query.out_val_len - 1;
+    if (chunk_len > parser_tx_obj.query.out_val_len - 1) {
+        chunk_len = parser_tx_obj.query.out_val_len - 1;
     }
-    MEMCPY(parser_tx_obj.tx_ctx.query.out_val, parser_tx_obj.tx + chunk_start, chunk_len);
-    parser_tx_obj.tx_ctx.query.out_val[chunk_len] = 0;
+    MEMCPY(parser_tx_obj.query.out_val, parser_tx_obj.tx + chunk_start, chunk_len);
+    parser_tx_obj.query.out_val[chunk_len] = 0;
 
     return num_chunks;
 }
 
 ///// Update key characters from json transaction read from the token_index element.
 __always_inline void append_key_item(int16_t token_index) {
-    if (*parser_tx_obj.tx_ctx.query.out_key > 0) {
+    if (*parser_tx_obj.query.out_key > 0) {
         // There is already something there, add separator
-        strcat_chunk_s(parser_tx_obj.tx_ctx.query.out_key,
-                       parser_tx_obj.tx_ctx.query.out_key_len, "/", 1);
+        strcat_chunk_s(parser_tx_obj.query.out_key,
+                       parser_tx_obj.query.out_key_len, "/", 1);
     }
 
     const int16_t token_start = parser_tx_obj.json.tokens[token_index].start;
@@ -87,22 +87,22 @@ __always_inline void append_key_item(int16_t token_index) {
     const char *address_ptr = parser_tx_obj.tx + token_start;
     const int16_t new_item_size = token_end - token_start;
 
-    strcat_chunk_s(parser_tx_obj.tx_ctx.query.out_key,
-                   parser_tx_obj.tx_ctx.query.out_key_len, address_ptr, new_item_size);
+    strcat_chunk_s(parser_tx_obj.query.out_key,
+                   parser_tx_obj.query.out_key_len, address_ptr, new_item_size);
 }
 
 int16_t tx_traverse(int16_t root_token_index) {
     const jsmntype_t token_type = parser_tx_obj.json.tokens[root_token_index].type;
 
-    if (parser_tx_obj.tx_ctx.max_level <= 0 || parser_tx_obj.tx_ctx.max_depth <= 0 ||
+    if (parser_tx_obj.max_level <= 0 || parser_tx_obj.max_depth <= 0 ||
         token_type == JSMN_STRING ||
         token_type == JSMN_PRIMITIVE) {
 
         // Early bail out
-        if (parser_tx_obj.tx_ctx.item_index_current == parser_tx_obj.tx_ctx.query.item_index) {
+        if (parser_tx_obj.item_index_current == parser_tx_obj.query.item_index) {
             return tx_get_value(root_token_index);
         }
-        parser_tx_obj.tx_ctx.item_index_current++;
+        parser_tx_obj.item_index_current++;
         return TX_TOKEN_NOT_FOUND;
     }
 
@@ -111,39 +111,41 @@ int16_t tx_traverse(int16_t root_token_index) {
 
     switch (token_type) {
         case JSMN_OBJECT: {
-            const int16_t key_len = strlen(parser_tx_obj.tx_ctx.query.out_key);
+            const int16_t key_len = strlen(parser_tx_obj.query.out_key);
             for (int16_t i = 0; i < el_count; ++i) {
                 const int16_t key_index = object_get_nth_key(root_token_index, i, &parser_tx_obj.json);
                 const int16_t value_index = object_get_nth_value(root_token_index, i, &parser_tx_obj.json);
 
                 // Skip writing keys if we are actually exploring to count
-                if (parser_tx_obj.tx_ctx.query.item_index != TX_TOKEN_NOT_FOUND) {
+                if (parser_tx_obj.query.item_index != TX_TOKEN_NOT_FOUND) {
                     append_key_item(key_index);
                 }
 
                 // When traversing objects both level and depth should be considered
-                parser_tx_obj.tx_ctx.max_level--;
-                parser_tx_obj.tx_ctx.max_depth--;
+                parser_tx_obj.max_level--;
+                parser_tx_obj.max_depth--;
                 num_chunks = tx_traverse(value_index);       // Traverse the value, extracting subkeys
-                parser_tx_obj.tx_ctx.max_level++;
-                parser_tx_obj.tx_ctx.max_depth++;
+                parser_tx_obj.max_level++;
+                parser_tx_obj.max_depth++;
 
                 if (num_chunks != TX_TOKEN_NOT_FOUND) {
                     break;
                 }
 
-                *(parser_tx_obj.tx_ctx.query.out_key + key_len) = 0;
+                *(parser_tx_obj.query.out_key + key_len) = 0;
             }
             break;
         }
         case JSMN_ARRAY: {
             for (int16_t i = 0; i < el_count; ++i) {
-                const int16_t element_index = array_get_nth_element(root_token_index, i, &parser_tx_obj.json);
+                const int16_t element_index = array_get_nth_element(
+                    root_token_index, i,
+                    &parser_tx_obj.json);
 
                 // When iterating along an array, the level does not change but we need to count the recursion
-                parser_tx_obj.tx_ctx.max_depth--;
+                parser_tx_obj.max_depth--;
                 num_chunks = tx_traverse(element_index);
-                parser_tx_obj.tx_ctx.max_depth++;
+                parser_tx_obj.max_depth++;
 
                 if (num_chunks != TX_TOKEN_NOT_FOUND) {
                     break;

@@ -48,8 +48,6 @@ parser_error_t parser_getItem(parser_context_t *ctx,
 
     snprintf(outKey, outKeyLen, "?");
     snprintf(outValue, outValueLen, "?");
-    parser_tx_obj.max_chars_per_key_line = outKeyLen;
-    parser_tx_obj.max_chars_per_value_line = outValueLen;
 
     parser_error_t err = parser_ok;
 

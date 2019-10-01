@@ -33,21 +33,14 @@ typedef struct {
 } tx_query_t;
 
 typedef struct {
-    tx_query_t query;                       // ??
-    int16_t item_index_current;                     // ??
-    uint8_t max_level;
-    uint8_t max_depth;
-} tx_context_t;
-
-typedef struct {
     parsed_json_t json;
-
-    uint16_t max_chars_per_key_line;
-    uint16_t max_chars_per_value_line;
     const char *tx;
     uint8_t cache_valid;
 
-    tx_context_t tx_ctx;
+    int16_t item_index_current;                     // ??
+    uint8_t max_level;
+    uint8_t max_depth;
+    tx_query_t query;                       // ??
 } parser_tx_t;
 
 #ifdef __cplusplus

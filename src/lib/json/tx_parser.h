@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) ZondaX GmbH
+*   (c) 2018, 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -29,19 +29,19 @@ extern "C" {
 
 #define INIT_QUERY_CONTEXT(_KEY, _KEY_LEN, _VAL, _VAL_LEN, _CHUNK_IDX, _MAX_LEVEL) \
     INIT_QUERY(_KEY, _KEY_LEN, _VAL, _VAL_LEN, _CHUNK_IDX) \
-    parser_tx_obj.tx_ctx.item_index_current = 0; \
-    parser_tx_obj.tx_ctx.max_depth = MAX_RECURSION_DEPTH; \
-    parser_tx_obj.tx_ctx.max_level = _MAX_LEVEL;
+    parser_tx_obj.item_index_current = 0; \
+    parser_tx_obj.max_depth = MAX_RECURSION_DEPTH; \
+    parser_tx_obj.max_level = _MAX_LEVEL;
 
 #define INIT_QUERY(_KEY, _KEY_LEN, _VAL, _VAL_LEN, _CHUNK_IDX)  \
         _KEY[0] = 0; \
         _VAL[0] = 0; \
-        parser_tx_obj.tx_ctx.query.out_key=_KEY; \
-        parser_tx_obj.tx_ctx.query.out_val=_VAL; \
-        parser_tx_obj.tx_ctx.query.out_key_len = _KEY_LEN; \
-        parser_tx_obj.tx_ctx.query.out_val_len = _VAL_LEN; \
-        parser_tx_obj.tx_ctx.query.item_index= 0; \
-        parser_tx_obj.tx_ctx.query.chunk_index = _CHUNK_IDX;
+        parser_tx_obj.query.out_key=_KEY; \
+        parser_tx_obj.query.out_val=_VAL; \
+        parser_tx_obj.query.out_key_len = _KEY_LEN; \
+        parser_tx_obj.query.out_val_len = _VAL_LEN; \
+        parser_tx_obj.query.item_index= 0; \
+        parser_tx_obj.query.chunk_index = _CHUNK_IDX;
 
 // Traverses transaction data and fills tx_context
 // \return -1 if the item was not found or the number of available chunks for this item
