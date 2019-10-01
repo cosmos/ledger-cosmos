@@ -15,21 +15,34 @@
 ********************************************************************************/
 #pragma once
 
-#include "parser_common.h"
-#include "json/json_parser.h"
-#include "parser_txdef.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern parser_tx_t parser_tx_obj;
+#include <stdint.h>
+#include <stddef.h>
 
-parser_error_t parser_init(parser_context_t *ctx,
-                           const uint8_t *buffer,
-                           uint16_t bufferSize);
+typedef enum {
+    parser_ok = 0,
+    parser_no_data = 1,
+    parser_extended_error = 2,
+    parser_unexpected_buffer_end = 3,
+    parser_unexpected_wire_type = 4,
+    parser_unexpected_version = 5,
+    parser_unexpected_characters = 6,
+    parser_unexpected_field = 7,
+    parser_duplicated_field = 8,
+    parser_value_out_of_range = 9,
+    parser_unexpected_chain = 10,
+} parser_error_t;
 
-parser_error_t _readTx(parser_context_t *c, parser_tx_t *v);
+extern const char *lastErrorMessage;
+
+typedef struct {
+    const uint8_t *buffer;
+    uint16_t bufferSize;
+    uint16_t offset;
+} parser_context_t;
 
 #ifdef __cplusplus
 }

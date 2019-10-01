@@ -18,7 +18,8 @@
 #include <stdio.h>
 #include "tx_parser.h"
 #include "tx_display.h"
-#include "json_parser.h"
+#include "json/json_parser.h"
+#include "lib/parser_impl.h"
 
 #if defined(TARGET_NANOS) || defined(TARGET_NANOX)
 #include "os.h"
@@ -143,7 +144,7 @@ display_cache_t *tx_display_cache() {
 }
 
 void tx_display_index_root() {
-    if (parsing_context.cache_valid) {
+    if (parser_tx_obj.cache_valid) {
         return;
     }
 
@@ -157,8 +158,8 @@ void tx_display_index_root() {
     for (int8_t idx = 0; idx < NUM_REQUIRED_ROOT_PAGES; idx++) {
         const int16_t subroot_token_idx = object_get_value(ROOT_TOKEN_INDEX,
                                                            get_required_root_item(idx),
-                                                           parsing_context.parsed_tx,
-                                                           parsing_context.tx);
+                                                           &parser_tx_obj.json,
+                                                           parser_tx_obj.tx);
         if (subroot_token_idx < 0) {
             break;
         }
@@ -169,18 +170,18 @@ void tx_display_index_root() {
         char tmp_key[2];
         char tmp_val[2];
         INIT_QUERY_CONTEXT(tmp_key, sizeof(tmp_key), tmp_val, sizeof(tmp_val), 0, root_max_level[idx])
-        STRNCPY_S(tx_ctx.query.out_key, get_required_root_item(idx), tx_ctx.query.out_key_len);
-        tx_ctx.max_depth = MAX_RECURSION_DEPTH;
-        tx_ctx.query.item_index = 0;
+        STRNCPY_S(parser_tx_obj.tx_ctx.query.out_key, get_required_root_item(idx), parser_tx_obj.tx_ctx.query.out_key_len);
+        parser_tx_obj.tx_ctx.max_depth = MAX_RECURSION_DEPTH;
+        parser_tx_obj.tx_ctx.query.item_index = 0;
 
         found = 0;
         while (found >= 0) {
-            tx_ctx.item_index_current = 0;
+            parser_tx_obj.tx_ctx.item_index_current = 0;
             found = tx_traverse(subroot_token_idx);
 
             if (found >= 0) {
                 display_cache.num_subpages[idx]++;
-                tx_ctx.query.item_index++;
+                parser_tx_obj.tx_ctx.query.item_index++;
             }
         };
         display_cache.numItems += display_cache.num_subpages[idx];
@@ -190,7 +191,7 @@ void tx_display_index_root() {
         }
     }
 
-    parsing_context.cache_valid = 1;
+    parser_tx_obj.cache_valid = 1;
 }
 
 int16_t tx_display_numItems() {
@@ -200,32 +201,34 @@ int16_t tx_display_numItems() {
 
 // This function assumes that the tx_ctx has been set properly
 int16_t tx_display_get_item(uint16_t itemIndex) {
-    if (!parsing_context.cache_valid) {
+    if (!parser_tx_obj.cache_valid) {
         return ERR_MUST_INDEX_FIRST;
     }
 
     // TODO: Verify it has been properly set?
-    tx_ctx.query.out_key[0] = 0;
-    tx_ctx.query.out_val[0] = 0;
+    parser_tx_obj.tx_ctx.query.out_key[0] = 0;
+    parser_tx_obj.tx_ctx.query.out_val[0] = 0;
     if (itemIndex < 0 || itemIndex >= display_cache.numItems) {
         return -1;
     }
 
-    tx_ctx.query.item_index = 0;
+    parser_tx_obj.tx_ctx.query.item_index = 0;
     uint16_t root_index = 0;
     for (uint16_t i = 0; i < itemIndex; i++) {
-        tx_ctx.query.item_index++;
-        if (tx_ctx.query.item_index >= display_cache.num_subpages[root_index]) {
-            tx_ctx.query.item_index = 0;
+        parser_tx_obj.tx_ctx.query.item_index++;
+        if (parser_tx_obj.tx_ctx.query.item_index >= display_cache.num_subpages[root_index]) {
+            parser_tx_obj.tx_ctx.query.item_index = 0;
             root_index++;
         }
     }
 
-    tx_ctx.item_index_current = 0;
-    tx_ctx.max_level = root_max_level[root_index];
-    tx_ctx.max_depth = MAX_RECURSION_DEPTH;
+    parser_tx_obj.tx_ctx.item_index_current = 0;
+    parser_tx_obj.tx_ctx.max_level = root_max_level[root_index];
+    parser_tx_obj.tx_ctx.max_depth = MAX_RECURSION_DEPTH;
 
-    STRNCPY_S(tx_ctx.query.out_key, get_required_root_item(root_index), tx_ctx.query.out_key_len);
+    STRNCPY_S(parser_tx_obj.tx_ctx.query.out_key,
+        get_required_root_item(root_index),
+        parser_tx_obj.tx_ctx.query.out_key_len);
 
     int16_t ret = tx_traverse(display_cache.subroot_start_token[root_index]);
 
@@ -235,19 +238,19 @@ int16_t tx_display_get_item(uint16_t itemIndex) {
 void tx_display_make_friendly() {
     // post process keys
     for (int8_t i = 0; i < NUM_KEY_SUBSTITUTIONS; i++) {
-        if (!strcmp(tx_ctx.query.out_key, key_substitutions[i].str1)) {
-            STRNCPY_S(tx_ctx.query.out_key,
+        if (!strcmp(parser_tx_obj.tx_ctx.query.out_key, key_substitutions[i].str1)) {
+            STRNCPY_S(parser_tx_obj.tx_ctx.query.out_key,
                       key_substitutions[i].str2,
-                      tx_ctx.query.out_key_len);
+                      parser_tx_obj.tx_ctx.query.out_key_len);
             break;
         }
     }
 
     for (int8_t i = 0; i < NUM_VALUE_SUBSTITUTIONS; i++) {
-        if (!strcmp(tx_ctx.query.out_val, value_substitutions[i].str1)) {
-            STRNCPY_S(tx_ctx.query.out_val,
+        if (!strcmp(parser_tx_obj.tx_ctx.query.out_val, value_substitutions[i].str1)) {
+            STRNCPY_S(parser_tx_obj.tx_ctx.query.out_val,
                       value_substitutions[i].str2,
-                      tx_ctx.query.out_val_len);
+                      parser_tx_obj.tx_ctx.query.out_val_len);
             break;
         }
     }

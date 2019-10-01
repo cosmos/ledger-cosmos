@@ -17,7 +17,7 @@
 #pragma once
 #include <stdint.h>
 
-#include "json_parser.h"
+#include "json/json_parser.h"
 #include "tx_parser.h"
 
 #ifdef __cplusplus

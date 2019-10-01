@@ -73,8 +73,6 @@ uint8_t *tx_get_buffer() {
 }
 
 const char *tx_parse() {
-    ctx_parsed_tx.flags.make_friendly = 1;
-
     uint8_t err = parser_parse(
         &ctx_parsed_tx,
         tx_get_buffer(),
@@ -118,9 +116,7 @@ tx_error_t tx_getItem(int8_t displayIdx,
     if (*pageCount > 1) {
         uint8_t keyLen = strlen(outKey);
         if (keyLen < outKeyLen) {
-            // FIXME: Improve Key Trimming
-            snprintf(outKey + keyLen, outKeyLen - keyLen,
-                     " [%d/%d]", pageIdx + 1, *pageCount);
+            snprintf(outKey + keyLen, outKeyLen - keyLen, " [%d/%d]", pageIdx + 1, *pageCount);
         }
     }
 

@@ -15,77 +15,23 @@
 ********************************************************************************/
 
 #include <stdio.h>
-
-#include "lib/json_parser.h"
-#include "lib/tx_parser.h"
-#include "lib/tx_display.h"
-
+#include "json/tx_parser.h"
+#include "json/tx_display.h"
 #include "lib/parser_impl.h"
 #include "view_internal.h"
 
-parsed_json_t parsed_transaction;
-const char *lastErrorMessage = NULL;
-
 parser_error_t parser_parse(parser_context_t *ctx,
-                            uint8_t *data,
+                            const uint8_t *data,
                             uint16_t dataLen) {
-
-    ctx->data = (const char *) data;
-    ctx->dataLen = dataLen;
-
-    lastErrorMessage = json_parse_s(&parsed_transaction, ctx->data, ctx->dataLen);
-    if (lastErrorMessage != NULL) {
-        return parser_extended_error;
-    }
-
-    parsing_context_t context;
-    context.tx = (const char *) data;
-    context.max_chars_per_key_line = MAX_CHARS_PER_KEY_LINE;
-    context.max_chars_per_value_line = MAX_CHARS_PER_VALUE_LINE;
-    context.parsed_tx = &parsed_transaction;
-
-    set_parsing_context(context);
-    tx_display_index_root();
-
-    return parser_ok;
-}
-
-const char *parser_getErrorDescription(parser_error_t err) {
-    switch (err) {
-        case parser_ok:
-            return "No error";
-        case parser_no_data:
-            return "No more data";
-        case parser_extended_error:
-            if (lastErrorMessage != NULL)
-                return lastErrorMessage;
-            return "Unknown message";
-        case parser_unexpected_buffer_end:
-            return "Unexpected buffer end";
-        case parser_unexpected_wire_type:
-            return "Unexpected wire type";
-        case parser_unexpected_version:
-            return "Unexpected version";
-        case parser_unexpected_characters:
-            return "Unexpected characters";
-        case parser_unexpected_field:
-            return "Unexpected field";
-        case parser_duplicated_field:
-            return "Unexpected duplicated field";
-        case parser_unexpected_chain:
-            return "Unexpected chain";
-        default:
-            return "Unrecognized error code";
-    }
+    parser_init(ctx, data, dataLen);
+    return _readTx(ctx, &parser_tx_obj);
 }
 
 parser_error_t parser_validate(parser_context_t *ctx) {
-    lastErrorMessage = json_validate(&parsed_transaction, ctx->data);
-
+    lastErrorMessage = tx_validate(&parser_tx_obj.json, (const char *) ctx->buffer);
     if (lastErrorMessage != NULL) {
         return parser_extended_error;
     }
-
     return parser_ok;
 }
 
@@ -104,19 +50,23 @@ parser_error_t parser_getItem(parser_context_t *ctx,
 
     parser_error_t err = parser_ok;
 
-    INIT_QUERY(outKey, outKeyLen, outValue, outValueLen, pageIdx)
+    if (displayIdx < 0) {
+        return parser_no_data;
+    }
 
+    INIT_QUERY(outKey, outKeyLen, outValue, outValueLen, pageIdx)
     int16_t ret = tx_display_get_item(displayIdx);
+
+    if (ret == TX_TOKEN_NOT_FOUND) {
+        return parser_no_data;
+    }
 
     if (ret < 0 || ret > 255) {
         return parser_unexpected_buffer_end;
     }
 
     *pageCount = ret;
-
-    if (ctx->flags.make_friendly) {
-        tx_display_make_friendly();
-    }
+    tx_display_make_friendly();
 
     return err;
 }

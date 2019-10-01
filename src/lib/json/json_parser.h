@@ -55,14 +55,6 @@ typedef struct {
 /// \param
 void reset_parsed_json(parsed_json_t *);
 
-typedef struct {
-    const parsed_json_t *parsed_tx;
-    uint16_t max_chars_per_key_line;
-    uint16_t max_chars_per_value_line;
-    const char *tx;
-    uint8_t cache_valid;
-} parsing_context_t;
-
 //---------------------------------------------
 // NEW JSON PARSER CODE
 
@@ -84,19 +76,19 @@ const char *json_parse(parsed_json_t *parsed_json,
 
 /// Get the number of elements in the array
 /// \param array_token_index
-/// \param parsed_transaction
+/// \param json
 /// \return number of elements
 uint16_t array_get_element_count(uint16_t array_token_index,
-                                 const parsed_json_t *parsed_transaction);
+                                 const parsed_json_t *json);
 
 /// Get the token index of the nth array's element
 /// \param array_token_index
 /// \param element_index
-/// \param parsed_transaction
+/// \param json
 /// \return returns the token index or -1 if not found
 int16_t array_get_nth_element(uint16_t array_token_index,
                               uint16_t element_index,
-                              const parsed_json_t *parsed_transaction);
+                              const parsed_json_t *json);
 
 /// Get the number of dictionary elements (key/value pairs) under given object
 /// \param object_token_index: token index of the parent object

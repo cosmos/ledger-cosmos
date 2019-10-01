@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2019 ZondaX GmbH
+*   (c) ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -13,23 +13,21 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
+
 #pragma once
 
-#include "parser_common.h"
-#include "json/json_parser.h"
-#include "parser_txdef.h"
+#include "json_parser.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-extern parser_tx_t parser_tx_obj;
-
-parser_error_t parser_init(parser_context_t *ctx,
-                           const uint8_t *buffer,
-                           uint16_t bufferSize);
-
-parser_error_t _readTx(parser_context_t *c, parser_tx_t *v);
+/// Validate json transaction
+/// \param parsed_transacton
+/// \param transaction
+/// \return
+const char *tx_validate(parsed_json_t *json, const char *transaction);
 
 #ifdef __cplusplus
 }
