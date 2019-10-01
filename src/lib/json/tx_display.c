@@ -28,7 +28,6 @@
 #endif
 
 // Required pages
-// FIXME: the required root items have been moved to a function due to PIC issues. Refactor and fix
 const char *get_required_root_item(uint8_t i) {
     switch (i) {
         case 0:
@@ -58,79 +57,79 @@ const char *get_required_root_item(uint8_t i) {
 //};
 
 static const uint16_t root_max_level[NUM_REQUIRED_ROOT_PAGES] = {
-        2, // "chain_id",
-        2, // "account_number",
-        2, // "sequence",
-        1, // "fee",
-        2, // "memo"
-        2, // "msgs"
+    2, // "chain_id",
+    2, // "account_number",
+    2, // "sequence",
+    1, // "fee",
+    2, // "memo"
+    2, // "msgs"
 };
 
 static const key_subst_t key_substitutions[NUM_KEY_SUBSTITUTIONS] = {
-        {"chain_id",                     "Chain ID"},
-        {"account_number",               "Account"},
-        {"sequence",                     "Sequence"},
-        {"memo",                         "Memo"},
-        {"fee/amount",                   "Fee"},
-        {"fee/gas",                      "Gas"},
-        {"msgs/type",                    "Type"},
+    {"chain_id",                          "Chain ID"},
+    {"account_number",                    "Account"},
+    {"sequence",                          "Sequence"},
+    {"memo",                              "Memo"},
+    {"fee/amount",                        "Fee"},
+    {"fee/gas",                           "Gas"},
+    {"msgs/type",                         "Type"},
 
-        // FIXME: Are these obsolete?? multisend?
-        {"msgs/inputs/address",          "Source Address"},
-        {"msgs/inputs/coins",            "Source Coins"},
-        {"msgs/outputs/address",         "Dest Address"},
-        {"msgs/outputs/coins",           "Dest Coins"},
+    // FIXME: Are these obsolete?? multisend?
+    {"msgs/inputs/address",               "Source Address"},
+    {"msgs/inputs/coins",                 "Source Coins"},
+    {"msgs/outputs/address",              "Dest Address"},
+    {"msgs/outputs/coins",                "Dest Coins"},
 
-        // MsgSend
-        {"msgs/value/from_address",             "From"},
-        {"msgs/value/to_address",               "To"},
-        {"msgs/value/amount",                   "Amount"},
+    // MsgSend
+    {"msgs/value/from_address",           "From"},
+    {"msgs/value/to_address",             "To"},
+    {"msgs/value/amount",                 "Amount"},
 
-        // MsgDelegate
-        {"msgs/value/delegator_address", "Delegator"},
-        {"msgs/value/validator_address", "Validator"},
+    // MsgDelegate
+    {"msgs/value/delegator_address",      "Delegator"},
+    {"msgs/value/validator_address",      "Validator"},
 
-        // MsgUndelegate
+    // MsgUndelegate
 //        {"msgs/value/delegator_address", "Delegator"},
 //        {"msgs/value/validator_address", "Validator"},
 
-        // MsgBeginRedelegate
+    // MsgBeginRedelegate
 //        {"msgs/value/delegator_address", "Delegator"},
-        {"msgs/value/validator_src_address", "Validator Source"},
-        {"msgs/value/validator_dst_address", "Validator Dest"},
+    {"msgs/value/validator_src_address",  "Validator Source"},
+    {"msgs/value/validator_dst_address",  "Validator Dest"},
 
-        // MsgSubmitProposal
-        {"msgs/value/description",              "Description"},
-        {"msgs/value/initial_deposit/amount",  "Deposit Amount"},
-        {"msgs/value/initial_deposit/denom",   "Deposit Denom"},
-        {"msgs/value/proposal_type",            "Proposal"},
-        {"msgs/value/proposer",                 "Proposer"},
-        {"msgs/value/title",                    "Title"},
+    // MsgSubmitProposal
+    {"msgs/value/description",            "Description"},
+    {"msgs/value/initial_deposit/amount", "Deposit Amount"},
+    {"msgs/value/initial_deposit/denom",  "Deposit Denom"},
+    {"msgs/value/proposal_type",          "Proposal"},
+    {"msgs/value/proposer",               "Proposer"},
+    {"msgs/value/title",                  "Title"},
 
-        // MsgDeposit
-        {"msgs/value/depositer",                 "Sender"},
-        {"msgs/value/proposal_id",               "Proposal ID"},
-        {"msgs/value/amount",                    "Amount"},
+    // MsgDeposit
+    {"msgs/value/depositer",              "Sender"},
+    {"msgs/value/proposal_id",            "Proposal ID"},
+    {"msgs/value/amount",                 "Amount"},
 
-        // MsgVote
-        {"msgs/value/voter",                    "Description"},
+    // MsgVote
+    {"msgs/value/voter",                  "Description"},
 //        {"msgs/value/proposal_id",              "Proposal ID"},
-        {"msgs/value/option",                   "Option"},
+    {"msgs/value/option",                 "Option"},
 
-        // MsgWithdrawDelegationReward
+    // MsgWithdrawDelegationReward
 //        {"msgs/value/delegator_address", "Delegator"},      // duplicated
 //        {"msgs/value/validator_address", "Validator"},      // duplicated
 };
 
 static const key_subst_t value_substitutions[NUM_VALUE_SUBSTITUTIONS] = {
-        {"cosmos-sdk/MsgSend", "Send"},
-        {"cosmos-sdk/MsgDelegate", "Delegate"},
-        {"cosmos-sdk/MsgUndelegate", "Undelegate"},
-        {"cosmos-sdk/MsgBeginRedelegate", "Redelegate"},
-        {"cosmos-sdk/MsgSubmitProposal", "Propose"},
-        {"cosmos-sdk/MsgDeposit", "Deposit"},
-        {"cosmos-sdk/MsgVote", "Vote"},
-        {"cosmos-sdk/MsgWithdrawDelegationReward", "Withdraw Reward"},
+    {"cosmos-sdk/MsgSend",                     "Send"},
+    {"cosmos-sdk/MsgDelegate",                 "Delegate"},
+    {"cosmos-sdk/MsgUndelegate",               "Undelegate"},
+    {"cosmos-sdk/MsgBeginRedelegate",          "Redelegate"},
+    {"cosmos-sdk/MsgSubmitProposal",           "Propose"},
+    {"cosmos-sdk/MsgDeposit",                  "Deposit"},
+    {"cosmos-sdk/MsgVote",                     "Vote"},
+    {"cosmos-sdk/MsgWithdrawDelegationReward", "Withdraw Reward"},
 };
 
 #define STRNCPY_S(DST, SRC, DST_SIZE) \
@@ -151,15 +150,15 @@ void tx_display_index_root() {
     // Clear values
     display_cache.numItems = 0;
     memset(display_cache.num_subpages, 0, NUM_REQUIRED_ROOT_PAGES);
-    memset(display_cache.subroot_start_token, TX_TOKEN_NOT_FOUND, NUM_REQUIRED_ROOT_PAGES);
+    memset(display_cache.subroot_start_token, TX_TOKEN_NOT_FOUND, NUM_REQUIRED_ROOT_PAGES);  // FIXME: This is not clearing everything
 
     // Calculate pages
     int8_t found = 0;
     for (int8_t idx = 0; idx < NUM_REQUIRED_ROOT_PAGES; idx++) {
-        const int16_t subroot_token_idx = object_get_value(ROOT_TOKEN_INDEX,
-                                                           get_required_root_item(idx),
-                                                           &parser_tx_obj.json,
-                                                           parser_tx_obj.tx);
+        const int16_t subroot_token_idx = object_get_value(
+            &parser_tx_obj.json,
+            parser_tx_obj.tx, ROOT_TOKEN_INDEX,
+            get_required_root_item(idx));
         if (subroot_token_idx < 0) {
             break;
         }
@@ -170,7 +169,8 @@ void tx_display_index_root() {
         char tmp_key[2];
         char tmp_val[2];
         INIT_QUERY_CONTEXT(tmp_key, sizeof(tmp_key), tmp_val, sizeof(tmp_val), 0, root_max_level[idx])
-        STRNCPY_S(parser_tx_obj.tx_ctx.query.out_key, get_required_root_item(idx), parser_tx_obj.tx_ctx.query.out_key_len);
+        STRNCPY_S(parser_tx_obj.tx_ctx.query.out_key, get_required_root_item(idx),
+                  parser_tx_obj.tx_ctx.query.out_key_len);
         parser_tx_obj.tx_ctx.max_depth = MAX_RECURSION_DEPTH;
         parser_tx_obj.tx_ctx.query.item_index = 0;
 
@@ -227,8 +227,8 @@ int16_t tx_display_get_item(uint16_t itemIndex) {
     parser_tx_obj.tx_ctx.max_depth = MAX_RECURSION_DEPTH;
 
     STRNCPY_S(parser_tx_obj.tx_ctx.query.out_key,
-        get_required_root_item(root_index),
-        parser_tx_obj.tx_ctx.query.out_key_len);
+              get_required_root_item(root_index),
+              parser_tx_obj.tx_ctx.query.out_key_len);
 
     int16_t ret = tx_traverse(display_cache.subroot_start_token[root_index]);
 

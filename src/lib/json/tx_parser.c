@@ -44,8 +44,8 @@ __always_inline void strcat_chunk_s(char *dst, uint16_t dst_max, const char *src
 
 __always_inline int16_t tx_get_value(const int16_t token_index) {
 
-    const int16_t token_start = parser_tx_obj.json.Tokens[token_index].start;
-    const int16_t token_end = parser_tx_obj.json.Tokens[token_index].end;
+    const int16_t token_start = parser_tx_obj.json.tokens[token_index].start;
+    const int16_t token_end = parser_tx_obj.json.tokens[token_index].end;
     const int16_t token_len = token_end - token_start;
 
     int16_t num_chunks = (token_len / (parser_tx_obj.tx_ctx.query.out_val_len - 1)) + 1;
@@ -82,8 +82,8 @@ __always_inline void append_key_item(int16_t token_index) {
                        parser_tx_obj.tx_ctx.query.out_key_len, "/", 1);
     }
 
-    const int16_t token_start = parser_tx_obj.json.Tokens[token_index].start;
-    const int16_t token_end = parser_tx_obj.json.Tokens[token_index].end;
+    const int16_t token_start = parser_tx_obj.json.tokens[token_index].start;
+    const int16_t token_end = parser_tx_obj.json.tokens[token_index].end;
     const char *address_ptr = parser_tx_obj.tx + token_start;
     const int16_t new_item_size = token_end - token_start;
 
@@ -92,7 +92,7 @@ __always_inline void append_key_item(int16_t token_index) {
 }
 
 int16_t tx_traverse(int16_t root_token_index) {
-    const jsmntype_t token_type = parser_tx_obj.json.Tokens[root_token_index].type;
+    const jsmntype_t token_type = parser_tx_obj.json.tokens[root_token_index].type;
 
     if (parser_tx_obj.tx_ctx.max_level <= 0 || parser_tx_obj.tx_ctx.max_depth <= 0 ||
         token_type == JSMN_STRING ||

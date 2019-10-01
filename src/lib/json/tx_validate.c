@@ -15,8 +15,6 @@
 ********************************************************************************/
 
 #include <jsmn.h>
-#include <stdio.h>
-#include "tx_parser.h"
 #include "json/json_parser.h"
 
 const char whitespaces[] = {
@@ -39,18 +37,18 @@ int8_t is_space(char c) {
 
 int8_t contains_whitespace(parsed_json_t *json, const char *transaction) {
     int start = 0;
-    const int last_element_index = json->Tokens[0].end;
+    const int last_element_index = json->tokens[0].end;
 
     // Starting at token 1 because token 0 contains full tx
-    for (int i = 1; i < json->NumberOfTokens; i++) {
-        if (json->Tokens[i].type != JSMN_UNDEFINED) {
-            const int end = json->Tokens[i].start;
+    for (int i = 1; i < json->numberOfTokens; i++) {
+        if (json->tokens[i].type != JSMN_UNDEFINED) {
+            const int end = json->tokens[i].start;
             for (int j = start; j < end; j++) {
                 if (is_space(transaction[j]) == 1) {
                     return 1;
                 }
             }
-            start = json->Tokens[i].end + 1;
+            start = json->tokens[i].end + 1;
         } else {
             return 0;
         }
@@ -79,8 +77,8 @@ int8_t is_sorted(int16_t first_index, int16_t second_index,
     second[size] = '\0';
 #endif
 
-    if (strcmp(transaction + json->Tokens[first_index].start,
-               transaction + json->Tokens[second_index].start) <= 0) {
+    if (strcmp(transaction + json->tokens[first_index].start,
+               transaction + json->tokens[second_index].start) <= 0) {
         return 1;
     }
     return 0;
@@ -88,8 +86,8 @@ int8_t is_sorted(int16_t first_index, int16_t second_index,
 
 int8_t dictionaries_sorted(parsed_json_t *json,
                            const char *transaction) {
-    for (int i = 0; i < json->NumberOfTokens; i++) {
-        if (json->Tokens[i].type == JSMN_OBJECT) {
+    for (int i = 0; i < json->numberOfTokens; i++) {
+        if (json->tokens[i].type == JSMN_OBJECT) {
 
             const int count = object_get_element_count(i, json);
             if (count > 1) {
@@ -116,45 +114,45 @@ const char *tx_validate(parsed_json_t *json, const char *transaction) {
         return "JSON Dictionaries are not sorted";
     }
 
-    if (object_get_value(0,
-                         "chain_id",
-                         json,
-                         transaction) == -1) {
+    if (object_get_value(
+        json,
+        transaction, 0,
+        "chain_id") == -1) {
         return "JSON Missing chain_id";
     }
 
-    if (object_get_value(0,
-                         "sequence",
-                         json,
-                         transaction) == -1) {
+    if (object_get_value(
+        json,
+        transaction, 0,
+        "sequence") == -1) {
         return "JSON Missing sequence";
     }
 
-    if (object_get_value(0,
-                         "fee",
-                         json,
-                         transaction) == -1) {
+    if (object_get_value(
+        json,
+        transaction, 0,
+        "fee") == -1) {
         return "JSON Missing fee";
     }
 
-    if (object_get_value(0,
-                         "msgs",
-                         json,
-                         transaction) == -1) {
+    if (object_get_value(
+        json,
+        transaction, 0,
+        "msgs") == -1) {
         return "JSON Missing msgs";
     }
 
-    if (object_get_value(0,
-                         "account_number",
-                         json,
-                         transaction) == -1) {
+    if (object_get_value(
+        json,
+        transaction, 0,
+        "account_number") == -1) {
         return "JSON Missing account_number";
     }
 
-    if (object_get_value(0,
-                         "memo",
-                         json,
-                         transaction) == -1) {
+    if (object_get_value(
+        json,
+        transaction, 0,
+        "memo") == -1) {
         return "JSON Missing memo";
     }
 
