@@ -157,7 +157,7 @@ void tx_display_index_root() {
     for (int8_t idx = 0; idx < NUM_REQUIRED_ROOT_PAGES; idx++) {
         const int16_t subroot_token_idx = object_get_value(
             &parser_tx_obj.json,
-            parser_tx_obj.tx, ROOT_TOKEN_INDEX,
+            ROOT_TOKEN_INDEX,
             get_required_root_item(idx));
         if (subroot_token_idx < 0) {
             break;

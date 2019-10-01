@@ -35,7 +35,7 @@ int8_t is_space(char c) {
     return 0;
 }
 
-int8_t contains_whitespace(parsed_json_t *json, const char *transaction) {
+int8_t contains_whitespace(parsed_json_t *json) {
     int start = 0;
     const int last_element_index = json->tokens[0].end;
 
@@ -44,7 +44,7 @@ int8_t contains_whitespace(parsed_json_t *json, const char *transaction) {
         if (json->tokens[i].type != JSMN_UNDEFINED) {
             const int end = json->tokens[i].start;
             for (int j = start; j < end; j++) {
-                if (is_space(transaction[j]) == 1) {
+                if (is_space(json->buffer[j]) == 1) {
                     return 1;
                 }
             }
@@ -53,8 +53,8 @@ int8_t contains_whitespace(parsed_json_t *json, const char *transaction) {
             return 0;
         }
     }
-    while (start <= last_element_index && transaction[start] != '\0') {
-        if (is_space(transaction[start])) {
+    while (start <= last_element_index && json->buffer[start] != '\0') {
+        if (is_space(json->buffer[start])) {
             return 1;
         }
         start++;
@@ -62,9 +62,9 @@ int8_t contains_whitespace(parsed_json_t *json, const char *transaction) {
     return 0;
 }
 
-int8_t is_sorted(int16_t first_index, int16_t second_index,
-                 parsed_json_t *json,
-                 const char *transaction) {
+int8_t is_sorted(int16_t first_index,
+    int16_t second_index,
+                 parsed_json_t *json) {
 #if DEBUG_SORTING
     char first[256];
     char second[256];
@@ -77,15 +77,14 @@ int8_t is_sorted(int16_t first_index, int16_t second_index,
     second[size] = '\0';
 #endif
 
-    if (strcmp(transaction + json->tokens[first_index].start,
-               transaction + json->tokens[second_index].start) <= 0) {
+    if (strcmp((const char *) (json->buffer+json->tokens[first_index].start),
+               (const char *) (json->buffer+json->tokens[second_index].start)) <= 0) {
         return 1;
     }
     return 0;
 }
 
-int8_t dictionaries_sorted(parsed_json_t *json,
-                           const char *transaction) {
+int8_t dictionaries_sorted(parsed_json_t *json) {
     for (int i = 0; i < json->numberOfTokens; i++) {
         if (json->tokens[i].type == JSMN_OBJECT) {
 
@@ -94,7 +93,7 @@ int8_t dictionaries_sorted(parsed_json_t *json,
                 int prev_token_index = object_get_nth_key(i, 0, json);
                 for (int j = 1; j < count; j++) {
                     int next_token_index = object_get_nth_key(i, j, json);
-                    if (!is_sorted(prev_token_index, next_token_index, json, transaction)) {
+                    if (!is_sorted(prev_token_index, next_token_index, json)) {
                         return 0;
                     }
                     prev_token_index = next_token_index;
@@ -105,53 +104,53 @@ int8_t dictionaries_sorted(parsed_json_t *json,
     return 1;
 }
 
-const char *tx_validate(parsed_json_t *json, const char *transaction) {
-    if (contains_whitespace(json, transaction) == 1) {
+const char *tx_validate(parsed_json_t *json) {
+    if (contains_whitespace(json) == 1) {
         return "JSON Contains whitespace in the corpus";
     }
 
-    if (dictionaries_sorted(json, transaction) != 1) {
+    if (dictionaries_sorted(json) != 1) {
         return "JSON Dictionaries are not sorted";
     }
 
     if (object_get_value(
         json,
-        transaction, 0,
+        0,
         "chain_id") == -1) {
         return "JSON Missing chain_id";
     }
 
     if (object_get_value(
         json,
-        transaction, 0,
+        0,
         "sequence") == -1) {
         return "JSON Missing sequence";
     }
 
     if (object_get_value(
         json,
-        transaction, 0,
+        0,
         "fee") == -1) {
         return "JSON Missing fee";
     }
 
     if (object_get_value(
         json,
-        transaction, 0,
+        0,
         "msgs") == -1) {
         return "JSON Missing msgs";
     }
 
     if (object_get_value(
         json,
-        transaction, 0,
+        0,
         "account_number") == -1) {
         return "JSON Missing account_number";
     }
 
     if (object_get_value(
         json,
-        transaction, 0,
+        0,
         "memo") == -1) {
         return "JSON Missing memo";
     }

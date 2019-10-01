@@ -49,7 +49,7 @@ typedef struct {
     int8_t isValid;
     uint16_t numberOfTokens;
     jsmntok_t tokens[MAX_NUMBER_OF_TOKENS];
-    uint8_t buffer;
+    const char *buffer;
     uint16_t bufferLen;
 } parsed_json_t;
 
@@ -123,7 +123,8 @@ int16_t object_get_nth_value(uint16_t object_token_index,
 /// \param parsed_transaction
 /// \param transaction
 /// \return returns token index or -1 if not found
-int16_t object_get_value(const parsed_json_t *parsed_transaction, const char *transaction, uint16_t object_token_index,
+int16_t object_get_value(const parsed_json_t *parsed_transaction,
+                         uint16_t object_token_index,
                          const char *key_name);
 
 #ifdef __cplusplus

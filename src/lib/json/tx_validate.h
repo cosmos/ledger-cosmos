@@ -27,7 +27,7 @@ extern "C" {
 /// \param parsed_transacton
 /// \param transaction
 /// \return
-const char *tx_validate(parsed_json_t *json, const char *transaction);
+const char *tx_validate(parsed_json_t *json);
 
 #ifdef __cplusplus
 }

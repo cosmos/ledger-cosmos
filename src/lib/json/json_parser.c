@@ -15,6 +15,7 @@
 ********************************************************************************/
 
 #include <jsmn.h>
+#include <zxmacros.h>
 #include "json_parser.h"
 
 #if defined(TARGET_NANOS) || defined(TARGET_NANOX)
@@ -24,26 +25,23 @@
 #define EQUALS(_P, _Q, _LEN) (memcmp( (_P), (_Q), (_LEN))==0)
 #endif
 
-void reset_parsed_json(parsed_json_t *parser_data) {
-    memset(parser_data, 0, sizeof(parsed_json_t));
-}
-
-const char *json_parse(parsed_json_t *parsed_json, const char *transaction) {
-    return json_parse_s(parsed_json, transaction, strlen(transaction));
+const char *json_parse(parsed_json_t *parsed_json, const char *buffer) {
+    return json_parse_s(parsed_json, buffer, strlen(buffer));
 }
 
 const char *json_parse_s(parsed_json_t *parsed_json,
-                         const char *transaction,
-                         uint16_t transaction_length) {
+                         const char *buffer, uint16_t bufferLen) {
     jsmn_parser parser;
     jsmn_init(&parser);
 
-    reset_parsed_json(parsed_json);
+    MEMSET(parsed_json, 0, sizeof(parsed_json_t));
+    parsed_json->buffer = buffer;
+    parsed_json->bufferLen = bufferLen;
 
     int num_tokens = jsmn_parse(
         &parser,
-        transaction,
-        transaction_length,
+        parsed_json->buffer,
+        parsed_json->bufferLen,
         parsed_json->tokens,
         MAX_NUMBER_OF_TOKENS);
 
@@ -215,7 +213,6 @@ int16_t object_get_nth_value(uint16_t object_token_index,
 }
 
 int16_t object_get_value(const parsed_json_t *parsed_transaction,
-                         const char *transaction,
                          uint16_t object_token_index,
                          const char *key_name) {
     if (object_token_index < 0 || object_token_index > parsed_transaction->numberOfTokens) {
@@ -242,7 +239,9 @@ int16_t object_get_value(const parsed_json_t *parsed_transaction,
         prev_element_end = value_token.end;
 
         if (((uint16_t) strlen(key_name)) == (key_token.end - key_token.start)) {
-            if (EQUALS(key_name, transaction + key_token.start, key_token.end - key_token.start)) {
+            if (EQUALS(key_name,
+                       parsed_transaction->buffer + key_token.start,
+                       key_token.end - key_token.start)) {
                 return token_index;
             }
         }

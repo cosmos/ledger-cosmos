@@ -43,12 +43,6 @@ extern "C" {
         parser_tx_obj.tx_ctx.query.item_index= 0; \
         parser_tx_obj.tx_ctx.query.chunk_index = _CHUNK_IDX;
 
-/// Validate json transaction
-/// \param parsed_transacton
-/// \param transaction
-/// \return
-const char *tx_validate(parsed_json_t *json, const char *transaction);
-
 // Traverses transaction data and fills tx_context
 // \return -1 if the item was not found or the number of available chunks for this item
 int16_t tx_traverse(int16_t root_token_index);
