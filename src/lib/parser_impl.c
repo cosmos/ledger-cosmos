@@ -81,13 +81,7 @@ parser_error_t _readTx(parser_context_t *c, parser_tx_t *v) {
     }
 
     parser_tx_obj.tx = (const char *) c->buffer;
-//    context.max_chars_per_key_line = MAX_CHARS_PER_KEY_LINE;
-//    context.max_chars_per_value_line = MAX_CHARS_PER_VALUE_LINE;
-    parser_tx_obj.max_chars_per_key_line = 39;
-    parser_tx_obj.max_chars_per_value_line = 39;
     parser_tx_obj.cache_valid = 0;
-
-    tx_display_index_root();
 
     return parser_ok;
 }

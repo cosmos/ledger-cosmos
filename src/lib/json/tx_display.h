@@ -24,28 +24,9 @@
 extern "C" {
 #endif
 
-#define ERR_MUST_INDEX_FIRST -2
-
 #define NUM_REQUIRED_ROOT_PAGES 6
 #define NUM_KEY_SUBSTITUTIONS 29
 #define NUM_VALUE_SUBSTITUTIONS 8
-
-typedef struct {
-    char str1[50];
-    char str2[50];
-} key_subst_t;
-
-typedef struct {
-    int16_t numItems;
-    int16_t subroot_start_token[NUM_REQUIRED_ROOT_PAGES];
-    uint8_t num_subpages[NUM_REQUIRED_ROOT_PAGES];
-} display_cache_t;
-
-// This is only used for testing purposes
-display_cache_t *tx_display_cache();
-
-// This must be run before accessing items
-void tx_display_index_root();
 
 /// This is the main function called from ledger that updates key and value strings
 /// that are going to be displayed in the UI.

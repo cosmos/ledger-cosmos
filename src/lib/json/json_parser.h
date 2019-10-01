@@ -53,10 +53,6 @@ typedef struct {
     uint16_t bufferLen;
 } parsed_json_t;
 
-/// Resets parsed_json data structure
-/// \param
-void reset_parsed_json(parsed_json_t *);
-
 //---------------------------------------------
 // NEW JSON PARSER CODE
 

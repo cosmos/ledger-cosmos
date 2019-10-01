@@ -65,6 +65,11 @@ static const uint16_t root_max_level[NUM_REQUIRED_ROOT_PAGES] = {
     2, // "msgs"
 };
 
+typedef struct {
+    char str1[50];
+    char str2[50];
+} key_subst_t;
+
 static const key_subst_t key_substitutions[NUM_KEY_SUBSTITUTIONS] = {
     {"chain_id",                          "Chain ID"},
     {"account_number",                    "Account"},
@@ -136,21 +141,21 @@ static const key_subst_t value_substitutions[NUM_VALUE_SUBSTITUTIONS] = {
     strncpy(DST, SRC, DST_SIZE - 1); \
     DST[DST_SIZE - 1] = 0;
 
-display_cache_t display_cache;
+typedef struct {
+    int16_t numItems;
+    int16_t subroot_start_token[NUM_REQUIRED_ROOT_PAGES];
+    uint8_t num_subpages[NUM_REQUIRED_ROOT_PAGES];
+} display_cache_t;
 
-display_cache_t *tx_display_cache() {
-    return &display_cache;
-}
+display_cache_t display_cache;
 
 void tx_display_index_root() {
     if (parser_tx_obj.cache_valid) {
         return;
     }
 
-    // Clear values
-    display_cache.numItems = 0;
-    memset(display_cache.num_subpages, 0, NUM_REQUIRED_ROOT_PAGES);
-    memset(display_cache.subroot_start_token, TX_TOKEN_NOT_FOUND, NUM_REQUIRED_ROOT_PAGES);  // FIXME: This is not clearing everything
+    // Clear cache
+    memset(&display_cache, 0, sizeof(display_cache_t));
 
     // Calculate pages
     int8_t found = 0;
@@ -168,9 +173,13 @@ void tx_display_index_root() {
 
         char tmp_key[2];
         char tmp_val[2];
-        INIT_QUERY_CONTEXT(tmp_key, sizeof(tmp_key), tmp_val, sizeof(tmp_val), 0, root_max_level[idx])
+        INIT_QUERY_CONTEXT(tmp_key, sizeof(tmp_key),
+                           tmp_val, sizeof(tmp_val),
+                           0, root_max_level[idx])
+
         STRNCPY_S(parser_tx_obj.tx_ctx.query.out_key, get_required_root_item(idx),
                   parser_tx_obj.tx_ctx.query.out_key_len);
+
         parser_tx_obj.tx_ctx.max_depth = MAX_RECURSION_DEPTH;
         parser_tx_obj.tx_ctx.query.item_index = 0;
 
@@ -201,9 +210,7 @@ int16_t tx_display_numItems() {
 
 // This function assumes that the tx_ctx has been set properly
 int16_t tx_display_get_item(uint16_t itemIndex) {
-    if (!parser_tx_obj.cache_valid) {
-        return ERR_MUST_INDEX_FIRST;
-    }
+    tx_display_index_root();
 
     // TODO: Verify it has been properly set?
     parser_tx_obj.tx_ctx.query.out_key[0] = 0;
@@ -236,6 +243,8 @@ int16_t tx_display_get_item(uint16_t itemIndex) {
 }
 
 void tx_display_make_friendly() {
+    tx_display_index_root();
+
     // post process keys
     for (int8_t i = 0; i < NUM_KEY_SUBSTITUTIONS; i++) {
         if (!strcmp(parser_tx_obj.tx_ctx.query.out_key, key_substitutions[i].str1)) {
@@ -254,6 +263,5 @@ void tx_display_make_friendly() {
             break;
         }
     }
-
 }
 

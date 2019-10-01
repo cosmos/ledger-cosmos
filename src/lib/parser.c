@@ -15,6 +15,7 @@
 ********************************************************************************/
 
 #include <stdio.h>
+#include <json/tx_validate.h>
 #include "json/tx_parser.h"
 #include "json/tx_display.h"
 #include "lib/parser_impl.h"
@@ -28,7 +29,7 @@ parser_error_t parser_parse(parser_context_t *ctx,
 }
 
 parser_error_t parser_validate(parser_context_t *ctx) {
-    lastErrorMessage = tx_validate(&parser_tx_obj.json, (const char *) ctx->buffer);
+    lastErrorMessage = tx_validate(&parser_tx_obj.json);
     if (lastErrorMessage != NULL) {
         return parser_extended_error;
     }
@@ -47,6 +48,8 @@ parser_error_t parser_getItem(parser_context_t *ctx,
 
     snprintf(outKey, outKeyLen, "?");
     snprintf(outValue, outValueLen, "?");
+    parser_tx_obj.max_chars_per_key_line = outKeyLen;
+    parser_tx_obj.max_chars_per_value_line = outValueLen;
 
     parser_error_t err = parser_ok;
 
