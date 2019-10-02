@@ -30,9 +30,6 @@ int16_t tx_display_get_item(uint16_t itemIndex);
 /// \return number of pages (msg pages + 5 required)
 int16_t tx_display_numItems();
 
-/// Apply postprocessing rules to key and values
-void tx_display_make_friendly();
-
 //---------------------------------------------
 
 #ifdef __cplusplus

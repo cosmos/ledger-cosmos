@@ -123,6 +123,8 @@ void tx_display_index_root() {
     parser_tx_obj.cache_valid = 1;
 }
 
+void tx_display_make_friendly();
+
 int16_t tx_display_numItems() {
     tx_display_index_root();
     return display_cache.numItems;
@@ -159,6 +161,7 @@ int16_t tx_display_get_item(uint16_t itemIndex) {
 
     int16_t ret = tx_traverse(display_cache.subroot_start_token[root_index]);
 
+    tx_display_make_friendly();
     return ret;
 }
 

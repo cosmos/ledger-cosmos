@@ -67,7 +67,6 @@ parser_error_t parser_getItem(parser_context_t *ctx,
     }
 
     *pageCount = ret;
-    tx_display_make_friendly();
 
     return err;
 }
