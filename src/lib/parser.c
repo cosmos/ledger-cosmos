@@ -29,11 +29,7 @@ parser_error_t parser_parse(parser_context_t *ctx,
 }
 
 parser_error_t parser_validate(parser_context_t *ctx) {
-    lastErrorMessage = tx_validate(&parser_tx_obj.json);
-    if (lastErrorMessage != NULL) {
-        return parser_extended_error;
-    }
-    return parser_ok;
+    return tx_validate(&parser_tx_obj.json);
 }
 
 uint8_t parser_getNumItems(parser_context_t *ctx) {
@@ -49,24 +45,10 @@ parser_error_t parser_getItem(parser_context_t *ctx,
     snprintf(outKey, outKeyLen, "?");
     snprintf(outValue, outValueLen, "?");
 
-    parser_error_t err = parser_ok;
-
     if (displayIdx < 0) {
         return parser_no_data;
     }
 
     INIT_QUERY(outKey, outKeyLen, outValue, outValueLen, pageIdx)
-    int16_t ret = tx_display_get_item(displayIdx);
-
-    if (ret == TX_TOKEN_NOT_FOUND) {
-        return parser_no_data;
-    }
-
-    if (ret < 0 || ret > 255) {
-        return parser_unexpected_buffer_end;
-    }
-
-    *pageCount = ret;
-
-    return err;
+    return tx_display_get_item(displayIdx, pageCount);
 }

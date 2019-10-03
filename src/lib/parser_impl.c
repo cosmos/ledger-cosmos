@@ -18,7 +18,6 @@
 #include "json/tx_display.h"
 
 parser_tx_t parser_tx_obj;
-const char *lastErrorMessage = NULL;
 
 parser_error_t parser_init_context(parser_context_t *ctx,
                                    const uint8_t *buffer,
@@ -51,14 +50,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "No error";
         case parser_no_data:
             return "No more data";
-        case parser_extended_error:
-            if (lastErrorMessage != NULL)
-                return lastErrorMessage;
-            return "Unknown message";
         case parser_unexpected_buffer_end:
             return "Unexpected buffer end";
-        case parser_unexpected_wire_type:
-            return "Unexpected wire type";
         case parser_unexpected_version:
             return "Unexpected version";
         case parser_unexpected_characters:
@@ -67,17 +60,43 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "Unexpected field";
         case parser_duplicated_field:
             return "Unexpected duplicated field";
+        case parser_value_out_of_range:
+            return "Value out of range";
         case parser_unexpected_chain:
             return "Unexpected chain";
+        case parser_too_many_tokens:
+            return "NOMEM: JSON string contains too many tokens";
+        case parser_incomplete_json:
+            return "JSON string is not complete";
+
+//////
+        case parser_json_contains_whitespace:
+            return "JSON Contains whitespace in the corpus";
+        case parser_json_is_not_sorted:
+            return "JSON Dictionaries are not sorted";
+        case parser_json_missing_chain_id:
+            return "JSON Missing chain_id";
+        case parser_json_missing_sequence:
+            return "JSON Missing sequence";
+        case parser_json_missing_fee:
+            return "JSON Missing fee";
+        case parser_json_missing_msgs:
+            return "JSON Missing msgs";
+        case parser_json_missing_account_number:
+            return "JSON Missing account number";
+        case parser_json_missing_memo:
+            return "JSON Missing memo";
+
         default:
             return "Unrecognized error code";
     }
 }
 
 parser_error_t _readTx(parser_context_t *c, parser_tx_t *v) {
-    lastErrorMessage = json_parse_s(&parser_tx_obj.json, (const char *) c->buffer, c->bufferSize);
-    if (lastErrorMessage != NULL) {
-        return parser_extended_error;
+    parser_error_t err = json_parse_s(&parser_tx_obj.json,
+                                      (const char *) c->buffer, c->bufferSize);
+    if (err != parser_ok) {
+        return err;
     }
 
     parser_tx_obj.tx = (const char *) c->buffer;

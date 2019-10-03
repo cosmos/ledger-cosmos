@@ -15,6 +15,7 @@
 ********************************************************************************/
 
 #include <jsmn.h>
+#include <parser_common.h>
 #include "json/json_parser.h"
 
 const char whitespaces[] = {
@@ -104,56 +105,56 @@ int8_t dictionaries_sorted(parsed_json_t *json) {
     return 1;
 }
 
-const char *tx_validate(parsed_json_t *json) {
+parser_error_t tx_validate(parsed_json_t *json) {
     if (contains_whitespace(json) == 1) {
-        return "JSON Contains whitespace in the corpus";
+        return parser_json_contains_whitespace;
     }
 
     if (dictionaries_sorted(json) != 1) {
-        return "JSON Dictionaries are not sorted";
+        return parser_json_is_not_sorted;
     }
 
     if (object_get_value(
         json,
         0,
         "chain_id") == -1) {
-        return "JSON Missing chain_id";
+        return parser_json_missing_chain_id;
     }
 
     if (object_get_value(
         json,
         0,
         "sequence") == -1) {
-        return "JSON Missing sequence";
+        return parser_json_missing_sequence;
     }
 
     if (object_get_value(
         json,
         0,
         "fee") == -1) {
-        return "JSON Missing fee";
+        return parser_json_missing_fee;
     }
 
     if (object_get_value(
         json,
         0,
         "msgs") == -1) {
-        return "JSON Missing msgs";
+        return parser_json_missing_msgs;
     }
 
     if (object_get_value(
         json,
         0,
         "account_number") == -1) {
-        return "JSON Missing account_number";
+        return parser_json_missing_account_number;
     }
 
     if (object_get_value(
         json,
         0,
         "memo") == -1) {
-        return "JSON Missing memo";
+        return parser_json_missing_memo;
     }
 
-    return NULL;
+    return parser_ok;
 }

@@ -18,6 +18,7 @@
 
 #include "json/json_parser.h"
 #include <stdint.h>
+#include <parser_common.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,11 +45,10 @@ extern "C" {
         parser_tx_obj.query.chunk_index = _CHUNK_IDX;
 
 // Traverses transaction data and fills tx_context
-// \return -1 if the item was not found or the number of available chunks for this item
-int16_t tx_traverse(int16_t root_token_index);
+parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks);
 
 // Retrieves the value for the corresponding token index. If the value goes beyond val_len, the chunk_idx will be used
-int16_t tx_get_value(int16_t token_index);
+parser_error_t tx_get_value(int16_t token_index, uint8_t *numChunks);
 
 //---------------------------------------------
 

@@ -18,6 +18,7 @@
 
 #include "json_parser.h"
 #include <stdint.h>
+#include <parser_common.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,7 +28,7 @@ extern "C" {
 /// \param parsed_transacton
 /// \param transaction
 /// \return
-const char *tx_validate(parsed_json_t *json);
+parser_error_t tx_validate(parsed_json_t *json);
 
 #ifdef __cplusplus
 }

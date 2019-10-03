@@ -16,6 +16,7 @@
 
 #pragma once
 #include <stdint.h>
+#include <parser_common.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,7 +25,7 @@ extern "C" {
 /// This is the main function called from ledger that updates key and value strings
 /// that are going to be displayed in the UI.
 /// This function assumes that the tx_ctx has been properly set
-int16_t tx_display_get_item(uint16_t itemIndex);
+parser_error_t tx_display_get_item(uint16_t itemIndex, uint8_t *numPages);
 
 /// Return number of UI pages that we'll have for the current json transaction (only if the tx is valid)
 /// \return number of pages (msg pages + 5 required)

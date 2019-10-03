@@ -24,19 +24,26 @@ extern "C" {
 
 typedef enum {
     parser_ok = 0,
-    parser_no_data = 1,
-    parser_extended_error = 2,
-    parser_unexpected_buffer_end = 3,
-    parser_unexpected_wire_type = 4,
-    parser_unexpected_version = 5,
-    parser_unexpected_characters = 6,
-    parser_unexpected_field = 7,
-    parser_duplicated_field = 8,
-    parser_value_out_of_range = 9,
-    parser_unexpected_chain = 10,
+    parser_no_data,
+    parser_unexpected_buffer_end,
+    parser_unexpected_version,
+    parser_unexpected_characters,
+    parser_unexpected_field,
+    parser_duplicated_field,
+    parser_value_out_of_range,
+    parser_unexpected_chain,
+    parser_too_many_tokens,         // "NOMEM: JSON string contains too many tokens"
+    parser_incomplete_json,        // "JSON string is not complete";
+    ////
+    parser_json_contains_whitespace,
+    parser_json_is_not_sorted,
+    parser_json_missing_chain_id,
+    parser_json_missing_sequence,
+    parser_json_missing_fee,
+    parser_json_missing_msgs,
+    parser_json_missing_account_number,
+    parser_json_missing_memo,
 } parser_error_t;
-
-extern const char *lastErrorMessage;
 
 typedef struct {
     const uint8_t *buffer;

@@ -16,6 +16,7 @@
 
 #include <jsmn.h>
 #include <zxmacros.h>
+#include <parser_common.h>
 #include "json_parser.h"
 
 #if defined(TARGET_NANOS) || defined(TARGET_NANOX)
@@ -25,11 +26,11 @@
 #define EQUALS(_P, _Q, _LEN) (memcmp( (_P), (_Q), (_LEN))==0)
 #endif
 
-const char *json_parse(parsed_json_t *parsed_json, const char *buffer) {
+parser_error_t json_parse(parsed_json_t *parsed_json, const char *buffer) {
     return json_parse_s(parsed_json, buffer, strlen(buffer));
 }
 
-const char *json_parse_s(parsed_json_t *parsed_json,
+parser_error_t json_parse_s(parsed_json_t *parsed_json,
                          const char *buffer, uint16_t bufferLen) {
     jsmn_parser parser;
     jsmn_init(&parser);
@@ -47,11 +48,11 @@ const char *json_parse_s(parsed_json_t *parsed_json,
 
     switch (num_tokens) {
         case JSMN_ERROR_NOMEM:
-            return "NOMEM: JSON string contains too many tokens";
+            return parser_too_many_tokens;
         case JSMN_ERROR_INVAL:
-            return "Invalid character in JSON string";
+            return parser_unexpected_characters;
         case JSMN_ERROR_PART:
-            return "JSON string is not complete";
+            return parser_incomplete_json;
     }
 
     parsed_json->numberOfTokens = 0;
@@ -59,17 +60,18 @@ const char *json_parse_s(parsed_json_t *parsed_json,
 
     // Parsing error
     if (num_tokens <= 0) {
-        return "No tokens. Unknown parser error";
+        return parser_no_data;
     }
 
     // We cannot support if number of tokens exceeds the limit
     if (num_tokens > MAX_NUMBER_OF_TOKENS) {
-        return "TOK: JSON string contains too many tokens";
+        return parser_too_many_tokens;
     }
 
     parsed_json->numberOfTokens = num_tokens;
     parsed_json->isValid = true;
-    return NULL;
+
+    return parser_ok;
 }
 
 uint16_t array_get_element_count(uint16_t array_token_index,

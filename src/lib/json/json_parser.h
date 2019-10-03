@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include "parser_common.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,16 +62,16 @@ typedef struct {
 /// \param transaction
 /// \param transaction_length
 /// \return Error message
-const char *json_parse_s(parsed_json_t *parsed_json,
-                         const char *transaction,
-                         uint16_t transaction_length);
+parser_error_t json_parse_s(parsed_json_t *parsed_json,
+                            const char *transaction,
+                            uint16_t transaction_length);
 
 /// Parse json to create a token representation
 /// \param parsed_json
 /// \param transaction
 /// \return Error message
-const char *json_parse(parsed_json_t *parsed_json,
-                       const char *transaction);
+parser_error_t json_parse(parsed_json_t *parsed_json,
+                          const char *transaction);
 
 /// Get the number of elements in the array
 /// \param array_token_index

@@ -102,12 +102,12 @@ void _indexRootFields() {
         parser_tx_obj.max_depth = MAX_RECURSION_DEPTH;
         parser_tx_obj.query.item_index = 0;
 
-        found = 0;
-        while (found >= 0) {
+        parser_error_t err = parser_ok;
+        while (err == parser_ok) {
             parser_tx_obj.item_index_current = 0;
-            found = tx_traverse(subroot_token_idx);
-
-            if (found >= 0) {
+            uint8_t dummy;
+            err = tx_traverse(subroot_token_idx, &dummy);
+            if (err == parser_ok) {
                 display_cache.num_subpages[idx]++;
                 parser_tx_obj.query.item_index++;
             }
@@ -131,14 +131,14 @@ int16_t tx_display_numItems() {
 }
 
 // This function assumes that the tx_ctx has been set properly
-int16_t tx_display_get_item(uint16_t itemIndex) {
+parser_error_t tx_display_get_item(uint16_t itemIndex, uint8_t *numChunks) {
     _indexRootFields();
 
     MEMSET(parser_tx_obj.query.out_key, 0, parser_tx_obj.query.out_key_len);
     MEMSET(parser_tx_obj.query.out_val, 0, parser_tx_obj.query.out_val_len);
 
     if (itemIndex < 0 || itemIndex >= display_cache.numItems) {
-        return -1;
+        return parser_no_data;
     }
 
     parser_tx_obj.query.item_index = 0;
@@ -159,7 +159,7 @@ int16_t tx_display_get_item(uint16_t itemIndex) {
               get_required_root_item(root_index),
               parser_tx_obj.query.out_key_len)
 
-    int16_t ret = tx_traverse(display_cache.subroot_start_token[root_index]);
+    int16_t ret = tx_traverse(display_cache.subroot_start_token[root_index], numChunks);
 
     tx_display_make_friendly();
     return ret;
@@ -255,7 +255,7 @@ static const key_subst_t value_substitutions[NUM_VALUE_SUBSTITUTIONS] = {
 };
 
 void tx_display_make_friendly() {
-    tx_display_index_root();
+    _indexRootFields();
 
     // post process keys
     for (int8_t i = 0; i < NUM_KEY_SUBSTITUTIONS; i++) {
