@@ -76,7 +76,6 @@ void _indexRootFields() {
     memset(&display_cache, 0, sizeof(display_cache_t));
 
     // Calculate pages
-    int8_t found = 0;
     for (int8_t idx = 0; idx < NUM_REQUIRED_ROOT_PAGES; idx++) {
         const int16_t subroot_token_idx = object_get_value(
             &parser_tx_obj.json,
@@ -143,6 +142,7 @@ parser_error_t tx_display_get_item(uint16_t itemIndex, uint8_t *numChunks) {
 
     parser_tx_obj.query.item_index = 0;
     uint16_t root_index = 0;
+
     for (uint16_t i = 0; i < itemIndex; i++) {
         parser_tx_obj.query.item_index++;
         if (parser_tx_obj.query.item_index >= display_cache.num_subpages[root_index]) {

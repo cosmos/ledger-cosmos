@@ -24,8 +24,6 @@
 extern "C" {
 #endif
 
-#define TX_TOKEN_NOT_FOUND (-1)
-
 #define MAX_RECURSION_DEPTH  6
 
 #define INIT_QUERY_CONTEXT(_KEY, _KEY_LEN, _VAL, _VAL_LEN, _CHUNK_IDX, _MAX_LEVEL) \

@@ -42,7 +42,20 @@ __always_inline void strcat_chunk_s(char *dst, uint16_t dst_max, const char *src
     }
 }
 
+///////////////////////////
+///////////////////////////
+///////////////////////////
+///////////////////////////
+///////////////////////////
+///////////////////////////
+///////////////////////////
 __always_inline parser_error_t tx_get_value(int16_t token_index, uint8_t *numChunks) {
+    // json.tokens
+    // query.out_val_len
+    // query.out_val
+    // chunk_index
+    // tx
+
     const int16_t token_start = parser_tx_obj.json.tokens[token_index].start;
     const int16_t token_end = parser_tx_obj.json.tokens[token_index].end;
     const int16_t token_len = token_end - token_start;
@@ -72,7 +85,6 @@ __always_inline parser_error_t tx_get_value(int16_t token_index, uint8_t *numChu
     return parser_ok;
 }
 
-///// Update key characters from json transaction read from the token_index element.
 __always_inline void append_key_item(int16_t token_index) {
     if (*parser_tx_obj.query.out_key > 0) {
         // There is already something there, add separator
@@ -88,6 +100,15 @@ __always_inline void append_key_item(int16_t token_index) {
     strcat_chunk_s(parser_tx_obj.query.out_key,
                    parser_tx_obj.query.out_key_len, address_ptr, new_item_size);
 }
+///////////////////////////
+///////////////////////////
+///////////////////////////
+///////////////////////////
+///////////////////////////
+///////////////////////////
+
+parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *value_token_index) {
+// item_index_current == query.item_index    << when there is a match, extract the token start/end
 
 parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks) {
 //int16_t tx_traverse(int16_t root_token_index) {
@@ -117,9 +138,7 @@ parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks) {
                 const int16_t value_index = object_get_nth_value(root_token_index, i, &parser_tx_obj.json);
 
                 // Skip writing keys if we are actually exploring to count
-                if (parser_tx_obj.query.item_index != TX_TOKEN_NOT_FOUND) {
-                    append_key_item(key_index);
-                }
+                append_key_item(key_index);
 
                 // When traversing objects both level and depth should be considered
                 parser_tx_obj.max_level--;
