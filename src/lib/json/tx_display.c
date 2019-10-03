@@ -67,7 +67,7 @@ typedef struct {
 
 display_cache_t display_cache;
 
-void tx_display_index_root() {
+void _indexRootFields() {
     if (parser_tx_obj.cache_valid) {
         return;
     }
@@ -126,17 +126,17 @@ void tx_display_index_root() {
 void tx_display_make_friendly();
 
 int16_t tx_display_numItems() {
-    tx_display_index_root();
+    _indexRootFields();
     return display_cache.numItems;
 }
 
 // This function assumes that the tx_ctx has been set properly
 int16_t tx_display_get_item(uint16_t itemIndex) {
-    tx_display_index_root();
+    _indexRootFields();
 
-    // TODO: Verify it has been properly set?
-    parser_tx_obj.query.out_key[0] = 0;
-    parser_tx_obj.query.out_val[0] = 0;
+    MEMSET(parser_tx_obj.query.out_key, 0, parser_tx_obj.query.out_key_len);
+    MEMSET(parser_tx_obj.query.out_val, 0, parser_tx_obj.query.out_val_len);
+
     if (itemIndex < 0 || itemIndex >= display_cache.numItems) {
         return -1;
     }
