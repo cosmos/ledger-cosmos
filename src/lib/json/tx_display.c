@@ -55,10 +55,6 @@ static const uint16_t root_max_level[NUM_REQUIRED_ROOT_PAGES] = {
     2, // "msgs"
 };
 
-#define STRNCPY_S(DST, SRC, DST_SIZE) \
-    MEMSET(DST, 0, DST_SIZE);           \
-    strncpy(DST, SRC, DST_SIZE - 1);
-
 typedef struct {
     int16_t numItems;
     int16_t subroot_start_token[NUM_REQUIRED_ROOT_PAGES];
@@ -104,8 +100,8 @@ void _indexRootFields() {
         parser_error_t err = parser_ok;
         while (err == parser_ok) {
             parser_tx_obj.item_index_current = 0;
-            uint8_t dummy;
-            err = tx_traverse(subroot_token_idx, &dummy);
+            uint16_t dummy;
+            err = tx_traverse_find(subroot_token_idx, &dummy);
             if (err == parser_ok) {
                 display_cache.num_subpages[idx]++;
                 parser_tx_obj.query.item_index++;
@@ -122,19 +118,14 @@ void _indexRootFields() {
     parser_tx_obj.cache_valid = 1;
 }
 
-void tx_display_make_friendly();
-
 int16_t tx_display_numItems() {
     _indexRootFields();
     return display_cache.numItems;
 }
 
 // This function assumes that the tx_ctx has been set properly
-parser_error_t tx_display_get_item(uint16_t itemIndex, uint8_t *numChunks) {
+parser_error_t tx_display_set_query(uint16_t itemIndex, uint16_t *outStartToken) {
     _indexRootFields();
-
-    MEMSET(parser_tx_obj.query.out_key, 0, parser_tx_obj.query.out_key_len);
-    MEMSET(parser_tx_obj.query.out_val, 0, parser_tx_obj.query.out_val_len);
 
     if (itemIndex < 0 || itemIndex >= display_cache.numItems) {
         return parser_no_data;
@@ -151,18 +142,14 @@ parser_error_t tx_display_get_item(uint16_t itemIndex, uint8_t *numChunks) {
         }
     }
 
+    parser_tx_obj.item_index_root = root_index;
     parser_tx_obj.item_index_current = 0;
     parser_tx_obj.max_level = root_max_level[root_index];
     parser_tx_obj.max_depth = MAX_RECURSION_DEPTH;
 
-    STRNCPY_S(parser_tx_obj.query.out_key,
-              get_required_root_item(root_index),
-              parser_tx_obj.query.out_key_len)
+    *outStartToken = display_cache.subroot_start_token[parser_tx_obj.item_index_root];
 
-    int16_t ret = tx_traverse(display_cache.subroot_start_token[root_index], numChunks);
-
-    tx_display_make_friendly();
-    return ret;
+    return parser_ok;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////

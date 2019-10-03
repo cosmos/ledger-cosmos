@@ -49,12 +49,12 @@ __always_inline void strcat_chunk_s(char *dst, uint16_t dst_max, const char *src
 ///////////////////////////
 ///////////////////////////
 ///////////////////////////
-__always_inline parser_error_t tx_get_value(int16_t token_index, uint8_t *numChunks) {
-    // json.tokens
-    // query.out_val_len
-    // query.out_val
+
+__always_inline parser_error_t tx_getToken(uint16_t token_index,
+                                           char *out_val, uint16_t out_val_len,
+                                           uint16_t chunk_index, uint8_t *numChunks) {
     // chunk_index
-    // tx
+    // query.out_val_len, query.out_val
 
     const int16_t token_start = parser_tx_obj.json.tokens[token_index].start;
     const int16_t token_end = parser_tx_obj.json.tokens[token_index].end;
@@ -107,11 +107,7 @@ __always_inline void append_key_item(int16_t token_index) {
 ///////////////////////////
 ///////////////////////////
 
-parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *value_token_index) {
-// item_index_current == query.item_index    << when there is a match, extract the token start/end
-
-parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks) {
-//int16_t tx_traverse(int16_t root_token_index) {
+parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_token_index) {
     parser_error_t err;
     const jsmntype_t token_type = parser_tx_obj.json.tokens[root_token_index].type;
 
@@ -121,13 +117,13 @@ parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks) {
 
         // Early bail out
         if (parser_tx_obj.item_index_current == parser_tx_obj.query.item_index) {
-            return tx_get_value(root_token_index, numChunks);
+            *ret_value_token_index = root_token_index;
+            return parser_ok;
         }
         parser_tx_obj.item_index_current++;
         return parser_no_data;
     }
 
-    *numChunks = 0;
     const int16_t el_count = object_get_element_count(root_token_index, &parser_tx_obj.json);
 
     switch (token_type) {
@@ -144,7 +140,7 @@ parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks) {
                 parser_tx_obj.max_level--;
                 parser_tx_obj.max_depth--;
                 // Traverse the value, extracting subkeys
-                err = tx_traverse(value_index, numChunks);
+                err = tx_traverse_find(value_index, ret_value_token_index);
                 parser_tx_obj.max_level++;
                 parser_tx_obj.max_depth++;
 
@@ -157,14 +153,13 @@ parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks) {
         }
         case JSMN_ARRAY: {
             for (int16_t i = 0; i < el_count; ++i) {
-                const int16_t element_index = array_get_nth_element(
-                    root_token_index, i,
-                    &parser_tx_obj.json);
+                const int16_t element_index = array_get_nth_element(root_token_index, i,
+                                                                    &parser_tx_obj.json);
 
                 // When iterating along an array,
                 // the level does not change but we need to count the recursion
                 parser_tx_obj.max_depth--;
-                err = tx_traverse(element_index, numChunks);
+                err = tx_traverse_find(element_index, ret_value_token_index);
                 parser_tx_obj.max_depth++;
 
                 if (err == parser_ok)

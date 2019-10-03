@@ -42,12 +42,15 @@ extern "C" {
         parser_tx_obj.query.item_index= 0; \
         parser_tx_obj.query.chunk_index = _CHUNK_IDX;
 
+parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_token_index);
+
 // Traverses transaction data and fills tx_context
 parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks);
 
 // Retrieves the value for the corresponding token index. If the value goes beyond val_len, the chunk_idx will be used
-parser_error_t tx_get_value(int16_t token_index, uint8_t *numChunks);
-
+parser_error_t tx_getToken(uint16_t token_index,
+                           char *out_val, uint16_t out_val_len,
+                           uint16_t chunk_index, uint8_t *numChunks);
 //---------------------------------------------
 
 #ifdef __cplusplus

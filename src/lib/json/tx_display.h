@@ -22,14 +22,22 @@
 extern "C" {
 #endif
 
+#define STRNCPY_S(DST, SRC, DST_SIZE) \
+    MEMSET(DST, 0, DST_SIZE);           \
+    strncpy(DST, SRC, DST_SIZE - 1);
+
 /// This is the main function called from ledger that updates key and value strings
 /// that are going to be displayed in the UI.
 /// This function assumes that the tx_ctx has been properly set
-parser_error_t tx_display_get_item(uint16_t itemIndex, uint8_t *numPages);
+parser_error_t tx_display_set_query(uint16_t itemIndex, uint16_t *outStartToken);
 
 /// Return number of UI pages that we'll have for the current json transaction (only if the tx is valid)
 /// \return number of pages (msg pages + 5 required)
 int16_t tx_display_numItems();
+
+const char *get_required_root_item(uint8_t i);
+
+void tx_display_make_friendly();
 
 //---------------------------------------------
 

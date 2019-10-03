@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <json/tx_validate.h>
+#include <zxmacros.h>
 #include "json/tx_parser.h"
 #include "json/tx_display.h"
 #include "lib/parser_impl.h"
@@ -39,16 +40,42 @@ uint8_t parser_getNumItems(parser_context_t *ctx) {
 parser_error_t parser_getItem(parser_context_t *ctx,
                               int8_t displayIdx,
                               char *outKey, uint16_t outKeyLen,
-                              char *outValue, uint16_t outValueLen,
+                              char *outVal, uint16_t outValLen,
                               uint8_t pageIdx, uint8_t *pageCount) {
 
+    MEMSET(outKey, 0, outKeyLen);
+    MEMSET(outVal, 0, outValLen);
     snprintf(outKey, outKeyLen, "?");
-    snprintf(outValue, outValueLen, "?");
+    snprintf(outVal, outValLen, "?");
 
     if (displayIdx < 0) {
         return parser_no_data;
     }
 
-    INIT_QUERY(outKey, outKeyLen, outValue, outValueLen, pageIdx)
-    return tx_display_get_item(displayIdx, pageCount);
+    INIT_QUERY(outKey, outKeyLen, outVal, outValLen, pageIdx)
+
+    uint16_t displayStartToken;
+    parser_error_t err = tx_display_set_query(displayIdx, &displayStartToken);
+    if (err != parser_ok)
+        return err;
+
+    STRNCPY_S(parser_tx_obj.query.out_key,
+              get_required_root_item(parser_tx_obj.item_index_root),
+              parser_tx_obj.query.out_key_len)
+
+    uint16_t ret_value_token_index;
+    err = tx_traverse_find(displayStartToken, &ret_value_token_index);
+
+    if (err != parser_ok)
+        return err;
+
+    err = tx_getToken(ret_value_token_index,
+                      parser_tx_obj.query.out_val, parser_tx_obj.query.out_val_len,
+                      parser_tx_obj.query.chunk_index, pageCount);
+    if (err != parser_ok)
+        return err;
+
+    tx_display_make_friendly();
+
+    return err;
 }
