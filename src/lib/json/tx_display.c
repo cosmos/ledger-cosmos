@@ -94,12 +94,12 @@ void _indexRootFields() {
                   get_required_root_item(idx),
                   parser_tx_obj.query.out_key_len)
 
-        parser_tx_obj.max_depth = MAX_RECURSION_DEPTH;
+        parser_tx_obj.query.max_depth = MAX_RECURSION_DEPTH;
         parser_tx_obj.query.item_index = 0;
 
         parser_error_t err = parser_ok;
         while (err == parser_ok) {
-            parser_tx_obj.item_index_current = 0;
+            parser_tx_obj.query.item_index_current = 0;
             uint16_t dummy;
             err = tx_traverse_find(subroot_token_idx, &dummy);
             if (err == parser_ok) {
@@ -142,12 +142,12 @@ parser_error_t tx_display_set_query(uint16_t itemIndex, uint16_t *outStartToken)
         }
     }
 
-    parser_tx_obj.item_index_root = root_index;
-    parser_tx_obj.item_index_current = 0;
-    parser_tx_obj.max_level = root_max_level[root_index];
-    parser_tx_obj.max_depth = MAX_RECURSION_DEPTH;
+    parser_tx_obj.query.item_index_root = root_index;
+    parser_tx_obj.query.item_index_current = 0;
+    parser_tx_obj.query.max_level = root_max_level[root_index];
+    parser_tx_obj.query.max_depth = MAX_RECURSION_DEPTH;
 
-    *outStartToken = display_cache.subroot_start_token[parser_tx_obj.item_index_root];
+    *outStartToken = display_cache.subroot_start_token[parser_tx_obj.query.item_index_root];
 
     return parser_ok;
 }

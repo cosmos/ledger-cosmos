@@ -111,16 +111,16 @@ parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_to
     parser_error_t err;
     const jsmntype_t token_type = parser_tx_obj.json.tokens[root_token_index].type;
 
-    if (parser_tx_obj.max_level <= 0 || parser_tx_obj.max_depth <= 0 ||
+    if (parser_tx_obj.query.max_level <= 0 || parser_tx_obj.query.max_depth <= 0 ||
         token_type == JSMN_STRING ||
         token_type == JSMN_PRIMITIVE) {
 
         // Early bail out
-        if (parser_tx_obj.item_index_current == parser_tx_obj.query.item_index) {
+        if (parser_tx_obj.query.item_index_current == parser_tx_obj.query.item_index) {
             *ret_value_token_index = root_token_index;
             return parser_ok;
         }
-        parser_tx_obj.item_index_current++;
+        parser_tx_obj.query.item_index_current++;
         return parser_no_data;
     }
 
@@ -137,12 +137,12 @@ parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_to
                 append_key_item(key_index);
 
                 // When traversing objects both level and depth should be considered
-                parser_tx_obj.max_level--;
-                parser_tx_obj.max_depth--;
+                parser_tx_obj.query.max_level--;
+                parser_tx_obj.query.max_depth--;
                 // Traverse the value, extracting subkeys
                 err = tx_traverse_find(value_index, ret_value_token_index);
-                parser_tx_obj.max_level++;
-                parser_tx_obj.max_depth++;
+                parser_tx_obj.query.max_level++;
+                parser_tx_obj.query.max_depth++;
 
                 if (err == parser_ok)
                     return err;
@@ -158,9 +158,9 @@ parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_to
 
                 // When iterating along an array,
                 // the level does not change but we need to count the recursion
-                parser_tx_obj.max_depth--;
+                parser_tx_obj.query.max_depth--;
                 err = tx_traverse_find(element_index, ret_value_token_index);
-                parser_tx_obj.max_depth++;
+                parser_tx_obj.query.max_depth++;
 
                 if (err == parser_ok)
                     return err;

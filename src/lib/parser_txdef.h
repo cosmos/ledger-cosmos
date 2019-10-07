@@ -23,27 +23,25 @@ extern "C" {
 #include <stddef.h>
 
 typedef struct {
-    int16_t item_index;             // ??
+    int16_t item_index;
+    int16_t chunk_index;
+    uint16_t item_index_current;
+    uint16_t item_index_root;
+    uint8_t max_level;
+    uint8_t max_depth;
 
-    char *out_key;                  // ??
-    int16_t out_key_len;            // ??
+    char *out_key;
+    int16_t out_key_len;
 
-    int16_t chunk_index;            // ??
-    char *out_val;                  // ??
-    int16_t out_val_len;            // ??
+    char *out_val;
+    int16_t out_val_len;
 } tx_query_t;
 
 typedef struct {
     parsed_json_t json;
     const char *tx;
     uint8_t cache_valid;
-
     tx_query_t query;
-
-    uint16_t item_index_current;
-    uint16_t item_index_root;
-    uint8_t max_level;
-    uint8_t max_depth;
 } parser_tx_t;
 
 #ifdef __cplusplus

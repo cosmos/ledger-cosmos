@@ -28,9 +28,9 @@ extern "C" {
 
 #define INIT_QUERY_CONTEXT(_KEY, _KEY_LEN, _VAL, _VAL_LEN, _CHUNK_IDX, _MAX_LEVEL) \
     INIT_QUERY(_KEY, _KEY_LEN, _VAL, _VAL_LEN, _CHUNK_IDX) \
-    parser_tx_obj.item_index_current = 0; \
-    parser_tx_obj.max_depth = MAX_RECURSION_DEPTH; \
-    parser_tx_obj.max_level = _MAX_LEVEL;
+    parser_tx_obj.query.item_index_current = 0; \
+    parser_tx_obj.query.max_depth = MAX_RECURSION_DEPTH; \
+    parser_tx_obj.query.max_level = _MAX_LEVEL;
 
 #define INIT_QUERY(_KEY, _KEY_LEN, _VAL, _VAL_LEN, _CHUNK_IDX)  \
         _KEY[0] = 0; \

@@ -60,7 +60,7 @@ parser_error_t parser_getItem(parser_context_t *ctx,
         return err;
 
     STRNCPY_S(parser_tx_obj.query.out_key,
-              get_required_root_item(parser_tx_obj.item_index_root),
+              get_required_root_item(parser_tx_obj.query.item_index_root),
               parser_tx_obj.query.out_key_len)
 
     uint16_t ret_value_token_index;
