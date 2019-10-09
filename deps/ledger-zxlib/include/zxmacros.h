@@ -32,6 +32,10 @@ extern "C" {
 #define NV_VOL
 #endif
 
+#ifndef PIC
+#define PIC(x) (x)
+#endif
+
 #define NV_ALIGN __attribute__ ((aligned(64)))
 
 #if defined (TARGET_NANOS) || defined(TARGET_NANOX)
@@ -75,7 +79,9 @@ void __logstack();
 #define LOGSTACK() __logstack()
 
 #else
+
 #include <string.h>
+
 #define MEMMOVE memmove
 #define MEMSET memset
 #define MEMCPY memcpy
@@ -104,44 +110,31 @@ void __logstack();
 #define NtoHL(x) (x)
 #endif
 
-__Z_INLINE void array_to_hexstr(char *dst, const uint8_t *src, uint8_t count) {
-    const char hexchars[] = "0123456789ABCDEF";
-    for (uint8_t i = 0; i < count; i++, src++) {
-        *dst++ = hexchars[*src >> 4];
-        *dst++ = hexchars[*src & 0x0F];
-    }
-    *dst = 0; // terminate string
+#define NUM_TO_STR(TYPE) __Z_INLINE const char * TYPE##_to_str(char *data, int dataLen, TYPE##_t number) { \
+    if (dataLen < 2) return "Buffer too small";     \
+    MEMSET(data, 0, dataLen);                       \
+    char *p = data;                                 \
+    if (number < 0) { *(p++) = '-'; data++; }       \
+    else if (number == 0) { *(p++) = '0'; }         \
+    TYPE##_t tmp;                                   \
+    while (number != 0) {                           \
+        if (p - data >= (dataLen - 1)) {    return "Buffer too small";  }   \
+        tmp = number % 10;                          \
+        tmp = tmp < 0 ? -tmp : tmp;                 \
+        *(p++) = (char) ('0' + tmp);                \
+        number /= 10u;                              \
+    }                                               \
+    while (p > data) {                              \
+        p--;                                        \
+        char z = *data; *data = *p; *p = z;         \
+        data++;                                     \
+    }                                               \
+    return NULL;                                    \
 }
 
-__Z_INLINE const char *int64_to_str(char *data, int size, int64_t number) {
-    char temp[] = "-9223372036854775808";
+NUM_TO_STR(int64)
 
-    char *ptr = temp;
-    int64_t num = number;
-    int sign = 1;
-    if (number < 0) {
-        sign = -1;
-    }
-    while (num != 0) {
-        *ptr++ = '0' + (num % 10) * sign;
-        num /= 10;
-    }
-    if (number < 0) {
-        *ptr++ = '-';
-    } else if (number == 0) {
-        *ptr++ = '0';
-    }
-    int distance = (ptr - temp) + 1;
-    if (size < distance) {
-        return "Size too small";
-    }
-    int index = 0;
-    while (--ptr >= temp) {
-        data[index++] = *ptr;
-    }
-    data[index] = '\0';
-    return NULL;
-}
+NUM_TO_STR(uint64)
 
 __Z_INLINE int8_t str_to_int8(const char *start, const char *end, char *error) {
 
@@ -227,20 +220,56 @@ __Z_INLINE void fpuint64_to_str(char *dst, const uint64_t value, uint8_t decimal
 
 __Z_INLINE uint64_t uint64_from_BEarray(const uint8_t data[8]) {
     uint64_t result = 0;
-    for (int i = 0; i < 8; i++) {
-        result <<= 8;
+    for (uint8_t i = 0; i < 8u; i++) {
+        result <<= 8u;
         result += data[i];
     }
     return result;
 }
 
+__Z_INLINE void array_to_hexstr(char *dst, const uint8_t *src, uint8_t count) {
+    const char hexchars[] = "0123456789ABCDEF";
+    for (uint8_t i = 0; i < count; i++, src++) {
+        *dst++ = hexchars[*src >> 4u];
+        *dst++ = hexchars[*src & 0x0Fu];
+    }
+    *dst = 0; // terminate string
+}
+
+__Z_INLINE void pageString(char *outValue, uint16_t outValueLen,
+                           char *inValue, uint8_t pageIdx, uint8_t *pageCount) {
+    MEMSET(outValue, 0, outValueLen);
+    outValueLen--;  // leave space for NULL termination
+    uint16_t inValueLen = strlen(inValue);
+    *pageCount = (inValueLen / outValueLen);
+    const uint16_t lastChunkLen = (inValueLen % outValueLen);
+
+    if (lastChunkLen > 0) {
+        (*pageCount)++;
+    }
+
+    if (pageIdx < *pageCount) {
+        if (lastChunkLen > 0 && pageIdx == *pageCount - 1) {
+            MEMCPY(outValue, inValue + (pageIdx * outValueLen), lastChunkLen);
+        } else {
+            MEMCPY(outValue, inValue + (pageIdx * outValueLen), outValueLen);
+        }
+    }
+}
+
+///////////////////////
+///////////////////////
+///////////////////////
+///////////////////////
+
+typedef enum {
+    FALSE,
+    TRUE
+} bool_t;
+
 size_t asciify(char *utf8_in);
 
 size_t asciify_ext(const char *utf8_in, char *ascii_only_out);
-
-#ifndef PIC
-#define PIC(x) (x)
-#endif
 
 #ifdef __cplusplus
 }

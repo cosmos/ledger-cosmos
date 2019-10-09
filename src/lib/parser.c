@@ -21,6 +21,7 @@
 #include "json/tx_display.h"
 #include "lib/parser_impl.h"
 #include "view_internal.h"
+#include "jsmn.h"
 
 parser_error_t parser_parse(parser_context_t *ctx,
                             const uint8_t *data,
@@ -35,6 +36,84 @@ parser_error_t parser_validate(parser_context_t *ctx) {
 
 uint8_t parser_getNumItems(parser_context_t *ctx) {
     return tx_display_numItems();
+}
+
+__Z_INLINE bool_t parser_areEqual(uint16_t tokenidx, char *expected) {
+    if (parser_tx_obj.json.tokens[tokenidx].type != JSMN_STRING) {
+        return FALSE;
+    }
+
+    uint16_t len = parser_tx_obj.json.tokens[tokenidx].end - parser_tx_obj.json.tokens[tokenidx].start;
+    if (strlen(expected) != len) {
+        return FALSE;
+    }
+
+    const char *p = parser_tx_obj.tx + parser_tx_obj.json.tokens[tokenidx].start;
+    for (uint16_t i = 0; i < len; i++) {
+        if (expected[i] != *(p + i)) {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+__Z_INLINE bool_t parser_isAmount(char *key) {
+    if (strcmp(parser_tx_obj.query.out_key, "fee/amount") == 0)
+        return TRUE;
+
+    if (strcmp(parser_tx_obj.query.out_key, "msgs/inputs/coins") == 0)
+        return TRUE;
+
+    if (strcmp(parser_tx_obj.query.out_key, "msgs/outputs/coins") == 0)
+        return TRUE;
+
+    if (strcmp(parser_tx_obj.query.out_key, "msgs/value/amount") == 0)
+        return TRUE;
+
+    return FALSE;
+}
+
+__Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
+                                              char *outVal, uint16_t outValLen,
+                                              uint8_t pageIdx, uint8_t *pageCount) {
+    const uint16_t numElementsList = array_get_element_count(amountToken, &parser_tx_obj.json);
+    const uint16_t numElementsDict = array_get_element_count(amountToken + 1, &parser_tx_obj.json);
+
+    if (numElementsList != 1 || numElementsDict != 4)
+        return parser_unexpected_field;
+
+    if (parser_tx_obj.json.tokens[amountToken + 1].type != JSMN_OBJECT)
+        return parser_unexpected_field;
+
+    if (!parser_areEqual(amountToken + 2, "amount"))
+        return parser_unexpected_field;
+
+    if (!parser_areEqual(amountToken + 4, "denom"))
+        return parser_unexpected_field;
+
+    char bufferUI[160];
+    MEMSET(outVal, 0, outValLen);
+    MEMSET(bufferUI, 0, sizeof(bufferUI));
+
+    const char *amountPtr = parser_tx_obj.tx + parser_tx_obj.json.tokens[amountToken + 3].start;
+    const uint16_t amountLen = parser_tx_obj.json.tokens[amountToken + 3].end -
+                               parser_tx_obj.json.tokens[amountToken + 3].start;
+    const char *denomPtr = parser_tx_obj.tx + parser_tx_obj.json.tokens[amountToken + 5].start;
+    const uint16_t denomLen = parser_tx_obj.json.tokens[amountToken + 5].end -
+                              parser_tx_obj.json.tokens[amountToken + 5].start;
+
+    if (sizeof(bufferUI) < amountLen + denomLen + 2) {
+        return parser_unexpected_buffer_end;
+    }
+
+    MEMCPY(bufferUI, amountPtr, amountLen);
+    bufferUI[amountLen] = ' ';
+    MEMCPY(bufferUI + 1 + amountLen, denomPtr, denomLen);
+
+    pageString(outVal, outValLen, bufferUI, pageIdx, pageCount);
+
+    return parser_ok;
 }
 
 parser_error_t parser_getItem(parser_context_t *ctx,
@@ -69,13 +148,18 @@ parser_error_t parser_getItem(parser_context_t *ctx,
     if (err != parser_ok)
         return err;
 
-    err = tx_getToken(ret_value_token_index,
-                      parser_tx_obj.query.out_val, parser_tx_obj.query.out_val_len,
-                      parser_tx_obj.query.chunk_index, pageCount);
-    if (err != parser_ok)
-        return err;
+    if (parser_isAmount(parser_tx_obj.query.out_key)) {
+        err = parser_formatAmount(ret_value_token_index, outVal, outValLen, pageIdx, pageCount);
+    } else {
+        err = tx_getToken(ret_value_token_index,
+                          parser_tx_obj.query.out_val, parser_tx_obj.query.out_val_len,
+                          parser_tx_obj.query.chunk_index, pageCount);
+    }
 
     tx_display_make_friendly();
+
+    if (err != parser_ok)
+        return err;
 
     return err;
 }

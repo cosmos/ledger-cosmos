@@ -53,34 +53,31 @@ __always_inline void strcat_chunk_s(char *dst, uint16_t dst_max, const char *src
 __always_inline parser_error_t tx_getToken(uint16_t token_index,
                                            char *out_val, uint16_t out_val_len,
                                            uint16_t chunk_index, uint8_t *numChunks) {
-    // chunk_index
-    // query.out_val_len, query.out_val
-
     const int16_t token_start = parser_tx_obj.json.tokens[token_index].start;
     const int16_t token_end = parser_tx_obj.json.tokens[token_index].end;
     const int16_t token_len = token_end - token_start;
 
-    *numChunks = (token_len / (parser_tx_obj.query.out_val_len - 1)) + 1;
-    if (token_len > 0 && (token_len % (parser_tx_obj.query.out_val_len - 1) == 0))
+    *numChunks = (token_len / (out_val_len - 1)) + 1;
+    if (token_len > 0 && (token_len % (out_val_len - 1) == 0))
         numChunks--;
 
-    parser_tx_obj.query.out_val[0] = '\0';  // flush
-    if (parser_tx_obj.query.chunk_index >= *numChunks) {
+    out_val[0] = '\0';  // flush
+    if (chunk_index >= *numChunks) {
         return parser_no_data;
     }
 
-    const int16_t chunk_start = token_start + parser_tx_obj.query.chunk_index * (parser_tx_obj.query.out_val_len - 1);
+    const int16_t chunk_start = token_start + chunk_index * (out_val_len - 1);
     int16_t chunk_len = token_end - chunk_start;
-
     if (chunk_len < 0) {
         return parser_no_data;
     }
 
-    if (chunk_len > parser_tx_obj.query.out_val_len - 1) {
-        chunk_len = parser_tx_obj.query.out_val_len - 1;
+    if (chunk_len > out_val_len - 1) {
+        chunk_len = out_val_len - 1;
     }
-    MEMCPY(parser_tx_obj.query.out_val, parser_tx_obj.tx + chunk_start, chunk_len);
-    parser_tx_obj.query.out_val[chunk_len] = 0;
+
+    MEMCPY(out_val, parser_tx_obj.tx + chunk_start, chunk_len);
+    out_val[chunk_len] = 0;
 
     return parser_ok;
 }
