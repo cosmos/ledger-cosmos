@@ -29,7 +29,7 @@ extern "C" {
 /// This is the main function called from ledger that updates key and value strings
 /// that are going to be displayed in the UI.
 /// This function assumes that the tx_ctx has been properly set
-parser_error_t tx_display_set_query(uint16_t itemIndex, uint16_t *outStartToken);
+parser_error_t tx_display_set_query(uint16_t displayIdx, uint16_t *outStartToken);
 
 /// Return number of UI pages that we'll have for the current json transaction (only if the tx is valid)
 /// \return number of pages (msg pages + 5 required)

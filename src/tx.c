@@ -19,6 +19,7 @@
 #include "buffering.h"
 #include "lib/parser.h"
 #include <string.h>
+#include "zxmacros.h"
 
 #if defined(TARGET_NANOX)
 #define RAM_BUFFER_SIZE 8192
@@ -96,14 +97,18 @@ uint8_t tx_getNumItems() {
 
 tx_error_t tx_getItem(int8_t displayIdx,
                       char *outKey, uint16_t outKeyLen,
-                      char *outValue, uint16_t outValueLen,
+                      char *outVal, uint16_t outValLen,
                       uint8_t pageIdx, uint8_t *pageCount) {
     tx_error_t err = tx_no_error;
+
+    if (displayIdx < 0 || displayIdx > tx_getNumItems() ) {
+        return tx_no_data;
+    }
 
     err = (tx_error_t) parser_getItem(&ctx_parsed_tx,
                                       displayIdx,
                                       outKey, outKeyLen,
-                                      outValue, outValueLen,
+                                      outVal, outValLen,
                                       pageIdx, pageCount);
 
     // Convert error codes
@@ -112,13 +117,6 @@ tx_error_t tx_getItem(int8_t displayIdx,
 
     if (err == parser_ok)
         return tx_no_error;
-
-    if (*pageCount > 1) {
-        uint8_t keyLen = strlen(outKey);
-        if (keyLen < outKeyLen) {
-            snprintf(outKey + keyLen, outKeyLen - keyLen, " [%d/%d]", pageIdx + 1, *pageCount);
-        }
-    }
 
     return err;
 }

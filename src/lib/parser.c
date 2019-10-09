@@ -77,31 +77,34 @@ __Z_INLINE bool_t parser_isAmount(char *key) {
 __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
                                               char *outVal, uint16_t outValLen,
                                               uint8_t pageIdx, uint8_t *pageCount) {
-    const uint16_t numElementsList = array_get_element_count(amountToken, &parser_tx_obj.json);
-    const uint16_t numElementsDict = array_get_element_count(amountToken + 1, &parser_tx_obj.json);
+    uint16_t numElements = array_get_element_count(amountToken, &parser_tx_obj.json);
+    if (parser_tx_obj.json.tokens[amountToken].type == JSMN_ARRAY){
+        amountToken++;
+    }
 
-    if (numElementsList != 1 || numElementsDict != 4)
+    numElements = array_get_element_count(amountToken, &parser_tx_obj.json);
+    if (numElements != 4)
         return parser_unexpected_field;
 
-    if (parser_tx_obj.json.tokens[amountToken + 1].type != JSMN_OBJECT)
+    if (parser_tx_obj.json.tokens[amountToken].type != JSMN_OBJECT)
         return parser_unexpected_field;
 
-    if (!parser_areEqual(amountToken + 2, "amount"))
+    if (!parser_areEqual(amountToken + 1, "amount"))
         return parser_unexpected_field;
 
-    if (!parser_areEqual(amountToken + 4, "denom"))
+    if (!parser_areEqual(amountToken + 3, "denom"))
         return parser_unexpected_field;
 
     char bufferUI[160];
     MEMSET(outVal, 0, outValLen);
     MEMSET(bufferUI, 0, sizeof(bufferUI));
 
-    const char *amountPtr = parser_tx_obj.tx + parser_tx_obj.json.tokens[amountToken + 3].start;
-    const uint16_t amountLen = parser_tx_obj.json.tokens[amountToken + 3].end -
-                               parser_tx_obj.json.tokens[amountToken + 3].start;
-    const char *denomPtr = parser_tx_obj.tx + parser_tx_obj.json.tokens[amountToken + 5].start;
-    const uint16_t denomLen = parser_tx_obj.json.tokens[amountToken + 5].end -
-                              parser_tx_obj.json.tokens[amountToken + 5].start;
+    const char *amountPtr = parser_tx_obj.tx + parser_tx_obj.json.tokens[amountToken + 2].start;
+    const uint16_t amountLen = parser_tx_obj.json.tokens[amountToken + 2].end -
+                               parser_tx_obj.json.tokens[amountToken + 2].start;
+    const char *denomPtr = parser_tx_obj.tx + parser_tx_obj.json.tokens[amountToken + 4].start;
+    const uint16_t denomLen = parser_tx_obj.json.tokens[amountToken + 4].end -
+                              parser_tx_obj.json.tokens[amountToken + 4].start;
 
     if (sizeof(bufferUI) < amountLen + denomLen + 2) {
         return parser_unexpected_buffer_end;
@@ -124,14 +127,9 @@ parser_error_t parser_getItem(parser_context_t *ctx,
 
     MEMSET(outKey, 0, outKeyLen);
     MEMSET(outVal, 0, outValLen);
+    INIT_QUERY(outKey, outKeyLen, outVal, outValLen, pageIdx)
     snprintf(outKey, outKeyLen, "?");
     snprintf(outVal, outValLen, "?");
-
-    if (displayIdx < 0) {
-        return parser_no_data;
-    }
-
-    INIT_QUERY(outKey, outKeyLen, outVal, outValLen, pageIdx)
 
     uint16_t displayStartToken;
     parser_error_t err = tx_display_set_query(displayIdx, &displayStartToken);
@@ -144,7 +142,6 @@ parser_error_t parser_getItem(parser_context_t *ctx,
 
     uint16_t ret_value_token_index;
     err = tx_traverse_find(displayStartToken, &ret_value_token_index);
-
     if (err != parser_ok)
         return err;
 
@@ -158,8 +155,12 @@ parser_error_t parser_getItem(parser_context_t *ctx,
 
     tx_display_make_friendly();
 
-    if (err != parser_ok)
-        return err;
+    if (*pageCount > 1) {
+        uint8_t keyLen = strlen(outKey);
+        if (keyLen < outKeyLen) {
+            snprintf(outKey + keyLen, outKeyLen - keyLen, " [%d/%d]", pageIdx + 1, *pageCount);
+        }
+    }
 
     return err;
 }

@@ -26,7 +26,13 @@ uint32_t bip32Path[BIP32_LEN_DEFAULT];
 uint8_t bech32_hrp_len;
 char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
 
+#if defined(TARGET_NANOS)
 #define SAFE_HEARTBEAT(X)  io_seproxyhal_io_heartbeat(); X; io_seproxyhal_io_heartbeat();
+#endif
+
+#if defined(TARGET_NANOX)
+#define SAFE_HEARTBEAT(X)  X;
+#endif
 
 #if defined(TARGET_NANOS) || defined(TARGET_NANOX)
 void crypto_extractPublicKey(uint32_t bip32Path[BIP32_LEN_DEFAULT], uint8_t *pubKey){
@@ -72,7 +78,6 @@ uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t
                                               BIP32_LEN_DEFAULT,
                                               privateKeyData, NULL));
 
-    io_seproxyhal_io_heartbeat();
     SAFE_HEARTBEAT(cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey));
 
     // Sign

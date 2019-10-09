@@ -236,11 +236,11 @@ __Z_INLINE void array_to_hexstr(char *dst, const uint8_t *src, uint8_t count) {
     *dst = 0; // terminate string
 }
 
-__Z_INLINE void pageString(char *outValue, uint16_t outValueLen,
-                           char *inValue, uint8_t pageIdx, uint8_t *pageCount) {
+__Z_INLINE void pageStringExt(char *outValue, uint16_t outValueLen,
+                           const char *inValue, uint16_t inValueLen,
+                           uint8_t pageIdx, uint8_t *pageCount) {
     MEMSET(outValue, 0, outValueLen);
     outValueLen--;  // leave space for NULL termination
-    uint16_t inValueLen = strlen(inValue);
     *pageCount = (inValueLen / outValueLen);
     const uint16_t lastChunkLen = (inValueLen % outValueLen);
 
@@ -255,6 +255,12 @@ __Z_INLINE void pageString(char *outValue, uint16_t outValueLen,
             MEMCPY(outValue, inValue + (pageIdx * outValueLen), outValueLen);
         }
     }
+}
+
+__Z_INLINE void pageString(char *outValue, uint16_t outValueLen,
+                           const char *inValue,
+                           uint8_t pageIdx, uint8_t *pageCount) {
+    pageStringExt(outValue, outValueLen, inValue, strlen(inValue), pageIdx, pageCount);
 }
 
 ///////////////////////

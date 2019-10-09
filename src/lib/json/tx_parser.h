@@ -48,9 +48,10 @@ parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_to
 parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks);
 
 // Retrieves the value for the corresponding token index. If the value goes beyond val_len, the chunk_idx will be used
+
 parser_error_t tx_getToken(uint16_t token_index,
                            char *out_val, uint16_t out_val_len,
-                           uint16_t chunk_index, uint8_t *numChunks);
+                           uint8_t pageIdx, uint8_t *pageCount);
 //---------------------------------------------
 
 #ifdef __cplusplus

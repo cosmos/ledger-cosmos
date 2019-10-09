@@ -124,17 +124,17 @@ int16_t tx_display_numItems() {
 }
 
 // This function assumes that the tx_ctx has been set properly
-parser_error_t tx_display_set_query(uint16_t itemIndex, uint16_t *outStartToken) {
+parser_error_t tx_display_set_query(uint16_t displayIdx, uint16_t *outStartToken) {
     _indexRootFields();
 
-    if (itemIndex < 0 || itemIndex >= display_cache.numItems) {
+    if (displayIdx < 0 || displayIdx >= display_cache.numItems) {
         return parser_no_data;
     }
 
     parser_tx_obj.query.item_index = 0;
     uint16_t root_index = 0;
 
-    for (uint16_t i = 0; i < itemIndex; i++) {
+    for (uint16_t i = 0; i < displayIdx; i++) {
         parser_tx_obj.query.item_index++;
         if (parser_tx_obj.query.item_index >= display_cache.num_subpages[root_index]) {
             parser_tx_obj.query.item_index = 0;
