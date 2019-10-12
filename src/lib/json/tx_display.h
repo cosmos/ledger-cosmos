@@ -23,7 +23,7 @@ extern "C" {
 #endif
 
 #define STRNCPY_S(DST, SRC, DST_SIZE) \
-    MEMSET(DST, 0, DST_SIZE);           \
+    explicit_bzero(DST, DST_SIZE);           \
     strncpy(DST, SRC, DST_SIZE - 1);
 
 /// This is the main function called from ledger that updates key and value strings

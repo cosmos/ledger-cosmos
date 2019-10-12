@@ -69,7 +69,7 @@ void _indexRootFields() {
     }
 
     // Clear cache
-    memset(&display_cache, 0, sizeof(display_cache_t));
+    explicit_bzero(&display_cache, sizeof(display_cache_t));
 
     // Calculate pages
     for (int8_t idx = 0; idx < NUM_REQUIRED_ROOT_PAGES; idx++) {

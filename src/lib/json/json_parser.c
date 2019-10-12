@@ -35,7 +35,7 @@ parser_error_t json_parse_s(parsed_json_t *parsed_json,
     jsmn_parser parser;
     jsmn_init(&parser);
 
-    MEMSET(parsed_json, 0, sizeof(parsed_json_t));
+    explicit_bzero(parsed_json, sizeof(parsed_json_t));
     parsed_json->buffer = buffer;
     parsed_json->bufferLen = bufferLen;
 

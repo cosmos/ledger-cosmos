@@ -16,6 +16,9 @@
 
 #pragma once
 
+#include <string.h>
+#include <strings.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -80,8 +83,6 @@ void __logstack();
 
 #else
 
-#include <string.h>
-
 #define MEMMOVE memmove
 #define MEMSET memset
 #define MEMCPY memcpy
@@ -112,7 +113,7 @@ void __logstack();
 
 #define NUM_TO_STR(TYPE) __Z_INLINE const char * TYPE##_to_str(char *data, int dataLen, TYPE##_t number) { \
     if (dataLen < 2) return "Buffer too small";     \
-    MEMSET(data, 0, dataLen);                       \
+    explicit_bzero(data, dataLen);                  \
     char *p = data;                                 \
     if (number < 0) { *(p++) = '-'; data++; }       \
     else if (number == 0) { *(p++) = '0'; }         \
@@ -239,7 +240,7 @@ __Z_INLINE void array_to_hexstr(char *dst, const uint8_t *src, uint8_t count) {
 __Z_INLINE void pageStringExt(char *outValue, uint16_t outValueLen,
                            const char *inValue, uint16_t inValueLen,
                            uint8_t pageIdx, uint8_t *pageCount) {
-    MEMSET(outValue, 0, outValueLen);
+    explicit_bzero(outValue, outValueLen);
     outValueLen--;  // leave space for NULL termination
     *pageCount = (inValueLen / outValueLen);
     const uint16_t lastChunkLen = (inValueLen % outValueLen);
