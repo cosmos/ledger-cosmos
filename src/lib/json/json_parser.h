@@ -31,7 +31,7 @@ extern "C" {
 #endif
 
 /// Max number of accepted tokens in the JSON input
-#define MAX_NUMBER_OF_TOKENS   2048
+#define MAX_NUMBER_OF_TOKENS   1536
 
 // we must limit the number
 #if defined(TARGET_NANOS)
