@@ -47,7 +47,7 @@ typedef enum {
 
 typedef struct {
     const uint8_t *buffer;
-    uint16_t bufferSize;
+    uint16_t bufferLen;
     uint16_t offset;
 } parser_context_t;
 

@@ -90,49 +90,50 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
     return 0;
 }
 
-void extractBip32(uint32_t rx, uint32_t offset) {
-    if ((rx - offset) < 1 + 4 * BIP32_LEN_DEFAULT) {
+void extractBip44(uint32_t rx, uint32_t offset) {
+    if ((rx - offset) < sizeof(uint32_t) * BIP44_LEN_DEFAULT) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 
-    uint8_t depth = G_io_apdu_buffer[offset];
-    if (depth != BIP32_LEN_DEFAULT) {
-        THROW(APDU_CODE_DATA_INVALID);
-    }
+    MEMCPY(bip44Path, G_io_apdu_buffer + offset, sizeof(uint32_t) * BIP44_LEN_DEFAULT);
 
-    uint8_t *p = (uint8_t * )(G_io_apdu_buffer + offset + 1);
-    memcpy(bip32Path, p, 4 * BIP32_LEN_DEFAULT);
-
-    if (bip32Path[0] != BIP32_0_DEFAULT ||
-        bip32Path[1] != BIP32_1_DEFAULT ||
-        bip32Path[3] != BIP32_3_DEFAULT) {
+    // Check values
+    if (bip44Path[0] != BIP44_0_DEFAULT ||
+        bip44Path[1] != BIP44_1_DEFAULT ||
+        bip44Path[3] != BIP44_3_DEFAULT) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 }
 
 bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
-    int packageIndex = G_io_apdu_buffer[OFFSET_PCK_INDEX];
-    int packageCount = G_io_apdu_buffer[OFFSET_PCK_COUNT];
+    const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
 
-    uint16_t offset = OFFSET_DATA;
-    if (rx < offset) {
+    if (rx < OFFSET_DATA) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 
-    if (packageIndex == 1) {
-        tx_initialize();
-        tx_reset();
-
-        extractBip32(rx, OFFSET_DATA);
-
-        return packageIndex == packageCount;
+    uint32_t added;
+    switch(payloadType) {
+        case 0:
+            tx_initialize();
+            tx_reset();
+            extractBip44(rx, OFFSET_DATA);
+            return false;
+        case 1:
+            added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
+            if (added != rx - OFFSET_DATA) {
+                THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
+            }
+            return false;
+        case 2:
+            added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
+            if (added != rx - OFFSET_DATA) {
+                THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
+            }
+            return true;
     }
 
-    if (tx_append(&(G_io_apdu_buffer[offset]), rx - offset) != rx - offset) {
-        THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
-    }
-
-    return packageIndex == packageCount;
+    THROW(APDU_CODE_DATA_INVALID);
 }
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
@@ -174,7 +175,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
                 case INS_GET_ADDR_SECP256K1: {
                     uint8_t len = extractHRP(rx, OFFSET_DATA);
-                    extractBip32(rx, OFFSET_DATA + 1 + len);
+                    extractBip44(rx, OFFSET_DATA + 1 + len);
 
                     uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
 
@@ -198,9 +199,9 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
                     if (error_msg != NULL) {
                         int error_msg_length = strlen(error_msg);
-                        os_memmove(G_io_apdu_buffer, error_msg, error_msg_length);
+                        MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
                         *tx += (error_msg_length);
-                        THROW(APDU_CODE_BAD_KEY_HANDLE);
+                        THROW(APDU_CODE_DATA_INVALID);
                     }
 
                     view_sign_show();

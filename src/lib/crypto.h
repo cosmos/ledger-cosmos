@@ -23,13 +23,12 @@
 extern "C" {
 #endif
 
-#define MAX_BECH32_HRP_LEN      83
-#define PK_COMPRESSED_LEN       33
+#define BIP44_LEN_DEFAULT       5u
+#define MAX_BECH32_HRP_LEN      83u
+#define PK_COMPRESSED_LEN       33u
 
-extern uint32_t bip32Path[BIP32_LEN_DEFAULT];
+extern uint32_t bip44Path[BIP44_LEN_DEFAULT];
 extern char *hrp;
-
-#define PUBKEY_LEN 33
 
 uint8_t extractHRP(uint32_t rx, uint32_t offset);
 
@@ -37,8 +36,7 @@ void crypto_set_hrp(char *p);
 
 uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len);
 
-uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen,
-                     const uint8_t *message, uint16_t messageLen);
+uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen);
 
 #ifdef __cplusplus
 }

@@ -197,7 +197,7 @@ void view_idle_show_impl() {
 void view_address_show_impl() {
 #define KEYCHUNKSIZE    12
     // move first part to key
-    MEMSET(viewdata.key, 0, MAX_CHARS_PER_KEY_LINE);
+    MEMZERO(viewdata.key, MAX_CHARS_PER_KEY_LINE);
     MEMCPY(viewdata.key, address, KEYCHUNKSIZE);
 
     // move the remainder to

@@ -55,4 +55,4 @@ target_include_directories(zxlib_tests PRIVATE
 
 target_link_libraries(zxlib_tests gtest_main zxlib)
 
-add_test(ZXLIB_TESTS ledger_qrl_tests)
+add_test(ZXLIB_TESTS zxlib_tests)

@@ -28,19 +28,13 @@
 #define OFFSET_DATA_LEN                 4  //< Data Length
 #define OFFSET_DATA                     5  //< Data offset
 
-#define OFFSET_PCK_INDEX                OFFSET_P1  //< Package index offset
-#define OFFSET_PCK_COUNT                OFFSET_P2  //< Package count offset
 #define APDU_MIN_LENGTH                 5
+
+#define OFFSET_PAYLOAD_TYPE             OFFSET_P1
 
 #define INS_GET_VERSION                 0
 #define INS_SIGN_SECP256K1              2
 #define INS_GET_ADDR_SECP256K1          4
-
-#ifdef TESTING_ENABLED
-#define INS_HASH_TEST                   100
-#define INS_PUBLIC_KEY_SECP256K1_TEST   101
-#define INS_SIGN_SECP256K1_TEST         102
-#endif
 
 void app_init();
 

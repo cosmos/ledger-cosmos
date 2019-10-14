@@ -15,7 +15,6 @@
 ********************************************************************************/
 #include "zxmacros.h"
 #include "utf8.h"
-#include <string.h>
 
 #ifdef LEDGER_SPECIFIC
 #include <stdio.h>

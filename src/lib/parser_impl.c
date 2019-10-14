@@ -27,12 +27,12 @@ parser_error_t parser_init_context(parser_context_t *ctx,
     if (bufferSize == 0 || buffer == NULL) {
         // Not available, use defaults
         ctx->buffer = NULL;
-        ctx->bufferSize = 0;
+        ctx->bufferLen = 0;
         return parser_no_data;
     }
 
     ctx->buffer = buffer;
-    ctx->bufferSize = bufferSize;
+    ctx->bufferLen = bufferSize;
 
     return parser_ok;
 }
@@ -41,6 +41,7 @@ parser_error_t parser_init(parser_context_t *ctx, const uint8_t *buffer, uint16_
     parser_error_t err = parser_init_context(ctx, buffer, bufferSize);
     if (err != parser_ok)
         return err;
+
     return err;
 }
 
@@ -94,7 +95,7 @@ const char *parser_getErrorDescription(parser_error_t err) {
 
 parser_error_t _readTx(parser_context_t *c, parser_tx_t *v) {
     parser_error_t err = json_parse_s(&parser_tx_obj.json,
-                                      (const char *) c->buffer, c->bufferSize);
+                                      (const char *) c->buffer, c->bufferLen);
     if (err != parser_ok) {
         return err;
     }

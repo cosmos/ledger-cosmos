@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2019 ZondaX GmbH
+*   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -13,20 +13,17 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
+
 #pragma once
+
+#include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <stddef.h>
-
-#define BIP44_0_DEFAULT     (0x80000000 | 0x2c)
-#define BIP44_1_DEFAULT     (0x80000000 | 0x76)
-#define BIP44_2_DEFAULT     (0x80000000 | 0)
-#define BIP44_3_DEFAULT     (0)
-#define BIP44_4_DEFAULT     (0)
+size_t parseHexString(const char *s, uint8_t *out);
 
 #ifdef __cplusplus
 }

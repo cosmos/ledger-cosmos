@@ -1,6 +1,5 @@
 /*******************************************************************************
-*   (c) 2018, 2019 ZondaX GmbH
-*   (c) 2016 Ledger
+*   (c) 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -14,15 +13,15 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-#include "crypto.h"
-#include <bech32.h>
 
-#include "apdu_codes.h"
-#include "zxmacros.h"
+#include "crypto.h"
 #include "cosmos.h"
 
-uint32_t bip32Path[BIP32_LEN_DEFAULT];
+#include <bech32.h>
+#include "apdu_codes.h"
+#include "zxmacros.h"
 
+uint32_t bip44Path[BIP44_LEN_DEFAULT];
 uint8_t bech32_hrp_len;
 char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
 
@@ -35,16 +34,19 @@ char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
 #endif
 
 #if defined(TARGET_NANOS) || defined(TARGET_NANOX)
-void crypto_extractPublicKey(uint32_t bip32Path[BIP32_LEN_DEFAULT], uint8_t *pubKey){
-        cx_ecfp_public_key_t cx_publicKey;
-        cx_ecfp_private_key_t cx_privateKey;
-        uint8_t privateKeyData[32];
+#include "cx.h"
+
+void crypto_extractPublicKey(uint32_t bip44Path[BIP44_LEN_DEFAULT], uint8_t *pubKey){
+    cx_ecfp_public_key_t cx_publicKey;
+    cx_ecfp_private_key_t cx_privateKey;
+    uint8_t privateKeyData[32];
+
     BEGIN_TRY
     {
         TRY {
             SAFE_HEARTBEAT(os_perso_derive_node_bip32(CX_CURVE_256K1,
-                                                      bip32Path,
-                                                      BIP32_LEN_DEFAULT,
+                                                      bip44Path,
+                                                      BIP44_LEN_DEFAULT,
                                                       privateKeyData, NULL));
 
             //////////////////////
@@ -53,9 +55,9 @@ void crypto_extractPublicKey(uint32_t bip32Path[BIP32_LEN_DEFAULT], uint8_t *pub
             SAFE_HEARTBEAT(cx_ecfp_generate_pair(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1));
         }
         FINALLY {
-            explicit_bzero(&cx_privateKey, sizeof(cx_privateKey));
-            explicit_bzero(privateKeyData, 32);
-        };
+            MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
+            MEMZERO(privateKeyData, 32);
+        }
     }
     END_TRY;
 
@@ -72,7 +74,6 @@ void crypto_extractPublicKey(uint32_t bip32Path[BIP32_LEN_DEFAULT], uint8_t *pub
 }
 
 uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen) {
-    // Hash
     uint8_t message_digest[CX_SHA256_SIZE];
     SAFE_HEARTBEAT(cx_hash_sha256(message, messageLen, message_digest, CX_SHA256_SIZE));
 
@@ -81,11 +82,12 @@ uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t
     int signatureLength;
     BEGIN_TRY
     {
-        TRY {
+        TRY
+        {
             // Generate keys
             SAFE_HEARTBEAT(os_perso_derive_node_bip32(CX_CURVE_256K1,
-                                                      bip32Path,
-                                                      BIP32_LEN_DEFAULT,
+                                                      bip44Path,
+                                                      BIP44_LEN_DEFAULT,
                                                       privateKeyData, NULL));
 
             SAFE_HEARTBEAT(cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey));
@@ -100,11 +102,11 @@ uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t
                                                 CX_SHA256_SIZE,
                                                 signature,
                                                 signatureMaxlen,
-                                                &info))
+                                                &info));
         }
         FINALLY {
-            explicit_bzero(&cx_privateKey, sizeof(cx_privateKey));
-            explicit_bzero(privateKeyData, 32);
+            MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
+            MEMZERO(privateKeyData, 32);
         }
     }
     END_TRY;
@@ -115,7 +117,7 @@ uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t
 
 void crypto_extractPublicKey(uint32_t path[BIP32_LEN_DEFAULT], uint8_t *pubKey) {
     // Empty version for non-Ledger devices
-    MEMSET(pubKey, 0, 32);
+    MEMZERO(pubKey, 32);
 }
 
 uint16_t crypto_sign(uint8_t *signature,
@@ -129,11 +131,10 @@ uint16_t crypto_sign(uint8_t *signature,
 #endif
 
 uint8_t extractHRP(uint32_t rx, uint32_t offset) {
-    MEMSET(bech32_hrp, 0, MAX_BECH32_HRP_LEN);
-
     if (rx < offset + 1) {
         THROW(APDU_CODE_DATA_INVALID);
     }
+    MEMZERO(bech32_hrp, MAX_BECH32_HRP_LEN);
 
     bech32_hrp_len = G_io_apdu_buffer[offset];
 
@@ -161,12 +162,12 @@ void crypto_set_hrp(char *p) {
 }
 
 uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
-    if (buffer_len < PUBKEY_LEN + 50) {
+    if (buffer_len < PK_COMPRESSED_LEN + 50) {
         return 0;
     }
 
     // extract pubkey
-    crypto_extractPublicKey(bip32Path, buffer);
+    crypto_extractPublicKey(bip44Path, buffer);
 
     // Hash it
     uint8_t hashed1_pk[CX_SHA256_SIZE];
@@ -175,8 +176,8 @@ uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
     uint8_t hashed2_pk[CX_RIPEMD160_SIZE];
     ripemd160_32(hashed2_pk, hashed1_pk);
 
-    char *addr = (char *) (buffer + PUBKEY_LEN);
+    char *addr = (char *) (buffer + PK_COMPRESSED_LEN);
     bech32EncodeFromBytes(addr, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE);
 
-    return PUBKEY_LEN + strlen(addr);
+    return PK_COMPRESSED_LEN + strlen(addr);
 }

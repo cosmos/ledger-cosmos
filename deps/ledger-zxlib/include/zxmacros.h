@@ -16,12 +16,12 @@
 
 #pragma once
 
-#include <string.h>
-#include <strings.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "string.h"
+extern void explicit_bzero (void *__s, size_t __n) __THROW __nonnull ((1));
 
 #if defined(LEDGER_SPECIFIC)
 #include "bolos_target.h"
@@ -71,6 +71,7 @@ extern "C" {
 #define MEMSET os_memset
 #define MEMCPY os_memcpy
 #define MEMCPY_NV nvm_write
+#define MEMZERO explicit_bzero
 
 void debug_printf(void* buffer);
 
@@ -87,6 +88,7 @@ void __logstack();
 #define MEMSET memset
 #define MEMCPY memcpy
 #define MEMCPY_NV memcpy
+#define MEMZERO explicit_bzero
 #define LOG(str)
 #define LOGSTACK()
 #endif
@@ -113,7 +115,7 @@ void __logstack();
 
 #define NUM_TO_STR(TYPE) __Z_INLINE const char * TYPE##_to_str(char *data, int dataLen, TYPE##_t number) { \
     if (dataLen < 2) return "Buffer too small";     \
-    explicit_bzero(data, dataLen);                  \
+    MEMZERO(data, dataLen);                  \
     char *p = data;                                 \
     if (number < 0) { *(p++) = '-'; data++; }       \
     else if (number == 0) { *(p++) = '0'; }         \
@@ -240,7 +242,7 @@ __Z_INLINE void array_to_hexstr(char *dst, const uint8_t *src, uint8_t count) {
 __Z_INLINE void pageStringExt(char *outValue, uint16_t outValueLen,
                            const char *inValue, uint16_t inValueLen,
                            uint8_t pageIdx, uint8_t *pageCount) {
-    explicit_bzero(outValue, outValueLen);
+    MEMZERO(outValue, outValueLen);
     outValueLen--;  // leave space for NULL termination
     *pageCount = (inValueLen / outValueLen);
     const uint16_t lastChunkLen = (inValueLen % outValueLen);
@@ -268,11 +270,6 @@ __Z_INLINE void pageString(char *outValue, uint16_t outValueLen,
 ///////////////////////
 ///////////////////////
 ///////////////////////
-
-typedef enum {
-    FALSE,
-    TRUE
-} bool_t;
 
 size_t asciify(char *utf8_in);
 

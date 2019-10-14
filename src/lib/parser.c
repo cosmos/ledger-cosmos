@@ -15,8 +15,9 @@
 ********************************************************************************/
 
 #include <stdio.h>
-#include <json/tx_validate.h>
 #include <zxmacros.h>
+#include <json/tx_validate.h>
+#include <zxtypes.h>
 #include "json/tx_parser.h"
 #include "json/tx_display.h"
 #include "lib/parser_impl.h"
@@ -40,38 +41,38 @@ uint8_t parser_getNumItems(parser_context_t *ctx) {
 
 __Z_INLINE bool_t parser_areEqual(uint16_t tokenidx, char *expected) {
     if (parser_tx_obj.json.tokens[tokenidx].type != JSMN_STRING) {
-        return FALSE;
+        return false;
     }
 
     uint16_t len = parser_tx_obj.json.tokens[tokenidx].end - parser_tx_obj.json.tokens[tokenidx].start;
     if (strlen(expected) != len) {
-        return FALSE;
+        return false;
     }
 
     const char *p = parser_tx_obj.tx + parser_tx_obj.json.tokens[tokenidx].start;
     for (uint16_t i = 0; i < len; i++) {
         if (expected[i] != *(p + i)) {
-            return FALSE;
+            return false;
         }
     }
 
-    return TRUE;
+    return true;
 }
 
 __Z_INLINE bool_t parser_isAmount(char *key) {
     if (strcmp(parser_tx_obj.query.out_key, "fee/amount") == 0)
-        return TRUE;
+        return true;
 
     if (strcmp(parser_tx_obj.query.out_key, "msgs/inputs/coins") == 0)
-        return TRUE;
+        return true;
 
     if (strcmp(parser_tx_obj.query.out_key, "msgs/outputs/coins") == 0)
-        return TRUE;
+        return true;
 
     if (strcmp(parser_tx_obj.query.out_key, "msgs/value/amount") == 0)
-        return TRUE;
+        return true;
 
-    return FALSE;
+    return false;
 }
 
 __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,

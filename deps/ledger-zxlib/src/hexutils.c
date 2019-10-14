@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2019 ZondaX GmbH
+*   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -13,21 +13,42 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-#pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <ctype.h>
+#include <string.h>
+#include "hexutils.h"
 
-#include <stdint.h>
-#include <stddef.h>
+uint8_t hex2dec(char c, char *out) {
+    c = tolower(c);
 
-#define BIP44_0_DEFAULT     (0x80000000 | 0x2c)
-#define BIP44_1_DEFAULT     (0x80000000 | 0x76)
-#define BIP44_2_DEFAULT     (0x80000000 | 0)
-#define BIP44_3_DEFAULT     (0)
-#define BIP44_4_DEFAULT     (0)
+    if (!isxdigit(c)) {
+        return -1;
+    }
 
-#ifdef __cplusplus
+    if (isdigit(c)) {
+        *out = c - '0';
+        return 0;
+    }
+
+    *out = c - 'a' + 10;
+    return 0;
 }
-#endif
+
+size_t parseHexString(const char *s, uint8_t *out) {
+    size_t len = strlen(s);
+    if (len % 2 == 1) {
+        return 0;
+    }
+
+    for (size_t i = 0; i < len; i += 2) {
+        char tmp1, tmp2;
+        if (hex2dec(s[i], &tmp1))
+            return 0;
+        if (hex2dec(s[i + 1], &tmp2))
+            return 0;
+
+        out[i >> 1u] = (tmp1 << 4u) + tmp2;
+    }
+
+    return len >> 1u;
+};
