@@ -23,6 +23,7 @@
 #include "lib/parser_impl.h"
 #include "view_internal.h"
 #include "jsmn.h"
+#include "parser.h"
 
 parser_error_t parser_parse(parser_context_t *ctx,
                             const uint8_t *data,
@@ -32,7 +33,26 @@ parser_error_t parser_parse(parser_context_t *ctx,
 }
 
 parser_error_t parser_validate(parser_context_t *ctx) {
-    return tx_validate(&parser_tx_obj.json);
+    parser_error_t err = tx_validate(&parser_tx_obj.json);
+    if (err != parser_ok)
+        return err;
+
+    // Iterate through all items to check that all can be shown and are valid
+
+    uint8_t numItems = parser_getNumItems(ctx);
+
+    char tmpKey[40];
+    char tmpVal[40];
+
+    for (uint8_t idx = 0; idx < numItems; idx++) {
+        uint8_t pageCount;
+        err = parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), idx, &pageCount);
+        if (err != parser_ok) {
+            return err;
+        }
+    }
+
+    return parser_ok;
 }
 
 uint8_t parser_getNumItems(parser_context_t *ctx) {
@@ -84,7 +104,7 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
     }
 
     numElements = array_get_element_count(amountToken, &parser_tx_obj.json);
-    if (numElements != 4) {
+    if (numElements == 0) {
         snprintf(outVal, outValLen, "Empty");
         return parser_ok;
     }
