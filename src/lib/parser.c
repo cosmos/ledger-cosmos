@@ -79,11 +79,16 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
                                               char *outVal, uint16_t outValLen,
                                               uint8_t pageIdx, uint8_t *pageCount) {
     uint16_t numElements = array_get_element_count(amountToken, &parser_tx_obj.json);
-    if (parser_tx_obj.json.tokens[amountToken].type == JSMN_ARRAY){
+    if (parser_tx_obj.json.tokens[amountToken].type == JSMN_ARRAY) {
         amountToken++;
     }
 
     numElements = array_get_element_count(amountToken, &parser_tx_obj.json);
+    if (numElements != 4) {
+        snprintf(outVal, outValLen, "Empty");
+        return parser_ok;
+    }
+
     if (numElements != 4)
         return parser_unexpected_field;
 
