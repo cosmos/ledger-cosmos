@@ -122,8 +122,8 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
         return parser_unexpected_field;
 
     char bufferUI[160];
-    MEMSET(outVal, 0, outValLen);
-    MEMSET(bufferUI, 0, sizeof(bufferUI));
+    MEMZERO(outVal, outValLen);
+    MEMZERO(bufferUI, sizeof(bufferUI));
 
     const char *amountPtr = parser_tx_obj.tx + parser_tx_obj.json.tokens[amountToken + 2].start;
     const uint16_t amountLen = parser_tx_obj.json.tokens[amountToken + 2].end -
@@ -133,6 +133,14 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
                               parser_tx_obj.json.tokens[amountToken + 4].start;
 
     if (sizeof(bufferUI) < amountLen + denomLen + 2) {
+        return parser_unexpected_buffer_end;
+    }
+
+    if (amountLen == 0) {
+        return parser_unexpected_buffer_end;
+    }
+
+    if (denomLen == 0) {
         return parser_unexpected_buffer_end;
     }
 
@@ -151,11 +159,11 @@ parser_error_t parser_getItem(parser_context_t *ctx,
                               char *outVal, uint16_t outValLen,
                               uint8_t pageIdx, uint8_t *pageCount) {
 
-    MEMSET(outKey, 0, outKeyLen);
-    MEMSET(outVal, 0, outValLen);
+    MEMZERO(outKey, outKeyLen);
+    MEMZERO(outVal, outValLen);
     INIT_QUERY(outKey, outKeyLen, outVal, outValLen, pageIdx)
     snprintf(outKey, outKeyLen, "?");
-    snprintf(outVal, outValLen, "?");
+    snprintf(outVal, outValLen, " ");
 
     uint16_t displayStartToken;
     parser_error_t err = tx_display_set_query(displayIdx, &displayStartToken);
@@ -174,9 +182,7 @@ parser_error_t parser_getItem(parser_context_t *ctx,
     if (parser_isAmount(parser_tx_obj.query.out_key)) {
         err = parser_formatAmount(ret_value_token_index, outVal, outValLen, pageIdx, pageCount);
     } else {
-        err = tx_getToken(ret_value_token_index,
-                          parser_tx_obj.query.out_val, parser_tx_obj.query.out_val_len,
-                          parser_tx_obj.query.chunk_index, pageCount);
+        err = tx_getToken(ret_value_token_index, outVal, outValLen, parser_tx_obj.query.chunk_index, pageCount);
     }
 
     tx_display_make_friendly();

@@ -53,6 +53,10 @@ __always_inline void strcat_chunk_s(char *dst, uint16_t dst_max, const char *src
 parser_error_t tx_getToken(uint16_t token_index,
                            char *out_val, uint16_t out_val_len,
                            uint8_t pageIdx, uint8_t *pageCount) {
+    *pageCount = 1;
+    MEMZERO(out_val, out_val_len);
+    snprintf(out_val, out_val_len, " ");
+
     const int16_t token_start = parser_tx_obj.json.tokens[token_index].start;
     const int16_t token_end = parser_tx_obj.json.tokens[token_index].end;
 
@@ -60,10 +64,12 @@ parser_error_t tx_getToken(uint16_t token_index,
         return parser_unexpected_buffer_end;
     }
 
-    pageStringExt(out_val, out_val_len,
-                  parser_tx_obj.tx + token_start,
-                  token_end - token_start,
-                  pageIdx, pageCount);
+    if (token_start < token_end) {
+        pageStringExt(out_val, out_val_len,
+                      parser_tx_obj.tx + token_start,
+                      token_end - token_start,
+                      pageIdx, pageCount);
+    }
 
     if (pageIdx >= *pageCount)
         return parser_display_page_out_of_range;

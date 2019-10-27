@@ -251,7 +251,7 @@ __Z_INLINE void pageStringExt(char *outValue, uint16_t outValueLen,
     }
 
     if (inValueLen == 0) {
-        *pageCount = 1;
+        *pageCount = 0;
         return;
     }
 
