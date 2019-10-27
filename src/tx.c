@@ -101,7 +101,7 @@ tx_error_t tx_getItem(int8_t displayIdx,
                       uint8_t pageIdx, uint8_t *pageCount) {
     tx_error_t err = tx_no_error;
 
-    if (displayIdx < 0 || displayIdx > tx_getNumItems() ) {
+    if (displayIdx < 0 || displayIdx > tx_getNumItems()) {
         return tx_no_data;
     }
 
@@ -112,7 +112,9 @@ tx_error_t tx_getItem(int8_t displayIdx,
                                       pageIdx, pageCount);
 
     // Convert error codes
-    if (err == parser_no_data)
+    if (err == parser_no_data ||
+        err == parser_display_idx_out_of_range ||
+        err == parser_display_page_out_of_range)
         return tx_no_data;
 
     if (err == parser_ok)
