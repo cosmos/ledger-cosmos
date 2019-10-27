@@ -48,11 +48,11 @@ parser_error_t json_parse_s(parsed_json_t *parsed_json,
 
     switch (num_tokens) {
         case JSMN_ERROR_NOMEM:
-            return parser_too_many_tokens;
+            return parser_json_too_many_tokens;
         case JSMN_ERROR_INVAL:
             return parser_unexpected_characters;
         case JSMN_ERROR_PART:
-            return parser_incomplete_json;
+            return parser_json_incomplete_json;
     }
 
     parsed_json->numberOfTokens = 0;
@@ -60,12 +60,12 @@ parser_error_t json_parse_s(parsed_json_t *parsed_json,
 
     // Parsing error
     if (num_tokens <= 0) {
-        return parser_no_data;
+        return parser_json_zero_tokens;
     }
 
     // We cannot support if number of tokens exceeds the limit
     if (num_tokens > MAX_NUMBER_OF_TOKENS) {
-        return parser_too_many_tokens;
+        return parser_json_too_many_tokens;
     }
 
     parsed_json->numberOfTokens = num_tokens;

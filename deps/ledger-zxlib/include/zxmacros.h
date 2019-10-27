@@ -21,7 +21,8 @@ extern "C" {
 #endif
 
 #include "string.h"
-extern void explicit_bzero (void *__s, size_t __n) __THROW __nonnull ((1));
+
+extern void explicit_bzero(void *__s, size_t __n) __THROW __nonnull ((1));
 
 #if defined(LEDGER_SPECIFIC)
 #include "bolos_target.h"
@@ -240,10 +241,20 @@ __Z_INLINE void array_to_hexstr(char *dst, const uint8_t *src, uint8_t count) {
 }
 
 __Z_INLINE void pageStringExt(char *outValue, uint16_t outValueLen,
-                           const char *inValue, uint16_t inValueLen,
-                           uint8_t pageIdx, uint8_t *pageCount) {
+                              const char *inValue, uint16_t inValueLen,
+                              uint8_t pageIdx, uint8_t *pageCount) {
     MEMZERO(outValue, outValueLen);
+
     outValueLen--;  // leave space for NULL termination
+    if (outValueLen == 0) {
+        return;
+    }
+
+    if (inValueLen == 0) {
+        *pageCount = 1;
+        return;
+    }
+
     *pageCount = (inValueLen / outValueLen);
     const uint16_t lastChunkLen = (inValueLen % outValueLen);
 

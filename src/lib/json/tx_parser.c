@@ -56,12 +56,17 @@ parser_error_t tx_getToken(uint16_t token_index,
     const int16_t token_start = parser_tx_obj.json.tokens[token_index].start;
     const int16_t token_end = parser_tx_obj.json.tokens[token_index].end;
 
+    if (token_start > token_end) {
+        return parser_unexpected_buffer_end;
+    }
+
     pageStringExt(out_val, out_val_len,
-                  parser_tx_obj.tx + token_start, token_end - token_start,
+                  parser_tx_obj.tx + token_start,
+                  token_end - token_start,
                   pageIdx, pageCount);
 
     if (pageIdx >= *pageCount)
-        return parser_no_data;
+        return parser_display_page_out_of_range;
 
     return parser_ok;
 }
@@ -102,7 +107,7 @@ parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_to
             return parser_ok;
         }
         parser_tx_obj.query.item_index_current++;
-        return parser_no_data;
+        return parser_query_no_results;
     }
 
     const int16_t el_count = object_get_element_count(root_token_index, &parser_tx_obj.json);
@@ -152,5 +157,5 @@ parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_to
             break;
     }
 
-    return parser_no_data;
+    return parser_query_no_results;
 }

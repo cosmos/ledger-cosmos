@@ -128,7 +128,7 @@ parser_error_t tx_display_set_query(uint16_t displayIdx, uint16_t *outStartToken
     _indexRootFields();
 
     if (displayIdx < 0 || displayIdx >= display_cache.numItems) {
-        return parser_no_data;
+        return parser_display_idx_out_of_range;
     }
 
     parser_tx_obj.query.item_index = 0;

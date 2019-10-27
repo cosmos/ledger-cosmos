@@ -28,7 +28,7 @@ parser_error_t parser_init_context(parser_context_t *ctx,
         // Not available, use defaults
         ctx->buffer = NULL;
         ctx->bufferLen = 0;
-        return parser_no_data;
+        return parser_init_context_empty;
     }
 
     ctx->buffer = buffer;
@@ -51,6 +51,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "No error";
         case parser_no_data:
             return "No more data";
+        case parser_init_context_empty:
+            return "Initialized empty context";
         case parser_unexpected_buffer_end:
             return "Unexpected buffer end";
         case parser_unexpected_version:
@@ -65,12 +67,20 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "Value out of range";
         case parser_unexpected_chain:
             return "Unexpected chain";
-        case parser_too_many_tokens:
-            return "NOMEM: JSON string contains too many tokens";
-        case parser_incomplete_json:
-            return "JSON string is not complete";
-
+        case parser_query_no_results:
+            return "item query returned no results";
 //////
+        case parser_display_idx_out_of_range:
+            return "display index out of range";
+        case parser_display_page_out_of_range:
+            return "display page out of range";
+//////
+        case parser_json_zero_tokens:
+            return "JSON. Zero tokens";
+        case parser_json_too_many_tokens:
+            return "JSON. Too many tokens";
+        case parser_json_incomplete_json:
+            return "JSON string is not complete";
         case parser_json_contains_whitespace:
             return "JSON Contains whitespace in the corpus";
         case parser_json_is_not_sorted:
