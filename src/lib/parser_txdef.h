@@ -1,6 +1,5 @@
 /*******************************************************************************
-*   (c) 2018,2019 ZondaX GmbH
-*   (c) 2016 Ledger
+*  (c) 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -16,27 +15,35 @@
 ********************************************************************************/
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
+#include <stddef.h>
 
-#if defined(LEDGER_SPECIFIC)
-#include "bolos_target.h"
-#if defined(BOLOS_SDK)
-#include "os.h"
-#include "cx.h"
+typedef struct {
+    int16_t item_index;
+    int16_t chunk_index;
+    uint16_t item_index_current;
+    uint16_t item_index_root;
+    uint8_t max_level;
+    uint8_t max_depth;
+
+    char *out_key;
+    int16_t out_key_len;
+
+    char *out_val;
+    int16_t out_val_len;
+} tx_query_t;
+
+typedef struct {
+    parsed_json_t json;
+    const char *tx;
+    uint8_t cache_valid;
+    tx_query_t query;
+} parser_tx_t;
+
+#ifdef __cplusplus
+}
 #endif
-#endif
-
-/// view_init (initializes UI)
-void view_init();
-
-/// view_idle_show (idle view - main menu + status)
-void view_idle_show(unsigned int ignored);
-
-/// view_error (error view)
-void view_error_show();
-
-// shows address in the screen
-void view_address_show();
-
-// Shows review screen + later sign menu
-void view_sign_show();

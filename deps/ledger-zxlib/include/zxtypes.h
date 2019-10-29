@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) ZondaX GmbH
+*   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -16,18 +16,14 @@
 
 #pragma once
 
-#include "json_parser.h"
-#include <stdint.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/// Validate json transaction
-/// \param parsed_transacton
-/// \param transaction
-/// \return
-const char *json_validate(parsed_json_t *parsed_transaction, const char *transaction);
+typedef enum {
+    bool_false = 0,
+    bool_true = 1,
+} bool_t;
 
 #ifdef __cplusplus
 }
