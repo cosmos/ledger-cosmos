@@ -160,7 +160,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 #ifdef TESTING_ENABLED
                     G_io_apdu_buffer[0] = 0xFF;
 #else
-                    G_io_apdu_buffer[0] = 0;
+                    G_io_apdu_buffer[0] = 1; // app mode TERRA
 #endif
                     G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
                     G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;

@@ -194,6 +194,11 @@ static const key_subst_t key_substitutions[NUM_KEY_SUBSTITUTIONS] = {
     {"msgs/value/to_address",             "To"},
     {"msgs/value/amount",                 "Amount"},
 
+    // MsgSwap
+    {"msgs/value/trader",                 "Trader"},
+    {"msgs/value/offer_coin",             "Offer Coin"},
+    {"msgs/value/ask_denom",              "Ask Denom"},
+
     // MsgDelegate
     {"msgs/value/delegator_address",      "Delegator"},
     {"msgs/value/validator_address",      "Validator"},
@@ -232,6 +237,7 @@ static const key_subst_t key_substitutions[NUM_KEY_SUBSTITUTIONS] = {
 
 static const key_subst_t value_substitutions[NUM_VALUE_SUBSTITUTIONS] = {
     {"bank/MsgSend",                      "Send"},
+    {"market/MsgSwap",                    "Swap"},
     {"staking/MsgDelegate",               "Delegate"},
     {"staking/MsgUndelegate",             "Undelegate"},
     {"staking/MsgBeginRedelegate",        "Redelegate"},
