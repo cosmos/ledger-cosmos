@@ -1,6 +1,5 @@
 /*******************************************************************************
-*   (c) 2018,2019 ZondaX GmbH
-*   (c) 2016 Ledger
+*   (c) 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -14,29 +13,31 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
+
 #pragma once
 
-#include <stdint.h>
+#include <zxmacros.h>
+#include "cosmos.h"
 
-#if defined(LEDGER_SPECIFIC)
-#include "bolos_target.h"
-#if defined(BOLOS_SDK)
-#include "os.h"
-#include "cx.h"
-#endif
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-/// view_init (initializes UI)
-void view_init();
+#define BIP44_LEN_DEFAULT       5u
+#define MAX_BECH32_HRP_LEN      83u
+#define PK_COMPRESSED_LEN       33u
 
-/// view_idle_show (idle view - main menu + status)
-void view_idle_show(unsigned int ignored);
+extern uint32_t bip44Path[BIP44_LEN_DEFAULT];
+extern char *hrp;
 
-/// view_error (error view)
-void view_error_show();
+uint8_t extractHRP(uint32_t rx, uint32_t offset);
 
-// shows address in the screen
-void view_address_show();
+void crypto_set_hrp(char *p);
 
-// Shows review screen + later sign menu
-void view_sign_show();
+uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len);
+
+uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen);
+
+#ifdef __cplusplus
+}
+#endif

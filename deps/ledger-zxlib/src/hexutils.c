@@ -1,6 +1,5 @@
 /*******************************************************************************
-*   (c) 2018,2019 ZondaX GmbH
-*   (c) 2016 Ledger
+*   (c) 2018 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -14,29 +13,42 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-#pragma once
 
-#include <stdint.h>
+#include <ctype.h>
+#include <string.h>
+#include "hexutils.h"
 
-#if defined(LEDGER_SPECIFIC)
-#include "bolos_target.h"
-#if defined(BOLOS_SDK)
-#include "os.h"
-#include "cx.h"
-#endif
-#endif
+uint8_t hex2dec(char c, char *out) {
+    c = tolower(c);
 
-/// view_init (initializes UI)
-void view_init();
+    if (!isxdigit(c)) {
+        return -1;
+    }
 
-/// view_idle_show (idle view - main menu + status)
-void view_idle_show(unsigned int ignored);
+    if (isdigit(c)) {
+        *out = c - '0';
+        return 0;
+    }
 
-/// view_error (error view)
-void view_error_show();
+    *out = c - 'a' + 10;
+    return 0;
+}
 
-// shows address in the screen
-void view_address_show();
+size_t parseHexString(const char *s, uint8_t *out) {
+    size_t len = strlen(s);
+    if (len % 2 == 1) {
+        return 0;
+    }
 
-// Shows review screen + later sign menu
-void view_sign_show();
+    for (size_t i = 0; i < len; i += 2) {
+        char tmp1, tmp2;
+        if (hex2dec(s[i], &tmp1))
+            return 0;
+        if (hex2dec(s[i + 1], &tmp2))
+            return 0;
+
+        out[i >> 1u] = (tmp1 << 4u) + tmp2;
+    }
+
+    return len >> 1u;
+};

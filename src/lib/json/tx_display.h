@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) ZondaX GmbH
+*   (c) 2018, 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -16,47 +16,27 @@
 
 #pragma once
 #include <stdint.h>
-
-#include "json_parser.h"
-#include "tx_parser.h"
+#include <parser_common.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define ERR_MUST_INDEX_FIRST -2
-
-#define NUM_REQUIRED_ROOT_PAGES 6
-#define NUM_KEY_SUBSTITUTIONS 29
-#define NUM_VALUE_SUBSTITUTIONS 8
-
-typedef struct {
-    char str1[50];
-    char str2[50];
-} key_subst_t;
-
-typedef struct {
-    int16_t num_pages;
-    int16_t subroot_start_token[NUM_REQUIRED_ROOT_PAGES];
-    uint8_t num_subpages[NUM_REQUIRED_ROOT_PAGES];
-} display_cache_t;
-
-// This is only used for testing purposes
-display_cache_t *tx_display_cache();
-
-// This must be run before accessing items
-void tx_display_index_root();
+#define STRNCPY_S(DST, SRC, DST_SIZE) \
+    explicit_bzero(DST, DST_SIZE);           \
+    strncpy(DST, SRC, DST_SIZE - 1);
 
 /// This is the main function called from ledger that updates key and value strings
 /// that are going to be displayed in the UI.
 /// This function assumes that the tx_ctx has been properly set
-int16_t tx_display_get_item(uint16_t page_index);
+parser_error_t tx_display_set_query(uint16_t displayIdx, uint16_t *outStartToken);
 
 /// Return number of UI pages that we'll have for the current json transaction (only if the tx is valid)
 /// \return number of pages (msg pages + 5 required)
-int16_t tx_display_num_pages();
+int16_t tx_display_numItems();
 
-/// Apply postprocessing rules to key and values
+const char *get_required_root_item(uint8_t i);
+
 void tx_display_make_friendly();
 
 //---------------------------------------------

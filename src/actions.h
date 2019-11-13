@@ -1,6 +1,6 @@
 /*******************************************************************************
-*   (c) 2018,2019 ZondaX GmbH
 *   (c) 2016 Ledger
+*   (c) 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -18,25 +18,12 @@
 
 #include <stdint.h>
 
-#if defined(LEDGER_SPECIFIC)
-#include "bolos_target.h"
-#if defined(BOLOS_SDK)
-#include "os.h"
-#include "cx.h"
-#endif
-#endif
+uint8_t app_sign();
 
-/// view_init (initializes UI)
-void view_init();
+void app_set_hrp(char *p);
 
-/// view_idle_show (idle view - main menu + status)
-void view_idle_show(unsigned int ignored);
+uint8_t app_fill_address();
 
-/// view_error (error view)
-void view_error_show();
+void app_reply_address();
 
-// shows address in the screen
-void view_address_show();
-
-// Shows review screen + later sign menu
-void view_sign_show();
+void app_reply_error();

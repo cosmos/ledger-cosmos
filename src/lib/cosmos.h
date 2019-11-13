@@ -1,6 +1,5 @@
 /*******************************************************************************
-*   (c) 2016 Ledger
-*   (c) 2018, 2019 ZondaX GmbH
+*  (c) 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -16,14 +15,19 @@
 ********************************************************************************/
 #pragma once
 
-#include "os.h"
-#include "cx.h"
-#include "view_common.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-// Initialize and show control
-void viewexpl_start(
-        int start_page,
-        viewctl_delegate_getData delegate_update,
-        viewctl_delegate_ready delegate_ready,
-        viewctl_delegate_exit delegate_exit
-        );
+#include <stdint.h>
+#include <stddef.h>
+
+#define BIP44_0_DEFAULT     (0x80000000 | 0x2c)
+#define BIP44_1_DEFAULT     (0x80000000 | 0x76)
+#define BIP44_2_DEFAULT     (0x80000000 | 0)
+#define BIP44_3_DEFAULT     (0)
+#define BIP44_4_DEFAULT     (0)
+
+#ifdef __cplusplus
+}
+#endif

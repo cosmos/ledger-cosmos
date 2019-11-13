@@ -1,6 +1,5 @@
 /*******************************************************************************
-*   (c) 2018,2019 ZondaX GmbH
-*   (c) 2016 Ledger
+*  (c) 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -16,27 +15,22 @@
 ********************************************************************************/
 #pragma once
 
-#include <stdint.h>
+#include "parser_common.h"
+#include "json/json_parser.h"
+#include "parser_txdef.h"
 
-#if defined(LEDGER_SPECIFIC)
-#include "bolos_target.h"
-#if defined(BOLOS_SDK)
-#include "os.h"
-#include "cx.h"
-#endif
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-/// view_init (initializes UI)
-void view_init();
+extern parser_tx_t parser_tx_obj;
 
-/// view_idle_show (idle view - main menu + status)
-void view_idle_show(unsigned int ignored);
+parser_error_t parser_init(parser_context_t *ctx,
+                           const uint8_t *buffer,
+                           uint16_t bufferSize);
 
-/// view_error (error view)
-void view_error_show();
+parser_error_t _readTx(parser_context_t *c, parser_tx_t *v);
 
-// shows address in the screen
-void view_address_show();
-
-// Shows review screen + later sign menu
-void view_sign_show();
+#ifdef __cplusplus
+}
+#endif
