@@ -25,7 +25,7 @@ include $(BOLOS_SDK)/Makefile.defines
 APPNAME = "Cosmos"
 APPVERSION_M=2
 APPVERSION_N=1
-APPVERSION_P=3
+APPVERSION_P=4
 
 APP_LOAD_PARAMS = --appFlags 0x200 --delete $(COMMON_LOAD_PARAMS) --path "44'/118'"
 
