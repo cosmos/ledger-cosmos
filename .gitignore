@@ -62,3 +62,7 @@ bin/app\.elf
 src/glyphs\.h
 
 src/glyphs\.c
+
+bin/app.sha256
+
+bin/app.apdu

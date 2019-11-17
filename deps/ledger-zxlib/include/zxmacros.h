@@ -96,7 +96,6 @@ void __logstack();
 
 #include <inttypes.h>
 #include <stdint.h>
-#include <memory.h>
 
 #define __Z_INLINE inline __attribute__((always_inline)) static
 
