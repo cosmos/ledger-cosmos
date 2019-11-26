@@ -37,20 +37,31 @@ void view_sign_show_s();
 
 ux_state_t ux;
 
+void os_exit(uint32_t id) {
+    os_sched_exit(0);
+}
+
 const ux_menu_entry_t menu_main[] = {
     {NULL, NULL, 0, &C_icon_app, MENU_MAIN_APP_LINE1, MENU_MAIN_APP_LINE2, 33, 12},
     {NULL, NULL, 0, NULL, "v"APPVERSION, NULL, 0, 0},
-    {NULL, os_sched_exit, 0, &C_icon_dashboard, "Quit", NULL, 50, 29},
+    {NULL, os_exit, 0, &C_icon_dashboard, "Quit", NULL, 50, 29},
     UX_MENU_END
 };
 
-static const bagl_element_t view_address[] = {
-    UI_FillRectangle(0, 0, 0, UI_SCREEN_WIDTH, UI_SCREEN_HEIGHT, 0x000000, 0xFFFFFF),
-    UI_Icon(0, 128 - 7, 0, 7, 7, BAGL_GLYPH_ICON_CHECK),
-    UI_LabelLine(UIID_LABEL + 0, 0, 8, UI_SCREEN_WIDTH, UI_11PX, UI_WHITE, UI_BLACK, viewdata.key),
-    UI_LabelLine(UIID_LABEL + 0, 0, 19, UI_SCREEN_WIDTH, UI_11PX, UI_WHITE, UI_BLACK, viewdata.value),
-    UI_LabelLineScrolling(UIID_LABELSCROLL, 0, 30, 128, UI_11PX, UI_WHITE, UI_BLACK, viewdata.value2),
-};
+UX_STEP_NOCB_INIT(ux_addr_flow_1_step, paging,
+        { h_addr_update_item(CUR_FLOW.index); },
+        { .title = "Address", .text = viewdata.addr, });
+UX_STEP_NOCB_INIT(ux_addr_flow_2_step, paging,
+        { h_addr_update_item(CUR_FLOW.index); },
+        { .title = "Path", .text = viewdata.addr, });
+UX_STEP_VALID(ux_addr_flow_3_step, pb, h_address_accept(0), { &C_icon_validate_14, "Ok"});
+
+UX_FLOW(
+    ux_addr_flow,
+    &ux_addr_flow_1_step,
+    &ux_addr_flow_2_step,
+    &ux_addr_flow_3_step
+);
 
 void h_review(unsigned int _) { UNUSED(_); view_sign_show_impl(); }
 
@@ -75,18 +86,6 @@ static const bagl_element_t view_error[] = {
     UI_LabelLine(UIID_LABEL + 0, 0, 19, UI_SCREEN_WIDTH, UI_11PX, UI_WHITE, UI_BLACK, viewdata.value),
     UI_LabelLineScrolling(UIID_LABELSCROLL, 0, 30, 128, UI_11PX, UI_WHITE, UI_BLACK, viewdata.value2),
 };
-
-static unsigned int view_address_button(unsigned int button_mask, unsigned int button_mask_counter) {
-    switch (button_mask) {
-        case BUTTON_EVT_RELEASED | BUTTON_LEFT | BUTTON_RIGHT:
-        case BUTTON_EVT_RELEASED | BUTTON_LEFT:
-            break;
-        case BUTTON_EVT_RELEASED | BUTTON_RIGHT:
-            h_address_accept(0);
-            break;
-    }
-    return 0;
-}
 
 static unsigned int view_error_button(unsigned int button_mask, unsigned int button_mask_counter) {
     switch (button_mask) {
@@ -195,19 +194,11 @@ void view_idle_show_impl() {
 }
 
 void view_address_show_impl() {
-#define KEYCHUNKSIZE    12
-    // move first part to key
-    MEMZERO(viewdata.key, MAX_CHARS_PER_KEY_LINE);
-    MEMCPY(viewdata.key, address, KEYCHUNKSIZE);
-
-    // move the remainder to
-    snprintf(viewdata.value,
-             MAX_CHARS_PER_VALUE1_LINE, "%s",
-             address + KEYCHUNKSIZE);
-
-    splitValueField();
-
-    UX_DISPLAY(view_address, view_prepro);
+    ux_layout_paging_reset();
+    if(G_ux.stack_count == 0) {
+        ux_stack_push();
+    }
+    ux_flow_init(0, ux_addr_flow, NULL);
 }
 
 void view_error_show_impl() {

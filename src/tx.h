@@ -16,7 +16,7 @@
 #pragma once
 
 #include "os.h"
-#include "cosmos.h"
+#include "coin.h"
 
 typedef enum {
     tx_no_error = 0,

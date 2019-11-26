@@ -19,13 +19,13 @@
 #include "hexutils.h"
 
 uint8_t hex2dec(char c, char *out) {
-    c = tolower(c);
+    c = (char) tolower((int)c);
 
-    if (!isxdigit(c)) {
+    if (!isxdigit((int)c)) {
         return -1;
     }
 
-    if (isdigit(c)) {
+    if (isdigit((int)c)) {
         *out = c - '0';
         return 0;
     }

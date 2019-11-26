@@ -26,11 +26,12 @@
 #define MENU_MAIN_APP_LINE2 "Cosmos"
 #endif
 
+#define CUR_FLOW G_ux.flow_stack[G_ux.stack_count-1]
+
 #if defined(TARGET_NANOX)
 #define MAX_CHARS_PER_KEY_LINE      64
 #define MAX_CHARS_PER_VALUE1_LINE   4096
 #define MAX_CHARS_HEXMESSAGE        160
-#define CUR_FLOW G_ux.flow_stack[G_ux.stack_count-1]
 #else
 #define MAX_CHARS_PER_KEY_LINE      (32+1)
 #define MAX_CHARS_PER_VALUE_LINE    (18)
@@ -38,15 +39,23 @@
 #define MAX_CHARS_PER_VALUE2_LINE   (MAX_CHARS_PER_VALUE_LINE+1)
 #define MAX_CHARS_HEXMESSAGE        40
 #endif
+#define MAX_CHARS_ADDR              (MAX_CHARS_PER_KEY_LINE + MAX_CHARS_PER_VALUE1_LINE)
 
-extern const char *address;
+// This typically will point to G_io_apdu_buffer that is prefilled with the address
 
 typedef struct {
-    char key[MAX_CHARS_PER_KEY_LINE];
-    char value[MAX_CHARS_PER_VALUE1_LINE];
+    union {
+        struct {
+            char key[MAX_CHARS_PER_KEY_LINE];
+            char value[MAX_CHARS_PER_VALUE1_LINE];
 #if defined(TARGET_NANOS)
-    char value2[MAX_CHARS_PER_VALUE2_LINE];
+            char value2[MAX_CHARS_PER_VALUE2_LINE];
 #endif
+        };
+        struct {
+            char addr[MAX_CHARS_ADDR];
+        };
+    };
     int8_t idx;
     int8_t pageIdx;
     uint8_t pageCount;
@@ -102,3 +111,5 @@ void h_review_increase();
 void h_review_decrease();
 
 view_error_t h_review_update_data();
+
+view_error_t h_addr_update_item(uint8_t idx);

@@ -21,8 +21,7 @@ extern "C" {
 #endif
 
 #include "string.h"
-
-extern void explicit_bzero(void *__s, size_t __n) __THROW __nonnull ((1));
+extern void explicit_bzero (void *__s, size_t __n) __THROW __nonnull ((1));
 
 #if defined(LEDGER_SPECIFIC)
 #include "bolos_target.h"
@@ -138,6 +137,15 @@ void __logstack();
 NUM_TO_STR(int64)
 
 NUM_TO_STR(uint64)
+
+__Z_INLINE void bip44_to_str(char *s, uint32_t max, const uint32_t path[5]) {
+    snprintf(s, max, "%d%s%d%s%d%s%d%s%d%s",
+             path[0] & 0x7FFFFFFFu, (path[0] & 0x80000000u) != 0 ? "'/" : "/",
+             path[1] & 0x7FFFFFFFu, (path[0] & 0x80000000u) != 0 ? "'/" : "/",
+             path[2] & 0x7FFFFFFFu, (path[0] & 0x80000000u) != 0 ? "'/" : "/",
+             path[3] & 0x7FFFFFFFu, (path[0] & 0x80000000u) != 0 ? "'/" : "/",
+             path[4] & 0x7FFFFFFFu, (path[0] & 0x80000000u) != 0 ? "'" : "");
+}
 
 __Z_INLINE int8_t str_to_int8(const char *start, const char *end, char *error) {
 

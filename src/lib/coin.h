@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2019 ZondaX GmbH
+*  (c) 2019 ZondaX GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -13,30 +13,20 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-
 #pragma once
-
-#include <zxmacros.h>
-#include "coin.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define BIP44_LEN_DEFAULT       5u
-#define MAX_BECH32_HRP_LEN      83u
-#define PK_LEN       33u
+#include <stdint.h>
+#include <stddef.h>
 
-extern uint32_t bip44Path[BIP44_LEN_DEFAULT];
-extern char *hrp;
-
-uint8_t extractHRP(uint32_t rx, uint32_t offset);
-
-void crypto_set_hrp(char *p);
-
-uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len);
-
-uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen);
+#define BIP44_0_DEFAULT     (0x80000000 | 0x2c)
+#define BIP44_1_DEFAULT     (0x80000000 | 0x76)     // FIXME: Change derivation path
+#define BIP44_2_DEFAULT     (0x80000000 | 0)
+#define BIP44_3_DEFAULT     (0)
+#define BIP44_4_DEFAULT     (0)
 
 #ifdef __cplusplus
 }

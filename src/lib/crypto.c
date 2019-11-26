@@ -15,7 +15,7 @@
 ********************************************************************************/
 
 #include "crypto.h"
-#include "cosmos.h"
+#include "coin.h"
 
 #include <bech32.h>
 #include "apdu_codes.h"
@@ -70,7 +70,7 @@ void crypto_extractPublicKey(uint32_t bip44Path[BIP44_LEN_DEFAULT], uint8_t *pub
         pubKey[31] |= 0x80;
     }
     //////////////////////
-    memcpy(pubKey, cx_publicKey.W, PK_COMPRESSED_LEN);
+    memcpy(pubKey, cx_publicKey.W, PK_LEN);
 }
 
 uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen) {
@@ -162,7 +162,7 @@ void crypto_set_hrp(char *p) {
 }
 
 uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
-    if (buffer_len < PK_COMPRESSED_LEN + 50) {
+    if (buffer_len < PK_LEN + 50) {
         return 0;
     }
 
@@ -171,13 +171,13 @@ uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
 
     // Hash it
     uint8_t hashed1_pk[CX_SHA256_SIZE];
-    cx_hash_sha256(buffer, PK_COMPRESSED_LEN, hashed1_pk, CX_SHA256_SIZE);
+    cx_hash_sha256(buffer, PK_LEN, hashed1_pk, CX_SHA256_SIZE);
 
     uint8_t hashed2_pk[CX_RIPEMD160_SIZE];
     ripemd160_32(hashed2_pk, hashed1_pk);
 
-    char *addr = (char *) (buffer + PK_COMPRESSED_LEN);
+    char *addr = (char *) (buffer + PK_LEN);
     bech32EncodeFromBytes(addr, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE);
 
-    return PK_COMPRESSED_LEN + strlen(addr);
+    return PK_LEN + strlen(addr);
 }
