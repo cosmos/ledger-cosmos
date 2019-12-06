@@ -18,12 +18,12 @@
 
 #include <stdint.h>
 
-#define MENU_MAIN_APP_LINE1 "Tendermint"
+#define MENU_MAIN_APP_LINE1 "Cosmos"
 
 #ifdef TESTING_ENABLED
 #define MENU_MAIN_APP_LINE2 "Cosmos TEST!"
 #else
-#define MENU_MAIN_APP_LINE2 "Cosmos"
+#define MENU_MAIN_APP_LINE2 "App"
 #endif
 
 #define CUR_FLOW G_ux.flow_stack[G_ux.stack_count-1]
