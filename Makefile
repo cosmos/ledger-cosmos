@@ -23,8 +23,8 @@ include $(BOLOS_SDK)/Makefile.defines
 
 # Main app configuration
 APPNAME = "Terra"
-APPVERSION_M=2
-APPVERSION_N=1
+APPVERSION_M=1
+APPVERSION_N=6
 APPVERSION_P=0
 
 APP_LOAD_PARAMS = --appFlags 0x200 --delete $(COMMON_LOAD_PARAMS) --path "44'/330'"
@@ -84,7 +84,8 @@ DEFINES          += HAVE_UX_FLOW
 SDK_SOURCE_PATH  += lib_ux
 else
 # Assume Nano S
-DEFINES += IO_SEPROXYHAL_BUFFER_SIZE_B=128
+DEFINES       += IO_SEPROXYHAL_BUFFER_SIZE_B=128
+DEFINES       += HAVE_BOLOS_UX COMPLIANCE_UX_160 HAVE_UX_LEGACY HAVE_UX_FLOW
 endif
 
 # X specific
@@ -129,19 +130,14 @@ include $(BOLOS_SDK)/Makefile.glyphs
 APP_SOURCE_PATH += src deps/jsmn/src deps/ledger-zxlib/include deps/ledger-zxlib/src
 SDK_SOURCE_PATH += lib_stusb lib_u2f lib_stusb_impl
 
-ifeq ($(TARGET_NAME),TARGET_NANOX)
 #SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
 SDK_SOURCE_PATH  += lib_ux
-endif
 
 load:
-	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
+	sudo -E python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
 delete:
-	python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
-
-package:
-	./pkgdemo.sh ${APPNAME} ${APPVERSION} ${ICONNAME}
+	sudo -E python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
 
 # Import generic rules from the SDK
 include $(BOLOS_SDK)/Makefile.rules

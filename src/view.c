@@ -17,6 +17,7 @@
 
 #include "view.h"
 #include "view_internal.h"
+#include "crypto.h"
 
 #include "actions.h"
 #include "apdu_codes.h"
@@ -30,7 +31,6 @@
 #include <stdio.h>
 
 view_t viewdata;
-const char *address;
 
 void h_address_accept(unsigned int _) {
     UNUSED(_);
@@ -115,6 +115,19 @@ view_error_t h_review_update_data() {
     return view_no_error;
 }
 
+view_error_t h_addr_update_item(uint8_t idx) {
+    MEMZERO(viewdata.addr, MAX_CHARS_ADDR);
+    switch (idx) {
+        case 0:
+            snprintf(viewdata.addr, MAX_CHARS_ADDR, "%s", (char *) (G_io_apdu_buffer + PK_LEN));
+            break;
+        case 1:
+            bip44_to_str(viewdata.addr, MAX_CHARS_ADDR, bip44Path);
+            break;
+    }
+    return view_no_error;
+}
+
 void io_seproxyhal_display(const bagl_element_t *element) {
     io_seproxyhal_display_default((bagl_element_t *) element);
 }
@@ -128,8 +141,6 @@ void view_idle_show(unsigned int ignored) {
 }
 
 void view_address_show() {
-    // Address has been placed in the output buffer
-    address = (char *) (G_io_apdu_buffer + 32);
     view_address_show_impl();
 }
 

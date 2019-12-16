@@ -21,8 +21,7 @@ extern "C" {
 #endif
 
 #include "string.h"
-
-extern void explicit_bzero(void *__s, size_t __n) __THROW __nonnull ((1));
+extern void explicit_bzero (void *__s, size_t __n) __THROW __nonnull ((1));
 
 #if defined(LEDGER_SPECIFIC)
 #include "bolos_target.h"
@@ -96,7 +95,7 @@ void __logstack();
 
 #include <inttypes.h>
 #include <stdint.h>
-#include <memory.h>
+#include <stdio.h>
 
 #define __Z_INLINE inline __attribute__((always_inline)) static
 
@@ -139,6 +138,15 @@ void __logstack();
 NUM_TO_STR(int64)
 
 NUM_TO_STR(uint64)
+
+__Z_INLINE void bip44_to_str(char *s, uint32_t max, const uint32_t path[5]) {
+    snprintf(s, max, "%d%s%d%s%d%s%d%s%d%s",
+             path[0] & 0x7FFFFFFFu, (path[0] & 0x80000000u) != 0 ? "'/" : "/",
+             path[1] & 0x7FFFFFFFu, (path[0] & 0x80000000u) != 0 ? "'/" : "/",
+             path[2] & 0x7FFFFFFFu, (path[0] & 0x80000000u) != 0 ? "'/" : "/",
+             path[3] & 0x7FFFFFFFu, (path[0] & 0x80000000u) != 0 ? "'/" : "/",
+             path[4] & 0x7FFFFFFFu, (path[0] & 0x80000000u) != 0 ? "'" : "");
+}
 
 __Z_INLINE int8_t str_to_int8(const char *start, const char *end, char *error) {
 
@@ -199,27 +207,31 @@ __Z_INLINE int64_t str_to_int64(const char *start, const char *end, char *error)
     return value * sign;
 }
 
-__Z_INLINE void fpuint64_to_str(char *dst, const uint64_t value, uint8_t decimals) {
-    char buffer[30];
-
-    int64_to_str(buffer, 30, value);
-    size_t digits = strlen(buffer);
+__Z_INLINE void fpstr_to_str(char *dst, const char *number, uint8_t decimals) {
+    size_t digits = strlen(number);
 
     if (digits <= decimals) {
         *dst++ = '0';
         *dst++ = '.';
         for (uint16_t i = 0; i < decimals - digits; i++, dst++)
             *dst = '0';
-        strcpy(dst, buffer);
+        strcpy(dst, number);
     } else {
-        strcpy(dst, buffer);
+        strcpy(dst, number);
         const size_t shift = digits - decimals;
         dst = dst + shift;
         *dst++ = '.';
 
-        char *p = buffer + shift;
+        const char *p = number + shift;
         strcpy(dst, p);
     }
+}
+
+__Z_INLINE void fpuint64_to_str(char *dst, const uint64_t value, uint8_t decimals) {
+    char buffer[30];
+    MEMZERO(buffer, sizeof(buffer));
+    int64_to_str(buffer, 30, value);
+    fpstr_to_str(dst, buffer, decimals);
 }
 
 __Z_INLINE uint64_t uint64_from_BEarray(const uint8_t data[8]) {

@@ -16,27 +16,19 @@
 
 #pragma once
 
-#include <zxmacros.h>
-#include "coin.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define BIP44_LEN_DEFAULT       5u
-#define MAX_BECH32_HRP_LEN      83u
-#define PK_LEN       33u
+#include <zxmacros.h>
+#include <zxtypes.h>
 
-extern uint32_t bip44Path[BIP44_LEN_DEFAULT];
-extern char *hrp;
+bool_t bignumLittleEndian_bcdprint(char *outBuffer, uint16_t outBufferLen, const uint8_t *inBCD, uint16_t inBCDLen);
+void bignumLittleEndian_to_bcd(uint8_t *bcdOut, uint16_t bcdOutLen, const uint8_t *binValue, uint16_t binValueLen);
 
-uint8_t extractHRP(uint32_t rx, uint32_t offset);
+bool_t bignumBigEndian_bcdprint(char *outBuffer, uint16_t outBufferLen, const uint8_t *bcdIn, uint16_t bcdInLen);
+void bignumBigEndian_to_bcd(uint8_t *bcdOut, uint16_t bcdOutLen, const uint8_t *binValue, uint16_t binValueLen);
 
-void crypto_set_hrp(char *p);
-
-uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len);
-
-uint16_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, const uint8_t *message, uint16_t messageLen);
 
 #ifdef __cplusplus
 }
