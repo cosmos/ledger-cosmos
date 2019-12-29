@@ -19,23 +19,13 @@
 #include <parser_common.h>
 #include "json_parser.h"
 
-#if defined(TARGET_NANOS) || defined(TARGET_NANOX)
-#include "os.h"
-#define EQUALS(_P, _Q, _LEN) (os_memcmp( PIC(_P), PIC(_Q), (_LEN))==0)
-#else
-#define EQUALS(_P, _Q, _LEN) (memcmp( (_P), (_Q), (_LEN))==0)
-#endif
+#define EQUALS(_P, _Q, _LEN) (MEMCMP( PIC(_P), PIC(_Q), (_LEN))==0)
 
-parser_error_t json_parse(parsed_json_t *parsed_json, const char *buffer) {
-    return json_parse_s(parsed_json, buffer, strlen(buffer));
-}
-
-parser_error_t json_parse_s(parsed_json_t *parsed_json,
-                         const char *buffer, uint16_t bufferLen) {
+parser_error_t json_parse(parsed_json_t *parsed_json, const char *buffer, uint16_t bufferLen) {
     jsmn_parser parser;
     jsmn_init(&parser);
 
-    explicit_bzero(parsed_json, sizeof(parsed_json_t));
+    MEMZERO(parsed_json, sizeof(parsed_json_t));
     parsed_json->buffer = buffer;
     parsed_json->bufferLen = bufferLen;
 
