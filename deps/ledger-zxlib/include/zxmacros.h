@@ -70,6 +70,7 @@ extern void explicit_bzero (void *__s, size_t __n) __THROW __nonnull ((1));
 #define MEMMOVE os_memmove
 #define MEMSET os_memset
 #define MEMCPY os_memcpy
+#define MEMCMP os_memcmp
 #define MEMCPY_NV nvm_write
 #define MEMZERO explicit_bzero
 
@@ -87,6 +88,7 @@ void __logstack();
 #define MEMMOVE memmove
 #define MEMSET memset
 #define MEMCPY memcpy
+#define MEMCMP memcmp
 #define MEMCPY_NV memcpy
 #define MEMZERO explicit_bzero
 #define LOG(str)

@@ -20,10 +20,6 @@
 #include "lib/parser_impl.h"
 #include <zxmacros.h>
 
-#if defined(TARGET_NANOS) || defined(TARGET_NANOX)
-#include "os.h"
-#endif
-
 #define NUM_REQUIRED_ROOT_PAGES 6
 
 // Required pages
@@ -47,12 +43,12 @@ const char *get_required_root_item(uint8_t i) {
 }
 
 static const uint16_t root_max_level[NUM_REQUIRED_ROOT_PAGES] = {
-    2, // "chain_id",
-    2, // "account_number",
-    2, // "sequence",
-    1, // "fee",
-    2, // "memo"
-    2, // "msgs"
+        2, // "chain_id",
+        2, // "account_number",
+        2, // "sequence",
+        1, // "fee",
+        2, // "memo"
+        2, // "msgs"
 };
 
 typedef struct {
@@ -69,14 +65,14 @@ void _indexRootFields() {
     }
 
     // Clear cache
-    explicit_bzero(&display_cache, sizeof(display_cache_t));
+    MEMZERO(&display_cache, sizeof(display_cache_t));
 
     // Calculate pages
     for (int8_t idx = 0; idx < NUM_REQUIRED_ROOT_PAGES; idx++) {
-        const int16_t subroot_token_idx = object_get_value(
-            &parser_tx_obj.json,
-            ROOT_TOKEN_INDEX,
-            get_required_root_item(idx));
+        const int16_t subroot_token_idx = object_get_value(&parser_tx_obj.json,
+                                                           ROOT_TOKEN_INDEX,
+                                                           get_required_root_item(idx));
+
         if (subroot_token_idx < 0) {
             break;
         }
@@ -175,70 +171,70 @@ typedef struct {
 } key_subst_t;
 
 static const key_subst_t key_substitutions[NUM_KEY_SUBSTITUTIONS] = {
-    {"chain_id",                          "Chain ID"},
-    {"account_number",                    "Account"},
-    {"sequence",                          "Sequence"},
-    {"memo",                              "Memo"},
-    {"fee/amount",                        "Fee"},
-    {"fee/gas",                           "Gas"},
-    {"msgs/type",                         "Type"},
+        {"chain_id",                          "Chain ID"},
+        {"account_number",                    "Account"},
+        {"sequence",                          "Sequence"},
+        {"memo",                              "Memo"},
+        {"fee/amount",                        "Fee"},
+        {"fee/gas",                           "Gas"},
+        {"msgs/type",                         "Type"},
 
-    // FIXME: Are these obsolete?? multisend?
-    {"msgs/inputs/address",               "Source Address"},
-    {"msgs/inputs/coins",                 "Source Coins"},
-    {"msgs/outputs/address",              "Dest Address"},
-    {"msgs/outputs/coins",                "Dest Coins"},
+        // FIXME: Are these obsolete?? multisend?
+        {"msgs/inputs/address",               "Source Address"},
+        {"msgs/inputs/coins",                 "Source Coins"},
+        {"msgs/outputs/address",              "Dest Address"},
+        {"msgs/outputs/coins",                "Dest Coins"},
 
-    // MsgSend
-    {"msgs/value/from_address",           "From"},
-    {"msgs/value/to_address",             "To"},
-    {"msgs/value/amount",                 "Amount"},
+        // MsgSend
+        {"msgs/value/from_address",           "From"},
+        {"msgs/value/to_address",             "To"},
+        {"msgs/value/amount",                 "Amount"},
 
-    // MsgDelegate
-    {"msgs/value/delegator_address",      "Delegator"},
-    {"msgs/value/validator_address",      "Validator"},
+        // MsgDelegate
+        {"msgs/value/delegator_address",      "Delegator"},
+        {"msgs/value/validator_address",      "Validator"},
 
-    // MsgUndelegate
+        // MsgUndelegate
 //        {"msgs/value/delegator_address", "Delegator"},
 //        {"msgs/value/validator_address", "Validator"},
 
-    // MsgBeginRedelegate
+        // MsgBeginRedelegate
 //        {"msgs/value/delegator_address", "Delegator"},
-    {"msgs/value/validator_src_address",  "Validator Source"},
-    {"msgs/value/validator_dst_address",  "Validator Dest"},
+        {"msgs/value/validator_src_address",  "Validator Source"},
+        {"msgs/value/validator_dst_address",  "Validator Dest"},
 
-    // MsgSubmitProposal
-    {"msgs/value/description",            "Description"},
-    {"msgs/value/initial_deposit/amount", "Deposit Amount"},
-    {"msgs/value/initial_deposit/denom",  "Deposit Denom"},
-    {"msgs/value/proposal_type",          "Proposal"},
-    {"msgs/value/proposer",               "Proposer"},
-    {"msgs/value/title",                  "Title"},
+        // MsgSubmitProposal
+        {"msgs/value/description",            "Description"},
+        {"msgs/value/initial_deposit/amount", "Deposit Amount"},
+        {"msgs/value/initial_deposit/denom",  "Deposit Denom"},
+        {"msgs/value/proposal_type",          "Proposal"},
+        {"msgs/value/proposer",               "Proposer"},
+        {"msgs/value/title",                  "Title"},
 
-    // MsgDeposit
-    {"msgs/value/depositer",              "Sender"},
-    {"msgs/value/proposal_id",            "Proposal ID"},
-    {"msgs/value/amount",                 "Amount"},
+        // MsgDeposit
+        {"msgs/value/depositer",              "Sender"},
+        {"msgs/value/proposal_id",            "Proposal ID"},
+        {"msgs/value/amount",                 "Amount"},
 
-    // MsgVote
-    {"msgs/value/voter",                  "Description"},
+        // MsgVote
+        {"msgs/value/voter",                  "Description"},
 //        {"msgs/value/proposal_id",              "Proposal ID"},
-    {"msgs/value/option",                 "Option"},
+        {"msgs/value/option",                 "Option"},
 
-    // MsgWithdrawDelegationReward
+        // MsgWithdrawDelegationReward
 //        {"msgs/value/delegator_address", "Delegator"},      // duplicated
 //        {"msgs/value/validator_address", "Validator"},      // duplicated
 };
 
 static const key_subst_t value_substitutions[NUM_VALUE_SUBSTITUTIONS] = {
-    {"cosmos-sdk/MsgSend",                     "Send"},
-    {"cosmos-sdk/MsgDelegate",                 "Delegate"},
-    {"cosmos-sdk/MsgUndelegate",               "Undelegate"},
-    {"cosmos-sdk/MsgBeginRedelegate",          "Redelegate"},
-    {"cosmos-sdk/MsgSubmitProposal",           "Propose"},
-    {"cosmos-sdk/MsgDeposit",                  "Deposit"},
-    {"cosmos-sdk/MsgVote",                     "Vote"},
-    {"cosmos-sdk/MsgWithdrawDelegationReward", "Withdraw Reward"},
+        {"cosmos-sdk/MsgSend",                     "Send"},
+        {"cosmos-sdk/MsgDelegate",                 "Delegate"},
+        {"cosmos-sdk/MsgUndelegate",               "Undelegate"},
+        {"cosmos-sdk/MsgBeginRedelegate",          "Redelegate"},
+        {"cosmos-sdk/MsgSubmitProposal",           "Propose"},
+        {"cosmos-sdk/MsgDeposit",                  "Deposit"},
+        {"cosmos-sdk/MsgVote",                     "Vote"},
+        {"cosmos-sdk/MsgWithdrawDelegationReward", "Withdraw Reward"},
 };
 
 void tx_display_make_friendly() {

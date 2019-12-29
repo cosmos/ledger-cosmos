@@ -104,8 +104,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
 }
 
 parser_error_t _readTx(parser_context_t *c, parser_tx_t *v) {
-    parser_error_t err = json_parse_s(&parser_tx_obj.json,
-                                      (const char *) c->buffer, c->bufferLen);
+    parser_error_t err = json_parse(&parser_tx_obj.json,
+                                    (const char *) c->buffer, c->bufferLen);
     if (err != parser_ok) {
         return err;
     }
