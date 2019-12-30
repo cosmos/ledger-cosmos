@@ -104,7 +104,7 @@ TEST(INT64_TO_STR, TooSmall_0) {
 
     char temp[1];
     const char* error = int64_to_str(temp, sizeof(temp), int64_t(0));
-    EXPECT_STREQ("Size too small", error);
+    EXPECT_STREQ("Buffer too small", error);
 }
 
 TEST(INT64_TO_STR, FitsJust) {
@@ -119,7 +119,7 @@ TEST(INT64_TO_STR, TooSmall_10) {
 
     char temp[2];
     const char* error = int64_to_str(temp, sizeof(temp), int64_t(10));
-    EXPECT_STREQ("Size too small", error);
+    EXPECT_STREQ("Buffer too small", error);
 }
 
 TEST(INT64_TO_STR, Max) {
@@ -218,10 +218,10 @@ TEST(STR_TO_INT8, DummyData_Negative) {
 
 TEST(STR_TO_INT64, Min) {
 
-    char numberStr[] = "-9223372036854775808";
+    char numberStr[] = "-9223372036854775807";
     char error = 0;
     int64_t number = str_to_int64(numberStr, numberStr + strlen(numberStr), &error);
-    EXPECT_EQ(-9223372036854775808, number);
+    EXPECT_EQ(-9223372036854775807, number);
     EXPECT_EQ(0, error);
 }
 

@@ -17,12 +17,30 @@
 #include <zxmacros.h>
 
 namespace {
-    TEST(MACROS, bip44path) {
+    TEST(MACROS, bip44path1) {
         uint32_t path[] = {44, 60, 0, 0, 1};
 
         char buffer[100];
         bip44_to_str(buffer, sizeof(buffer), path);
 
         EXPECT_EQ("44/60/0/0/1", std::string(buffer));
+    }
+
+    TEST(MACROS, bip44path2) {
+        uint32_t path[] = {0x8000002c, 60, 0, 0, 1};
+
+        char buffer[100];
+        bip44_to_str(buffer, sizeof(buffer), path);
+
+        EXPECT_EQ("44'/60/0/0/1", std::string(buffer));
+    }
+
+    TEST(MACROS, bip44path3) {
+        uint32_t path[] = {0x8000002c, 60, 0, 0, 0x80000001};
+
+        char buffer[100];
+        bip44_to_str(buffer, sizeof(buffer), path);
+
+        EXPECT_EQ("44'/60/0/0/1'", std::string(buffer));
     }
 }
