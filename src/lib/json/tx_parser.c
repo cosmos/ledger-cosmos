@@ -55,7 +55,6 @@ parser_error_t tx_getToken(uint16_t token_index,
                            uint8_t pageIdx, uint8_t *pageCount) {
     *pageCount = 1;
     MEMZERO(out_val, out_val_len);
-    snprintf(out_val, out_val_len, " ");
 
     const int16_t token_start = parser_tx_obj.json.tokens[token_index].start;
     const int16_t token_end = parser_tx_obj.json.tokens[token_index].end;
@@ -102,6 +101,10 @@ __always_inline void append_key_item(int16_t token_index) {
 parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_token_index) {
     parser_error_t err;
     const jsmntype_t token_type = parser_tx_obj.json.tokens[root_token_index].type;
+
+    if (parser_tx_obj.tx == NULL) {
+        return parser_no_data;
+    }
 
     if (parser_tx_obj.query.max_level <= 0 || parser_tx_obj.query.max_depth <= 0 ||
         token_type == JSMN_STRING ||
