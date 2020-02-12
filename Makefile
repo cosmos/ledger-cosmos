@@ -134,10 +134,10 @@ SDK_SOURCE_PATH += lib_stusb lib_u2f lib_stusb_impl
 SDK_SOURCE_PATH  += lib_ux
 
 load:
-	sudo -E python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
+	python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
 
 delete:
-	sudo -E python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
+	python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
 
 # Import generic rules from the SDK
 include $(BOLOS_SDK)/Makefile.rules
