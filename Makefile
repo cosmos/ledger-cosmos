@@ -25,9 +25,10 @@ include $(BOLOS_SDK)/Makefile.defines
 APPNAME = "Cosmos"
 APPVERSION_M=2
 APPVERSION_N=2
-APPVERSION_P=3
+APPVERSION_P=4
 
-APP_LOAD_PARAMS = --appFlags 0x200 --delete $(COMMON_LOAD_PARAMS) --path "44'/118'"
+APPPATH = "44'/118'"
+APP_LOAD_PARAMS = --appFlags 0x200 --delete $(COMMON_LOAD_PARAMS) --path $(APPPATH)
 
 ifeq ($(TARGET_NAME),TARGET_NANOS)
 SCRIPT_LD:=$(CURDIR)/script.ld
@@ -43,6 +44,17 @@ $(error ICONNAME is not set)
 endif
 
 all: default
+	@echo "#!/usr/bin/env bash" > $(CURDIR)/pkg/zxtool.sh
+	@echo "APPNAME=\"${APPNAME}\"" >> $(CURDIR)/pkg/zxtool.sh
+	@echo "APPVERSION=\"${APPVERSION}\"" >> $(CURDIR)/pkg/zxtool.sh
+	@echo "APPPATH=\""${APPPATH}"\"" >> $(CURDIR)/pkg/zxtool.sh
+	@echo "LOAD_PARAMS=\"${COMMON_LOAD_PARAMS}\"" >> $(CURDIR)/pkg/zxtool.sh
+	@echo "DELETE_PARAMS=\"${COMMON_DELETE_PARAMS}\"" >> $(CURDIR)/pkg/zxtool.sh
+	@echo "APPHEX=\"" >> $(CURDIR)/pkg/zxtool.sh
+	@cat $(CURDIR)/bin/app.hex >> $(CURDIR)/pkg/zxtool.sh
+	@echo "\"" >> $(CURDIR)/pkg/zxtool.sh
+	@cat $(CURDIR)/scripts/template.sh >> $(CURDIR)/pkg/zxtool.sh
+	@chmod +x $(CURDIR)/pkg/zxtool.sh
 
 ############
 # Platform
@@ -132,12 +144,6 @@ SDK_SOURCE_PATH += lib_stusb lib_u2f lib_stusb_impl
 
 #SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
 SDK_SOURCE_PATH  += lib_ux
-
-load:
-	sudo -E python -m ledgerblue.loadApp $(APP_LOAD_PARAMS)
-
-delete:
-	sudo -E python -m ledgerblue.deleteApp $(COMMON_DELETE_PARAMS)
 
 # Import generic rules from the SDK
 include $(BOLOS_SDK)/Makefile.rules
