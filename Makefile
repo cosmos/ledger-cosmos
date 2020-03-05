@@ -19,13 +19,16 @@
 ifeq ($(BOLOS_SDK),)
 $(error BOLOS_SDK is not set)
 endif
+
+MY_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+
 include $(BOLOS_SDK)/Makefile.defines
 
 # Main app configuration
 APPNAME = "Cosmos"
 APPVERSION_M=2
 APPVERSION_N=2
-APPVERSION_P=5
+APPVERSION_P=6
 
 APPPATH = "44'/118'"
 APP_LOAD_PARAMS = --appFlags 0x200 --delete $(COMMON_LOAD_PARAMS) --path $(APPPATH)
@@ -76,6 +79,7 @@ DEFINES   += U2F_PROXY_MAGIC=\"CSM\"
 DEFINES   += USB_SEGMENT_SIZE=64
 DEFINES   += U2F_MAX_MESSAGE_SIZE=264 #257+5+2
 DEFINES   += HAVE_BOLOS_APP_STACK_CANARY
+DEFINES   += NDEBUG
 
 WEBUSB_URL     = www.ledgerwallet.com
 DEFINES       += HAVE_WEBUSB WEBUSB_URL_SIZE_B=$(shell echo -n $(WEBUSB_URL) | wc -c) WEBUSB_URL=$(shell echo -n $(WEBUSB_URL) | sed -e "s/./\\\'\0\\\',/g")
@@ -104,12 +108,11 @@ endif
 
 #Feature temporarily disabled
 DEFINES   += LEDGER_SPECIFIC
-#DEFINES += TESTING_ENABLED
 
 # Compiler, assembler, and linker
 
 ifneq ($(BOLOS_ENV),)
-$(info BOLOS_ENV=$(BOLOS_ENV))
+$(info BOLOS_ENV is $(BOLOS_ENV))
 CLANGPATH := $(BOLOS_ENV)/clang-arm-fropi/bin/
 GCCPATH := $(BOLOS_ENV)/gcc-arm-none-eabi-5_3-2016q1/bin/
 else
@@ -127,7 +130,7 @@ endif
 #########################
 
 CC := $(CLANGPATH)clang
-CFLAGS += -O3 -Os
+CFLAGS += -O3 -Os -Wno-unknown-pragmas
 
 AS := $(GCCPATH)arm-none-eabi-gcc
 AFLAGS +=
