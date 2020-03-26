@@ -1,0 +1,63 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: zondax/circleci:latest
+    steps:
+      - checkout
+      - run: git submodule update --init --recursive
+      - run: cmake -DDISABLE_DOCKER_BUILDS=ON -DCMAKE_BUILD_TYPE=Debug . && make
+      # Unfortunately need to disable leak sanitizer https://github.com/google/sanitizers/issues/916
+      # Still run all other ASAN components
+      - run: GTEST_COLOR=1 ASAN_OPTIONS=detect_leaks=0 ctest -VV
+
+  build_ledger:
+    docker:
+      - image: zondax/ledger-docker-bolos:v1.0
+    environment:
+      - BOLOS_SDK=/home/zondax/project/deps/nanos-secure-sdk
+      - BOLOS_ENV=/opt/bolos
+    steps:
+      - checkout
+      # Docker entrypoint is not considered
+      - run: git submodule update --init --recursive
+      - run:
+          name: Build
+          command: |
+            source /home/zondax/.cargo/env
+            cd /home/zondax/project
+            make
+
+  build_package:
+    docker:
+      - image: zondax/ledger-docker-bolos:v1.0
+    environment:
+      - BOLOS_SDK=/home/zondax/project/deps/nanos-secure-sdk
+      - BOLOS_ENV=/opt/bolos
+    steps:
+      - checkout
+      - run: git submodule update --init --recursive
+      - run:
+          name: Build
+          command: |
+            source /home/zondax/.cargo/env
+            cd /home/zondax/project
+            make
+      - store_artifacts:
+          path: /home/zondax/project/app/pkg/zxtool.sh
+      - run: /home/zondax/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete $(/home/zondax/project/app/pkg/zxtool.sh version) /home/zondax/project/app/pkg/zxtool.sh
+
+workflows:
+  version: 2
+  build_all:
+    jobs:
+      - build
+      - build_ledger
+      - build_package:
+          requires:
+            - build
+            - build_ledger
+          filters:
+            branches:
+              only:
+                - master
