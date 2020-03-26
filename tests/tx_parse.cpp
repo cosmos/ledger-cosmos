@@ -122,9 +122,9 @@ namespace {
         parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
         EXPECT_EQ(err, parser_ok);
 
-        auto num_pages = tx_display_numItems();
+        auto numItems = tx_display_numItems();
 
-        EXPECT_EQ(0, num_pages) << "Wrong number of pages";
+        EXPECT_EQ(1, numItems) << "Wrong number of pages";
     }
 
     TEST(TxParse, Tx_Page_Count) {

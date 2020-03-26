@@ -69,26 +69,31 @@ parser_error_t tx_getToken(uint16_t token_index,
     const int16_t token_start = parser_tx_obj.json.tokens[token_index].start;
     const int16_t token_end = parser_tx_obj.json.tokens[token_index].end;
 
-    if (token_start >= token_end) {
+    if (token_start > token_end) {
         return parser_unexpected_buffer_end;
     }
 
     const char *inValue = parser_tx_obj.tx + token_start;
     uint16_t inLen = token_end - token_start;
 
-    for (int8_t i = 0; i < array_length(value_substitutions); i++) {
-        const char *substStr = value_substitutions[i].str1;
-        const size_t substStrLen = strlen(substStr);
-        if (inLen == substStrLen && !MEMCMP(inValue, substStr, substStrLen)) {
-            inValue = value_substitutions[i].str2;
-            inLen = strlen(value_substitutions[i].str2);
-            break;
+    // empty strings are considered the first page
+    *pageCount = 1;
+    if (inLen > 0) {
+        for (int8_t i = 0; i < array_length(value_substitutions); i++) {
+            const char *substStr = value_substitutions[i].str1;
+            const size_t substStrLen = strlen(substStr);
+            if (inLen == substStrLen && !MEMCMP(inValue, substStr, substStrLen)) {
+                inValue = value_substitutions[i].str2;
+                inLen = strlen(value_substitutions[i].str2);
+                break;
+            }
         }
-    }
 
-    pageStringExt(out_val, out_val_len,
-                  inValue, inLen,
-                  pageIdx, pageCount);
+        pageStringExt(out_val, out_val_len,
+                      inValue, inLen,
+                      pageIdx, pageCount);
+
+    }
 
     if (pageIdx >= *pageCount) {
         return parser_display_page_out_of_range;
