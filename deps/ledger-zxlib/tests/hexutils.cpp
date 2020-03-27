@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) 2018 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -16,13 +16,7 @@
 
 #include "gmock/gmock.h"
 
-#include <cstdio>
-#include <iostream>
-#include <memory>
-#include <stdexcept>
 #include <string>
-#include <array>
-#include <cctype>
 
 #include "hexutils.h"
 
@@ -30,7 +24,7 @@ TEST(HEXUTILS, parseHexString) {
     char s[] = "1234567890";
     uint8_t data[100];
 
-    auto length = parseHexString(s, data);
+    auto length = parseHexString(data, sizeof(data), s);
 
     ASSERT_THAT(length, testing::Eq(5));
 
@@ -45,7 +39,7 @@ TEST(HEXUTILS, parseHexString2) {
     char s[] = "be333be7ee";
     uint8_t data[100];
 
-    auto length = parseHexString(s, data);
+    auto length = parseHexString(data, sizeof(data), s);
 
     ASSERT_THAT(length, testing::Eq(5));
 
