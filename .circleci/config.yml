@@ -28,24 +28,24 @@ jobs:
             cd /home/zondax/project
             make
 
-  build_package:
-    docker:
-      - image: zondax/ledger-docker-bolos:v1.0
-    environment:
-      - BOLOS_SDK=/home/zondax/project/deps/nanos-secure-sdk
-      - BOLOS_ENV=/opt/bolos
-    steps:
-      - checkout
-      - run: git submodule update --init --recursive
-      - run:
-          name: Build
-          command: |
-            source /home/zondax/.cargo/env
-            cd /home/zondax/project
-            make
-      - store_artifacts:
-          path: /home/zondax/project/app/pkg/zxtool.sh
-      - run: /home/zondax/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete $(/home/zondax/project/app/pkg/zxtool.sh version) /home/zondax/project/app/pkg/zxtool.sh
+#  build_package:
+#    docker:
+#      - image: zondax/ledger-docker-bolos:v1.0
+#    environment:
+#      - BOLOS_SDK=/home/zondax/project/deps/nanos-secure-sdk
+#      - BOLOS_ENV=/opt/bolos
+#    steps:
+#      - checkout
+#      - run: git submodule update --init --recursive
+#      - run:
+#          name: Build
+#          command: |
+#            source /home/zondax/.cargo/env
+#            cd /home/zondax/project
+#            make
+#      - store_artifacts:
+#          path: /home/zondax/project/app/pkg/zxtool.sh
+#      - run: /home/zondax/go/bin/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete $(/home/zondax/project/app/pkg/zxtool.sh version) /home/zondax/project/app/pkg/zxtool.sh
 
 workflows:
   version: 2
@@ -53,11 +53,11 @@ workflows:
     jobs:
       - build
       - build_ledger
-      - build_package:
-          requires:
-            - build
-            - build_ledger
-          filters:
-            branches:
-              only:
-                - master
+#      - build_package:
+#          requires:
+#            - build
+#            - build_ledger
+#          filters:
+#            branches:
+#              only:
+#                - master
