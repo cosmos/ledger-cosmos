@@ -89,11 +89,25 @@ int8_t dictionaries_sorted(parsed_json_t *json) {
     for (int i = 0; i < json->numberOfTokens; i++) {
         if (json->tokens[i].type == JSMN_OBJECT) {
 
-            const int count = object_get_element_count(i, json);
+            uint16_t count;
+
+            if (object_get_element_count(json, i, &count) != parser_ok) {
+                return 0;
+            }
+
             if (count > 1) {
-                int prev_token_index = object_get_nth_key(i, 0, json);
+                uint16_t prev_token_index;
+                if (object_get_nth_key(json, i, 0, &prev_token_index) != parser_ok) {
+                    return 0;
+                }
+
                 for (int j = 1; j < count; j++) {
-                    int next_token_index = object_get_nth_key(i, j, json);
+                    uint16_t next_token_index;
+
+                    if (object_get_nth_key(json, i, j, &next_token_index) != parser_ok) {
+                        return 0;
+                    }
+
                     if (!is_sorted(prev_token_index, next_token_index, json)) {
                         return 0;
                     }
@@ -114,47 +128,32 @@ parser_error_t tx_validate(parsed_json_t *json) {
         return parser_json_is_not_sorted;
     }
 
-    if (object_get_value(
-            json,
-            0,
-            "chain_id") == -1) {
+    uint16_t token_index;
+    parser_error_t err;
+
+    err = object_get_value(json, 0, "chain_id", &token_index);
+    if (err != parser_ok)
         return parser_json_missing_chain_id;
-    }
 
-    if (object_get_value(
-            json,
-            0,
-            "sequence") == -1) {
+    err = object_get_value(json,0,"sequence", &token_index);
+    if (err != parser_ok)
         return parser_json_missing_sequence;
-    }
 
-    if (object_get_value(
-            json,
-            0,
-            "fee") == -1) {
+    err = object_get_value(json,0,"fee", &token_index);
+    if (err != parser_ok)
         return parser_json_missing_fee;
-    }
 
-    if (object_get_value(
-            json,
-            0,
-            "msgs") == -1) {
+    err = object_get_value(json,0,"msgs", &token_index);
+    if (err != parser_ok)
         return parser_json_missing_msgs;
-    }
 
-    if (object_get_value(
-            json,
-            0,
-            "account_number") == -1) {
+    err = object_get_value(json,0,"account_number", &token_index);
+    if (err != parser_ok)
         return parser_json_missing_account_number;
-    }
 
-    if (object_get_value(
-            json,
-            0,
-            "memo") == -1) {
+    err = object_get_value(json,0,"memo", &token_index);
+    if (err != parser_ok)
         return parser_json_missing_memo;
-    }
 
     return parser_ok;
 }

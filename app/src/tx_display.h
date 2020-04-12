@@ -44,11 +44,9 @@ parser_error_t tx_display_readTx(parser_context_t *c,
                                  const uint8_t *data,
                                  size_t dataLen);
 
-/// Return number of UI pages that we'll have for the current json transaction (only if the tx is valid)
-/// \return number of pages (msg pages + 5 required)
-uint16_t tx_display_numItems();
+parser_error_t tx_display_numItems(uint16_t *num_items);
 
-void tx_display_make_friendly();
+parser_error_t tx_display_make_friendly();
 
 //---------------------------------------------
 

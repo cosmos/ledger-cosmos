@@ -48,7 +48,7 @@ extern "C" {
 //  - re-created SendMsg struct with indices pointing to tokens in parsed json
 typedef struct {
     uint8_t isValid;
-    int32_t numberOfTokens;
+    uint32_t numberOfTokens;
     jsmntok_t tokens[MAX_NUMBER_OF_TOKENS];
     const char *buffer;
     uint16_t bufferLen;
@@ -67,55 +67,65 @@ parser_error_t json_parse(parsed_json_t *parsed_json,
                           uint16_t transaction_length);
 
 /// Get the number of elements in the array
-/// \param array_token_index
 /// \param json
-/// \return number of elements
-uint16_t array_get_element_count(uint16_t array_token_index,
-                                 const parsed_json_t *json);
+/// \param array_token_index
+/// \param number of elements (out)
+/// \return Error message
+parser_error_t array_get_element_count(const parsed_json_t *json,
+                                       uint16_t array_token_index,
+                                       uint16_t *number_elements);
 
 /// Get the token index of the nth array's element
+/// \param json
 /// \param array_token_index
 /// \param element_index
-/// \param json
-/// \return returns the token index or -1 if not found
-int16_t array_get_nth_element(uint16_t array_token_index,
-                              uint16_t element_index,
-                              const parsed_json_t *json);
+/// \param token index
+/// \return Error message
+parser_error_t array_get_nth_element(const parsed_json_t *json,
+                                     uint16_t array_token_index,
+                                     uint16_t element_index,
+                                     uint16_t *token_index);
 
 /// Get the number of dictionary elements (key/value pairs) under given object
+/// \param json
 /// \param object_token_index: token index of the parent object
-/// \param parsed_transaction
-/// \return number of elements
-uint16_t object_get_element_count(uint16_t object_token_index,
-                                  const parsed_json_t *parsed_transaction);
+/// \param number of elements (out)
+/// \return Error message
+parser_error_t object_get_element_count(const parsed_json_t *json,
+                                        uint16_t object_token_index,
+                                        uint16_t *number_elements);
 
 /// Get the token index for the nth dictionary key
+/// \param json
 /// \param object_token_index: token index of the parent object
 /// \param object_element_index
-/// \param parsed_transaction
-/// \return returns token index or -1 if not found
-int16_t object_get_nth_key(uint16_t object_token_index,
-                           uint16_t object_element_index,
-                           const parsed_json_t *parsed_transaction);
+/// \return token index (out)
+/// \return Error message
+parser_error_t object_get_nth_key(const parsed_json_t *json,
+                                  uint16_t object_token_index,
+                                  uint16_t object_element_index,
+                                  uint16_t *token_index);
 
 /// Get the token index for the nth dictionary value
+/// \param json
 /// \param object_token_index: token index of the parent object
 /// \param object_element_index
-/// \param parsed_transaction
-/// \return returns token index or -1 if not found
-int16_t object_get_nth_value(uint16_t object_token_index,
-                             uint16_t object_element_index,
-                             const parsed_json_t *parsed_transaction);
+/// \return token index (out))
+/// \return Error message
+parser_error_t object_get_nth_value(const parsed_json_t *json,
+                                    uint16_t object_token_index,
+                                    uint16_t object_element_index,
+                                    uint16_t *token_index);
 
 /// Get the token index of the value that matches the given key
+/// \param json
 /// \param object_token_index: token index of the parent object
 /// \param key_name: key name of the wanted value
-/// \param parsed_transaction
-/// \param transaction
-/// \return returns token index or -1 if not found
-int16_t object_get_value(const parsed_json_t *parsed_transaction,
-                         uint16_t object_token_index,
-                         const char *key_name);
+/// \return Error message
+parser_error_t object_get_value(const parsed_json_t *json,
+                                uint16_t object_token_index,
+                                const char *key_name,
+                                uint16_t *token_index);
 
 #ifdef __cplusplus
 }

@@ -61,7 +61,7 @@ check_python:
 
 deps: check_python
 	@echo "Install dependencies"
-	$(CURDIR)/deps/ledger-zxlib/install_deps.sh
+	$(CURDIR)/deps/ledger-zxlib/scripts/install_deps.sh
 
 pull:
 	docker pull $(DOCKER_IMAGE)
