@@ -23,12 +23,6 @@
 #include "parser_impl.h"
 #include "common/parser.h"
 
-__Z_INLINE parser_error_t parser_getItem_raw(const parser_context_t *ctx,
-                                             int8_t displayIdx,
-                                             char *outKey, uint16_t outKeyLen,
-                                             char *outVal, uint16_t outValLen,
-                                             uint8_t pageIdx, uint8_t *pageCount);
-
 parser_error_t parser_parse(parser_context_t *ctx,
                             const uint8_t *data,
                             size_t dataLen) {
@@ -40,7 +34,8 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
     CHECK_PARSER_ERR(tx_validate(&parser_tx_obj.json))
 
     // Iterate through all items to check that all can be shown and are valid
-    uint8_t numItems = parser_getNumItems(ctx);
+    uint16_t numItems = 0;
+    CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems));
 
     char tmpKey[40];
     char tmpVal[40];
@@ -53,8 +48,9 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
     return parser_ok;
 }
 
-uint8_t parser_getNumItems(const parser_context_t *ctx) {
-    return tx_display_numItems();
+parser_error_t parser_getNumItems(const parser_context_t *ctx, uint16_t *num_items) {
+    *num_items = 0;
+    return tx_display_numItems(num_items);
 }
 
 __Z_INLINE bool_t parser_areEqual(uint16_t tokenidx, char *expected) {
@@ -63,7 +59,11 @@ __Z_INLINE bool_t parser_areEqual(uint16_t tokenidx, char *expected) {
     }
 
     int16_t len = parser_tx_obj.json.tokens[tokenidx].end - parser_tx_obj.json.tokens[tokenidx].start;
-    if (strlen(expected) != len) {
+    if (len < 0) {
+        return bool_false;
+    }
+
+    if (strlen(expected) != (size_t) len) {
         return bool_false;
     }
 
@@ -78,16 +78,16 @@ __Z_INLINE bool_t parser_areEqual(uint16_t tokenidx, char *expected) {
 }
 
 __Z_INLINE bool_t parser_isAmount(char *key) {
-    if (strcmp(parser_tx_obj.query.out_key, "fee/amount") == 0)
+    if (strcmp(key, "fee/amount") == 0)
         return bool_true;
 
-    if (strcmp(parser_tx_obj.query.out_key, "msgs/inputs/coins") == 0)
+    if (strcmp(key, "msgs/inputs/coins") == 0)
         return bool_true;
 
-    if (strcmp(parser_tx_obj.query.out_key, "msgs/outputs/coins") == 0)
+    if (strcmp(key, "msgs/outputs/coins") == 0)
         return bool_true;
 
-    if (strcmp(parser_tx_obj.query.out_key, "msgs/value/amount") == 0)
+    if (strcmp(key, "msgs/value/amount") == 0)
         return bool_true;
 
     return bool_false;
@@ -101,7 +101,10 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
         amountToken++;
     }
 
-    uint16_t numElements = array_get_element_count(amountToken, &parser_tx_obj.json);
+    uint16_t numElements;
+
+    CHECK_PARSER_ERR(array_get_element_count(&parser_tx_obj.json, amountToken, &numElements));
+
     if (numElements == 0) {
         *pageCount = 1;
         snprintf(outVal, outValLen, "Empty");
@@ -125,6 +128,10 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
     MEMZERO(bufferUI, sizeof(bufferUI));
 
     const char *amountPtr = parser_tx_obj.tx + parser_tx_obj.json.tokens[amountToken + 2].start;
+    if (parser_tx_obj.json.tokens[amountToken + 2].start < 0) {
+        return parser_unexpected_buffer_end;
+    }
+
     const int16_t amountLen = parser_tx_obj.json.tokens[amountToken + 2].end -
                               parser_tx_obj.json.tokens[amountToken + 2].start;
     const char *denomPtr = parser_tx_obj.tx + parser_tx_obj.json.tokens[amountToken + 4].start;
@@ -159,16 +166,21 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
                               uint8_t pageIdx, uint8_t *pageCount) {
     *pageCount = 0;
 
-    if (parser_getNumItems(ctx) == 0) {
+    MEMZERO(outKey, outKeyLen);
+    MEMZERO(outVal, outValLen);
+
+    uint16_t numItems;
+    CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
+    if (numItems == 0) {
         return parser_unexpected_number_items;
     }
 
-    if (displayIdx < 0 || displayIdx >= parser_getNumItems(ctx)) {
+    if (displayIdx < 0 || displayIdx >= numItems) {
         return parser_display_idx_out_of_range;
     }
 
-    uint16_t ret_value_token_index;
-    tx_display_query(displayIdx, outKey, outKeyLen, &ret_value_token_index);
+    uint16_t ret_value_token_index = 0;
+    CHECK_PARSER_ERR(tx_display_query(displayIdx, outKey, outKeyLen, &ret_value_token_index));
 
     if (parser_isAmount(outKey)) {
         CHECK_PARSER_ERR(parser_formatAmount(
@@ -182,7 +194,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
                 pageIdx, pageCount))
     }
 
-    tx_display_make_friendly();
+    CHECK_PARSER_ERR(tx_display_make_friendly())
 
     if (*pageCount > 1) {
         size_t keyLen = strlen(outKey);

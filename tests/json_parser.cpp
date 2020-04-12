@@ -125,7 +125,9 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        EXPECT_EQ(array_get_element_count(2, &parsed_json), 3) << "Wrong number of array elements";
+        uint16_t token;
+        EXPECT_EQ(array_get_element_count(&parsed_json, 2, &token), parser_ok);
+        EXPECT_EQ(token, 3) << "Wrong number of array elements";
     }
 
     TEST(JsonParserTest, ArrayElementCount_primitives) {
@@ -134,7 +136,9 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        EXPECT_EQ(array_get_element_count(2, &parsed_json), 7) << "Wrong number of array elements";
+        uint16_t token;
+        EXPECT_EQ(array_get_element_count(&parsed_json, 2, &token), parser_ok);
+        EXPECT_EQ(token, 7) << "Wrong number of array elements";
     }
 
     TEST(JsonParserTest, ArrayElementCount_strings) {
@@ -143,7 +147,9 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        EXPECT_EQ(array_get_element_count(2, &parsed_json), 2) << "Wrong number of array elements";
+        uint16_t token;
+        EXPECT_EQ(array_get_element_count(&parsed_json, 2, &token), parser_ok);
+        EXPECT_EQ(token, 2) << "Wrong number of array elements";
     }
 
     TEST(JsonParserTest, ArrayElementCount_empty) {
@@ -152,7 +158,8 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        EXPECT_EQ(array_get_element_count(2, &parsed_json), 0) << "Wrong number of array elements";
+        uint16_t token;
+        EXPECT_EQ(array_get_element_count(&parsed_json, 2, &token), parser_no_data);
     }
 
     TEST(JsonParserTest, ArrayElementGet_objects) {
@@ -162,7 +169,8 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        int token_index = array_get_nth_element(2, 1, &parsed_json);
+        uint16_t token_index;
+        EXPECT_EQ(array_get_nth_element(&parsed_json, 2, 1, &token_index), parser_ok);
         EXPECT_EQ(token_index, 8) << "Wrong token index returned";
         EXPECT_EQ(parsed_json.tokens[token_index].type, JSMN_OBJECT) << "Wrong token type returned";
     }
@@ -173,7 +181,8 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        int token_index = array_get_nth_element(2, 5, &parsed_json);
+        uint16_t token_index;
+        EXPECT_EQ(array_get_nth_element(&parsed_json, 2, 5, &token_index), parser_ok);
         EXPECT_EQ(token_index, 8) << "Wrong token index returned";
         EXPECT_EQ(parsed_json.tokens[token_index].type, JSMN_PRIMITIVE) << "Wrong token type returned";
     }
@@ -184,7 +193,8 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        int token_index = array_get_nth_element(2, 0, &parsed_json);
+        uint16_t token_index;
+        EXPECT_EQ(array_get_nth_element(&parsed_json, 2, 0, &token_index), parser_ok);
         EXPECT_EQ(token_index, 3) << "Wrong token index returned";
         EXPECT_EQ(parsed_json.tokens[token_index].type, JSMN_STRING) << "Wrong token type returned";
     }
@@ -195,8 +205,9 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        int token_index = array_get_nth_element(2, 0, &parsed_json);
-        EXPECT_EQ(token_index, -1) << "Token index should be invalid (not found).";
+        uint16_t token_index;
+        EXPECT_EQ(array_get_nth_element(&parsed_json, 2, 0, &token_index), parser_no_data)
+                            << "Token index should be invalid (not found).";
     }
 
     TEST(TxValidationTest, ArrayElementGet_out_of_bounds_negative) {
@@ -205,8 +216,9 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        int token_index = array_get_nth_element(2, -1, &parsed_json);
-        EXPECT_EQ(token_index, -1) << "Token index should be invalid (not found).";
+        uint16_t token_index;
+        EXPECT_EQ(array_get_nth_element(&parsed_json, 2, -1, &token_index), parser_no_data)
+                            << "Token index should be invalid (not found).";
     }
 
     TEST(TxValidationTest, ArrayElementGet_out_of_bounds) {
@@ -215,8 +227,9 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        int token_index = array_get_nth_element(2, 3, &parsed_json);
-        EXPECT_EQ(token_index, -1) << "Token index should be invalid (not found).";
+        uint16_t token_index;
+        EXPECT_EQ(array_get_nth_element(&parsed_json, 2, 3, &token_index), parser_no_data)
+                            << "Token index should be invalid (not found).";
     }
 
     TEST(TxValidationTest, ObjectElementCount_primitives) {
@@ -225,7 +238,9 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        EXPECT_EQ(object_get_element_count(0, &parsed_json), 3) << "Wrong number of object elements";
+        uint16_t count;
+        EXPECT_EQ(object_get_element_count(&parsed_json, 0, &count), parser_ok);
+        EXPECT_EQ(count, 3) << "Wrong number of object elements";
     }
 
     TEST(TxValidationTest, ObjectElementCount_string) {
@@ -234,7 +249,9 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        EXPECT_EQ(object_get_element_count(0, &parsed_json), 4) << "Wrong number of object elements";
+        uint16_t count;
+        EXPECT_EQ(object_get_element_count(&parsed_json, 0, &count), parser_ok);
+        EXPECT_EQ(count, 4) << "Wrong number of object elements";
     }
 
     TEST(TxValidationTest, ObjectElementCount_array) {
@@ -246,7 +263,9 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        EXPECT_EQ(object_get_element_count(0, &parsed_json), 4) << "Wrong number of object elements";
+        uint16_t count;
+        EXPECT_EQ(object_get_element_count(&parsed_json, 0, &count), parser_ok);
+        EXPECT_EQ(count, 4) << "Wrong number of object elements";
     }
 
     TEST(TxValidationTest, ObjectElementCount_object) {
@@ -257,7 +276,9 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        EXPECT_EQ(object_get_element_count(0, &parsed_json), 3) << "Wrong number of object elements";
+        uint16_t count;
+        EXPECT_EQ(object_get_element_count(&parsed_json, 0, &count), parser_ok);
+        EXPECT_EQ(count, 3) << "Wrong number of object elements";
     }
 
     TEST(TxValidationTest, ObjectElementCount_deep) {
@@ -268,7 +289,9 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        EXPECT_EQ(object_get_element_count(0, &parsed_json), 3) << "Wrong number of object elements";
+        uint16_t count;
+        EXPECT_EQ(object_get_element_count(&parsed_json, 0, &count), parser_ok);
+        EXPECT_EQ(count, 3) << "Wrong number of object elements";
     }
 
     TEST(TxValidationTest, ObjectElementGet_primitives) {
@@ -277,7 +300,8 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        int token_index = object_get_nth_key(0, 0, &parsed_json);
+        uint16_t token_index;
+        EXPECT_EQ(object_get_nth_key(&parsed_json, 0, 0, &token_index), parser_ok);
         EXPECT_EQ(token_index, 1) << "Wrong token index";
         EXPECT_EQ(parsed_json.tokens[token_index].type, JSMN_STRING) << "Wrong token type returned";
         EXPECT_EQ(memcmp(transaction + parsed_json.tokens[token_index].start, "age", strlen("age")), 0)
@@ -290,7 +314,8 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        int token_index = object_get_nth_value(0, 3, &parsed_json);
+        uint16_t token_index;
+        EXPECT_EQ(object_get_nth_value(&parsed_json, 0, 3, &token_index), parser_ok);
         EXPECT_EQ(token_index, 8) << "Wrong token index";
         EXPECT_EQ(parsed_json.tokens[token_index].type, JSMN_STRING) << "Wrong token type returned";
         EXPECT_EQ(memcmp(transaction + parsed_json.tokens[token_index].start, "july", strlen("july")), 0)
@@ -303,8 +328,9 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        int token_index = object_get_nth_key(0, -1, &parsed_json);
-        EXPECT_EQ(token_index, -1) << "Wrong token index, should be invalid";
+        uint16_t token_index;
+        EXPECT_EQ(object_get_nth_key(&parsed_json, 0, -1, &token_index), parser_no_data)
+                            << "Wrong token index, should be invalid";
     }
 
     TEST(TxValidationTest, ObjectElementGet_out_of_bounds) {
@@ -313,8 +339,9 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        int token_index = object_get_nth_key(0, 5, &parsed_json);
-        EXPECT_EQ(token_index, -1) << "Wrong token index, should be invalid";
+        uint16_t token_index;
+        EXPECT_EQ(object_get_nth_key(&parsed_json, 0, 5, &token_index), parser_no_data)
+                            << "Wrong token index, should be invalid";
     }
 
     TEST(TxValidationTest, ObjectElementGet_array) {
@@ -326,11 +353,14 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        int token_index = object_get_value(&parsed_json, 0, "years");
+        uint16_t token_index;
+        EXPECT_EQ(object_get_value(&parsed_json, 0, "years", &token_index), parser_ok);
 
         EXPECT_EQ(token_index, 14) << "Wrong token index";
         EXPECT_EQ(parsed_json.tokens[token_index].type, JSMN_ARRAY) << "Wrong token type returned";
-        EXPECT_EQ(array_get_element_count(token_index, &parsed_json), 5) << "Wrong number of array elements";
+        uint16_t number_elements;
+        EXPECT_EQ(array_get_element_count(&parsed_json, token_index, &number_elements), parser_ok);
+        EXPECT_EQ(number_elements, 5) << "Wrong number of array elements";
     }
 
     TEST(TxValidationTest, ObjectGetValueCorrectFormat) {
@@ -339,17 +369,23 @@ namespace {
         parsed_json_t parsed_json;
         JSON_PARSE(&parsed_json, transaction);
 
-        int token_index = object_get_value(&parsed_json, 0, "alt_bytes");
-        EXPECT_EQ(token_index, -1) << "Wrong token index"; // alt_bytes should not be found
-        token_index = object_get_value(&parsed_json, 0, "account_number");
+        uint16_t token_index;
+        EXPECT_EQ(object_get_value(&parsed_json, 0, "alt_bytes", &token_index), parser_no_data)
+                            << "Wrong token index"; // alt_bytes should not be found
+
+        EXPECT_EQ(object_get_value(&parsed_json, 0, "account_number", &token_index), parser_ok);
         EXPECT_EQ(token_index, 2) << "Wrong token index"; // alt_bytes should not be found
-        token_index = object_get_value(&parsed_json, 0, "chain_id");
+
+        EXPECT_EQ(object_get_value(&parsed_json, 0, "chain_id", &token_index), parser_ok);
         EXPECT_EQ(token_index, 4) << "Wrong token index";
-        token_index = object_get_value(&parsed_json, 0, "fee");
+
+        EXPECT_EQ(object_get_value(&parsed_json, 0, "fee", &token_index), parser_ok);
         EXPECT_EQ(token_index, 6) << "Wrong token index";
-        token_index = object_get_value(&parsed_json, 0, "msgs");
+
+        EXPECT_EQ(object_get_value(&parsed_json, 0, "msgs", &token_index), parser_ok);
         EXPECT_EQ(token_index, 19) << "Wrong token index";
-        token_index = object_get_value(&parsed_json, 0, "sequence");
+
+        EXPECT_EQ(object_get_value(&parsed_json, 0, "sequence", &token_index), parser_ok);
         EXPECT_EQ(token_index, 46) << "Wrong token index";
     }
 }

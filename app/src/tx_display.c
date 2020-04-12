@@ -51,8 +51,10 @@ static const uint8_t root_max_level[NUM_REQUIRED_ROOT_PAGES] = {
 
 typedef struct {
     uint16_t total_item_count;
+
+    uint8_t root_item_start_valid[NUM_REQUIRED_ROOT_PAGES];
     // token where the root_item starts (negative for non-existing)
-    int16_t root_item_start_token_idx[NUM_REQUIRED_ROOT_PAGES];
+    uint16_t root_item_start_token_idx[NUM_REQUIRED_ROOT_PAGES];
     // number of items the root_item contains
     uint8_t root_item_number_subitems[NUM_REQUIRED_ROOT_PAGES];
 } display_cache_t;
@@ -62,6 +64,7 @@ display_cache_t display_cache;
 parser_error_t tx_display_readTx(parser_context_t *ctx, const uint8_t *data, size_t dataLen) {
     CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
     CHECK_PARSER_ERR(_readTx(ctx, &parser_tx_obj))
+    return parser_ok;
 }
 
 parser_error_t tx_indexRootFields() {
@@ -74,24 +77,34 @@ parser_error_t tx_indexRootFields() {
     char tmp_key[20];
     char tmp_val[40];
     char tmp_val_ref[40];
+    MEMZERO(&tmp_key, sizeof(tmp_key));
+    MEMZERO(&tmp_val, sizeof(tmp_val));
+    MEMZERO(&tmp_val_ref, sizeof(tmp_val_ref));
+
     parser_tx_obj.flags.msg_type_grouping = 1;
     parser_tx_obj.filter_msg_type_count = 0;
 
     for (int8_t root_item_idx = 0; root_item_idx < NUM_REQUIRED_ROOT_PAGES; root_item_idx++) {
-        const char *req_root_item_key = get_required_root_item( (root_item_e) root_item_idx);
-        const int16_t req_root_item_key_token_idx = object_get_value(&parser_tx_obj.json,
-                                                                     ROOT_TOKEN_INDEX,
-                                                                     req_root_item_key);
+        const char *req_root_item_key = get_required_root_item((root_item_e) root_item_idx);
 
-        // Remember root item start token
-        display_cache.root_item_start_token_idx[root_item_idx] = req_root_item_key_token_idx;
+        uint16_t req_root_item_key_token_idx = 0;
 
-        if (req_root_item_key_token_idx < 0) {
+        parser_error_t err = object_get_value(
+                &parser_tx_obj.json,
+                ROOT_TOKEN_INDEX,
+                req_root_item_key,
+                &req_root_item_key_token_idx);
+
+        if (err == parser_no_data ) {
             continue;
         }
+        CHECK_PARSER_ERR(err)
+
+        // Remember root item start token
+        display_cache.root_item_start_valid[root_item_idx] = 1;
+        display_cache.root_item_start_token_idx[root_item_idx] = req_root_item_key_token_idx;
 
         // Now count how many items can be found in this root item
-        parser_error_t err = parser_ok;
         int32_t current_item_idx = 0;
         while (err == parser_ok) {
             INIT_QUERY_CONTEXT(tmp_key, sizeof(tmp_key),
@@ -102,18 +115,20 @@ parser_error_t tx_indexRootFields() {
 
             uint16_t ret_value_token_index;
 
-            err = tx_traverse_find(display_cache.root_item_start_token_idx[root_item_idx],
-                                   &ret_value_token_index);
+            err = tx_traverse_find(
+                    display_cache.root_item_start_token_idx[root_item_idx],
+                    &ret_value_token_index);
 
             if (err != parser_ok) {
                 continue;
             }
 
             uint8_t pageCount;
-            CHECK_PARSER_ERR(tx_getToken(ret_value_token_index,
-                                         parser_tx_obj.query.out_val,
-                                         parser_tx_obj.query.out_key_len,
-                                         0, &pageCount))
+            CHECK_PARSER_ERR(tx_getToken(
+                    ret_value_token_index,
+                    parser_tx_obj.query.out_val,
+                    parser_tx_obj.query.out_key_len,
+                    0, &pageCount))
 
             if (root_item_idx == root_item_memo) {
                 if (strlen(parser_tx_obj.query.out_val) == 0) {
@@ -144,7 +159,7 @@ parser_error_t tx_indexRootFields() {
             current_item_idx++;
         }
 
-        if (err != parser_query_no_results) {
+        if (err != parser_query_no_results && err != parser_no_data) {
             return err;
         }
 
@@ -156,26 +171,24 @@ parser_error_t tx_indexRootFields() {
     return parser_ok;
 }
 
-uint16_t tx_display_numItems() {
-    parser_error_t err = tx_indexRootFields();
-    if (err != parser_ok) {
-        return 0;
-    }
+parser_error_t tx_display_numItems(uint16_t *num_items) {
+    CHECK_PARSER_ERR(tx_indexRootFields())
 
-    uint16_t count = display_cache.total_item_count;
+    *num_items = display_cache.total_item_count;
     // Remove grouped items from list
-    if (parser_tx_obj.flags.msg_type_grouping == 1u && parser_tx_obj.filter_msg_type_count) {
-        count -= parser_tx_obj.filter_msg_type_count - 1;
+    if (parser_tx_obj.flags.msg_type_grouping == 1u && parser_tx_obj.filter_msg_type_count > 0) {
+        *num_items += 1; // we leave main type
+        *num_items -= parser_tx_obj.filter_msg_type_count;
     }
 
-    return count;
+    return parser_ok;
 }
 
 // This function assumes that the tx_ctx has been set properly
 parser_error_t tx_display_query(uint16_t displayIdx,
                                 char *outKey, uint16_t outKeyLen,
                                 uint16_t *ret_value_token_index) {
-    tx_indexRootFields();
+    CHECK_PARSER_ERR(tx_indexRootFields())
 
     if (displayIdx < 0 || displayIdx >= display_cache.total_item_count) {
         return parser_display_idx_out_of_range;
@@ -205,7 +218,12 @@ parser_error_t tx_display_query(uint16_t displayIdx,
     parser_tx_obj.query._item_index_current = 0;
     parser_tx_obj.query.max_level = root_max_level[root_index];
 
-    strncpy_s(outKey, get_required_root_item( (root_item_e) root_index), outKeyLen);
+    strncpy_s(outKey, get_required_root_item((root_item_e) root_index), outKeyLen);
+
+    if (!display_cache.root_item_start_valid[root_index]) {
+        return parser_no_data;
+    }
+
     CHECK_PARSER_ERR(tx_traverse_find(
             display_cache.root_item_start_token_idx[root_index],
             ret_value_token_index))
@@ -283,8 +301,8 @@ static const key_subst_t key_substitutions[] = {
 //        {"msgs/value/validator_address", "Validator"},      // duplicated
 };
 
-void tx_display_make_friendly() {
-    tx_indexRootFields();
+parser_error_t tx_display_make_friendly() {
+    CHECK_PARSER_ERR(tx_indexRootFields())
 
     // post process keys
     for (size_t i = 0; i < array_length(key_substitutions); i++) {
@@ -293,5 +311,7 @@ void tx_display_make_friendly() {
             break;
         }
     }
+
+    return parser_ok;
 }
 
