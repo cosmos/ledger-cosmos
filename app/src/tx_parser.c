@@ -58,7 +58,7 @@ static const key_subst_t value_substitutions[] = {
         {"gov/MsgSubmitProposal",             "Propose"},
         {"gov/MsgDeposit",                    "Deposit"},
         {"gov/MsgVote",                       "Vote"},
-        {"distr/MsgWithdrawDelegationReward", "Withdraw Reward"},
+        {"distribution/MsgWithdrawDelegationReward", "Withdraw Reward"},
 };
 
 parser_error_t tx_getToken(uint16_t token_index,
