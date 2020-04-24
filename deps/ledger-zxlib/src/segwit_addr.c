@@ -140,23 +140,23 @@ int bech32_decode(char* hrp, uint8_t *data, size_t *data_len, const char *input)
     return chk == 1;
 }
 
-int convert_bits(uint8_t* out, size_t* outlen, int outbits, const uint8_t* in, size_t inlen, int inbits, int pad) {
+int convert_bits(uint8_t* out, size_t* outlen, int outBits, const uint8_t* in, size_t inLen, int inBits, int pad) {
     uint32_t val = 0;
     int bits = 0;
-    uint32_t maxv = (((uint32_t)1) << outbits) - 1;
-    while (inlen--) {
-        val = (val << inbits) | *(in++);
-        bits += inbits;
-        while (bits >= outbits) {
-            bits -= outbits;
+    uint32_t maxv = (((uint32_t)1) << outBits) - 1;
+    while (inLen--) {
+        val = (val << inBits) | *(in++);
+        bits += inBits;
+        while (bits >= outBits) {
+            bits -= outBits;
             out[(*outlen)++] = (val >> bits) & maxv;
         }
     }
     if (pad) {
         if (bits) {
-            out[(*outlen)++] = (val << (outbits - bits)) & maxv;
+            out[(*outlen)++] = (val << (outBits - bits)) & maxv;
         }
-    } else if (((val << (outbits - bits)) & maxv) || bits >= inbits) {
+    } else if (((val << (outBits - bits)) & maxv) || bits >= inBits) {
         return 0;
     }
     return 1;

@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) 2018 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
 namespace {
 
     TEST(Buffering, SmallBuffer) {
-
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
@@ -43,7 +42,6 @@ namespace {
     }
 
     TEST(Buffering, BigBuffer) {
-
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
@@ -66,7 +64,6 @@ namespace {
     }
 
     TEST(Buffering, SmallBufferMultipleTimesWithinRam) {
-
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
@@ -93,7 +90,6 @@ namespace {
     }
 
     TEST(Buffering, SmallBufferMultipleTimesToFlash) {
-
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
@@ -120,7 +116,6 @@ namespace {
     }
 
     TEST(Buffering, SmallBufferMultipleTimes_CheckData) {
-
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
@@ -154,7 +149,6 @@ namespace {
     }
 
     TEST(Buffering, Reset) {
-
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
@@ -174,11 +168,9 @@ namespace {
 
         EXPECT_TRUE(buffering_get_ram_buffer()->in_use) << "After reset RAM should be enabled by default";
         EXPECT_FALSE(buffering_get_flash_buffer()->in_use) << "After reset RAM should be enabled by default";
-
     }
 
     TEST(Buffering, NotEnoughRoomInFlash) {
-
         uint8_t ram_buffer[100];
         uint8_t flash_buffer[1000];
 
@@ -193,7 +185,6 @@ namespace {
     }
 
     TEST(Buffering, NoFlashOnlyRAM) {
-
         uint8_t ram_buffer[100];
 
         buffering_init(ram_buffer,

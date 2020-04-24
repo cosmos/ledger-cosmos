@@ -27,10 +27,10 @@ extern "C" {
 
 int convert_bits(uint8_t *out,
                  size_t *outlen,
-                 int outbits,
+                 int outBits,
                  const uint8_t *in,
-                 size_t inlen,
-                 int inbits, int pad);
+                 size_t inLen,
+                 int inBits, int pad);
 
 #ifdef __cplusplus
 }

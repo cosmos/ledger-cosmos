@@ -1,0 +1,57 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# OS related files
+.DS_Store
+
+# Others
+cmake-build-debug/
+../.idea/workspace.xml
+\.idea/
+src/ledger/bin/
+src/ledger/debug/
+src/ledger/obj/
+obj/app\.elf
+debug/app\.map
+debug/app\.asm
+bin/app\.hex
+bin/app\.elf
+app/src/common/glyphs.h
+app/src/common/glyphs.c
+bin/app.sha256
+bin/app.apdu
+
+pkg/bin/app.hex
+pkg/zxtool.sh
+
+pkg/demo.zip

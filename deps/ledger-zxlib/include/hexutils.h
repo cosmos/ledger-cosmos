@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018 ZondaX GmbH
+*   (c) 2018 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-size_t parseHexString(const char *s, uint8_t *out);
+size_t parseHexString(uint8_t *out, uint16_t outLen, const char *input);
 
 #ifdef __cplusplus
 }
