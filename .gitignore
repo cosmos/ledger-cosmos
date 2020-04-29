@@ -1,68 +1,88 @@
+# Created by .ignore support plugin (hsz.mobi)
+### C template
 # Prerequisites
 *.d
 
-# Compiled Object files
-*.slo
-*.lo
+# Object files
 *.o
+*.ko
 *.obj
+*.elf
+
+# Linker output
+*.ilk
+*.map
+*.exp
 
 # Precompiled Headers
 *.gch
 *.pch
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
+# Libraries
 *.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
 
 # Executables
 *.exe
 *.out
 *.app
+*.i*86
+*.x86_64
+*.hex
 
-# OS related files
-.DS_Store
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+
+\cmake-build-debug
+\.idea/
+/tmp/
+/deps/nano2-sdk/
+
+# Created by cmake
+googletest-download/
+googletest-src/
+googletest-build/
+CMakeFiles/
+CMakeCache.txt
+unittests
+*.cmake
+Testing/
+cmake-build-fuzz/
 
 # Others
-cmake-build-debug/
-\.idea/workspace\.xml
-\.idea/
-src/ledger/bin/
-src/ledger/debug/
-src/ledger/obj/
-src/goclient/vendor
-pkg/
-src/goclient/goclient
+/cmake-build-debug/
+/cmake-build-fuzz/
+\.idea
+/app/bin/
+/app/debug/
+/app/obj/
 
-src/ledger/pkgdemo/loaddemo\.sh
+\deps/*
+!\deps/nanos-secure-sdk
+!\deps/ledger-zxlib
+!\deps/tinycbor
+!\deps/BLAKE
 
-src/ledger/pkgdemo/app\.hex
+app/src/glyphs.c
 
-obj/app\.elf
-
-debug/app\.map
-
-debug/app\.asm
-
-bin/app\.hex
-
-bin/app\.elf
-
-src/glyphs\.h
-
-src/glyphs\.c
-
-bin/app.sha256
-
-bin/app.apdu
+app/src/glyphs.h

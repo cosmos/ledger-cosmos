@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2019 ZondaX GmbH
+*   (c) 2019 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -19,13 +19,19 @@
 extern "C" {
 #endif
 
+#include "zxerror.h"
+
+#define MAX_INPUT_SIZE 64
+
 // the following function encodes directly from bytes
 // it will internally convert from 8 to 5 bits and return a
 // zero-terminated string in output
-void bech32EncodeFromBytes(char *output,
-                           const char *hrp,
-                           const uint8_t *data,
-                           size_t data_len);
+
+zxerr_t bech32EncodeFromBytes(char *out,
+                              size_t out_len,
+                              const char *hrp,
+                              const uint8_t *in,
+                              size_t in_len);
 
 #ifdef __cplusplus
 }
