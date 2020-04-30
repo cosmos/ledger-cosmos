@@ -68,7 +68,7 @@ void h_review(unsigned int _) { UNUSED(_); view_sign_show_impl(); }
 const ux_menu_entry_t menu_sign[] = {
     {NULL, h_review, 0, NULL, "View transaction", NULL, 0, 0},
     {NULL, h_sign_accept, 0, NULL, "Sign transaction", NULL, 0, 0},
-    {NULL, h_sign_reject, 0, &C_icon_back, "Reject", NULL, 60, 40},
+    {NULL, h_sign_reject, 0, NULL, "Reject", NULL, 0, 0},
     UX_MENU_END
 };
 
@@ -140,6 +140,7 @@ void h_review_button_left() {
     switch(err) {
         case view_no_error:
             view_review_show();
+            UX_WAIT();
             break;
         case view_no_data:
             view_sign_show_s();
@@ -147,10 +148,9 @@ void h_review_button_left() {
         case view_error_detected:
         default:
             view_error_show();
+            UX_WAIT();
             break;
     }
-
-    UX_WAIT();
 }
 
 void h_review_button_right() {
@@ -161,6 +161,7 @@ void h_review_button_right() {
     switch(err) {
         case view_no_error:
             view_review_show();
+            UX_WAIT();
             break;
         case view_no_data:
             view_sign_show_s();
@@ -168,10 +169,9 @@ void h_review_button_right() {
         case view_error_detected:
         default:
             view_error_show();
+            UX_WAIT();
             break;
     }
-
-    UX_WAIT();
 }
 
 void splitValueField() {
