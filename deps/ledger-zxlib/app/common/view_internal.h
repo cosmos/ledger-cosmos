@@ -34,7 +34,7 @@
 #endif
 #define MAX_CHARS_ADDR              (MAX_CHARS_PER_KEY_LINE + MAX_CHARS_PER_VALUE1_LINE)
 
-// This typically will point to G_io_apdu_buffer that is prefilled with the address
+// This takes data from G_io_apdu_buffer that is prefilled with the address
 
 typedef struct {
     union {
@@ -49,8 +49,10 @@ typedef struct {
             char addr[MAX_CHARS_ADDR];
         };
     };
-    int8_t idx;
-    int8_t pageIdx;
+    address_kind_e addrKind;
+    uint8_t itemIdx;
+    uint8_t itemCount;
+    uint8_t pageIdx;
     uint8_t pageCount;
 } view_t;
 
@@ -97,11 +99,11 @@ void h_sign_accept(unsigned int _);
 
 void h_sign_reject(unsigned int _);
 
-void h_review_init();
+void h_paging_init();
 
-void h_review_increase();
+void h_paging_increase();
 
-void h_review_decrease();
+void h_paging_decrease();
 
 view_error_t h_review_update_data();
 

@@ -185,7 +185,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
                     if (requireConfirmation) {
                         app_fill_address();
-                        view_address_show();
+                        view_address_show(addr_secp256k1);
                         *flags |= IO_ASYNCH_REPLY;
                         break;
                     }

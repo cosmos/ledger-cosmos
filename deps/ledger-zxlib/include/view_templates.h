@@ -155,6 +155,7 @@
         NULL,   /* text             */                      \
 }
 
+// FIXME: Up/Down vs Left/Right (not supported in zemu)
 #define UI_BACKGROUND_LEFT_RIGHT_ICONS \
         UI_FillRectangle(0, 0, 0, UI_SCREEN_WIDTH, UI_SCREEN_HEIGHT, 0x000000, 0xFFFFFF), \
         UI_Icon(UIID_ICONLEFT, 0, 0, 7, 7, BAGL_GLYPH_ICON_LEFT), \

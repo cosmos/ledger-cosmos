@@ -28,14 +28,19 @@ extern "C" {
 #define HDPATH_3_DEFAULT     (0)
 #define HDPATH_4_DEFAULT     (0)
 
-#define MENU_MAIN_APP_LINE1 "Cosmos"
+typedef enum {
+    addr_secp256k1 = 0,
+} address_kind_e;
 
+#define MENU_MAIN_APP_LINE1 "Cosmos"
 #ifdef TESTING_ENABLED
 #define MENU_MAIN_APP_LINE2 "Cosmos TEST!"
 #else
 #define MENU_MAIN_APP_LINE2 "App"
 #endif
+#define APPVERSION_LINE2 ""
 
+#define VIEW_ADDRESS_ITEM_COUNT 2
 #define VIEW_ADDRESS_BUFFER_OFFSET    (PK_LEN)
 
 #ifdef __cplusplus
