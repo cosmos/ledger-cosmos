@@ -1,31 +1,79 @@
+import {expect, test} from "jest";
 import Zemu from "@zondax/zemu";
 import CosmosApp from "ledger-cosmos-js";
+import secp256k1 from "secp256k1/elliptic";
+import crypto from "crypto";
 
 const Resolve = require("path").resolve;
-
 const APP_PATH = Resolve("../app/bin/app.elf");
 
-console.log(APP_PATH);
+const APP_SEED = "equip will roof matter pink blind book anxiety banner elbow sun young"
+const sim_options = {
+    logging: true,
+    start_delay: 3000,
+    custom: `-s "${APP_SEED}"`
+//    , X11: true
+};
+
+jest.setTimeout(30000)
+
+const example_tx_str = {
+    "account_number": "108",
+    "chain_id": "cosmoshub-2",
+    "fee": {
+        "amount": [
+            {
+                "amount": "600",
+                "denom": "uatom"
+            }
+        ],
+        "gas": "200000"
+    },
+    "memo": "",
+    "msgs": [
+        {
+            "type": "cosmos-sdk/MsgWithdrawDelegationReward",
+            "value": {
+                "delegator_address": "cosmos1kky4yzth6gdrm8ga5zlfwhav33yr7hl87jycah",
+                "validator_address": "cosmosvaloper1kn3wugetjuy4zetlq6wadchfhvu3x740ae6z6x"
+            }
+        },
+        {
+            "type": "cosmos-sdk/MsgWithdrawDelegationReward",
+            "value": {
+                "delegator_address": "cosmos1kky4yzth6gdrm8ga5zlfwhav33yr7hl87jycah",
+                "validator_address": "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0"
+            }
+        }
+    ],
+    "sequence": "106"
+};
 
 describe('Basic checks', function () {
     it('can start and stop container', async function () {
         const sim = new Zemu(APP_PATH);
         try {
-            await sim.start({logging: true});
+            await sim.start(sim_options);
         } finally {
             await sim.close();
         }
     });
 
-
     it('get app version', async function () {
         const sim = new Zemu(APP_PATH);
         try {
-            await sim.start();
+            await sim.start(sim_options);
             const app = new CosmosApp(sim.getTransport());
-            const version = await app.getVersion();
+            const resp = await app.getVersion();
 
-            console.log(version)
+            console.log(resp);
+
+            expect(resp.return_code).toEqual(0x9000);
+            expect(resp.error_message).toEqual("No errors");
+            expect(resp).toHaveProperty("test_mode");
+            expect(resp).toHaveProperty("major");
+            expect(resp).toHaveProperty("minor");
+            expect(resp).toHaveProperty("patch");
         } finally {
             await sim.close();
         }
@@ -34,7 +82,7 @@ describe('Basic checks', function () {
     it('get app info', async function () {
         const sim = new Zemu(APP_PATH);
         try {
-            await sim.start();
+            await sim.start(sim_options);
             const app = new CosmosApp(sim.getTransport());
             const info = await app.appInfo();
 
@@ -44,62 +92,114 @@ describe('Basic checks', function () {
         }
     });
 
-    const tx_str = {
-        "account_number": "108",
-        "chain_id": "cosmoshub-2",
-        "fee": {
-            "amount": [
-                {
-                    "amount": "600",
-                    "denom": "uatom"
-                }
-            ],
-            "gas": "200000"
-        },
-        "memo": "",
-        "msgs": [
-            {
-                "type": "cosmos-sdk/MsgWithdrawDelegationReward",
-                "value": {
-                    "delegator_address": "cosmos1kky4yzth6gdrm8ga5zlfwhav33yr7hl87jycah",
-                    "validator_address": "cosmosvaloper1kn3wugetjuy4zetlq6wadchfhvu3x740ae6z6x"
-                }
-            },
-            {
-                "type": "cosmos-sdk/MsgWithdrawDelegationReward",
-                "value": {
-                    "delegator_address": "cosmos1kky4yzth6gdrm8ga5zlfwhav33yr7hl87jycah",
-                    "validator_address": "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0"
-                }
-            },
-            {
-                "type": "cosmos-sdk/MsgWithdrawDelegationReward",
-                "value": {
-                    "delegator_address": "cosmos1kky4yzth6gdrm8ga5zlfwhav33yr7hl87jycah",
-                    "validator_address": "cosmosvaloper1ey69r37gfxvxg62sh4r0ktpuc46pzjrm873ae8"
-                }
-            },
-            {
-                "type": "cosmos-sdk/MsgWithdrawDelegationReward",
-                "value": {
-                    "delegator_address": "cosmos1kky4yzth6gdrm8ga5zlfwhav33yr7hl87jycah",
-                    "validator_address": "cosmosvaloper1648ynlpdw7fqa2axt0w2yp3fk542junl7rsvq6"
-                }
-            }
-        ],
-        "sequence": "106"
-    };
-
-    it('sign tx', async function () {
-        jest.setTimeout(60000);
+    it('get device info', async function () {
         const sim = new Zemu(APP_PATH);
-
         try {
-            await sim.start({ logging: true, X11: true });
+            await sim.start(sim_options);
+            const app = new CosmosApp(sim.getTransport());
+            const resp = await app.deviceInfo();
+
+            console.log(resp);
+
+            expect(resp.return_code).toEqual(0x9000);
+            expect(resp.error_message).toEqual("No errors");
+
+            expect(resp).toHaveProperty("targetId");
+            expect(resp).toHaveProperty("seVersion");
+            expect(resp).toHaveProperty("flag");
+            expect(resp).toHaveProperty("mcuVersion");
+        } finally {
+            await sim.close();
+        }
+    });
+
+    it('get address', async function () {
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
+            const app = new CosmosApp(sim.getTransport());
+            // Derivation path. First 3 items are automatically hardened!
+            const path = [44, 118, 5, 0, 3];
+            const resp = await app.getAddressAndPubKey(path, "cosmos");
+
+            console.log(resp);
+
+            expect(resp.return_code).toEqual(0x9000);
+            expect(resp.error_message).toEqual("No errors");
+
+            expect(resp).toHaveProperty("bech32_address");
+            expect(resp).toHaveProperty("compressed_pk");
+
+            expect(resp.bech32_address).toEqual("cosmos1wkd9tfm5pqvhhaxq77wv9tvjcsazuaykwsld65");
+            expect(resp.compressed_pk.length).toEqual(33);
+        } finally {
+            await sim.close();
+        }
+    });
+
+    function compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount) {
+        for (let i = 0; i < snapshotCount; i++) {
+            const img1 = Zemu.LoadPng2RGB(`${snapshotPrefixTmp}${i}.png`);
+            const img2 = Zemu.LoadPng2RGB(`${snapshotPrefixGolden}${i}.png`);
+            expect(img1).toEqual(img2);
+        }
+    }
+
+    it('show address', async function () {
+        const snapshotPrefixGolden = "snapshots/show-address/";
+        const snapshotPrefixTmp = "snapshots-tmp/show-address/";
+        let snapshotCount = 0;
+
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
+            const app = new CosmosApp(sim.getTransport());
+
+            // Derivation path. First 3 items are automatically hardened!
+            const path = [44, 118, 5, 0, 3];
+            const respRequest = app.showAddressAndPubKey(path, "cosmos");
+
+            // We need to wait until the app responds to the APDU
+            await Zemu.sleep(2000);
+
+            // Now navigate the address / path
+            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickBoth(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+
+            const resp = await respRequest;
+            console.log(resp);
+
+            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
+
+            expect(resp.return_code).toEqual(0x9000);
+            expect(resp.error_message).toEqual("No errors");
+
+            expect(resp).toHaveProperty("bech32_address");
+            expect(resp).toHaveProperty("compressed_pk");
+
+            expect(resp.bech32_address).toEqual("cosmos1wkd9tfm5pqvhhaxq77wv9tvjcsazuaykwsld65");
+            expect(resp.compressed_pk.length).toEqual(33);
+        } finally {
+            await sim.close();
+        }
+    });
+
+    it('sign basic', async function () {
+        const snapshotPrefixGolden = "snapshots/sign-basic/";
+        const snapshotPrefixTmp = "snapshots-tmp/sign-basic/";
+        let snapshotCount = 0;
+
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
             const app = new CosmosApp(sim.getTransport());
 
             const path = [44, 118, 0, 0, 0];
-            let tx = JSON.stringify(tx_str);
+            let tx = JSON.stringify(example_tx_str);
 
             // do not wait here..
             const signatureRequest = app.sign(path, tx);
@@ -107,16 +207,35 @@ describe('Basic checks', function () {
             await Zemu.sleep(2000);
 
             // Reference window
-            await sim.snapshot(Resolve("snapshots/0.png"));
-
-            for (let i = 1; i < 20; i++) {
-                await sim.clickRight(Resolve(`snapshots/${i}.png`));
+            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            for (let i = 0; i < 15; i++) {
+                await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
             }
+            await sim.clickBoth();
 
-            await sim.close();
+            let resp = await signatureRequest;
+            console.log(resp);
 
-            let signature = await signatureRequest;
-            console.log(signature);
+            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
+
+            expect(resp.return_code).toEqual(0x9000);
+            expect(resp.error_message).toEqual("No errors");
+
+            // Now verify the signature
+            const respPk = await app.getAddressAndPubKey(path, "cosmos");
+            expect(respPk.return_code).toEqual(0x9000);
+            expect(respPk.error_message).toEqual("No errors");
+
+            const hash = crypto.createHash("sha256");
+            const msgHash = Uint8Array.from(hash.update(tx).digest());
+
+            const signatureDER = resp.signature;
+            const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER));
+
+            const pk = Uint8Array.from(respPk.compressed_pk)
+
+            const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk);
+            expect(signatureOk).toEqual(true);
 
         } finally {
             await sim.close();

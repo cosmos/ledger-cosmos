@@ -31,6 +31,8 @@ extern void explicit_bzero(void *__s, size_t __n) __THROW __nonnull ((1));
 #endif
 #define __Z_INLINE inline __attribute__((always_inline)) static
 
+void handle_stack_overflow();
+
 #if defined(LEDGER_SPECIFIC)
 #include "bolos_target.h"
 #endif
@@ -61,6 +63,10 @@ extern void explicit_bzero(void *__s, size_t __n) __THROW __nonnull ((1));
 #include "os_io_seproxyhal.h"
 #endif
 
+#define CHECK_APP_CANARY() { if (app_stack_canary != APP_STACK_CANARY_MAGIC) handle_stack_overflow(); }
+#define APP_STACK_CANARY_MAGIC 0xDEAD0031
+extern unsigned int app_stack_canary;
+
 #define WAIT_EVENT() io_seproxyhal_spi_recv(G_io_seproxyhal_spi_buffer, sizeof(G_io_seproxyhal_spi_buffer), 0)
 
 #define UX_WAIT()  \
@@ -83,6 +89,8 @@ extern void explicit_bzero(void *__s, size_t __n) __THROW __nonnull ((1));
 #define MEMZERO explicit_bzero
 
 #else
+
+#define CHECK_APP_CANARY() {}
 
 #define MEMMOVE memmove
 #define MEMSET memset
@@ -109,11 +117,6 @@ __Z_INLINE void __memzero(void *buffer, size_t s) { memset(buffer, 0, s); }
     TYPE nvset_tmp=(VAL); \
     MEMCPY_NV((void*) PIC(DST), (void *) PIC(&nvset_tmp), sizeof(TYPE)); \
 }
-
-#define APP_STACK_CANARY_MAGIC 0xDEAD0031
-extern unsigned int app_stack_canary;
-void handle_stack_overflow();
-#define CHECK_APP_CANARY() { if (app_stack_canary != APP_STACK_CANARY_MAGIC) handle_stack_overflow(); }
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define __SWAP(v) (((v) & 0x000000FFu) << 24u | ((v) & 0x0000FF00u) << 8u | ((v) & 0x00FF0000u) >> 8u | ((v) & 0xFF000000u) >> 24u)

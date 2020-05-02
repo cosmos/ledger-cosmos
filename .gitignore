@@ -86,3 +86,4 @@ cmake-build-fuzz/
 app/src/glyphs.c
 
 app/src/glyphs.h
+/build
