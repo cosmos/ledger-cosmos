@@ -188,6 +188,51 @@ describe('Basic checks', function () {
         }
     });
 
+    it('show address - HUGE', async function () {
+        const snapshotPrefixGolden = "snapshots/show-address-huge/";
+        const snapshotPrefixTmp = "snapshots-tmp/show-address-huge/";
+        let snapshotCount = 0;
+
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
+            const app = new CosmosApp(sim.getTransport());
+
+            // Derivation path. First 3 items are automatically hardened!
+            const path = [44, 118, 2147483647, 0, 4294967295];
+            const respRequest = app.showAddressAndPubKey(path, "cosmos");
+
+            // We need to wait until the app responds to the APDU
+            await Zemu.sleep(2000);
+
+            // Now navigate the address / path
+            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickBoth(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+
+            const resp = await respRequest;
+            console.log(resp);
+
+            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
+
+            expect(resp.return_code).toEqual(0x9000);
+            expect(resp.error_message).toEqual("No errors");
+
+            expect(resp).toHaveProperty("bech32_address");
+            expect(resp).toHaveProperty("compressed_pk");
+
+            expect(resp.bech32_address).toEqual("cosmos1ex7gkwwmq4vcgdwcalaq3t20pgwr37u6ntkqzh");
+            expect(resp.compressed_pk.length).toEqual(33);
+        } finally {
+            await sim.close();
+        }
+    });
+
     it('sign basic', async function () {
         const snapshotPrefixGolden = "snapshots/sign-basic/";
         const snapshotPrefixTmp = "snapshots-tmp/sign-basic/";

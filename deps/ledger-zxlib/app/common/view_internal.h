@@ -105,6 +105,12 @@ void h_paging_increase();
 
 void h_paging_decrease();
 
+void h_paging_set_page_count(uint8_t pageCount);
+
 view_error_t h_review_update_data();
 
 view_error_t h_addr_update_item(uint8_t idx);
+
+view_error_t view_printAddr();
+
+view_error_t view_printPath();
