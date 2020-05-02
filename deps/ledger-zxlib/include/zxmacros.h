@@ -38,12 +38,9 @@ extern void explicit_bzero(void *__s, size_t __n) __THROW __nonnull ((1));
 #if defined(TARGET_NANOX)
 #define NV_CONST const
 #define NV_VOL volatile
-#define SAFE_HEARTBEAT(X)  X;
 #else
 #define NV_CONST
 #define NV_VOL
-// Disabling heartbeat (this was a Nano S workaround for U2F)
-#define SAFE_HEARTBEAT(X)  X; /*io_seproxyhal_io_heartbeat(); X; io_seproxyhal_io_heartbeat();*/
 #endif
 
 #ifndef PIC
@@ -85,15 +82,6 @@ extern void explicit_bzero(void *__s, size_t __n) __THROW __nonnull ((1));
 #define MEMCPY_NV nvm_write
 #define MEMZERO explicit_bzero
 
-void debug_printf(void* buffer);
-
-#undef LOG
-#undef LOGSTACK
-#define LOG(str) debug_printf(str)
-extern unsigned int app_stack_canary;
-void __logstack();
-#define LOGSTACK() __logstack()
-
 #else
 
 #define MEMMOVE memmove
@@ -111,9 +99,6 @@ void __logstack();
 __Z_INLINE void __memzero(void *buffer, size_t s) { memset(buffer, 0, s); }
 #define MEMZERO __memzero
 #endif
-
-#define LOG(str)
-#define LOGSTACK()
 #endif
 
 #include <inttypes.h>
@@ -124,6 +109,11 @@ __Z_INLINE void __memzero(void *buffer, size_t s) { memset(buffer, 0, s); }
     TYPE nvset_tmp=(VAL); \
     MEMCPY_NV((void*) PIC(DST), (void *) PIC(&nvset_tmp), sizeof(TYPE)); \
 }
+
+#define APP_STACK_CANARY_MAGIC 0xDEAD0031
+extern unsigned int app_stack_canary;
+void handle_stack_overflow();
+#define CHECK_APP_CANARY() { if (app_stack_canary != APP_STACK_CANARY_MAGIC) handle_stack_overflow(); }
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define __SWAP(v) (((v) & 0x000000FFu) << 24u | ((v) & 0x0000FF00u) << 8u | ((v) & 0x00FF0000u) >> 8u | ((v) & 0xFF000000u) >> 24u)

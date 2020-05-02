@@ -42,15 +42,15 @@ void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *p
     {
         TRY {
             // Generate keys
-            SAFE_HEARTBEAT(os_perso_derive_node_bip32(CX_CURVE_256K1,
+            os_perso_derive_node_bip32(CX_CURVE_256K1,
                                                       path,
                                                       HDPATH_LEN_DEFAULT,
                                                       privateKeyData,
-                                                      NULL));
+                                                      NULL);
 
-            SAFE_HEARTBEAT(cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey));
-            SAFE_HEARTBEAT(cx_ecfp_init_public_key(CX_CURVE_256K1, NULL, 0, &cx_publicKey));
-            SAFE_HEARTBEAT(cx_ecfp_generate_pair(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1));
+            cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey);
+            cx_ecfp_init_public_key(CX_CURVE_256K1, NULL, 0, &cx_publicKey);
+            cx_ecfp_generate_pair(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1);
         }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
@@ -78,7 +78,7 @@ uint16_t crypto_sign(uint8_t *signature,
     uint8_t messageDigest[CX_SHA256_SIZE];
 
     // Hash it
-    SAFE_HEARTBEAT(cx_hash_sha256(message, messageLen, messageDigest, CX_SHA256_SIZE));
+    cx_hash_sha256(message, messageLen, messageDigest, CX_SHA256_SIZE);
 
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
@@ -90,23 +90,22 @@ uint16_t crypto_sign(uint8_t *signature,
         TRY
         {
             // Generate keys
-            SAFE_HEARTBEAT(os_perso_derive_node_bip32(CX_CURVE_256K1,
+            os_perso_derive_node_bip32(CX_CURVE_256K1,
                                                       hdPath,
                                                       HDPATH_LEN_DEFAULT,
-                                                      privateKeyData, NULL));
+                                                      privateKeyData, NULL);
 
-            SAFE_HEARTBEAT(cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey));
+            cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey);
 
             // Sign
-            SAFE_HEARTBEAT(
-                signatureLength = cx_ecdsa_sign(&cx_privateKey,
-                                                CX_RND_RFC6979 | CX_LAST,
-                                                CX_SHA256,
-                                                messageDigest,
-                                                CX_SHA256_SIZE,
-                                                signature,
-                                                signatureMaxlen,
-                                                &info));
+            signatureLength = cx_ecdsa_sign(&cx_privateKey,
+                                            CX_RND_RFC6979 | CX_LAST,
+                                            CX_SHA256,
+                                            messageDigest,
+                                            CX_SHA256_SIZE,
+                                            signature,
+                                            signatureMaxlen,
+                                            &info);
         }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));

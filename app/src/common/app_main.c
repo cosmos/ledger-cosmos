@@ -292,13 +292,16 @@ void app_main() {
                 tx = 0;
                 rx = io_exchange(CHANNEL_APDU | flags, rx);
                 flags = 0;
+                CHECK_APP_CANARY()
 
                 if (rx == 0)
                     THROW(APDU_CODE_EMPTY_BUFFER);
 
                 handle_generic_apdu(&flags, &tx, rx);
+                CHECK_APP_CANARY()
 
                 handleApdu(&flags, &tx, rx);
+                CHECK_APP_CANARY()
             }
             CATCH_OTHER(e);
             {

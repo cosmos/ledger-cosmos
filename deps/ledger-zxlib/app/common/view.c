@@ -99,7 +99,8 @@ void h_paging_decrease() {
         if (viewdata.itemIdx > 0) {
             viewdata.itemIdx--;
             // jump to last page. update will cap this value
-            viewdata.pageIdx = 255;
+            viewdata.pageIdx = 0;
+//            viewdata.pageIdx = 255;
         }
     }
 }
@@ -119,6 +120,15 @@ view_error_t h_review_update_data() {
                          viewdata.key, MAX_CHARS_PER_KEY_LINE,
                          viewdata.value, MAX_CHARS_PER_VALUE1_LINE,
                          viewdata.pageIdx, &viewdata.pageCount);
+
+//        if (err == tx_no_data && viewdata.pageIdx > viewdata.pageCount) {
+//            // Retry capping
+//            viewdata.pageIdx = viewdata.pageCount;
+//            err = tx_getItem(viewdata.itemIdx,
+//                             viewdata.key, MAX_CHARS_PER_KEY_LINE,
+//                             viewdata.value, MAX_CHARS_PER_VALUE1_LINE,
+//                             viewdata.pageIdx, &viewdata.pageCount);
+//        }
 
         if (err == tx_no_data) {
             return view_no_data;

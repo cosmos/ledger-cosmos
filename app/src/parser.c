@@ -138,15 +138,15 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
     const int16_t denomLen = parser_tx_obj.json.tokens[amountToken + 4].end -
                              parser_tx_obj.json.tokens[amountToken + 4].start;
 
-    if (sizeof(bufferUI) < amountLen + denomLen + 2) {
+    if (amountLen <= 0) {
         return parser_unexpected_buffer_end;
     }
 
-    if (amountLen == 0) {
+    if (denomLen <= 0) {
         return parser_unexpected_buffer_end;
     }
 
-    if (denomLen == 0) {
+    if (sizeof(bufferUI) < (size_t) (amountLen + denomLen + 2) ) {
         return parser_unexpected_buffer_end;
     }
 
@@ -171,6 +171,8 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
 
     uint16_t numItems;
     CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
+    CHECK_APP_CANARY()
+
     if (numItems == 0) {
         return parser_unexpected_number_items;
     }
@@ -181,6 +183,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
 
     uint16_t ret_value_token_index = 0;
     CHECK_PARSER_ERR(tx_display_query(displayIdx, outKey, outKeyLen, &ret_value_token_index));
+    CHECK_APP_CANARY()
 
     if (parser_isAmount(outKey)) {
         CHECK_PARSER_ERR(parser_formatAmount(
@@ -193,8 +196,10 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
                 outVal, outValLen,
                 pageIdx, pageCount))
     }
+    CHECK_APP_CANARY()
 
     CHECK_PARSER_ERR(tx_display_make_friendly())
+    CHECK_APP_CANARY()
 
     if (*pageCount > 1) {
         size_t keyLen = strlen(outKey);
@@ -203,5 +208,6 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
         }
     }
 
+    CHECK_APP_CANARY()
     return parser_ok;
 }
