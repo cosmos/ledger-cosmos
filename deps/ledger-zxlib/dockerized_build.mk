@@ -17,6 +17,7 @@
 .PHONY: all deps build clean load delete check_python show_info_recovery_mode
 
 TESTS_ZEMU_DIR ?= $(CURDIR)/tests_zemu
+TESTS_ZEMU_JS_PACKAGE ?=
 
 LEDGER_SRC=$(CURDIR)/app
 DOCKER_APP_SRC=/project
