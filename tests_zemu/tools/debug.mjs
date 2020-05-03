@@ -79,7 +79,7 @@ async function debugScenario(sim, app) {
     console.log(resp);
 }
 
-async function main() {m
+async function main() {
     await beforeStart();
 
     if (process.argv.length > 2 && process.argv[2] === "debug") {
