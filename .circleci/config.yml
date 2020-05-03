@@ -89,12 +89,12 @@ workflows:
       - build
       - build_ledger
       - test_zemu
-      - build_package:
-          requires:
-            - build
-            - build_ledger
-            - test_zemu
-          filters:
-            branches:
-              only:
-                - master
+#      - build_package:
+#          requires:
+#            - build
+#            - build_ledger
+#            - test_zemu
+#          filters:
+#            branches:
+#              only:
+#                - master
