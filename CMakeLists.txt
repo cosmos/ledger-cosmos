@@ -51,6 +51,7 @@ target_include_directories(app_lib PUBLIC
         deps/ledger-zxlib/include
         deps/jsmn/src
         app/src
+        app/src/common
         )
 
 ##############################################################

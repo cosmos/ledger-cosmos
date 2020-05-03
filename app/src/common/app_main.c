@@ -24,7 +24,7 @@
 #include "view.h"
 #include "actions.h"
 #include "tx.h"
-#include "../crypto.h"
+#include "crypto.h"
 #include "coin.h"
 #include "zxmacros.h"
 

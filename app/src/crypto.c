@@ -34,7 +34,7 @@ void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *p
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
 
-    if (pubKeyLen < PK_LEN) {
+    if (pubKeyLen < PK_LEN_SECP256K1) {
         return;
     }
 
@@ -68,7 +68,7 @@ void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *p
         pubKey[31] |= 0x80;
     }
     //////////////////////
-    MEMCPY(pubKey, cx_publicKey.W, PK_LEN);
+    MEMCPY(pubKey, cx_publicKey.W, PK_LEN_SECP256K1);
 }
 
 uint16_t crypto_sign(uint8_t *signature,
@@ -170,7 +170,7 @@ void crypto_set_hrp(char *p) {
 }
 
 uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
-    if (buffer_len < PK_LEN + 50) {
+    if (buffer_len < PK_LEN_SECP256K1 + 50) {
         return 0;
     }
 
@@ -179,13 +179,13 @@ uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
 
     // Hash it
     uint8_t hashed1_pk[CX_SHA256_SIZE];
-    cx_hash_sha256(buffer, PK_LEN, hashed1_pk, CX_SHA256_SIZE);
+    cx_hash_sha256(buffer, PK_LEN_SECP256K1, hashed1_pk, CX_SHA256_SIZE);
 
     uint8_t hashed2_pk[CX_RIPEMD160_SIZE];
     ripemd160_32(hashed2_pk, hashed1_pk);
 
-    char *addr = (char *) (buffer + PK_LEN);
-    bech32EncodeFromBytes(addr, buffer_len - PK_LEN, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE);
+    char *addr = (char *) (buffer + PK_LEN_SECP256K1);
+    bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE);
 
-    return PK_LEN + strlen(addr);
+    return PK_LEN_SECP256K1 + strlen(addr);
 }
