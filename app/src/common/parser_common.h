@@ -24,6 +24,7 @@ extern "C" {
 
 #define CHECK_PARSER_ERR(__CALL) { \
     parser_error_t __err = __CALL;  \
+    CHECK_APP_CANARY()  \
     if (__err!=parser_ok) return __err;}
 
 typedef enum {

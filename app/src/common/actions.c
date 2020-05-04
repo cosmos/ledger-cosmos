@@ -16,13 +16,15 @@
 ********************************************************************************/
 
 #include "actions.h"
-#include "../crypto.h"
+#include "crypto.h"
 #include "tx.h"
 #include "apdu_codes.h"
 #include <os_io_seproxyhal.h>
+#include "coin.h"
 
 uint8_t app_sign() {
     uint8_t *signature = G_io_apdu_buffer;
+
     const uint8_t *message = tx_get_buffer();
     const uint16_t messageLength = tx_get_buffer_length();
 

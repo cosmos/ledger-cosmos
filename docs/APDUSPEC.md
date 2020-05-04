@@ -63,49 +63,6 @@ The general structure of commands and responses is as follows:
 
 --------------
 
-### SIGN_SECP256K1
-
-#### Command
-
-| Field | Type     | Content                | Expected  |
-| ----- | -------- | ---------------------- | --------- |
-| CLA   | byte (1) | Application Identifier | 0x55      |
-| INS   | byte (1) | Instruction ID         | 0x02      |
-| P1    | byte (1) | Payload desc           | 0 = init  |
-|       |          |                        | 1 = add   |
-|       |          |                        | 2 = last  |
-| P2    | byte (1) | ----                   | not used  |
-| L     | byte (1) | Bytes in payload       | (depends) |
-
-The first packet/chunk includes only the derivation path
-
-All other packets/chunks should contain message to sign 
-
-*First Packet*
-
-| Field      | Type     | Content                | Expected  |
-| ---------- | -------- | ---------------------- | --------- |
-| Path[0]    | byte (4) | Derivation Path Data   | 44        |
-| Path[1]    | byte (4) | Derivation Path Data   | 118       |
-| Path[2]    | byte (4) | Derivation Path Data   | ?         |
-| Path[3]    | byte (4) | Derivation Path Data   | ?         |
-| Path[4]    | byte (4) | Derivation Path Data   | ?         |
-
-*Other Chunks/Packets*
-
-| Field   | Type     | Content         | Expected |
-| ------- | -------- | --------------- | -------- |
-| Message | bytes... | Message to Sign |          |
-
-#### Response
-
-| Field   | Type      | Content     | Note                     |
-| ------- | --------- | ----------- | ------------------------ |
-| SIG     | byte (64) | Signature   |                          |
-| SW1-SW2 | byte (2)  | Return code | see list of return codes |
-
---------------
-
 ### INS_GET_ADDR_SECP256K1
 
 #### Command
@@ -135,3 +92,46 @@ First three items in the derivation path will be hardened automatically hardened
 | PK      | byte (33) | Compressed Public Key |                          |
 | ADDR    | byte (65) | Bech 32 addr          |                          |
 | SW1-SW2 | byte (2)  | Return code           | see list of return codes |
+
+### SIGN_SECP256K1
+
+#### Command
+
+| Field | Type     | Content                | Expected  |
+| ----- | -------- | ---------------------- | --------- |
+| CLA   | byte (1) | Application Identifier | 0x55      |
+| INS   | byte (1) | Instruction ID         | 0x02      |
+| P1    | byte (1) | Payload desc           | 0 = init  |
+|       |          |                        | 1 = add   |
+|       |          |                        | 2 = last  |
+| P2    | byte (1) | ----                   | not used  |
+| L     | byte (1) | Bytes in payload       | (depends) |
+
+The first packet/chunk includes only the derivation path
+
+All other packets/chunks should contain message to sign
+
+*First Packet*
+
+| Field      | Type     | Content                | Expected  |
+| ---------- | -------- | ---------------------- | --------- |
+| Path[0]    | byte (4) | Derivation Path Data   | 44        |
+| Path[1]    | byte (4) | Derivation Path Data   | 118       |
+| Path[2]    | byte (4) | Derivation Path Data   | ?         |
+| Path[3]    | byte (4) | Derivation Path Data   | ?         |
+| Path[4]    | byte (4) | Derivation Path Data   | ?         |
+
+*Other Chunks/Packets*
+
+| Field   | Type     | Content         | Expected |
+| ------- | -------- | --------------- | -------- |
+| Message | bytes... | Message to Sign |          |
+
+#### Response
+
+| Field   | Type      | Content     | Note                     |
+| ------- | --------- | ----------- | ------------------------ |
+| SIG     | byte (64) | Signature   |                          |
+| SW1-SW2 | byte (2)  | Return code | see list of return codes |
+
+--------------

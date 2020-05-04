@@ -133,23 +133,35 @@ parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_to
     const jsmntype_t token_type = parser_tx_obj.json.tokens[root_token_index].type;
 
     if (parser_tx_obj.tx == NULL || root_token_index < 0) {
+        CHECK_APP_CANARY()
         return parser_no_data;
     }
+
+    CHECK_APP_CANARY()
 
     if (parser_tx_obj.query.max_level <= 0 || parser_tx_obj.query.max_depth <= 0 ||
         token_type == JSMN_STRING ||
         token_type == JSMN_PRIMITIVE) {
 
+        CHECK_APP_CANARY()
+
         const bool groupedField = strcmp("msgs/type", parser_tx_obj.query.out_key) == 0;
+        CHECK_APP_CANARY()
+
         const bool isMainIndex = parser_tx_obj.filter_msg_type_valid_idx != parser_tx_obj.query._item_index_current;
+        CHECK_APP_CANARY()
+
         const bool skipItem = parser_tx_obj.flags.cache_valid == 1u &&
                               parser_tx_obj.flags.msg_type_grouping == 1u &&
                               groupedField &&
                               isMainIndex;
 
+        CHECK_APP_CANARY()
+
         // Early bail out
         if (!skipItem && parser_tx_obj.query._item_index_current == parser_tx_obj.query.item_index) {
             *ret_value_token_index = root_token_index;
+            CHECK_APP_CANARY()
             return parser_ok;
         }
 
@@ -158,6 +170,7 @@ parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_to
         }
 
         parser_tx_obj.query._item_index_current++;
+        CHECK_APP_CANARY()
         return parser_query_no_results;
     }
 
@@ -181,11 +194,14 @@ parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_to
                 parser_tx_obj.query.max_level--;
                 parser_tx_obj.query.max_depth--;
                 // Traverse the value, extracting subkeys
+                CHECK_APP_CANARY()
                 err = tx_traverse_find(value_index, ret_value_token_index);
+                CHECK_APP_CANARY()
                 parser_tx_obj.query.max_level++;
                 parser_tx_obj.query.max_depth++;
 
                 if (err == parser_ok) {
+                    CHECK_APP_CANARY()
                     return parser_ok;
                 }
 
@@ -207,6 +223,7 @@ parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_to
                 parser_tx_obj.query.max_depth++;
 
                 if (err == parser_ok) {
+                    CHECK_APP_CANARY()
                     return parser_ok;
                 }
             }

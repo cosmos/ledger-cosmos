@@ -22,21 +22,27 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#define HDPATH_0_DEFAULT     (0x80000000 | 0x2c)
-#define HDPATH_1_DEFAULT     (0x80000000 | 0x76)
-#define HDPATH_2_DEFAULT     (0x80000000 | 0)
-#define HDPATH_3_DEFAULT     (0)
-#define HDPATH_4_DEFAULT     (0)
+#define HDPATH_LEN_DEFAULT   5
+
+#define HDPATH_0_DEFAULT     (0x80000000u | 0x2cu)
+#define HDPATH_1_DEFAULT     (0x80000000u | 0x76u)
+#define HDPATH_2_DEFAULT     (0x80000000u | 0u)
+#define HDPATH_3_DEFAULT     (0u)
+#define HDPATH_4_DEFAULT     (0u)
+
+#define PK_LEN_SECP256K1     33u
+
+typedef enum {
+    addr_secp256k1 = 0,
+} address_kind_e;
+
+#define VIEW_ADDRESS_OFFSET_SECP256K1       PK_LEN_SECP256K1
+#define VIEW_ADDRESS_ITEM_COUNT             2
+#define VIEW_ADDRESS_LAST_PAGE_DEFAULT      0
 
 #define MENU_MAIN_APP_LINE1 "Cosmos"
-
-#ifdef TESTING_ENABLED
-#define MENU_MAIN_APP_LINE2 "Cosmos TEST!"
-#else
 #define MENU_MAIN_APP_LINE2 "App"
-#endif
-
-#define VIEW_ADDRESS_BUFFER_OFFSET    (PK_LEN)
+#define APPVERSION_LINE2 ""
 
 #ifdef __cplusplus
 }
