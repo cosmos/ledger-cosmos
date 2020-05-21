@@ -41,7 +41,7 @@ int8_t contains_whitespace(parsed_json_t *json) {
     const int last_element_index = json->tokens[0].end;
 
     // Starting at token 1 because token 0 contains full tx
-    for (int i = 1; i < json->numberOfTokens; i++) {
+    for (uint32_t i = 1; i < json->numberOfTokens; i++) {
         if (json->tokens[i].type != JSMN_UNDEFINED) {
             const int end = json->tokens[i].start;
             for (int j = start; j < end; j++) {
@@ -86,7 +86,7 @@ int8_t is_sorted(int16_t first_index,
 }
 
 int8_t dictionaries_sorted(parsed_json_t *json) {
-    for (int i = 0; i < json->numberOfTokens; i++) {
+    for (uint32_t i = 0; i < json->numberOfTokens; i++) {
         if (json->tokens[i].type == JSMN_OBJECT) {
 
             uint16_t count;
@@ -135,23 +135,23 @@ parser_error_t tx_validate(parsed_json_t *json) {
     if (err != parser_ok)
         return parser_json_missing_chain_id;
 
-    err = object_get_value(json,0,"sequence", &token_index);
+    err = object_get_value(json, 0, "sequence", &token_index);
     if (err != parser_ok)
         return parser_json_missing_sequence;
 
-    err = object_get_value(json,0,"fee", &token_index);
+    err = object_get_value(json, 0, "fee", &token_index);
     if (err != parser_ok)
         return parser_json_missing_fee;
 
-    err = object_get_value(json,0,"msgs", &token_index);
+    err = object_get_value(json, 0, "msgs", &token_index);
     if (err != parser_ok)
         return parser_json_missing_msgs;
 
-    err = object_get_value(json,0,"account_number", &token_index);
+    err = object_get_value(json, 0, "account_number", &token_index);
     if (err != parser_ok)
         return parser_json_missing_account_number;
 
-    err = object_get_value(json,0,"memo", &token_index);
+    err = object_get_value(json, 0, "memo", &token_index);
     if (err != parser_ok)
         return parser_json_missing_memo;
 

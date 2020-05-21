@@ -80,6 +80,7 @@ cmake-build-fuzz/
 
 \deps/*
 !\deps/nanos-secure-sdk
+\deps/nano2-sdk
 !\deps/ledger-zxlib
 !\deps/tinycbor
 !\deps/BLAKE
@@ -90,3 +91,4 @@ Pipfile
 app/src/glyphs.c
 
 app/src/glyphs.h
+/build

@@ -23,9 +23,7 @@
 extern "C" {
 #endif
 
-#define HDPATH_LEN_DEFAULT      5u
 #define MAX_BECH32_HRP_LEN      83u
-#define PK_LEN                  33u
 
 extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
 extern char *hrp;

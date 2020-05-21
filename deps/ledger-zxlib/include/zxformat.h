@@ -46,6 +46,8 @@ NUM_TO_STR(int64)
 NUM_TO_STR(uint64)
 
 __Z_INLINE void bip32_to_str(char *s, uint32_t max, const uint32_t *path, uint8_t pathLen) {
+    MEMZERO(s, max);
+
     if (pathLen == 0) {
         snprintf(s, max, "EMPTY PATH");
         return;
@@ -57,16 +59,38 @@ __Z_INLINE void bip32_to_str(char *s, uint32_t max, const uint32_t *path, uint8_
     }
 
     uint32_t offset = 0;
-    for (int i = 0; i < pathLen; i++) {
-        uint32_t written = snprintf(s + offset, max - offset, "%d%s%s",
-                                    path[i] & 0x7FFFFFFFu,
-                                    (path[i] & 0x80000000u) != 0 ? "'" : "",
-                                    i == pathLen - 1 ? "" : "/");
-        if (written >= max - offset) {
+    for (uint16_t i = 0; i < pathLen; i++) {
+        size_t written = 0;
+
+        // Warning: overcomplicated because Ledger's snprintf does not return number of written bytes
+
+        snprintf(s + offset, max - offset, "%d", path[i] & 0x7FFFFFFFu);
+        written = strlen(s + offset);
+        if (written == 0 || written >= max - offset) {
             snprintf(s, max, "ERROR");
             return;
         }
         offset += written;
+
+        if ((path[i] & 0x80000000u) != 0) {
+            snprintf(s + offset, max - offset, "'");
+            written = strlen(s + offset);
+            if (written == 0 || written >= max - offset) {
+                snprintf(s, max, "ERROR");
+                return;
+            }
+            offset += written;
+        }
+
+        if (i != pathLen - 1) {
+            snprintf(s + offset, max - offset, "/");
+            written = strlen(s + offset);
+            if (written == 0 || written >= max - offset) {
+                snprintf(s, max, "ERROR");
+                return;
+            }
+            offset += written;
+        }
     }
 }
 

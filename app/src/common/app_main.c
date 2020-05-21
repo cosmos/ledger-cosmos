@@ -24,7 +24,7 @@
 #include "view.h"
 #include "actions.h"
 #include "tx.h"
-#include "../crypto.h"
+#include "crypto.h"
 #include "coin.h"
 #include "zxmacros.h"
 
@@ -185,7 +185,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
                     if (requireConfirmation) {
                         app_fill_address();
-                        view_address_show();
+                        view_address_show(addr_secp256k1);
                         *flags |= IO_ASYNCH_REPLY;
                         break;
                     }
@@ -292,13 +292,16 @@ void app_main() {
                 tx = 0;
                 rx = io_exchange(CHANNEL_APDU | flags, rx);
                 flags = 0;
+                CHECK_APP_CANARY()
 
                 if (rx == 0)
                     THROW(APDU_CODE_EMPTY_BUFFER);
 
                 handle_generic_apdu(&flags, &tx, rx);
+                CHECK_APP_CANARY()
 
                 handleApdu(&flags, &tx, rx);
+                CHECK_APP_CANARY()
             }
             CATCH_OTHER(e);
             {
