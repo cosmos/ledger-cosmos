@@ -21,6 +21,7 @@
 #include <memory>
 #include "common/parser.h"
 #include "util/common.h"
+#include "common/app_mode.h"
 
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -45,6 +46,8 @@ void validate_testcase(const testcase_t &tc) {
 void check_testcase(const testcase_t &tc) {
     parser_context_t ctx;
     parser_error_t err;
+
+    app_mode_set_expert(tc.expert);
 
     const auto *buffer = (const uint8_t *) tc.tx.c_str();
     size_t bufferLen = tc.tx.size();

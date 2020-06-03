@@ -16,6 +16,7 @@
 ********************************************************************************/
 
 #include "app_main.h"
+#include "app_mode.h"
 
 #include <string.h>
 #include <os_io_seproxyhal.h>
@@ -140,109 +141,6 @@ bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
     THROW(APDU_CODE_INVALIDP1P2);
 }
 
-void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
-    uint16_t sw = 0;
-
-    BEGIN_TRY
-    {
-        TRY
-        {
-            if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
-                THROW(APDU_CODE_CLA_NOT_SUPPORTED);
-            }
-
-            if (rx < APDU_MIN_LENGTH) {
-                THROW(APDU_CODE_WRONG_LENGTH);
-            }
-
-            switch (G_io_apdu_buffer[OFFSET_INS]) {
-                case INS_GET_VERSION: {
-#ifdef TESTING_ENABLED
-                    G_io_apdu_buffer[0] = 0xFF;
-#else
-                    G_io_apdu_buffer[0] = 0;
-#endif
-                    G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
-                    G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
-                    G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
-                    G_io_apdu_buffer[4] = !IS_UX_ALLOWED;
-
-                    G_io_apdu_buffer[5] = (TARGET_ID >> 24) & 0xFF;
-                    G_io_apdu_buffer[6] = (TARGET_ID >> 16) & 0xFF;
-                    G_io_apdu_buffer[7] = (TARGET_ID >> 8) & 0xFF;
-                    G_io_apdu_buffer[8] = (TARGET_ID >> 0) & 0xFF;
-
-                    *tx += 9;
-                    THROW(APDU_CODE_OK);
-                    break;
-                }
-
-                case INS_GET_ADDR_SECP256K1: {
-                    uint8_t len = extractHRP(rx, OFFSET_DATA);
-                    extractHDPath(rx, OFFSET_DATA + 1 + len);
-
-                    uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
-
-                    if (requireConfirmation) {
-                        app_fill_address();
-                        view_address_show(addr_secp256k1);
-                        *flags |= IO_ASYNCH_REPLY;
-                        break;
-                    }
-
-                    *tx = app_fill_address();
-                    THROW(APDU_CODE_OK);
-                    break;
-                }
-
-                case INS_SIGN_SECP256K1: {
-                    if (!process_chunk(tx, rx))
-                        THROW(APDU_CODE_OK);
-
-                    const char *error_msg = tx_parse();
-
-                    if (error_msg != NULL) {
-                        int error_msg_length = strlen(error_msg);
-                        MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
-                        *tx += (error_msg_length);
-                        THROW(APDU_CODE_DATA_INVALID);
-                    }
-
-                    view_sign_show();
-                    *flags |= IO_ASYNCH_REPLY;
-                    break;
-                }
-
-                default:
-                    THROW(APDU_CODE_INS_NOT_SUPPORTED);
-            }
-        }
-        CATCH(EXCEPTION_IO_RESET)
-        {
-            THROW(EXCEPTION_IO_RESET);
-        }
-        CATCH_OTHER(e)
-        {
-            switch (e & 0xF000) {
-                case 0x6000:
-                case APDU_CODE_OK:
-                    sw = e;
-                    break;
-                default:
-                    sw = 0x6800 | (e & 0x7FF);
-                    break;
-            }
-            G_io_apdu_buffer[*tx] = sw >> 8;
-            G_io_apdu_buffer[*tx + 1] = sw;
-            *tx += 2;
-        }
-        FINALLY
-        {
-        }
-    }
-    END_TRY;
-}
-
 void handle_generic_apdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     if (rx > 4 && os_memcmp(G_io_apdu_buffer, "\xE0\x01\x00\x00", 4) == 0) {
         // Respond to get device info command
@@ -272,6 +170,12 @@ void app_init() {
     io_seproxyhal_init();
     USB_power(0);
     USB_power(1);
+
+    app_mode_reset();
+    if (app_mode_expert()) {
+        view_idle_show(1);
+    }
+
     view_idle_show(0);
 }
 
@@ -290,6 +194,7 @@ void app_main() {
             {
                 rx = tx;
                 tx = 0;
+
                 rx = io_exchange(CHANNEL_APDU | flags, rx);
                 flags = 0;
                 CHECK_APP_CANARY()

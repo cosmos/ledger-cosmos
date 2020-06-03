@@ -117,6 +117,7 @@ parser_error_t _readTx(parser_context_t *c, parser_tx_t *v) {
     parser_tx_obj.tx = (const char *) c->buffer;
     parser_tx_obj.flags.cache_valid = 0;
     parser_tx_obj.filter_msg_type_count = 0;
+    parser_tx_obj.filter_msg_from_count = 0;
 
     return parser_ok;
 }

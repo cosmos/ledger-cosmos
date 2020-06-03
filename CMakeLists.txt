@@ -40,6 +40,7 @@ file(GLOB_RECURSE LIB_SRC
         app/src/tx_validate.c
         app/src/parser.c
         app/src/parser_impl.c
+        app/src/common/app_mode.c
         )
 
 add_library(app_lib STATIC
@@ -89,17 +90,3 @@ target_include_directories(fuzzing_stub PUBLIC
         deps/jsmn/src
         )
 target_link_libraries(fuzzing_stub app_lib)
-
-###############################################################
-# Force tests to depend from app compiling
-###############################################################
-
-#set(DISABLE_DOCKER_BUILDS OFF CACHE BOOL "Disables Docker Builds")
-#
-#if (NOT DISABLE_DOCKER_BUILDS)
-#    add_custom_target(ledger_app
-#            COMMAND make build
-#            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#            )
-#    add_dependencies(unittests ledger_app)
-#endif ()

@@ -16,13 +16,40 @@
 #pragma once
 
 #include <stdint.h>
+#include "crypto.h"
+#include "tx.h"
+#include "apdu_codes.h"
+#include <os_io_seproxyhal.h>
+#include "coin.h"
 
-uint8_t app_sign();
+void app_sign();
 
 void app_set_hrp(char *p);
 
-uint8_t app_fill_address();
+extern uint8_t action_addr_len;
 
-void app_reply_address();
+__Z_INLINE uint8_t app_fill_address(address_kind_e kind) {
+    // Put data directly in the apdu buffer
+    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
 
-void app_reply_error();
+    switch (kind) {
+        case addr_secp256k1:
+            action_addr_len = crypto_fillAddress(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 2);
+            break;
+        default:
+            action_addr_len = 0;
+            break;
+    }
+
+    return action_addr_len;
+}
+
+__Z_INLINE void app_reply_address(address_kind_e kind) {
+    set_code(G_io_apdu_buffer, action_addr_len, APDU_CODE_OK);
+    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, action_addr_len + 2);
+}
+
+__Z_INLINE void app_reply_error() {
+    set_code(G_io_apdu_buffer, 0, APDU_CODE_DATA_INVALID);
+    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
+}

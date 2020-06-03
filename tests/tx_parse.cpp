@@ -131,7 +131,7 @@ namespace {
         parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
         EXPECT_EQ(err, parser_ok);
 
-        uint16_t numItems;
+        uint8_t numItems;
         tx_display_numItems(&numItems);
 
         EXPECT_EQ(1, numItems) << "Wrong number of items";
@@ -145,7 +145,7 @@ namespace {
         parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
         EXPECT_EQ(err, parser_ok);
 
-        uint16_t numItems;
+        uint8_t numItems;
         tx_display_numItems(&numItems);
         EXPECT_EQ(10, numItems) << "Wrong number of items";
     }
@@ -159,7 +159,7 @@ namespace {
         parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
         EXPECT_EQ(err, parser_ok);
 
-        uint16_t numItems;
+        uint8_t numItems;
         tx_display_numItems(&numItems);
         EXPECT_EQ(22, numItems) << "Wrong number of items";
     }

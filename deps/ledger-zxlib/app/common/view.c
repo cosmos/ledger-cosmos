@@ -49,19 +49,9 @@ void h_error_accept(unsigned int _) {
 
 void h_sign_accept(unsigned int _) {
     UNUSED(_);
-
-    const uint8_t replyLen = app_sign();
-
+    app_sign();
     view_idle_show(0);
     UX_WAIT();
-
-    if (replyLen > 0) {
-        set_code(G_io_apdu_buffer, replyLen, APDU_CODE_OK);
-        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, replyLen + 2);
-    } else {
-        set_code(G_io_apdu_buffer, 0, APDU_CODE_SIGN_VERIFY_ERROR);
-        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
-    }
 }
 
 void h_sign_reject(unsigned int _) {
@@ -115,6 +105,17 @@ view_error_t h_review_update_data() {
     tx_error_t err = tx_no_error;
 
     do {
+        err = tx_getNumItems(&viewdata.itemCount);
+        viewdata.itemCount++;
+
+        if (err == tx_no_data) {
+            return view_no_data;
+        }
+
+        if (err != tx_no_error) {
+            return view_error_detected;
+        }
+
         err = tx_getItem(viewdata.itemIdx,
                          viewdata.key, MAX_CHARS_PER_KEY_LINE,
                          viewdata.value, MAX_CHARS_PER_VALUE1_LINE,
@@ -124,14 +125,14 @@ view_error_t h_review_update_data() {
             return view_no_data;
         }
 
+        if (err != tx_no_error) {
+            return view_error_detected;
+        }
+
         if (viewdata.pageCount == 0) {
             h_paging_increase();
         }
     } while (viewdata.pageCount == 0);
-
-    if (err != tx_no_error) {
-        return view_error_detected;
-    }
 
     splitValueField();
     return view_no_error;
@@ -156,8 +157,8 @@ void view_init(void) {
     UX_INIT();
 }
 
-void view_idle_show(unsigned int ignored) {
-    view_idle_show_impl();
+void view_idle_show(uint8_t item_idx) {
+    view_idle_show_impl(item_idx);
 }
 
 void view_address_show(address_kind_e addressKind) {

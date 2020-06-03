@@ -57,12 +57,18 @@ typedef struct {
     struct {
         unsigned int cache_valid:1;
         unsigned int msg_type_grouping:1;
+        unsigned int msg_from_grouping:1;
+        unsigned int msg_from_grouping_hide_all:1;
     } flags;
 
     // indicates that N identical msg_type fields have been detected
-
     uint8_t filter_msg_type_count;
     int32_t filter_msg_type_valid_idx;
+
+    // indicates that N identical msg_from fields have been detected
+    uint8_t filter_msg_from_count;
+    int32_t filter_msg_from_valid_idx;
+    const char *own_addr;
 
     // current tx query
     tx_query_t query;

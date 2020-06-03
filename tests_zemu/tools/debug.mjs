@@ -14,7 +14,7 @@ const SIM_OPTIONS = {
 
 const example_tx_str = {
     "account_number": "108",
-    "chain_id": "cosmoshub-2",
+    "chain_id": "cosmoshub-3",
     "fee": {
         "amount": [
             {
@@ -29,14 +29,14 @@ const example_tx_str = {
         {
             "type": "cosmos-sdk/MsgWithdrawDelegationReward",
             "value": {
-                "delegator_address": "cosmos1kky4yzth6gdrm8ga5zlfwhav33yr7hl87jycah",
+                "delegator_address": "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",
                 "validator_address": "cosmosvaloper1kn3wugetjuy4zetlq6wadchfhvu3x740ae6z6x"
             }
         },
         {
             "type": "cosmos-sdk/MsgWithdrawDelegationReward",
             "value": {
-                "delegator_address": "cosmos1kky4yzth6gdrm8ga5zlfwhav33yr7hl87jycah",
+                "delegator_address": "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",
                 "validator_address": "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0"
             }
         }
@@ -61,19 +61,26 @@ async function debugScenario(sim, app) {
     const path = [44, 118, 0, 0, 0];
     let tx = JSON.stringify(example_tx_str);
 
+//    await Zemu.default.sleep(120000);
+
+    const addr = await app.getAddressAndPubKey(path, "cosmos");
+    console.log(addr)
+
+    console.log(tx);
+
     // do not wait here..
     const signatureRequest = app.sign(path, tx);
     await Zemu.default.sleep(1000);
 
-    // await sim.clickRight();
-    // await sim.clickRight();
-    // await sim.clickRight();
-    // await sim.clickRight();
-    // await sim.clickRight();
-    // await sim.clickRight();
-    // await sim.clickRight();
-    // await sim.clickRight();
-    // await sim.clickRight();
+    await sim.clickRight();
+    await sim.clickRight();
+    await sim.clickRight();
+    await sim.clickRight();
+    await sim.clickRight();
+    await sim.clickRight();
+    await sim.clickRight();
+    await sim.clickRight();
+    await sim.clickBoth();
 
     let resp = await signatureRequest;
     console.log(resp);

@@ -27,7 +27,7 @@ include $(BOLOS_SDK)/Makefile.defines
 # Main app configuration
 APPNAME = "Cosmos"
 APPVERSION_M=2
-APPVERSION_N=12
+APPVERSION_N=13
 APPVERSION_P=0
 
 APPPATH = "44'/118'"
@@ -127,7 +127,11 @@ endif
 #########################
 
 CC := $(CLANGPATH)clang
-CFLAGS += -O3 -Os -Wno-unknown-pragmas
+#CFLAGS += -Werror
+CFLAGS += -O3 -Os -Wpedantic -Wall -Wno-unknown-pragmas -Wno-c11-extensions
+# To accept Ledger SDK issues
+CFLAGS += -Wno-missing-declarations -Wno-empty-translation-unit -Wno-language-extension-token
+CFLAGS += -Wno-embedded-directive -Wno-pointer-arith
 
 AS := $(GCCPATH)arm-none-eabi-gcc
 AFLAGS +=

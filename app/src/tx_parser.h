@@ -19,6 +19,7 @@
 #include "json/json_parser.h"
 #include <stdint.h>
 #include <common/parser_common.h>
+#include "zxmacros.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,7 +51,14 @@ parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks);
 parser_error_t tx_getToken(uint16_t token_index,
                            char *out_val, uint16_t out_val_len,
                            uint8_t pageIdx, uint8_t *pageCount);
-//---------------------------------------------
+
+__Z_INLINE bool is_msg_type_field(char *field_name) {
+    return strcmp(field_name, "msgs/type") == 0;
+}
+
+__Z_INLINE bool is_msg_from_field(char *field_name) {
+    return strcmp(field_name, "msgs/value/delegator_address") == 0;
+}
 
 #ifdef __cplusplus
 }

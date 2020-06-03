@@ -23,6 +23,7 @@ typedef struct {
     std::string parsingErr;
     std::string validationErr;
     std::vector<std::string> expected;
+    bool expert;
 } testcase_t;
 
 std::vector<testcase_t> GetJsonTestCases(const std::string& filename);

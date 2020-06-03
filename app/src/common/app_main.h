@@ -19,8 +19,6 @@
 #include <stdbool.h>
 #include "apdu_codes.h"
 
-#define CLA                             0x55
-
 #define OFFSET_CLA                      0
 #define OFFSET_INS                      1  //< Instruction offset
 #define OFFSET_P1                       2  //< P1
@@ -32,10 +30,36 @@
 
 #define OFFSET_PAYLOAD_TYPE             OFFSET_P1
 
-#define INS_GET_VERSION                 0
-#define INS_SIGN_SECP256K1              2
-#define INS_GET_ADDR_SECP256K1          4
+#define INS_GET_VERSION                 0x00
+#define INS_SIGN_SECP256K1              0x02
+#define INS_GET_ADDR_SECP256K1          0x04
 
 void app_init();
 
 void app_main();
+
+void extractHDPath(uint32_t rx, uint32_t offset);
+
+bool process_chunk(volatile uint32_t *tx, uint32_t rx);
+
+void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx);
+
+__Z_INLINE void handle_getversion(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+#ifdef DEBUG
+    G_io_apdu_buffer[0] = 0xFF;
+#else
+    G_io_apdu_buffer[0] = 0;
+#endif
+    G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
+    G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
+    G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
+    G_io_apdu_buffer[4] = !IS_UX_ALLOWED;
+
+    G_io_apdu_buffer[5] = (TARGET_ID >> 24) & 0xFF;
+    G_io_apdu_buffer[6] = (TARGET_ID >> 16) & 0xFF;
+    G_io_apdu_buffer[7] = (TARGET_ID >> 8) & 0xFF;
+    G_io_apdu_buffer[8] = (TARGET_ID >> 0) & 0xFF;
+
+    *tx += 9;
+    THROW(APDU_CODE_OK);
+}

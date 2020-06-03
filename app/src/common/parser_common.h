@@ -34,7 +34,7 @@ typedef enum {
     parser_init_context_empty,
     parser_display_idx_out_of_range,
     parser_display_page_out_of_range,
-    parser_unexepected_error,
+    parser_unexpected_error,
     // Coin generic
     parser_unexpected_type,
     parser_unexpected_method,

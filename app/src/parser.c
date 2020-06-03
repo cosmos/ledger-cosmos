@@ -34,7 +34,7 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
     CHECK_PARSER_ERR(tx_validate(&parser_tx_obj.json))
 
     // Iterate through all items to check that all can be shown and are valid
-    uint16_t numItems = 0;
+    uint8_t numItems = 0;
     CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems));
 
     char tmpKey[40];
@@ -48,7 +48,7 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
     return parser_ok;
 }
 
-parser_error_t parser_getNumItems(const parser_context_t *ctx, uint16_t *num_items) {
+parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_items) {
     *num_items = 0;
     return tx_display_numItems(num_items);
 }
@@ -88,6 +88,21 @@ __Z_INLINE bool_t parser_isAmount(char *key) {
         return bool_true;
 
     if (strcmp(key, "msgs/value/amount") == 0)
+        return bool_true;
+
+    return bool_false;
+}
+
+__Z_INLINE bool_t is_default_denom_base(const char *denom, uint8_t denom_len) {
+    if (tx_is_expert_mode()){
+        return false;
+    }
+
+    if (strlen(COIN_DEFAULT_DENOM_BASE) != denom_len) {
+        return bool_false;
+    }
+
+    if (memcmp(denom, COIN_DEFAULT_DENOM_BASE, denom_len) == 0)
         return bool_true;
 
     return bool_false;
@@ -150,9 +165,27 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
         return parser_unexpected_buffer_end;
     }
 
-    MEMCPY(bufferUI, amountPtr, amountLen);
-    bufferUI[amountLen] = ' ';
-    MEMCPY(bufferUI + 1 + amountLen, denomPtr, denomLen);
+    if (is_default_denom_base(denomPtr, denomLen)) {
+        // Then we convert denomination
+        char tmp[50];
+        if (amountLen < 0 || ((uint16_t) amountLen) >= sizeof(tmp)) {
+            return parser_unexpected_error;
+        }
+        MEMZERO(tmp, sizeof(tmp));
+        MEMCPY(tmp, amountPtr, amountLen);
+
+        if (fpstr_to_str(bufferUI, sizeof(tmp), tmp, COIN_DEFAULT_DENOM_FACTOR)!=0) {
+            return parser_unexpected_error;
+        }
+
+        const uint16_t formatted_len =strlen(bufferUI);
+        bufferUI[formatted_len] = ' ';
+        MEMCPY(bufferUI + 1 + formatted_len, COIN_DEFAULT_DENOM_REPR, strlen(COIN_DEFAULT_DENOM_REPR));
+    } else {
+        MEMCPY(bufferUI, amountPtr, amountLen);
+        bufferUI[amountLen] = ' ';
+        MEMCPY(bufferUI + 1 + amountLen, denomPtr, denomLen);
+    }
 
     pageString(outVal, outValLen, bufferUI, pageIdx, pageCount);
 
@@ -169,7 +202,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     MEMZERO(outKey, outKeyLen);
     MEMZERO(outVal, outValLen);
 
-    uint16_t numItems;
+    uint8_t numItems;
     CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
     CHECK_APP_CANARY()
 

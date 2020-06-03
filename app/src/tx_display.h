@@ -26,25 +26,25 @@ extern "C" {
 
 typedef enum {
     root_item_chain_id = 0,
-    root_item_account_number = 1,
-    root_item_sequence = 2,
-    root_item_fee = 3,
-    root_item_memo = 4,
-    root_item_msgs = 5,
+    root_item_account_number,
+    root_item_sequence,
+    root_item_msgs,
+    root_item_memo,
+    root_item_fee,
 } root_item_e;
+
+bool tx_is_expert_mode();
 
 const char *get_required_root_item(root_item_e i);
 
 parser_error_t tx_display_query(uint16_t displayIdx,
-                                char *outKey,
-                                uint16_t outKeyLen,
+                                char *outKey, uint16_t outKeyLen,
                                 uint16_t *ret_value_token_index);
 
 parser_error_t tx_display_readTx(parser_context_t *c,
-                                 const uint8_t *data,
-                                 size_t dataLen);
+                                 const uint8_t *data, size_t dataLen);
 
-parser_error_t tx_display_numItems(uint16_t *num_items);
+parser_error_t tx_display_numItems(uint8_t *num_items);
 
 parser_error_t tx_display_make_friendly();
 

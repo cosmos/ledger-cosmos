@@ -25,7 +25,7 @@
 #define RAM_BUFFER_SIZE 8192
 #define FLASH_BUFFER_SIZE 16384
 #elif defined(TARGET_NANOS)
-#define RAM_BUFFER_SIZE 384
+#define RAM_BUFFER_SIZE 256
 #define FLASH_BUFFER_SIZE 8192
 #endif
 
@@ -93,7 +93,7 @@ const char *tx_parse() {
     return NULL;
 }
 
-tx_error_t tx_getNumItems(uint16_t *num_items) {
+tx_error_t tx_getNumItems(uint8_t *num_items) {
     parser_error_t err = parser_getNumItems(&ctx_parsed_tx, num_items);
 
     if (err != parser_ok) {
@@ -103,13 +103,13 @@ tx_error_t tx_getNumItems(uint16_t *num_items) {
     return tx_no_error;
 }
 
-tx_error_t tx_getItem(int8_t displayIdx,
+tx_error_t tx_getItem(uint8_t displayIdx,
                       char *outKey, uint16_t outKeyLen,
                       char *outVal, uint16_t outValLen,
                       uint8_t pageIdx, uint8_t *pageCount) {
     tx_error_t err = tx_no_error;
 
-    uint16_t numItems = 0;
+    uint8_t numItems = 0;
     err = tx_getNumItems(&numItems);
     if (err != tx_no_error) {
         return err;

@@ -83,7 +83,7 @@ void splitValueField();
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
 
-void view_idle_show_impl();
+void view_idle_show_impl(uint8_t item_idx);
 
 void view_address_show_impl();
 

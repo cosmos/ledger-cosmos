@@ -53,6 +53,9 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &filename) {
             expected.push_back(j.asString());
         }
 
+        bool expert = false;
+        expert = v["expert"].asBool();
+
         answer.push_back(
                 testcase_t{
                         v["name"].asString(),
@@ -60,6 +63,7 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &filename) {
                         v["parsingErr"].asString(),
                         v["validationErr"].asString(),
                         expected,
+                        expert
                 });
     }
 

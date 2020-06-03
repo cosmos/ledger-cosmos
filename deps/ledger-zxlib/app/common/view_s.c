@@ -15,6 +15,7 @@
 *  limitations under the License.
 ********************************************************************************/
 
+#include "app_mode.h"
 #include "view.h"
 #include "view_internal.h"
 #include "actions.h"
@@ -30,6 +31,7 @@
 
 #if defined(TARGET_NANOS)
 
+void h_expert_toggle();
 void h_review_button_left();
 void h_review_button_right();
 void view_review_show();
@@ -43,7 +45,10 @@ void os_exit(uint32_t id) {
 
 const ux_menu_entry_t menu_main[] = {
     {NULL, NULL, 0, &C_icon_app, MENU_MAIN_APP_LINE1, MENU_MAIN_APP_LINE2, 33, 12},
-    {NULL, NULL, 0, &C_icon_app, "v"APPVERSION, APPVERSION_LINE2, 33, 12},
+    {NULL, h_expert_toggle, 0, &C_icon_app, "Expert mode:", viewdata.value, 33, 12},
+    {NULL, NULL, 0, &C_icon_app, APPVERSION_LINE1, APPVERSION_LINE2, 33, 12},
+    {NULL, NULL, 0, &C_icon_app, "Developed by:", "Zondax.ch", 33, 12},
+    {NULL, NULL, 0, &C_icon_app, "License: ", "Apache 2.0", 33, 12},
     {NULL, os_exit, 0, &C_icon_dashboard, "Quit", NULL, 50, 29},
     UX_MENU_END
 };
@@ -226,8 +231,12 @@ void splitValueField() {
 //////////////////////////
 //////////////////////////
 
-void view_idle_show_impl() {
-    UX_MENU_DISPLAY(0, menu_main, NULL);
+void view_idle_show_impl(uint8_t item_idx) {
+    strcpy(viewdata.value, "disabled");
+    if (app_mode_expert()) {
+        strcpy(viewdata.value, "enabled");
+    }
+    UX_MENU_DISPLAY(item_idx, menu_main, NULL);
 }
 
 void view_address_show_impl() {
@@ -281,6 +290,11 @@ void view_sign_show_s(void){
 
 void view_review_show() {
     UX_DISPLAY(view_review, view_prepro);
+}
+
+void h_expert_toggle() {
+    app_mode_set_expert(!app_mode_expert());
+    view_idle_show(1);
 }
 
 #if !defined(HAVE_UX_FLOW)
