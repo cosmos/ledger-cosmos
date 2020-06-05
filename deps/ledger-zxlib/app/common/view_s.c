@@ -32,6 +32,7 @@
 #if defined(TARGET_NANOS)
 
 void h_expert_toggle();
+void h_expert_update();
 void h_review_button_left();
 void h_review_button_right();
 void view_review_show();
@@ -232,10 +233,7 @@ void splitValueField() {
 //////////////////////////
 
 void view_idle_show_impl(uint8_t item_idx) {
-    strcpy(viewdata.value, "disabled");
-    if (app_mode_expert()) {
-        strcpy(viewdata.value, "enabled");
-    }
+    h_expert_update();
     UX_MENU_DISPLAY(item_idx, menu_main, NULL);
 }
 
@@ -295,6 +293,13 @@ void view_review_show() {
 void h_expert_toggle() {
     app_mode_set_expert(!app_mode_expert());
     view_idle_show(1);
+}
+
+void h_expert_update() {
+    strcpy(viewdata.value, "disabled");
+    if (app_mode_expert()) {
+        strcpy(viewdata.value, "enabled");
+    }
 }
 
 #if !defined(HAVE_UX_FLOW)

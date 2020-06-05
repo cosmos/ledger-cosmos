@@ -132,6 +132,7 @@ CFLAGS += -O3 -Os -Wpedantic -Wall -Wno-unknown-pragmas -Wno-c11-extensions
 # To accept Ledger SDK issues
 CFLAGS += -Wno-missing-declarations -Wno-empty-translation-unit -Wno-language-extension-token
 CFLAGS += -Wno-embedded-directive -Wno-pointer-arith
+CFLAGS += -Wno-typedef-redefinition -Wno-newline-eof
 
 AS := $(GCCPATH)arm-none-eabi-gcc
 AFLAGS +=
