@@ -29,15 +29,19 @@ const example_tx_str = {
         {
             "type": "cosmos-sdk/MsgWithdrawDelegationReward",
             "value": {
-                "delegator_address": "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",
-                "validator_address": "cosmosvaloper1kn3wugetjuy4zetlq6wadchfhvu3x740ae6z6x"
+                "delegator_address": "cosmos19umvgcvk8cxsvzemy239nj9ngc2ltukantgyp3",
+                "validator_address": "cosmosvaloper1648ynlpdw7fqa2axt0w2yp3fk542junl7rsvq6"
             }
         },
         {
-            "type": "cosmos-sdk/MsgWithdrawDelegationReward",
+            "type": "cosmos-sdk/MsgDelegate",
             "value": {
-                "delegator_address": "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",
-                "validator_address": "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0"
+                "amount": {
+                    "amount": "20139397",
+                    "denom": "uatom"
+                },
+                "delegator_address": "cosmos19umvgcvk8cxsvzemy239nj9ngc2ltukantgyp3",
+                "validator_address": "cosmosvaloper1648ynlpdw7fqa2axt0w2yp3fk542junl7rsvq6",
             }
         }
     ],

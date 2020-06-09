@@ -81,6 +81,42 @@ const example_tx_str_expert = {
     "sequence": "106"
 };
 
+const example_tx_str_combined = {
+    "account_number": "108",
+    "chain_id": "cosmoshub-3",
+    "fee": {
+        "amount": [
+            {
+                "amount": "600",
+                "denom": "uatom"
+            }
+        ],
+        "gas": "200000"
+    },
+    "memo": "",
+    "msgs": [
+        {
+            "type": "cosmos-sdk/MsgWithdrawDelegationReward",
+            "value": {
+                "delegator_address": "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",
+                "validator_address": "cosmosvaloper1648ynlpdw7fqa2axt0w2yp3fk542junl7rsvq6"
+            }
+        },
+        {
+            "type": "cosmos-sdk/MsgDelegate",
+            "value": {
+                "amount": {
+                    "amount": "20139397",
+                    "denom": "uatom"
+                },
+                "delegator_address": "cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h",
+                "validator_address": "cosmosvaloper1648ynlpdw7fqa2axt0w2yp3fk542junl7rsvq6",
+            }
+        }
+    ],
+    "sequence": "106"
+};
+
 describe('Basic checks', function () {
     it('can start and stop container', async function () {
         const sim = new Zemu(APP_PATH);
@@ -292,6 +328,62 @@ describe('Basic checks', function () {
             // Reference window
             await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
             for (let i = 0; i < 8; i++) {
+                await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
+            }
+            await sim.clickBoth();
+
+            let resp = await signatureRequest;
+            console.log(resp);
+
+            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
+
+            expect(resp.return_code).toEqual(0x9000);
+            expect(resp.error_message).toEqual("No errors");
+
+            // Now verify the signature
+            const hash = crypto.createHash("sha256");
+            const msgHash = Uint8Array.from(hash.update(tx).digest());
+
+            const signatureDER = resp.signature;
+            const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER));
+
+            const pk = Uint8Array.from(respPk.compressed_pk)
+
+            const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk);
+            expect(signatureOk).toEqual(true);
+
+        } finally {
+            await sim.close();
+        }
+    });
+
+    it('sign basic - combined tx', async function () {
+        const snapshotPrefixGolden = "snapshots/sign-basic-combined/";
+        const snapshotPrefixTmp = "snapshots-tmp/sign-basic-combined/";
+        let snapshotCount = 0;
+
+        const sim = new Zemu(APP_PATH);
+        try {
+            await sim.start(sim_options);
+            const app = new CosmosApp(sim.getTransport());
+
+            const path = [44, 118, 0, 0, 0];
+            let tx = JSON.stringify(example_tx_str_combined);
+
+            // get address / publickey
+            const respPk = await app.getAddressAndPubKey(path, "cosmos");
+            expect(respPk.return_code).toEqual(0x9000);
+            expect(respPk.error_message).toEqual("No errors");
+            console.log(respPk)
+
+            // do not wait here..
+            const signatureRequest = app.sign(path, tx);
+
+            await Zemu.sleep(2000);
+
+            // Reference window
+            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            for (let i = 0; i < 10; i++) {
                 await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
             }
             await sim.clickBoth();

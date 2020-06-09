@@ -1472,5 +1472,59 @@
       "37 | Gas : 200000"
     ],
     "expert": true
+  },
+  {
+    "name": "combined",
+    "tx": {
+      "account_number": "108",
+      "chain_id": "cosmoshub-3",
+      "fee": {
+        "amount": [
+          {
+            "amount": "600",
+            "denom": "uatom"
+          }
+        ],
+        "gas": "200000"
+      },
+      "memo": "",
+      "msgs": [
+        {
+          "type": "cosmos-sdk/MsgWithdrawDelegationReward",
+          "value": {
+            "delegator_address": "cosmos19umvgcvk8cxsvzemy239nj9ngc2ltukantgyp3",
+            "validator_address": "cosmosvaloper1648ynlpdw7fqa2axt0w2yp3fk542junl7rsvq6"
+          }
+        },
+        {
+          "type": "cosmos-sdk/MsgDelegate",
+          "value": {
+            "delegator_address": "cosmos19umvgcvk8cxsvzemy239nj9ngc2ltukantgyp3",
+            "validator_address": "cosmosvaloper1648ynlpdw7fqa2axt0w2yp3fk542junl7rsvq6",
+            "amount": {
+              "denom": "uatom",
+              "amount": "20139397"
+            }
+          }
+        }
+      ],
+      "sequence": "106"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Type : Withdraw Reward",
+      "1 | Delegator [1/2] : cosmos19umvgcvk8cxsvzemy239nj9ngc2ltuka",
+      "1 | Delegator [2/2] : ntgyp3",
+      "2 | Validator [1/2] : cosmosvaloper1648ynlpdw7fqa2axt0w2yp3fk",
+      "2 | Validator [2/2] : 542junl7rsvq6",
+      "3 | Type : Delegate",
+      "4 | Amount : 20.139397 ATOM",
+      "5 | Validator [1/2] : cosmosvaloper1648ynlpdw7fqa2axt0w2yp3fk",
+      "5 | Validator [2/2] : 542junl7rsvq6",
+      "6 | Fee : 0.000600 ATOM",
+      "7 | Gas : 200000"
+    ],
+    "expert": false
   }
 ]

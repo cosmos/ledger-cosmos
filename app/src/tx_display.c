@@ -255,8 +255,9 @@ parser_error_t tx_indexRootFields() {
     CHECK_PARSER_ERR(calculate_is_default_chainid());
 
     // turn off grouping if we are not in expert mode
-    parser_tx_obj.flags.msg_type_grouping = parser_tx_obj.filter_msg_type_count > 0;
-    parser_tx_obj.flags.msg_from_grouping = !tx_is_expert_mode() && parser_tx_obj.filter_msg_from_count > 0;
+    if (tx_is_expert_mode()) {
+        parser_tx_obj.flags.msg_from_grouping = 0;
+    }
 
     // check if from reference value matches the device address that will be signing
     parser_tx_obj.flags.msg_from_grouping_hide_all = 0;
@@ -319,7 +320,9 @@ __Z_INLINE parser_error_t retrieve_tree_indexes(uint8_t display_index, root_item
     // consume indexed subpages until we get the item index in the subpage
     *root_item = 0;
     *subitem_index = 0;
-    while (get_subitem_count(*root_item) == 0) (*root_item)++;
+    while (get_subitem_count(*root_item) == 0) {
+        (*root_item)++;
+    }
 
     for (uint16_t i = 0; i < display_index; i++) {
         (*subitem_index)++;
@@ -328,7 +331,9 @@ __Z_INLINE parser_error_t retrieve_tree_indexes(uint8_t display_index, root_item
             // Advance root index and skip empty items
             *subitem_index = 0;
             (*root_item)++;
-            while (get_subitem_count(*root_item) == 0) (*root_item)++;
+            while (get_subitem_count(*root_item) == 0){
+                (*root_item)++;
+            }
         }
     }
 
