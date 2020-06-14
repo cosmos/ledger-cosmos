@@ -87,8 +87,7 @@ UX_FLOW(
 void h_review(unsigned int _) { UNUSED(_); view_sign_show_impl(); }
 
 const ux_menu_entry_t menu_sign[] = {
-    {NULL, h_review, 0, NULL, "View transaction", NULL, 0, 0},
-    {NULL, h_sign_accept, 0, NULL, "Sign transaction", NULL, 0, 0},
+    {NULL, h_sign_accept, 0, NULL, "Approve", NULL, 0, 0},
     {NULL, h_sign_reject, 0, NULL, "Reject", NULL, 0, 0},
     UX_MENU_END
 };
@@ -164,7 +163,15 @@ static unsigned int view_review_button(unsigned int button_mask, unsigned int bu
 const bagl_element_t *view_prepro(const bagl_element_t *element) {
     switch (element->component.userid) {
         case UIID_ICONLEFT:
+            if (!h_paging_can_decrease()){
+                return NULL;
+            }
+            UX_CALLBACK_SET_INTERVAL(2000);
+            break;
         case UIID_ICONRIGHT:
+            if (!h_paging_can_increase()){
+                return NULL;
+            }
             UX_CALLBACK_SET_INTERVAL(2000);
             break;
         case UIID_LABELSCROLL:

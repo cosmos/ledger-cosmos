@@ -173,7 +173,7 @@ void app_init() {
     // grab the current plane mode setting
     G_io_app.plane_mode = os_setting_get(OS_SETTING_PLANEMODE, NULL, 0);
 #endif // TARGET_NANOX
-    
+
     USB_power(0);
     USB_power(1);
 
@@ -214,8 +214,9 @@ void app_main() {
                 if (rx == 0)
                     THROW(APDU_CODE_EMPTY_BUFFER);
 
-                handle_generic_apdu(&flags, &tx, rx);
-                CHECK_APP_CANARY()
+                // NOTE: Requested by Ledger
+//                handle_generic_apdu(&flags, &tx, rx);
+//                CHECK_APP_CANARY()
 
                 handleApdu(&flags, &tx, rx);
                 CHECK_APP_CANARY()

@@ -68,7 +68,7 @@ void bignumLittleEndian_to_bcd(uint8_t *bcdOut, uint16_t bcdOutLen,
 
         // get bit
         const uint16_t byteIdx = bitIdx >> 3u;
-        const uint8_t mask = 0x80u >> (bitIdx & 0x7u);
+        const uint8_t mask = 0x80u >> (bitIdx & 0b111u);
         carry = (binValue[binValueLen - byteIdx - 1] & mask) > 0;
 
         // Shift bcd
@@ -134,7 +134,7 @@ void bignumBigEndian_to_bcd(uint8_t *bcdOut, uint16_t bcdOutLen,
 
         // get bit
         const uint16_t byteIdx = bitIdx >> 3u;
-        const uint8_t mask = 0x80u >> (bitIdx & 0x7u);
+        const uint8_t mask = 0x80u >> (bitIdx & 0b111u);
         carry = (binValue[byteIdx] & mask) > 0;
 
         // Shift bcd

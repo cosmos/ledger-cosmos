@@ -185,7 +185,7 @@ uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
     ripemd160_32(hashed2_pk, hashed1_pk);
 
     char *addr = (char *) (buffer + PK_LEN_SECP256K1);
-    bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE);
+    bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE, 1);
 
     return PK_LEN_SECP256K1 + strlen(addr);
 }

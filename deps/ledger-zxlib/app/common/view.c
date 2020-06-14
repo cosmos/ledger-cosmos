@@ -69,6 +69,18 @@ void h_paging_init() {
     viewdata.pageCount = 1;
 }
 
+uint8_t h_paging_can_increase() {
+    if (viewdata.pageIdx + 1 < viewdata.pageCount) {
+        return 1;
+    } else {
+        // passed page count, go to next index
+        if (viewdata.itemIdx + 1 < viewdata.itemCount) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void h_paging_increase() {
     if (viewdata.pageIdx + 1 < viewdata.pageCount) {
         // increase page
@@ -80,6 +92,17 @@ void h_paging_increase() {
             viewdata.pageIdx = 0;
         }
     }
+}
+
+uint8_t h_paging_can_decrease() {
+    if (viewdata.pageIdx != 0) {
+        return 1;
+    } else {
+        if (viewdata.itemIdx > 0) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 void h_paging_decrease() {
