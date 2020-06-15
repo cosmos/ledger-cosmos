@@ -104,6 +104,14 @@ void extractHDPath(uint32_t rx, uint32_t offset) {
         hdPath[3] != HDPATH_3_DEFAULT) {
         THROW(APDU_CODE_DATA_INVALID);
     }
+
+    // Limit values unless the app is running in expert mode
+    if (!app_mode_expert()) {
+        for(int i=2; i < HDPATH_LEN_DEFAULT; i++) {
+            // hardened or unhardened values should be below 20
+            if ( (hdPath[i] & 0x7FFFFFFF) > 100) THROW(APDU_CODE_CONDITIONS_NOT_SATISFIED);
+        }
+    }
 }
 
 bool process_chunk(volatile uint32_t *tx, uint32_t rx) {

@@ -23,7 +23,7 @@
 // strcat but source does not need to be terminated (a chunk from a bigger string is concatenated)
 // dst_max is measured in bytes including the space for NULL termination
 // src_size does not include NULL termination
-__always_inline void strcat_chunk_s(char *dst, uint16_t dst_max, const char *src_chunk, size_t src_chunk_size) {
+__Z_INLINE void strcat_chunk_s(char *dst, uint16_t dst_max, const char *src_chunk, size_t src_chunk_size) {
     *(dst + dst_max - 1) = 0;                 // last character terminates with zero in case we go beyond bounds
     const size_t prev_size = strlen(dst);
 
@@ -102,7 +102,7 @@ parser_error_t tx_getToken(uint16_t token_index,
     return parser_ok;
 }
 
-__always_inline void append_key_item(int16_t token_index) {
+__Z_INLINE void append_key_item(int16_t token_index) {
     if (*parser_tx_obj.query.out_key > 0) {
         // There is already something there, add separator
         strcat_chunk_s(parser_tx_obj.query.out_key,

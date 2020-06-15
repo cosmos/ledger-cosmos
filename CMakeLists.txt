@@ -40,7 +40,7 @@ file(GLOB_RECURSE LIB_SRC
         app/src/tx_validate.c
         app/src/parser.c
         app/src/parser_impl.c
-        app/src/common/app_mode.c
+        deps/ledger-zxlib/app/common/app_mode.c
         )
 
 add_library(app_lib STATIC
@@ -53,6 +53,7 @@ target_include_directories(app_lib PUBLIC
         deps/jsmn/src
         app/src
         app/src/common
+        deps/ledger-zxlib/app/common
         )
 
 ##############################################################

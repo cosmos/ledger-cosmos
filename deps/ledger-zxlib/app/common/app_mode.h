@@ -22,10 +22,6 @@
 extern "C" {
 #endif
 
-typedef struct {
-    uint32_t expert;
-} app_mode_t;
-
 void app_mode_reset();
 
 bool app_mode_expert();

@@ -21,7 +21,7 @@
 #include <memory>
 #include "common/parser.h"
 #include "util/common.h"
-#include "common/app_mode.h"
+#include "app_mode.h"
 
 using ::testing::TestWithParam;
 using ::testing::Values;

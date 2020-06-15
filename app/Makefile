@@ -27,7 +27,7 @@ include $(BOLOS_SDK)/Makefile.defines
 # Main app configuration
 APPNAME = "Cosmos"
 APPVERSION_M=2
-APPVERSION_N=15
+APPVERSION_N=16
 APPVERSION_P=0
 
 APPPATH = "44'/118'"

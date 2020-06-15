@@ -27,6 +27,7 @@
 #include "zxmacros.h"
 #include "view_templates.h"
 #include "tx.h"
+#include "app_mode.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -164,12 +165,15 @@ view_error_t h_review_update_data() {
 view_error_t h_addr_update_item(uint8_t idx) {
     MEMZERO(viewdata.value, MAX_CHARS_PER_VALUE1_LINE);
 
-    switch (idx) {
-        case 0: return view_printAddr();
-        case 1: return view_printPath();
-        default:
-            return view_error_detected;
+    if (idx == 0) {
+        return view_printAddr();
     }
+
+    if (idx == 1 && app_mode_expert()) {
+        return view_printPath();
+    }
+
+    return view_error_detected;
 }
 
 void io_seproxyhal_display(const bagl_element_t *element) {
@@ -186,7 +190,12 @@ void view_idle_show(uint8_t item_idx) {
 
 void view_address_show(address_kind_e addressKind) {
     viewdata.addrKind = addressKind;
-    viewdata.itemCount = VIEW_ADDRESS_ITEM_COUNT;          // Address, path, etc.
+
+    viewdata.itemCount = 1;
+    if (app_mode_expert()) {
+        viewdata.itemCount = 2;
+    }
+
     view_address_show_impl();
 }
 
