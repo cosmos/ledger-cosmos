@@ -195,8 +195,7 @@
       "2 | Dest Address : cosmosaccaddr1da6hgur4wse3jx32",
       "3 | Dest Coins : 10 atom",
       "4 | Memo : testmemo",
-      "5 | Fee : 5 photon",
-      "6 | Gas : 10000"
+      "5 | Fee : 5 photon"
     ],
     "expert": false
   },
@@ -306,8 +305,7 @@
       "1 | Source Coins : 10 atom",
       "2 | Dest Address : cosmosaccaddr1da6hgur4wse3jx32",
       "3 | Dest Coins : 10 atom",
-      "4 | Fee : 5 photon",
-      "5 | Gas : 10000"
+      "4 | Fee : 5 photon"
     ],
     "expert": false
   },
@@ -419,8 +417,7 @@
       "1 | Source Coins : 10 atom",
       "2 | Dest Address : cosmosaccaddr1da6hgur4wse3jx32",
       "3 | Dest Coins : 10 atom",
-      "4 | Fee : 5 photon",
-      "5 | Gas : 10000"
+      "4 | Fee : 5 photon"
     ],
     "expert": false
   },
@@ -590,8 +587,7 @@
       "6 | Dest Address : test3",
       "7 | Dest Coins : 50 ripple",
       "8 | Memo : testmemo",
-      "9 | Fee : 5 photon",
-      "10 | Gas : 10000"
+      "9 | Fee : 5 photon"
     ],
     "expert": false
   },
@@ -731,8 +727,7 @@
       "3 | Validator [1/2] : cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt",
       "3 | Validator [2/2] : 9m5s03xfytvz7",
       "4 | Memo : Zondax.ch",
-      "5 | Fee : 0.005000 ATOM",
-      "6 | Gas : 200000"
+      "5 | Fee : 0.005000 ATOM"
     ],
     "expert": false
   },
@@ -818,8 +813,7 @@
       "4 | msgs/proposer [2/2] : vwxyz0",
       "5 | msgs/title : test",
       "6 | Memo : abc",
-      "7 | Fee : Empty",
-      "8 | Gas : 500000"
+      "7 | Fee : Empty"
     ],
     "expert": false
   },
@@ -911,8 +905,7 @@
       "3 | Validator [1/2] : cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt",
       "3 | Validator [2/2] : 9m5s03xfytvz7",
       "4 | Memo : Delegated with Ledger from union.market",
-      "5 | Fee : 0.005000 ATOM",
-      "6 | Gas : 200000"
+      "5 | Fee : 0.005000 ATOM"
     ],
     "expert": false
   },
@@ -1111,8 +1104,7 @@
       "2 | Validator [2/2] : vjhennyh568ys",
       "3 | Validator [1/2] : cosmosvaloper1x88j7vp2xnw3zec8ur3g4waxy",
       "3 | Validator [2/2] : cyz7m0mahdv3p",
-      "4 | Fee : 0.000600 ATOM",
-      "5 | Gas : 200000"
+      "4 | Fee : 0.000600 ATOM"
     ],
     "expert": false
   },
@@ -1522,8 +1514,7 @@
       "4 | Amount : 20.139397 ATOM",
       "5 | Validator [1/2] : cosmosvaloper1648ynlpdw7fqa2axt0w2yp3fk",
       "5 | Validator [2/2] : 542junl7rsvq6",
-      "6 | Fee : 0.000600 ATOM",
-      "7 | Gas : 200000"
+      "6 | Fee : 0.000600 ATOM"
     ],
     "expert": false
   }

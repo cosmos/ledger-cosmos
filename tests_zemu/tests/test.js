@@ -349,7 +349,7 @@ describe('Basic checks', function () {
 
             // Reference window
             await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            for (let i = 0; i < 7; i++) {
+            for (let i = 0; i < 6; i++) {
                 await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
             }
             await sim.clickBoth();
@@ -405,7 +405,7 @@ describe('Basic checks', function () {
 
             // Reference window
             await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            for (let i = 0; i < 9; i++) {
+            for (let i = 0; i < 8; i++) {
                 await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
             }
             await sim.clickBoth();
@@ -475,7 +475,7 @@ describe('Basic checks', function () {
 
             // Reference window
             await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            for (let i = 0; i < 7; i++) {
+            for (let i = 0; i < 6; i++) {
                 await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
             }
             await sim.clickBoth();
