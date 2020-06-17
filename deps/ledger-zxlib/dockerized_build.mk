@@ -140,6 +140,11 @@ dev_init_secondary: check_python show_info_recovery_mode
 dev_ca: check_python
 	@python -m ledgerblue.setupCustomCA --targetId 0x31100004 --public $(SCP_PUBKEY) --name zondax
 
+# This target will setup a custom developer certificate
+.PHONY: dev_caX
+dev_caX: check_python
+	@python -m ledgerblue.setupCustomCA --targetId 0x33000004 --public $(SCP_PUBKEY) --name zondax
+
 .PHONY: dev_ca_delete
 dev_ca_delete: check_python
 	@python -m ledgerblue.resetCustomCA --targetId 0x31100004
