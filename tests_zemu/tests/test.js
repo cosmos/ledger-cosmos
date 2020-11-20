@@ -1,4 +1,20 @@
-import {expect, test} from "jest";
+/** ******************************************************************************
+ *  (c) 2020 Zondax GmbH
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ******************************************************************************* */
+
+import jest, {expect} from "jest";
 import Zemu from "@zondax/zemu";
 import CosmosApp from "ledger-cosmos-js";
 import secp256k1 from "secp256k1/elliptic";
@@ -10,7 +26,7 @@ const APP_PATH = Resolve("../app/bin/app.elf");
 const APP_SEED = "equip will roof matter pink blind book anxiety banner elbow sun young"
 const sim_options = {
     logging: true,
-    start_delay: 4000,
+    start_delay: 3000,
     custom: `-s "${APP_SEED}"`
     , X11: true
 };
@@ -127,7 +143,7 @@ describe('Basic checks', function () {
         }
     });
 
-    it('get app version', async function () {
+    it('app version', async function () {
         const sim = new Zemu(APP_PATH);
         try {
             await sim.start(sim_options);
@@ -206,19 +222,7 @@ describe('Basic checks', function () {
         }
     });
 
-    function compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount) {
-        for (let i = 0; i < snapshotCount; i++) {
-            const img1 = Zemu.LoadPng2RGB(`${snapshotPrefixTmp}${i}.png`);
-            const img2 = Zemu.LoadPng2RGB(`${snapshotPrefixGolden}${i}.png`);
-            expect(img1).toEqual(img2);
-        }
-    }
-
     it('show address', async function () {
-        const snapshotPrefixGolden = "snapshots/show-address/";
-        const snapshotPrefixTmp = "snapshots-tmp/show-address/";
-        let snapshotCount = 0;
-
         const sim = new Zemu(APP_PATH);
         try {
             await sim.start(sim_options);
@@ -227,21 +231,14 @@ describe('Basic checks', function () {
             // Derivation path. First 3 items are automatically hardened!
             const path = [44, 118, 5, 0, 3];
             const respRequest = app.showAddressAndPubKey(path, "cosmos");
-
-            // We need to wait until the app responds to the APDU
-            await Zemu.sleep(2000);
+            // Wait until we are not in the main menu
+            await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
             // Now navigate the address / path
-            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickBoth(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.compareSnapshotsAndAccept(".", "show_address", 4);
 
             const resp = await respRequest;
             console.log(resp);
-
-            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
 
             expect(resp.return_code).toEqual(0x9000);
             expect(resp.error_message).toEqual("No errors");
@@ -275,40 +272,28 @@ describe('Basic checks', function () {
     });
 
     it('show address - HUGE - expert', async function () {
-        const snapshotPrefixGolden = "snapshots/show-address-huge/";
-        const snapshotPrefixTmp = "snapshots-tmp/show-address-huge/";
-        let snapshotCount = 0;
-
         const sim = new Zemu(APP_PATH);
         try {
             await sim.start(sim_options);
             const app = new CosmosApp(sim.getTransport());
 
             // Activate expert mode
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickBoth(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.clickRight();
+            await sim.clickBoth();
+            await sim.clickLeft();
 
             // Derivation path. First 3 items are automatically hardened!
             const path = [44, 118, 2147483647, 0, 4294967295];
             const respRequest = app.showAddressAndPubKey(path, "cosmos");
 
-            // We need to wait until the app responds to the APDU
-            await Zemu.sleep(2000);
+            // Wait until we are not in the main menu
+            await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
             // Now navigate the address / path
-            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickBoth(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.compareSnapshotsAndAccept(".", "show_address_huge", 7);
 
             const resp = await respRequest;
             console.log(resp);
-
-            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
 
             expect(resp.return_code).toEqual(0x9000);
             expect(resp.error_message).toEqual("No errors");
@@ -324,10 +309,6 @@ describe('Basic checks', function () {
     });
 
     it('sign basic', async function () {
-        const snapshotPrefixGolden = "snapshots/sign-basic/";
-        const snapshotPrefixTmp = "snapshots-tmp/sign-basic/";
-        let snapshotCount = 0;
-
         const sim = new Zemu(APP_PATH);
         try {
             await sim.start(sim_options);
@@ -345,19 +326,14 @@ describe('Basic checks', function () {
             // do not wait here..
             const signatureRequest = app.sign(path, tx);
 
-            await Zemu.sleep(2000);
+            // Wait until we are not in the main menu
+            await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-            // Reference window
-            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            for (let i = 0; i < 6; i++) {
-                await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
-            }
-            await sim.clickBoth();
+            // Now navigate the address / path
+            await sim.compareSnapshotsAndAccept(".", "sign_basic", 7);
 
             let resp = await signatureRequest;
             console.log(resp);
-
-            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
 
             expect(resp.return_code).toEqual(0x9000);
             expect(resp.error_message).toEqual("No errors");
@@ -401,19 +377,14 @@ describe('Basic checks', function () {
             // do not wait here..
             const signatureRequest = app.sign(path, tx);
 
-            await Zemu.sleep(3000);
+            // Wait until we are not in the main menu
+            await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-            // Reference window
-            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            for (let i = 0; i < 8; i++) {
-                await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
-            }
-            await sim.clickBoth();
+            // Now navigate the address / path
+            await sim.compareSnapshotsAndAccept(".", "sign_basic_combined", 9);
 
             let resp = await signatureRequest;
             console.log(resp);
-
-            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
 
             expect(resp.return_code).toEqual(0x9000);
             expect(resp.error_message).toEqual("No errors");
@@ -436,10 +407,6 @@ describe('Basic checks', function () {
     });
 
     it('show address and sign basic', async function () {
-        const snapshotPrefixGolden = "snapshots/show-address-and-sign-basic/";
-        const snapshotPrefixTmp = "snapshots-tmp/show-address-and-sign-basic/";
-        let snapshotCount = 0;
-
         const sim = new Zemu(APP_PATH);
         try {
             await sim.start(sim_options);
@@ -451,15 +418,11 @@ describe('Basic checks', function () {
             // get address / publickey
             const respRequest = app.showAddressAndPubKey(path, "cosmos");
 
-            // We need to wait until the app responds to the APDU
-            await Zemu.sleep(3000);
+            // Wait until we are not in the main menu
+            await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
             // Now navigate the address / path
-            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickRight(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            await sim.clickBoth(`${snapshotPrefixTmp}${snapshotCount++}.png`);
+            await sim.compareSnapshotsAndAccept(".", "show_address_and_sign_basic_1", 4);
 
             const respPk = await respRequest;
             console.log(respPk);
@@ -471,19 +434,14 @@ describe('Basic checks', function () {
             // do not wait here..
             const signatureRequest = app.sign(path, tx);
 
-            await Zemu.sleep(3000);
+            // Wait until we are not in the main menu
+            await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-            // Reference window
-            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            for (let i = 0; i < 6; i++) {
-                await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
-            }
-            await sim.clickBoth();
+            // Now navigate the address / path
+            await sim.compareSnapshotsAndAccept(".", "show_address_and_sign_basic_2", 7);
 
             let resp = await signatureRequest;
             console.log(resp);
-
-            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
 
             expect(resp.return_code).toEqual(0x9000);
             expect(resp.error_message).toEqual("No errors");
@@ -506,10 +464,6 @@ describe('Basic checks', function () {
     });
 
     it('sign expert', async function () {
-        const snapshotPrefixGolden = "snapshots/sign-expert/";
-        const snapshotPrefixTmp = "snapshots-tmp/sign-expert/";
-        let snapshotCount = 0;
-
         const sim = new Zemu(APP_PATH);
         try {
             await sim.start(sim_options);
@@ -527,21 +481,14 @@ describe('Basic checks', function () {
             // do not wait here..
             const signatureRequest = app.sign(path, tx);
 
-            await Zemu.sleep(3000);
+            // Wait until we are not in the main menu
+            await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot());
 
-            // Reference window
-            await sim.snapshot(`${snapshotPrefixTmp}${snapshotCount++}.png`);
-            for (let i = 0; i < 14; i++) {
-                await sim.clickRight(Resolve(`${snapshotPrefixTmp}${snapshotCount++}.png`));
-            }
-            await sim.clickBoth();
-            await sim.clickBoth();
-            await sim.clickBoth();
+            // Now navigate the address / path
+            await sim.compareSnapshotsAndAccept(".", "sign_expert", 15);
 
             let resp = await signatureRequest;
             console.log(resp);
-
-            compareSnapshots(snapshotPrefixTmp, snapshotPrefixGolden, snapshotCount);
 
             expect(resp.return_code).toEqual(0x9000);
             expect(resp.error_message).toEqual("No errors");
