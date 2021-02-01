@@ -46,8 +46,8 @@ debug/app\.map
 debug/app\.asm
 bin/app\.hex
 bin/app\.elf
-app/glyphs/glyphs.h
-app/glyphs/glyphs.c
+glyphs/glyphs.h
+glyphs/glyphs.c
 bin/app.sha256
 bin/app.apdu
 
