@@ -47,7 +47,7 @@ typedef enum {
 #define APPVERSION_LINE2                   ("v" APPVERSION)
 
 #define CRYPTO_BLOB_SKIP_BYTES              0
-#define COIN_DEFAULT_CHAINID                "Stargate"
+#define COIN_DEFAULT_CHAINID                "cosmoshub-4"
 
 // In non-expert mode, the app will convert from uatom to ATOM
 #define COIN_DEFAULT_DENOM_BASE             "uatom"

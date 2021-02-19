@@ -35,7 +35,7 @@ jest.setTimeout(30000)
 
 const example_tx_str_basic = {
     "account_number": "108",
-    "chain_id": "cosmoshub-3",
+    "chain_id": "cosmoshub-4",
     "fee": {
         "amount": [
             {
@@ -99,7 +99,7 @@ const example_tx_str_expert = {
 
 const example_tx_str_combined = {
     "account_number": "108",
-    "chain_id": "cosmoshub-3",
+    "chain_id": "cosmoshub-4",
     "fee": {
         "amount": [
             {
