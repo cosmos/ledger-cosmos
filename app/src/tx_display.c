@@ -189,7 +189,7 @@ parser_error_t tx_indexRootFields() {
             CHECK_PARSER_ERR(tx_getToken(
                     ret_value_token_index,
                     parser_tx_obj.query.out_val,
-                    parser_tx_obj.query.out_key_len,
+                    parser_tx_obj.query.out_val_len,
                     0, &pageCount))
 
             switch (root_item_idx) {
@@ -205,6 +205,11 @@ parser_error_t tx_indexRootFields() {
                     if (parser_tx_obj.flags.msg_type_grouping && is_msg_type_field(tmp_key)) {
                         // First message, initialize expected type
                         if (parser_tx_obj.filter_msg_type_count == 0) {
+
+                            if (strlen(tmp_val) >= sizeof(reference_msg_type)) {
+                                return parser_unexpected_type;
+                            }
+
                             strcpy(reference_msg_type, tmp_val);
                             parser_tx_obj.filter_msg_type_valid_idx = current_item_idx;
                         }

@@ -205,6 +205,9 @@ void app_init() {
 void app_main() {
     volatile uint32_t rx = 0, tx = 0, flags = 0;
 
+    // NOTE: requested from Ledger HQ
+    tx_initialize();
+
     for (;;) {
         volatile uint16_t sw = 0;
 
