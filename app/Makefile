@@ -34,7 +34,7 @@ APPPATH = "44'/118'"
 APP_LOAD_PARAMS = --appFlags 0x200 --delete $(COMMON_LOAD_PARAMS) --path $(APPPATH)
 
 ifeq ($(TARGET_NAME),TARGET_NANOS)
-SCRIPT_LD:=$(CURDIR)/script.ld
+APP_STACK_SIZE:=1212
 ICONNAME:=$(CURDIR)/nanos_icon.gif
 endif
 
