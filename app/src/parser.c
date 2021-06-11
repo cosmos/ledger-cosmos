@@ -49,6 +49,8 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
 }
 
 parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_items) {
+    UNUSED(ctx);
+
     *num_items = 0;
     return tx_display_numItems(num_items);
 }

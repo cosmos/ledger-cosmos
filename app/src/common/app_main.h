@@ -46,6 +46,9 @@ bool process_chunk(volatile uint32_t *tx, uint32_t rx);
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx);
 
 __Z_INLINE void handle_getversion(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+    UNUSED(flags);
+    UNUSED(rx);
+
 #ifdef DEBUG
     G_io_apdu_buffer[0] = 0xFF;
 #else
