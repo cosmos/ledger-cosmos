@@ -165,7 +165,7 @@ void ripemd160_32(uint8_t *out, uint8_t *in) {
 void crypto_set_hrp(char *p) {
     bech32_hrp_len = strlen(p);
     if (bech32_hrp_len < MAX_BECH32_HRP_LEN) {
-        strcpy(bech32_hrp, p);
+        strlcpy(bech32_hrp, p, sizeof(bech32_hrp));
     }
 }
 

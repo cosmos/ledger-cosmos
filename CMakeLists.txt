@@ -56,6 +56,8 @@ target_include_directories(app_lib PUBLIC
         deps/ledger-zxlib/app/common
         )
 
+target_link_libraries(app_lib PUBLIC bsd)
+
 ##############################################################
 ##############################################################
 #  Tests

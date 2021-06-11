@@ -210,7 +210,7 @@ parser_error_t tx_indexRootFields() {
                                 return parser_unexpected_type;
                             }
 
-                            strcpy(reference_msg_type, tmp_val);
+                            strlcpy(reference_msg_type, tmp_val, sizeof(reference_msg_type));
                             parser_tx_obj.filter_msg_type_valid_idx = current_item_idx;
                         }
 
@@ -227,7 +227,7 @@ parser_error_t tx_indexRootFields() {
                     if (parser_tx_obj.flags.msg_from_grouping && is_msg_from_field(tmp_key)) {
                         // First message, initialize expected from
                         if (parser_tx_obj.filter_msg_from_count == 0) {
-                            strcpy(reference_msg_from, tmp_val);
+                            strlcpy(reference_msg_from, tmp_val, sizeof(reference_msg_from));
                             parser_tx_obj.filter_msg_from_valid_idx = current_item_idx;
                         }
 
@@ -382,7 +382,7 @@ parser_error_t tx_display_query(uint16_t displayIdx,
     CHECK_PARSER_ERR(retrieve_tree_indexes(displayIdx, &root_index, &subitem_index));
 
     // Prepare query
-    char tmp_val[2];
+    static char tmp_val[2];
     INIT_QUERY_CONTEXT(outKey, outKeyLen, tmp_val, sizeof(tmp_val),
                        0, get_root_max_level(root_index))
     parser_tx_obj.query.item_index = subitem_index;
