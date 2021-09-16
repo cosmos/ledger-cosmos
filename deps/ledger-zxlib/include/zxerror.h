@@ -36,7 +36,7 @@ typedef enum {
     zxerr_ledger_api_error = 0b00001111,
 } zxerr_t;
 
-uint8_t getErrorMessage(char* buffer, uint16_t bufferLen, zxerr_t err) {
+__Z_INLINE uint8_t getErrorMessage(char* buffer, uint16_t bufferLen, zxerr_t err) {
     MEMZERO(buffer, bufferLen);
 
     switch (err) {
