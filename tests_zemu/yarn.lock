@@ -308,17 +308,17 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@grpc/grpc-js@^1.3.2":
-  version "1.3.2"
-  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.3.2.tgz#eae97e6daf5abd49a7818aadeca0744dfb1ebca1"
-  integrity sha512-UXepkOKCATJrhHGsxt+CGfpZy9zUn1q9mop5kfcXq1fBkTePxVNPOdnISlCbJFlCtld+pSLGyZCzr9/zVprFKA==
+"@grpc/grpc-js@^1.3.4":
+  version "1.3.7"
+  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.3.7.tgz#58b687aff93b743aafde237fd2ee9a3259d7f2d8"
+  integrity sha512-CKQVuwuSPh40tgOkR7c0ZisxYRiN05PcKPW72mQL5y++qd7CwBRoaJZvU5xfXnCJDFBmS3qZGQ71Frx6Ofo2XA==
   dependencies:
     "@types/node" ">=12.12.47"
 
-"@grpc/proto-loader@^0.6.2":
-  version "0.6.2"
-  resolved "https://registry.yarnpkg.com/@grpc/proto-loader/-/proto-loader-0.6.2.tgz#412575f3ff5ef0a9b79d4ea12c08cba5601041cb"
-  integrity sha512-q2Qle60Ht2OQBCp9S5hv1JbI4uBBq6/mqSevFNK3ZEgRDBCAkWqZPUhD/K9gXOHrHKluliHiVq2L9sw1mVyAIg==
+"@grpc/proto-loader@^0.6.4":
+  version "0.6.5"
+  resolved "https://registry.yarnpkg.com/@grpc/proto-loader/-/proto-loader-0.6.5.tgz#f23c7cb3e7076a8702f40c2b6678f06fb9950a55"
+  integrity sha512-GZdzyVQI1Bln/kCzIYgTKu+rQJ5dno0gVrfmLe4jqQu7T2e7svSwJzpCBqVU5hhBSJP3peuPjOMWsj5GR61YmQ==
   dependencies:
     "@types/long" "^4.0.1"
     lodash.camelcase "^4.3.0"
@@ -610,23 +610,38 @@
     rxjs "6"
     semver "^7.3.5"
 
+"@ledgerhq/devices@^6.7.0":
+  version "6.7.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/devices/-/devices-6.7.0.tgz#90e8fef16e6d039dec64e8a7f1874031578e1973"
+  integrity sha512-FWJfmdl8V300++OXLgBLpIi+IJoR/srWvxpXrWkc9hd3cNMxgeCl9opm84Y0oJDLBQL9AaERMrb+Cb1nZZR9Tw==
+  dependencies:
+    "@ledgerhq/errors" "^6.2.0"
+    "@ledgerhq/logs" "^6.2.0"
+    rxjs "6"
+    semver "^7.3.5"
+
 "@ledgerhq/errors@^5.50.0":
   version "5.50.0"
   resolved "https://registry.yarnpkg.com/@ledgerhq/errors/-/errors-5.50.0.tgz#e3a6834cb8c19346efca214c1af84ed28e69dad9"
   integrity sha512-gu6aJ/BHuRlpU7kgVpy2vcYk6atjB4iauP2ymF7Gk0ez0Y/6VSMVSJvubeEQN+IV60+OBK0JgeIZG7OiHaw8ow==
 
-"@ledgerhq/hw-transport-http@^5.51.1":
-  version "5.51.1"
-  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-transport-http/-/hw-transport-http-5.51.1.tgz#720b4a054401c82884f9d64bcb093988fd397498"
-  integrity sha512-hsWxRX+dICyCHUxdUWqKnFwSPL0G9v/R6TVEJpnQ07IiBfIajbF59IRPCn9/Fw4XHII6IO+xtPT+jFkwwSdHLQ==
-  dependencies:
-    "@ledgerhq/errors" "^5.50.0"
-    "@ledgerhq/hw-transport" "^5.51.1"
-    "@ledgerhq/logs" "^5.50.0"
-    axios "^0.21.1"
-    ws "6"
+"@ledgerhq/errors@^6.2.0":
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/errors/-/errors-6.2.0.tgz#7dc2b3bf6bdedccdaa1b97dccacfa912c4fc22f8"
+  integrity sha512-eO03x8HJmG60WtlrMuahigW/rwywFdcGzCnihta/MjkM8BD9A660cKVkyIuheCcpaB7UV/r+QsRl9abHbjjaag==
 
-"@ledgerhq/hw-transport@^5.25.0", "@ledgerhq/hw-transport@^5.51.1":
+"@ledgerhq/hw-transport-http@^6.1.0":
+  version "6.7.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-transport-http/-/hw-transport-http-6.7.0.tgz#dbc40c0c7dcf15e999331b49c1a583a63d0dea31"
+  integrity sha512-99UIQr3gw6b8ZzyQM6qIEJHGg5wz5k3/E/Bf26yhmE0k5qAoIxEjxq8vsPQzkUH6S872dXYXmmw1/+YK70cv7w==
+  dependencies:
+    "@ledgerhq/errors" "^6.2.0"
+    "@ledgerhq/hw-transport" "^6.7.0"
+    "@ledgerhq/logs" "^6.2.0"
+    axios "^0.21.4"
+    ws "7"
+
+"@ledgerhq/hw-transport@^5.25.0":
   version "5.51.1"
   resolved "https://registry.yarnpkg.com/@ledgerhq/hw-transport/-/hw-transport-5.51.1.tgz#8dd14a8e58cbee4df0c29eaeef983a79f5f22578"
   integrity sha512-6wDYdbWrw9VwHIcoDnqWBaDFyviyjZWv6H9vz9Vyhe4Qd7TIFmbTl/eWs6hZvtZBza9K8y7zD8ChHwRI4s9tSw==
@@ -635,10 +650,24 @@
     "@ledgerhq/errors" "^5.50.0"
     events "^3.3.0"
 
+"@ledgerhq/hw-transport@^6.1.0", "@ledgerhq/hw-transport@^6.7.0":
+  version "6.7.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/hw-transport/-/hw-transport-6.7.0.tgz#d1f0d70e21b91e6457a32d4c3cec0764e97461ff"
+  integrity sha512-w+PhW6Y4KXYdoCykkE1zt0VL6Ryf72RP8sZP8OH1O90hX/R/q9BMYKl8VNqTbqlrOrORgATlKkbmIJBjbngZew==
+  dependencies:
+    "@ledgerhq/devices" "^6.7.0"
+    "@ledgerhq/errors" "^6.2.0"
+    events "^3.3.0"
+
 "@ledgerhq/logs@^5.50.0":
   version "5.50.0"
   resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-5.50.0.tgz#29c6419e8379d496ab6d0426eadf3c4d100cd186"
   integrity sha512-swKHYCOZUGyVt4ge0u8a7AwNcA//h4nx5wIi0sruGye1IJ5Cva0GyK9L2/WdX+kWVTKp92ZiEo1df31lrWGPgA==
+
+"@ledgerhq/logs@^6.2.0":
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/@ledgerhq/logs/-/logs-6.2.0.tgz#9fb2d6f1811316697f7b3cc14607f6c608912419"
+  integrity sha512-SLyFyD7ElMhgKWPYedFGCT/ilcbGPgL5hXXYHxOM79Fs5fWi0zaUpt5oGqGMsOAAFaMa9/rbun0pokzPhEFz8A==
 
 "@nodelib/fs.scandir@2.1.3":
   version "2.1.3"
@@ -991,18 +1020,19 @@
     "@typescript-eslint/types" "4.8.1"
     eslint-visitor-keys "^2.0.0"
 
-"@zondax/zemu@^0.14.5":
-  version "0.14.5"
-  resolved "https://registry.yarnpkg.com/@zondax/zemu/-/zemu-0.14.5.tgz#c50517fb8d310a7a85ecb01d999ebf5568000e04"
-  integrity sha512-o8/NOMppMYP9lrHpMXs7wsuZh2YGljlYtjlgisWy+GnSk5MS08ULtCb3EzCe0Wc6W3hGBk6siZzpHX/UqqJi3g==
+"@zondax/zemu@^0.16.5":
+  version "0.16.5"
+  resolved "https://registry.yarnpkg.com/@zondax/zemu/-/zemu-0.16.5.tgz#45acddf593de4a9d70861c8671441d6f54c5a461"
+  integrity sha512-y5hMSE9DVVVsJuTbK8EjMxbZ49eItezSksb+JmbW9mkEwj5tIpT/50kF/2Lcu969yLbxBpwVyBUcT9gp0UoLuw==
   dependencies:
-    "@grpc/grpc-js" "^1.3.2"
-    "@grpc/proto-loader" "^0.6.2"
-    "@ledgerhq/hw-transport" "^5.51.1"
-    "@ledgerhq/hw-transport-http" "^5.51.1"
+    "@grpc/grpc-js" "^1.3.4"
+    "@grpc/proto-loader" "^0.6.4"
+    "@ledgerhq/hw-transport" "^6.1.0"
+    "@ledgerhq/hw-transport-http" "^6.1.0"
     dockerode "^3.3.0"
     elfy "^1.0.0"
     fs-extra "^10.0.0"
+    get-port "^5.1.1"
     json-rpc2 "^2.0.0"
     path "^0.12.7"
     pngjs "^6.0.0"
@@ -1243,6 +1273,7 @@ aws4@^1.8.0:
   integrity sha512-xh1Rl34h6Fi1DC2WWKfxUTVqRsNnr6LsKz2+hfwDxQJWmrx8+c7ylaqBMcHfl1U1r2dsifOvKX3LQuLNZ+XSvA==
 
 <<<<<<< refs/remotes/origin/master
+<<<<<<< refs/remotes/origin/master
 axios@^0.21.0:
   version "0.21.4"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
@@ -1253,6 +1284,12 @@ axios@^0.21.1:
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.1.tgz#22563481962f4d6bde9a76d516ef0e5d3c09b2b8"
   integrity sha512-dKQiRHxGD9PPRIUNIWvZhPTPpl1rf/OxTYKsqKUDjBwYylTvV7SjSHJb9ratfyzM6wCdLCOYLzs73qpg5c4iGA==
 >>>>>>> upgrade to sdk2.0
+=======
+axios@^0.21.4:
+  version "0.21.4"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
+  integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
+>>>>>>> update zemu
   dependencies:
     follow-redirects "^1.14.0"
 
@@ -2629,6 +2666,11 @@ get-package-type@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/get-package-type/-/get-package-type-0.1.0.tgz#8de2d803cff44df3bc6c456e6668b36c3926e11a"
   integrity sha512-pjzuKtY64GYfWizNAJ0fr9VqttZkNiK2iS430LtIHzjBEr6bX8Am2zm4sW4Ro5wjWW5cAlRL1qAMTcXbjNAO2Q==
+
+get-port@^5.1.1:
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/get-port/-/get-port-5.1.1.tgz#0469ed07563479de6efb986baf053dcd7d4e3193"
+  integrity sha512-g/Q1aTSDOxFpchXC4i8ZWvxA1lnPqx/JHqcpIw0/LX9T8x/GBbi6YnlN5nhaKIFkT8oFsscUKgDJYxfwfS6QsQ==
 
 get-stream@^4.0.0:
   version "4.1.0"
@@ -6221,12 +6263,10 @@ write-file-atomic@^3.0.0:
     signal-exit "^3.0.2"
     typedarray-to-buffer "^3.1.5"
 
-ws@6:
-  version "6.2.1"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-6.2.1.tgz#442fdf0a47ed64f59b6a5d8ff130f4748ed524fb"
-  integrity sha512-GIyAXC2cB7LjvpgMt9EKS2ldqr0MTrORaleiOno6TweZ6r3TKtoFQWay/2PceJ3RuBasOHzXNn5Lrw1X0bEjqA==
-  dependencies:
-    async-limiter "~1.0.0"
+ws@7:
+  version "7.5.5"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.5.tgz#8b4bc4af518cfabd0473ae4f99144287b33eb881"
+  integrity sha512-BAkMFcAzl8as1G/hArkxOxq3G7pjUqQ3gzYbLL0/5zNkph70e+lCoxBGnm6AW1+/aiNeV4fnKqZ8m4GZewmH2w==
 
 ws@^5.2.0:
   version "5.2.3"
