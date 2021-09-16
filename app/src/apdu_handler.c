@@ -16,18 +16,21 @@
 ********************************************************************************/
 
 #include "app_main.h"
-#include "app_mode.h"
 
 #include <string.h>
 #include <os_io_seproxyhal.h>
 #include <os.h>
+#include <ux.h>
 
 #include "view.h"
 #include "actions.h"
 #include "tx.h"
+#include "addr.h"
 #include "crypto.h"
 #include "coin.h"
 #include "zxmacros.h"
+#include "app_mode.h"
+
 #include "parser_impl.h"
 
 __Z_INLINE void handleGetAddrSecp256K1(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
@@ -36,14 +39,20 @@ __Z_INLINE void handleGetAddrSecp256K1(volatile uint32_t *flags, volatile uint32
 
     uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
 
+    zxerr_t zxerr = app_fill_address();
+    if (zxerr != zxerr_ok) {
+        *tx = 0;
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
     if (requireConfirmation) {
-        app_fill_address(addr_secp256k1);
-        view_address_show(addr_secp256k1);
+        view_review_init(addr_getItem, addr_getNumItems, app_reply_address);
+        view_review_show();
         *flags |= IO_ASYNCH_REPLY;
         return;
     }
 
-    *tx = app_fill_address(addr_secp256k1);
+    *tx = action_addrResponseLen;
     THROW(APDU_CODE_OK);
 }
 
@@ -53,7 +62,11 @@ __Z_INLINE void handleSignSecp256K1(volatile uint32_t *flags, volatile uint32_t 
     }
 
     // Put address in output buffer, we will use it to confirm source address
-    app_fill_address(addr_secp256k1);
+    zxerr_t zxerr = app_fill_address();
+    if (zxerr != zxerr_ok) {
+        *tx = 0;
+        THROW(APDU_CODE_DATA_INVALID);
+    }
     parser_tx_obj.own_addr = (const char *)(G_io_apdu_buffer + VIEW_ADDRESS_OFFSET_SECP256K1);
 
     const char *error_msg = tx_parse();
@@ -65,7 +78,9 @@ __Z_INLINE void handleSignSecp256K1(volatile uint32_t *flags, volatile uint32_t 
         THROW(APDU_CODE_DATA_INVALID);
     }
 
-    view_sign_show();
+    CHECK_APP_CANARY()
+    view_review_init(tx_getItem, tx_getNumItems, app_sign);
+    view_review_show();
     *flags |= IO_ASYNCH_REPLY;
 }
 

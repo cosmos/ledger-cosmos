@@ -1,5 +1,5 @@
 /*******************************************************************************
-*  (c) 2019 Zondax GmbH
+*  (c) 2019-2021 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -19,9 +19,6 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <stddef.h>
-
 #define CLA                  0x55
 
 #define HDPATH_LEN_DEFAULT   5
@@ -30,7 +27,6 @@ extern "C" {
 #define HDPATH_1_DEFAULT     (0x80000000u | 0x76u)
 #define HDPATH_2_DEFAULT     (0x80000000u | 0u)
 #define HDPATH_3_DEFAULT     (0u)
-#define HDPATH_4_DEFAULT     (0u)
 
 #define PK_LEN_SECP256K1     33u
 
@@ -46,13 +42,15 @@ typedef enum {
 #define APPVERSION_LINE1                   "Version:"
 #define APPVERSION_LINE2                   ("v" APPVERSION)
 
-#define CRYPTO_BLOB_SKIP_BYTES              0
 #define COIN_DEFAULT_CHAINID                "cosmoshub-4"
 
 // In non-expert mode, the app will convert from uatom to ATOM
 #define COIN_DEFAULT_DENOM_BASE             "uatom"
 #define COIN_DEFAULT_DENOM_REPR             "ATOM"
 #define COIN_DEFAULT_DENOM_FACTOR           6
+
+#define MENU_MAIN_APP_LINE2_SECRET         "?"
+#define COIN_SECRET_REQUIRED_CLICKS         0
 
 #ifdef __cplusplus
 }

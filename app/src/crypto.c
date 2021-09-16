@@ -18,6 +18,7 @@
 #include "coin.h"
 #include "zxmacros.h"
 #include "apdu_codes.h"
+#include "tx.h"
 
 #include <bech32.h>
 
@@ -29,28 +30,30 @@ char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
 #if defined(TARGET_NANOS) || defined(TARGET_NANOX)
 #include "cx.h"
 
-void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen) {
+zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *pubKey, uint16_t pubKeyLen) {
     cx_ecfp_public_key_t cx_publicKey;
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
 
     if (pubKeyLen < PK_LEN_SECP256K1) {
-        return;
+        return zxerr_invalid_crypto_settings;
     }
 
     BEGIN_TRY
     {
         TRY {
-            // Generate keys
             os_perso_derive_node_bip32(CX_CURVE_256K1,
-                                                      path,
-                                                      HDPATH_LEN_DEFAULT,
-                                                      privateKeyData,
-                                                      NULL);
+                                       path,
+                                       HDPATH_LEN_DEFAULT,
+                                       privateKeyData, NULL);
 
             cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey);
             cx_ecfp_init_public_key(CX_CURVE_256K1, NULL, 0, &cx_publicKey);
             cx_ecfp_generate_pair(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1);
+        }
+        CATCH_OTHER(e) {
+            CLOSE_TRY;
+            return zxerr_ledger_api_error;
         }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
@@ -69,33 +72,36 @@ void crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t *p
     }
     //////////////////////
     MEMCPY(pubKey, cx_publicKey.W, PK_LEN_SECP256K1);
+
+    return zxerr_ok;
 }
 
-uint16_t crypto_sign(uint8_t *signature,
-                     uint16_t signatureMaxlen,
-                     const uint8_t *message,
-                     uint16_t messageLen) {
+zxerr_t crypto_sign(uint8_t *signature,
+                   uint16_t signatureMaxlen,
+                   uint16_t *sigSize) {
     uint8_t messageDigest[CX_SHA256_SIZE];
+    MEMZERO(messageDigest,sizeof(messageDigest));
 
     // Hash it
+    const uint8_t *message = tx_get_buffer();
+    const uint16_t messageLen = tx_get_buffer_length();
     cx_hash_sha256(message, messageLen, messageDigest, CX_SHA256_SIZE);
 
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
-    int signatureLength = 0;
     unsigned int info = 0;
-
+    int signatureLength = 0;
     BEGIN_TRY
     {
         TRY
         {
             // Generate keys
-            os_perso_derive_node_bip32(CX_CURVE_256K1,
-                                                      hdPath,
-                                                      HDPATH_LEN_DEFAULT,
-                                                      privateKeyData, NULL);
+            os_perso_derive_node_bip32(CX_CURVE_SECP256K1,
+                                       hdPath,
+                                       HDPATH_LEN_DEFAULT,
+                                       privateKeyData, NULL);
 
-            cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey);
+            cx_ecfp_init_private_key(CX_CURVE_SECP256K1, privateKeyData, 32, &cx_privateKey);
 
             // Sign
             signatureLength = cx_ecdsa_sign(&cx_privateKey,
@@ -114,7 +120,8 @@ uint16_t crypto_sign(uint8_t *signature,
     }
     END_TRY;
 
-    return signatureLength;
+    *sigSize = signatureLength;
+    return zxerr_ok;
 }
 
 #else
@@ -169,9 +176,9 @@ void crypto_set_hrp(char *p) {
     }
 }
 
-uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
+zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrResponseLen) {
     if (buffer_len < PK_LEN_SECP256K1 + 50) {
-        return 0;
+        return zxerr_buffer_too_small;
     }
 
     // extract pubkey
@@ -187,5 +194,7 @@ uint16_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len) {
     char *addr = (char *) (buffer + PK_LEN_SECP256K1);
     bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE, 1);
 
-    return PK_LEN_SECP256K1 + strlen(addr);
+    *addrResponseLen = PK_LEN_SECP256K1 + strlen(addr);
+
+    return zxerr_ok;
 }

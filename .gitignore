@@ -88,3 +88,10 @@ app/src/glyphs.c
 
 app/src/glyphs.h
 /build
+.vscode/dryrun.log
+.vscode/targets.log
+
+fuzz-*.log
+/fuzz/corpora
+
+.vscode/

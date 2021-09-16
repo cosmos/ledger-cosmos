@@ -36,22 +36,17 @@
 
 # Others
 cmake-build-debug/
-../.idea/workspace.xml
+\.idea/workspace\.xml
 \.idea/
-src/ledger/bin/
-src/ledger/debug/
-src/ledger/obj/
-obj/app\.elf
-debug/app\.map
-debug/app\.asm
-bin/app\.hex
-bin/app\.elf
-glyphs/glyphs.h
-glyphs/glyphs.c
+
+glyphs/glyphs\.h
+glyphs/glyphs\.c
+obj/
+bin/
+debug/
 bin/app.sha256
 bin/app.apdu
 
-pkg/bin/app.hex
+\output/app.*
 pkg/zxtool.sh
-
-pkg/demo.zip
+pkg/installer_?.sh

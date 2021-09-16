@@ -22,6 +22,7 @@
 #include "tx_display.h"
 #include "parser_impl.h"
 #include "common/parser.h"
+#include "coin.h"
 
 parser_error_t parser_parse(parser_context_t *ctx,
                             const uint8_t *data,
@@ -58,7 +59,7 @@ __Z_INLINE bool_t parser_areEqual(uint16_t tokenidx, char *expected) {
         return bool_false;
     }
 
-    int16_t len = parser_tx_obj.json.tokens[tokenidx].end - parser_tx_obj.json.tokens[tokenidx].start;
+    int32_t len = parser_tx_obj.json.tokens[tokenidx].end - parser_tx_obj.json.tokens[tokenidx].start;
     if (len < 0) {
         return bool_false;
     }
@@ -177,8 +178,9 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
         if (fpstr_to_str(bufferUI, sizeof(tmp), tmp, COIN_DEFAULT_DENOM_FACTOR)!=0) {
             return parser_unexpected_error;
         }
+        number_inplace_trimming(bufferUI, 2);
 
-        const uint16_t formatted_len =strlen(bufferUI);
+        const uint16_t formatted_len = strlen(bufferUI);
         bufferUI[formatted_len] = ' ';
         MEMCPY(bufferUI + 1 + formatted_len, COIN_DEFAULT_DENOM_REPR, strlen(COIN_DEFAULT_DENOM_REPR));
     } else {
@@ -193,11 +195,13 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
 }
 
 parser_error_t parser_getItem(const parser_context_t *ctx,
-                              uint16_t displayIdx,
+                              uint8_t displayIdx,
                               char *outKey, uint16_t outKeyLen,
                               char *outVal, uint16_t outValLen,
                               uint8_t pageIdx, uint8_t *pageCount) {
     *pageCount = 0;
+
+    char tmpKey[100];
 
     MEMZERO(outKey, outKeyLen);
     MEMZERO(outVal, outValLen);
@@ -215,32 +219,27 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     }
 
     uint16_t ret_value_token_index = 0;
-    CHECK_PARSER_ERR(tx_display_query(displayIdx, outKey, outKeyLen, &ret_value_token_index));
+    CHECK_PARSER_ERR(tx_display_query(displayIdx, tmpKey, sizeof(tmpKey), &ret_value_token_index));
     CHECK_APP_CANARY()
+    snprintf(outKey, outKeyLen, "%s", tmpKey);
 
-    if (parser_isAmount(outKey)) {
-        CHECK_PARSER_ERR(parser_formatAmount(
-                ret_value_token_index,
-                outVal, outValLen,
-                pageIdx, pageCount))
+    if (parser_isAmount(tmpKey)) {
+        CHECK_PARSER_ERR(
+                parser_formatAmount(ret_value_token_index,
+                                    outVal, outValLen,
+                                    pageIdx, pageCount))
     } else {
-        CHECK_PARSER_ERR(tx_getToken(
-                ret_value_token_index,
-                outVal, outValLen,
-                pageIdx, pageCount))
+        CHECK_PARSER_ERR(tx_getToken(ret_value_token_index,
+                                     outVal, outValLen,
+                                     pageIdx, pageCount))
     }
     CHECK_APP_CANARY()
 
     CHECK_PARSER_ERR(tx_display_make_friendly())
     CHECK_APP_CANARY()
 
-    if (*pageCount > 1) {
-        size_t keyLen = strlen(outKey);
-        if (keyLen < outKeyLen) {
-            snprintf(outKey + keyLen, outKeyLen - keyLen, " [%d/%d]", pageIdx + 1, *pageCount);
-        }
-    }
-
+    snprintf(outKey, outKeyLen, "%s", tmpKey);
     CHECK_APP_CANARY()
+
     return parser_ok;
 }

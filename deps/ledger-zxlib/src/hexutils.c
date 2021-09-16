@@ -22,7 +22,7 @@ uint8_t hex2dec(char c, char *out) {
     c = (char) tolower((int) c);
 
     if (!isxdigit((int) c)) {
-        return -1;
+        return 1;
     }
 
     if (isdigit((int) c)) {
@@ -35,7 +35,7 @@ uint8_t hex2dec(char c, char *out) {
 }
 
 size_t parseHexString(uint8_t *out, uint16_t outLen, const char *input) {
-    size_t len = strnlen(input, outLen * 2 + 1);
+    size_t len = strnlen(input, outLen * 2u + 1u);
     if ( (len / 2) > outLen) {
         return 0;
     }

@@ -16,8 +16,7 @@
 #include "zxmacros.h"
 #include "utf8.h"
 
-size_t asciify(char *utf8_in_ascii_out)
-{
+size_t asciify(char *utf8_in_ascii_out) {
     return asciify_ext(utf8_in_ascii_out, utf8_in_ascii_out);
 }
 
@@ -29,7 +28,7 @@ size_t asciify_ext(const char *utf8_in, char *ascii_only_out) {
     while (*((char *) p) && utf8valid(p) == 0) {
         utf8_int32_t tmp_codepoint = 0;
         p = utf8codepoint(p, &tmp_codepoint);
-        *q = (tmp_codepoint >= 32 && tmp_codepoint <= 0x7F) ? tmp_codepoint : '.';
+        *q = (char) ((tmp_codepoint >= 32 && tmp_codepoint <= (int32_t) 0x7F) ? tmp_codepoint : '.');
         q++;
     }
 
@@ -39,9 +38,43 @@ size_t asciify_ext(const char *utf8_in, char *ascii_only_out) {
 }
 
 void handle_stack_overflow() {
+    zemu_log("!!!!!!!!!!!!!!!!!!!!!! CANARY TRIGGERED!!! STACK OVERFLOW DETECTED\n");
 #if defined (TARGET_NANOS) || defined(TARGET_NANOX)
     io_seproxyhal_se_reset();
 #else
-    while(1);
+    while (1);
+#endif
+}
+
+void check_app_canary() {
+#if defined (TARGET_NANOS) || defined(TARGET_NANOX)
+    if (app_stack_canary != APP_STACK_CANARY_MAGIC) handle_stack_overflow();
+#endif
+}
+
+void zemu_log_stack(const char *ctx) {
+#if defined(ZEMU_LOGGING) && (defined (TARGET_NANOS) || defined(TARGET_NANOX))
+#define STACK_SHIFT 20
+    void* p = NULL;
+    char buf[70];
+    snprintf(buf, sizeof(buf), "|SP| %p %p (%d) : %s\n",
+            &app_stack_canary,
+            ((void*)&p)+STACK_SHIFT,
+            (uint32_t)((void*)&p)+STACK_SHIFT - (uint32_t)&app_stack_canary,
+            ctx);
+    zemu_log(buf);
+#else
+    (void)ctx;
+#endif
+}
+
+void zemu_trace(const char *file, uint32_t line) {
+#if defined(ZEMU_LOGGING) && (defined (TARGET_NANOS) || defined(TARGET_NANOX))
+    char buf[200];
+    snprintf(buf, sizeof(buf), "|TRACE| %s:%d\n", file, line);
+    zemu_log(buf);
+#else
+    UNUSED(file);
+    UNUSED(line);
 #endif
 }

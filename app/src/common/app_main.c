@@ -16,11 +16,11 @@
 ********************************************************************************/
 
 #include "app_main.h"
-#include "app_mode.h"
 
 #include <string.h>
 #include <os_io_seproxyhal.h>
 #include <os.h>
+#include <ux.h>
 
 #include "view.h"
 #include "actions.h"
@@ -28,6 +28,7 @@
 #include "crypto.h"
 #include "coin.h"
 #include "zxmacros.h"
+#include "app_mode.h"
 
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
@@ -192,17 +193,14 @@ void app_init() {
     USB_power(1);
 
     app_mode_reset();
-    if (app_mode_expert()) {
-        view_idle_show(1);
-    }
-
-    view_idle_show(0);
+    view_idle_show(0, NULL);
 
 #ifdef HAVE_BLE
     // Enable Bluetooth
     BLE_power(0, NULL);
     BLE_power(1, "Nano X");
 #endif // HAVE_BLE
+
 }
 
 #pragma clang diagnostic push
