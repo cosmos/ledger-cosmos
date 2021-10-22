@@ -29,7 +29,7 @@ const char whitespaces[] = {
 };
 
 int8_t is_space(char c) {
-    for (uint16_t i = 0; i < sizeof(whitespaces); i++) {
+    for (uint32_t i = 0; i < sizeof(whitespaces); i++) {
         if (whitespaces[i] == c) {
             return 1;
         }
@@ -64,8 +64,8 @@ int8_t contains_whitespace(parsed_json_t *json) {
     return 0;
 }
 
-int8_t is_sorted(int16_t first_index,
-                 int16_t second_index,
+int8_t is_sorted(uint16_t first_index,
+                 uint16_t second_index,
                  parsed_json_t *json) {
     char first[256];
     char second[256];

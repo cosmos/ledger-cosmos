@@ -177,7 +177,7 @@ void h_review_action() {
         return;
     }
 #endif
-};
+}
 
 zxerr_t h_review_update_data() {
     if (viewdata.viewfuncGetNumItems == NULL) {

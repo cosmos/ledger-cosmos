@@ -165,7 +165,7 @@ parser_error_t tx_indexRootFields() {
         display_cache.root_item_start_token_idx[root_item_idx] = req_root_item_key_token_idx;
 
         // Now count how many items can be found in this root item
-        int32_t current_item_idx = 0;
+        int16_t current_item_idx = 0;
         while (err == parser_ok) {
             INIT_QUERY_CONTEXT(tmp_key, sizeof(tmp_key),
                                tmp_val, sizeof(tmp_val),
@@ -210,7 +210,7 @@ parser_error_t tx_indexRootFields() {
                                 return parser_unexpected_type;
                             }
 
-                            strlcpy(reference_msg_type, tmp_val, sizeof(reference_msg_type));
+                            snprintf(reference_msg_type, sizeof(reference_msg_type), "%s", tmp_val);
                             parser_tx_obj.filter_msg_type_valid_idx = current_item_idx;
                         }
 
@@ -227,7 +227,7 @@ parser_error_t tx_indexRootFields() {
                     if (parser_tx_obj.flags.msg_from_grouping && is_msg_from_field(tmp_key)) {
                         // First message, initialize expected from
                         if (parser_tx_obj.filter_msg_from_count == 0) {
-                            strlcpy(reference_msg_from, tmp_val, sizeof(reference_msg_from));
+                            snprintf(reference_msg_from, sizeof(reference_msg_from), "%s", tmp_val);
                             parser_tx_obj.filter_msg_from_valid_idx = current_item_idx;
                         }
 
@@ -257,7 +257,7 @@ parser_error_t tx_indexRootFields() {
 
     parser_tx_obj.flags.cache_valid = 1;
 
-    CHECK_PARSER_ERR(calculate_is_default_chainid());
+    CHECK_PARSER_ERR(calculate_is_default_chainid())
 
     // turn off grouping if we are not in expert mode
     if (tx_is_expert_mode()) {
@@ -266,7 +266,7 @@ parser_error_t tx_indexRootFields() {
 
     // check if from reference value matches the device address that will be signing
     parser_tx_obj.flags.msg_from_grouping_hide_all = 0;
-    if (address_matches_own(reference_msg_from)){
+    if (address_matches_own(reference_msg_from)) {
         parser_tx_obj.flags.msg_from_grouping_hide_all = 1;
     }
 
@@ -274,7 +274,7 @@ parser_error_t tx_indexRootFields() {
 }
 
 __Z_INLINE bool is_default_chainid() {
-    CHECK_PARSER_ERR(tx_indexRootFields());
+    CHECK_PARSER_ERR(tx_indexRootFields())
     return display_cache.is_default_chain;
 }
 
@@ -287,7 +287,7 @@ __Z_INLINE uint8_t get_subitem_count(root_item_e root_item) {
     if (display_cache.total_item_count == 0)
         return 0;
 
-    int16_t tmp_num_items = display_cache.root_item_number_subitems[root_item];
+    int32_t tmp_num_items = display_cache.root_item_number_subitems[root_item];
 
     switch (root_item) {
         case root_item_chain_id:
@@ -339,7 +339,7 @@ __Z_INLINE parser_error_t retrieve_tree_indexes(uint8_t display_index, root_item
             // Advance root index and skip empty items
             *subitem_index = 0;
             (*root_item)++;
-            while (get_subitem_count(*root_item) == 0){
+            while (get_subitem_count(*root_item) == 0) {
                 (*root_item)++;
             }
         }
@@ -371,7 +371,7 @@ parser_error_t tx_display_query(uint16_t displayIdx,
     CHECK_PARSER_ERR(tx_indexRootFields())
 
     uint8_t num_items;
-    CHECK_PARSER_ERR(tx_display_numItems(&num_items));
+    CHECK_PARSER_ERR(tx_display_numItems(&num_items))
 
     if (displayIdx < 0 || displayIdx >= num_items) {
         return parser_display_idx_out_of_range;
@@ -379,7 +379,7 @@ parser_error_t tx_display_query(uint16_t displayIdx,
 
     root_item_e root_index = 0;
     uint8_t subitem_index = 0;
-    CHECK_PARSER_ERR(retrieve_tree_indexes(displayIdx, &root_index, &subitem_index));
+    CHECK_PARSER_ERR(retrieve_tree_indexes(displayIdx, &root_index, &subitem_index))
 
     // Prepare query
     static char tmp_val[2];

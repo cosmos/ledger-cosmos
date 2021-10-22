@@ -55,10 +55,10 @@ typedef struct {
 
     // internal flags
     struct {
-        unsigned int cache_valid:1;
-        unsigned int msg_type_grouping:1;
-        unsigned int msg_from_grouping:1;
-        unsigned int msg_from_grouping_hide_all:1;
+        int cache_valid:1;
+        int msg_type_grouping:1;
+        int msg_from_grouping:1;
+        int msg_from_grouping_hide_all:1;
     } flags;
 
     // indicates that N identical msg_type fields have been detected

@@ -18,21 +18,19 @@
 #include <gtest/gtest.h>
 #include <algorithm>
 
-std::vector<testcase_t> GetJsonTestCases(const std::string &filename) {
+std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile) {
     auto answer = std::vector<testcase_t>();
 
     Json::CharReaderBuilder builder;
     std::shared_ptr<Json::Value> obj(new Json::Value());
 
-    std::ifstream inFile(filename);
-    EXPECT_TRUE(inFile.is_open())
-                        << "\n"
-                        << "******************\n"
-                        << "Check that your working directory points to the tests directory\n"
-                        << "In CLion use $PROJECT_DIR$\\tests\n"
-                        << "******************\n";
-    if (!inFile.is_open())
+
+    std::string fullPathJsonFile = std::string(TESTVECTORS_DIR) + jsonFile;
+
+    std::ifstream inFile(fullPathJsonFile);
+    if (!inFile.is_open()) {
         return answer;
+    }
 
     // Retrieve all test cases
     JSONCPP_STRING errs;

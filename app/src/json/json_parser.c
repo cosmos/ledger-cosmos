@@ -208,7 +208,7 @@ parser_error_t object_get_nth_value(const parsed_json_t *json,
         return parser_no_data;
     }
 
-    CHECK_PARSER_ERR(object_get_nth_key(json, object_token_index, object_element_index, key_index));
+    CHECK_PARSER_ERR(object_get_nth_key(json, object_token_index, object_element_index, key_index))
     (*key_index) ++;
 
     return  parser_ok;

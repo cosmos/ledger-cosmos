@@ -37,7 +37,7 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
 
     // Iterate through all items to check that all can be shown and are valid
     uint8_t numItems = 0;
-    CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems));
+    CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
 
     char tmpKey[40];
     char tmpVal[40];
@@ -70,7 +70,7 @@ __Z_INLINE bool_t parser_areEqual(uint16_t tokenidx, char *expected) {
     }
 
     const char *p = parser_tx_obj.tx + parser_tx_obj.json.tokens[tokenidx].start;
-    for (uint16_t i = 0; i < len; i++) {
+    for (uint32_t i = 0; i < len; i++) {
         if (expected[i] != *(p + i)) {
             return bool_false;
         }
@@ -120,7 +120,7 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
 
     uint16_t numElements;
 
-    CHECK_PARSER_ERR(array_get_element_count(&parser_tx_obj.json, amountToken, &numElements));
+    CHECK_PARSER_ERR(array_get_element_count(&parser_tx_obj.json, amountToken, &numElements))
 
     if (numElements == 0) {
         *pageCount = 1;
@@ -149,10 +149,10 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
         return parser_unexpected_buffer_end;
     }
 
-    const int16_t amountLen = parser_tx_obj.json.tokens[amountToken + 2].end -
+    const int32_t amountLen = parser_tx_obj.json.tokens[amountToken + 2].end -
                               parser_tx_obj.json.tokens[amountToken + 2].start;
     const char *denomPtr = parser_tx_obj.tx + parser_tx_obj.json.tokens[amountToken + 4].start;
-    const int16_t denomLen = parser_tx_obj.json.tokens[amountToken + 4].end -
+    const int32_t denomLen = parser_tx_obj.json.tokens[amountToken + 4].end -
                              parser_tx_obj.json.tokens[amountToken + 4].start;
 
     if (amountLen <= 0) {
@@ -220,7 +220,7 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     }
 
     uint16_t ret_value_token_index = 0;
-    CHECK_PARSER_ERR(tx_display_query(displayIdx, tmpKey, sizeof(tmpKey), &ret_value_token_index));
+    CHECK_PARSER_ERR(tx_display_query(displayIdx, tmpKey, sizeof(tmpKey), &ret_value_token_index))
     CHECK_APP_CANARY()
     snprintf(outKey, outKeyLen, "%s", tmpKey);
 
