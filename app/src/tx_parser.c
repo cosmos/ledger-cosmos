@@ -15,9 +15,9 @@
 ********************************************************************************/
 
 #include <jsmn.h>
-#include <stdio.h>
 #include "tx_parser.h"
 #include "zxmacros.h"
+#include "zxformat.h"
 #include "parser_impl.h"
 
 // strcat but source does not need to be terminated (a chunk from a bigger string is concatenated)

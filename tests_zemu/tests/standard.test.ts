@@ -14,10 +14,10 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu, {DEFAULT_START_OPTIONS} from '@zondax/zemu'
+import Zemu, { DEFAULT_START_OPTIONS } from '@zondax/zemu'
 // @ts-ignore
 import CosmosApp from 'ledger-cosmos-js'
-import {APP_SEED, example_tx_str_basic, example_tx_str_basic2, models} from './common'
+import { APP_SEED, example_tx_str_basic, example_tx_str_basic2, models } from './common'
 
 // @ts-ignore
 import secp256k1 from 'secp256k1/elliptic'
@@ -41,7 +41,7 @@ describe('Standard', function () {
   test.each(models)('can start and stop container', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({...defaultOptions, model: m.name})
+      await sim.start({ ...defaultOptions, model: m.name })
     } finally {
       await sim.close()
     }
@@ -50,7 +50,7 @@ describe('Standard', function () {
   test.each(models)('main menu', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({...defaultOptions, model: m.name})
+      await sim.start({ ...defaultOptions, model: m.name })
       await sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-mainmenu`, [1, 0, 0, 5, -5])
     } finally {
       await sim.close()
@@ -60,7 +60,7 @@ describe('Standard', function () {
   test.each(models)('get app version', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({...defaultOptions, model: m.name})
+      await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
       const resp = await app.getVersion()
 
@@ -80,12 +80,12 @@ describe('Standard', function () {
   test.each(models)('get address', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({...defaultOptions, model: m.name})
+      await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
       // Derivation path. First 3 items are automatically hardened!
       const path = [44, 118, 5, 0, 3]
-      const resp = await app.getAddressAndPubKey(path, 'thor')
+      const resp = await app.getAddressAndPubKey(path, 'cosmos')
 
       console.log(resp)
 
@@ -105,12 +105,12 @@ describe('Standard', function () {
   test.each(models)('show address', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({...defaultOptions, model: m.name})
+      await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
       // Derivation path. First 3 items are automatically hardened!
       const path = [44, 118, 5, 0, 3]
-      const respRequest = app.showAddressAndPubKey(path, 'thor')
+      const respRequest = app.showAddressAndPubKey(path, 'cosmos')
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
 
@@ -125,7 +125,7 @@ describe('Standard', function () {
       expect(resp).toHaveProperty('bech32_address')
       expect(resp).toHaveProperty('compressed_pk')
 
-      expect(resp.bech32_address).toEqual("cosmos1wkd9tfm5pqvhhaxq77wv9tvjcsazuaykwsld65");
+      expect(resp.bech32_address).toEqual('cosmos1wkd9tfm5pqvhhaxq77wv9tvjcsazuaykwsld65')
       expect(resp.compressed_pk.length).toEqual(33)
     } finally {
       await sim.close()
@@ -135,12 +135,12 @@ describe('Standard', function () {
   test.each(models)('show address HUGE', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({...defaultOptions, model: m.name})
+      await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
       // Derivation path. First 3 items are automatically hardened!
       const path = [44, 118, 2147483647, 0, 4294967295]
-      const resp = await app.showAddressAndPubKey(path, 'thor')
+      const resp = await app.showAddressAndPubKey(path, 'cosmos')
       console.log(resp)
 
       expect(resp.return_code).toEqual(0x6985)
@@ -153,7 +153,7 @@ describe('Standard', function () {
   test.each(models)('show address HUGE Expect', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({...defaultOptions, model: m.name})
+      await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
       // Activate expert mode
@@ -190,14 +190,14 @@ describe('Standard', function () {
   test.each(models)('sign basic normal', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({...defaultOptions, model: m.name})
+      await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]
       const tx = JSON.stringify(example_tx_str_basic)
 
       // get address / publickey
-      const respPk = await app.getAddressAndPubKey(path, 'thor')
+      const respPk = await app.getAddressAndPubKey(path, 'cosmos')
       expect(respPk.return_code).toEqual(0x9000)
       expect(respPk.error_message).toEqual('No errors')
       console.log(respPk)
@@ -209,7 +209,7 @@ describe('Standard', function () {
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
 
       // Now navigate the address / path
-      await sim.compareSnapshotsAndAccept('.', `${m.prefix.toLowerCase()}-sign_basic`, m.prefix == "S" ? 8 : 7)
+      await sim.compareSnapshotsAndAccept('.', `${m.prefix.toLowerCase()}-sign_basic`, m.prefix == 'S' ? 6 : 5)
 
       const resp = await signatureRequest
       console.log(resp)
@@ -236,14 +236,14 @@ describe('Standard', function () {
   test.each(models)('sign basic normal2', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({...defaultOptions, model: m.name})
+      await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]
       const tx = JSON.stringify(example_tx_str_basic2)
 
       // get address / publickey
-      const respPk = await app.getAddressAndPubKey(path, 'thor')
+      const respPk = await app.getAddressAndPubKey(path, 'cosmos')
       expect(respPk.return_code).toEqual(0x9000)
       expect(respPk.error_message).toEqual('No errors')
       console.log(respPk)
@@ -255,7 +255,7 @@ describe('Standard', function () {
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
 
       // Now navigate the address / path
-      await sim.compareSnapshotsAndAccept('.', `${m.prefix.toLowerCase()}-sign_basic2`, m.prefix == "S" ? 6 : 6)
+      await sim.compareSnapshotsAndAccept('.', `${m.prefix.toLowerCase()}-sign_basic2`, m.prefix == 'S' ? 7 : 6)
 
       const resp = await signatureRequest
       console.log(resp)

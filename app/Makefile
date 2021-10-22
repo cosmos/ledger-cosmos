@@ -55,7 +55,7 @@ COIN=ATOM
 endif
 
 APPVERSION_M=2
-APPVERSION_N=30
+APPVERSION_N=31
 APPVERSION_P=0
 
 $(info COIN  = [$(COIN)])
@@ -78,7 +78,7 @@ endif
 APP_LOAD_PARAMS = --appFlags 0x200 --delete $(COMMON_LOAD_PARAMS) --path $(APPPATH)
 
 ifeq ($(TARGET_NAME),TARGET_NANOS)
-APP_STACK_SIZE:=3216
+APP_STACK_SIZE:=1444
 ICONNAME:=$(CURDIR)/nanos_icon.gif
 OUTPUT_ELF ?= $(CURDIR)/output/app_s.elf
 OUTPUT_INSTALLER := $(CURDIR)/pkg/installer_s.sh

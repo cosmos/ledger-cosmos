@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <zxmacros.h>
+#include <zxformat.h>
 #include <tx_validate.h>
 #include <zxtypes.h>
 #include "tx_parser.h"
