@@ -27,7 +27,7 @@ bool_t bignumLittleEndian_bcdprint(char *outBuffer, uint16_t outBufferLen,
     }
 
     if (inBCDLen * 2 > outBufferLen) {
-        strlcpy(outBuffer, "ERR", outBufferLen);
+        snprintf(outBuffer, outBufferLen, "ERR");
         return bool_false;
     }
 
@@ -44,7 +44,7 @@ bool_t bignumLittleEndian_bcdprint(char *outBuffer, uint16_t outBufferLen,
     }
 
     if (!started) {
-        strlcpy(outBuffer, "0", outBufferLen);
+        snprintf(outBuffer, outBufferLen, "0");
     }
 
     return bool_true;
@@ -54,7 +54,7 @@ void bignumLittleEndian_to_bcd(uint8_t *bcdOut, uint16_t bcdOutLen,
                                const uint8_t *binValue, uint16_t binValueLen) {
     MEMZERO(bcdOut, bcdOutLen);
 
-    uint8_t carry = 0;
+    uint8_t carry;
     for (uint16_t bitIdx = 0; bitIdx < binValueLen * 8; bitIdx++) {
         // Fix bcd
         for (uint16_t j = 0; j < bcdOutLen; j++) {
@@ -92,7 +92,7 @@ bool_t bignumBigEndian_bcdprint(char *outBuffer, uint16_t outBufferLen,
     }
 
     if (bcdInLen * 2 > outBufferLen) {
-        strlcpy(outBuffer, "ERR", outBufferLen);
+        snprintf(outBuffer, outBufferLen, "ERR");
         return bool_false;
     }
 
@@ -110,7 +110,7 @@ bool_t bignumBigEndian_bcdprint(char *outBuffer, uint16_t outBufferLen,
     }
 
     if (!started) {
-        strlcpy(outBuffer, "0", outBufferLen);
+        snprintf(outBuffer, outBufferLen, "0");
     }
 
     return bool_true;
@@ -120,7 +120,7 @@ void bignumBigEndian_to_bcd(uint8_t *bcdOut, uint16_t bcdOutLen,
                             const uint8_t *binValue, uint16_t binValueLen) {
     MEMZERO(bcdOut, bcdOutLen);
 
-    uint8_t carry = 0;
+    uint8_t carry;
     for (uint16_t bitIdx = 0; bitIdx < binValueLen * 8; bitIdx++) {
         // Fix bcd
         for (uint16_t j = 0; j < bcdOutLen; j++) {
