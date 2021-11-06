@@ -17,6 +17,7 @@
 #include <common/parser.h>
 #include <sstream>
 #include "common.h"
+#include <fmt/core.h>
 
 std::vector<std::string> dumpUI(parser_context_t *ctx,
                                 uint16_t maxKeyLen,
@@ -41,15 +42,26 @@ std::vector<std::string> dumpUI(parser_context_t *ctx,
                                       valueBuffer, maxValueLen,
                                       pageIdx, &pageCount);
 
-            ss << idx << " | " << keyBuffer << " : ";
+//            ss << idx << " | " << keyBuffer << " : ";
+            ss << fmt::format("{} | {} ", idx, keyBuffer);
+            if (pageCount > 1) {
+                ss << fmt::format("[{}/{}] ", pageIdx + 1, pageCount);
+            }
+            ss << ": ";
 
             if (err == parser_ok) {
-                ss << valueBuffer;
+                // Model multiple lines
+                ss << fmt::format("{}", valueBuffer);
             } else {
                 ss << parser_getErrorDescription(err);
             }
 
-            answer.push_back(ss.str());
+            auto output = ss.str();
+            if (output.back() == ' ') {
+                output = output.substr(0, output.size() - 1);
+            }
+
+            answer.push_back(output);
 
             pageIdx++;
         }

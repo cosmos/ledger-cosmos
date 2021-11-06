@@ -179,7 +179,7 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
         if (fpstr_to_str(bufferUI, sizeof(tmp), tmp, COIN_DEFAULT_DENOM_FACTOR)!=0) {
             return parser_unexpected_error;
         }
-        number_inplace_trimming(bufferUI, 2);
+        number_inplace_trimming(bufferUI, COIN_DEFAULT_DENOM_FACTOR);
 
         const uint16_t formatted_len = strlen(bufferUI);
         bufferUI[formatted_len] = ' ';
