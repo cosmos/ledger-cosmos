@@ -39,6 +39,7 @@ all: bin/app.elf
 	@rm $(CURDIR)/output/app.elf
 
 include $(BOLOS_SDK)/Makefile.defines
+include $(CURDIR)/Makefile.version
 
 DEFINES += APP_SECRET_MODE_ENABLED
 
@@ -53,10 +54,6 @@ endif
 ifndef COIN
 COIN=ATOM
 endif
-
-APPVERSION_M=2
-APPVERSION_N=31
-APPVERSION_P=0
 
 $(info COIN  = [$(COIN)])
 

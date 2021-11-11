@@ -70,7 +70,7 @@ __Z_INLINE bool_t parser_areEqual(uint16_t tokenidx, char *expected) {
     }
 
     const char *p = parser_tx_obj.tx + parser_tx_obj.json.tokens[tokenidx].start;
-    for (uint32_t i = 0; i < len; i++) {
+    for (int32_t i = 0; i < len; i++) {
         if (expected[i] != *(p + i)) {
             return bool_false;
         }
