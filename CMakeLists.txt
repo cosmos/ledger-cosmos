@@ -128,7 +128,7 @@ target_include_directories(unittests PRIVATE
         ${gmock_SOURCE_DIR}/include
         ${CONAN_INCLUDE_DIRS_FMT}
         ${CONAN_INCLUDE_DIRS_JSONCPP}
-        deps/jsmn/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/jsmn/src
         )
 
 target_link_libraries(unittests PRIVATE
@@ -144,14 +144,14 @@ set_tests_properties(unittests PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOUR
 ##############################################################
 ##############################################################
 #  Fuzz Targets
-if (ENABLE_FUZZING)
+if(ENABLE_FUZZING)
     set(FUZZ_TARGETS
-            parser_parse
-            )
+        parser_parse
+        )
 
-    foreach (target ${FUZZ_TARGETS})
+    foreach(target ${FUZZ_TARGETS})
         add_executable(fuzz-${target} ${CMAKE_CURRENT_SOURCE_DIR}/fuzz/${target}.cpp)
         target_link_libraries(fuzz-${target} PRIVATE app_lib)
         target_link_options(fuzz-${target} PRIVATE "-fsanitize=fuzzer")
-    endforeach ()
-endif ()
+    endforeach()
+endif()

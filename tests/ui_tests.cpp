@@ -15,12 +15,12 @@
 ********************************************************************************/
 
 #include <gmock/gmock.h>
-#include "util/testcases.h"
+#include "testcases.h"
 
 #include <iostream>
 #include <memory>
 #include "common/parser.h"
-#include "util/common.h"
+#include "common.h"
 #include "app_mode.h"
 
 using ::testing::TestWithParam;
@@ -90,7 +90,7 @@ public:
     };
 };
 
-INSTANTIATE_TEST_SUITE_P (
+INSTANTIATE_TEST_SUITE_P ( // NOLINT(cert-err58-cpp)
     JsonTestCases,
     JsonTests,
     ::testing::ValuesIn(GetJsonTestCases("testcases/manual.json")),

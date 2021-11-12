@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018 Zondax GmbH
+*   (c) 2021 Zondax GmbH
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -13,19 +13,23 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-#include <tx_display.h>
-#include <common/parser.h>
+#include <parser.h>
 #include <sstream>
+#include <string>
 #include "common.h"
+#include <tx_display.h>
 #include <fmt/core.h>
 
 std::vector<std::string> dumpUI(parser_context_t *ctx,
                                 uint16_t maxKeyLen,
                                 uint16_t maxValueLen) {
+    auto answer = std::vector<std::string>();
+
     uint8_t numItems;
     parser_error_t err = parser_getNumItems(ctx, &numItems);
-
-    auto answer = std::vector<std::string>();
+    if (err != parser_ok) {
+        return answer;
+    }
 
     for (uint16_t idx = 0; idx < numItems; idx++) {
         char keyBuffer[1000];
@@ -36,18 +40,17 @@ std::vector<std::string> dumpUI(parser_context_t *ctx,
         while (pageIdx < pageCount) {
             std::stringstream ss;
 
-            auto err = parser_getItem(ctx,
-                                      idx,
-                                      keyBuffer, maxKeyLen,
-                                      valueBuffer, maxValueLen,
-                                      pageIdx, &pageCount);
+            err = parser_getItem(ctx,
+                                 idx,
+                                 keyBuffer, maxKeyLen,
+                                 valueBuffer, maxValueLen,
+                                 pageIdx, &pageCount);
 
-//            ss << idx << " | " << keyBuffer << " : ";
-            ss << fmt::format("{} | {} ", idx, keyBuffer);
+            ss << fmt::format("{} | {}", idx, keyBuffer);
             if (pageCount > 1) {
-                ss << fmt::format("[{}/{}] ", pageIdx + 1, pageCount);
+                ss << fmt::format(" [{}/{}]", pageIdx + 1, pageCount);
             }
-            ss << ": ";
+            ss << " : ";
 
             if (err == parser_ok) {
                 // Model multiple lines
