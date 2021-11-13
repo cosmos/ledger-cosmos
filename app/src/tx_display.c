@@ -42,6 +42,8 @@ const char *get_required_root_item(root_item_e i) {
     }
 }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "bugprone-branch-clone"
 __Z_INLINE uint8_t get_root_max_level(root_item_e i) {
     switch (i) {
         case root_item_chain_id:
@@ -60,6 +62,7 @@ __Z_INLINE uint8_t get_root_max_level(root_item_e i) {
             return 0;
     }
 }
+#pragma clang diagnostic pop
 
 typedef struct {
     bool root_item_start_token_valid[NUM_REQUIRED_ROOT_PAGES];
@@ -136,7 +139,7 @@ parser_error_t tx_indexRootFields() {
     MEMZERO(&tmp_val, sizeof(tmp_val));
 
     // Grouping references
-    char reference_msg_type[40];
+    char reference_msg_type[70];
     MEMZERO(&reference_msg_type, sizeof(reference_msg_type));
     char reference_msg_from[70];
     MEMZERO(&reference_msg_from, sizeof(reference_msg_from));
@@ -146,13 +149,18 @@ parser_error_t tx_indexRootFields() {
     parser_tx_obj.flags.msg_type_grouping = 1;
     parser_tx_obj.flags.msg_from_grouping = 1;
 
+    // Look for all expected root items in the JSON tree
+    // mark them as found/valid,
+
     for (root_item_e root_item_idx = 0; root_item_idx < NUM_REQUIRED_ROOT_PAGES; root_item_idx++) {
         uint16_t req_root_item_key_token_idx = 0;
+
+        const char *required_root_item_key = get_required_root_item(root_item_idx);
 
         parser_error_t err = object_get_value(
                 &parser_tx_obj.json,
                 ROOT_TOKEN_INDEX,
-                get_required_root_item(root_item_idx),
+                required_root_item_key,
                 &req_root_item_key_token_idx);
 
         if (err == parser_no_data) {
@@ -161,7 +169,7 @@ parser_error_t tx_indexRootFields() {
         CHECK_PARSER_ERR(err)
 
         // Remember root item start token
-        display_cache.root_item_start_token_valid[root_item_idx] = 1;
+        display_cache.root_item_start_token_valid[root_item_idx] = true;
         display_cache.root_item_start_token_idx[root_item_idx] = req_root_item_key_token_idx;
 
         // Now count how many items can be found in this root item
@@ -170,17 +178,14 @@ parser_error_t tx_indexRootFields() {
             INIT_QUERY_CONTEXT(tmp_key, sizeof(tmp_key),
                                tmp_val, sizeof(tmp_val),
                                0, get_root_max_level(root_item_idx))
+
             parser_tx_obj.query.item_index = current_item_idx;
             strncpy_s(parser_tx_obj.query.out_key,
-                      get_required_root_item(root_item_idx),
+                      required_root_item_key,
                       parser_tx_obj.query.out_key_len);
 
             uint16_t ret_value_token_index;
-
-            err = tx_traverse_find(
-                    display_cache.root_item_start_token_idx[root_item_idx],
-                    &ret_value_token_index);
-
+            err = tx_traverse_find(display_cache.root_item_start_token_idx[root_item_idx], &ret_value_token_index);
             if (err != parser_ok) {
                 continue;
             }
@@ -192,6 +197,8 @@ parser_error_t tx_indexRootFields() {
                     parser_tx_obj.query.out_val_len,
                     0, &pageCount))
 
+            // ZEMU_LOGF(200, "[ZEMU] %s : %s", tmp_key, parser_tx_obj.query.out_val);
+
             switch (root_item_idx) {
                 case root_item_memo: {
                     if (strlen(parser_tx_obj.query.out_val) == 0) {
@@ -201,6 +208,10 @@ parser_error_t tx_indexRootFields() {
                     break;
                 }
                 case root_item_msgs: {
+                    // Note: if we are dealing with the message field, Ledger has requested that we group.
+                    // This means that if all messages share the same time, we should only count the type field once
+                    // This is indicated by `parser_tx_obj.flags.msg_type_grouping`
+
                     // GROUPING: Message Type
                     if (parser_tx_obj.flags.msg_type_grouping && is_msg_type_field(tmp_key)) {
                         // First message, initialize expected type
@@ -239,6 +250,9 @@ parser_error_t tx_indexRootFields() {
 
                         parser_tx_obj.filter_msg_from_count++;
                     }
+
+                    // ZEMU_LOGF(200, "[ZEMU] %s [%d/%d]", tmp_key, parser_tx_obj.filter_msg_type_count, parser_tx_obj.filter_msg_from_count);
+                    break;
                 }
                 default:
                     break;
@@ -297,19 +311,20 @@ __Z_INLINE uint8_t get_subitem_count(root_item_e root_item) {
                 tmp_num_items = 0;
             }
             break;
-        case root_item_msgs:
+        case root_item_msgs: {
             // Remove grouped items from list
-            if (parser_tx_obj.flags.msg_type_grouping == 1u && parser_tx_obj.filter_msg_type_count > 0) {
+            if (parser_tx_obj.flags.msg_type_grouping && parser_tx_obj.filter_msg_type_count > 0) {
                 tmp_num_items += 1; // we leave main type
                 tmp_num_items -= parser_tx_obj.filter_msg_type_count;
             }
-            if (parser_tx_obj.flags.msg_from_grouping == 1u && parser_tx_obj.filter_msg_from_count > 0) {
+            if (parser_tx_obj.flags.msg_from_grouping && parser_tx_obj.filter_msg_from_count > 0) {
                 if (!parser_tx_obj.flags.msg_from_grouping_hide_all) {
                     tmp_num_items += 1; // we leave main from
                 }
                 tmp_num_items -= parser_tx_obj.filter_msg_from_count;
             }
             break;
+        }
         case root_item_memo:
             break;
         case root_item_fee:

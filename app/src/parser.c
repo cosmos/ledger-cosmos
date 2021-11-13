@@ -155,15 +155,13 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
     const int32_t denomLen = parser_tx_obj.json.tokens[amountToken + 4].end -
                              parser_tx_obj.json.tokens[amountToken + 4].start;
 
-    if (amountLen <= 0) {
+    if (amountLen <= 0 || denomLen <= 0) {
         return parser_unexpected_buffer_end;
     }
 
-    if (denomLen <= 0) {
-        return parser_unexpected_buffer_end;
-    }
+    const size_t totalLen = amountLen + denomLen + 2;
 
-    if (sizeof(bufferUI) < (size_t) (amountLen + denomLen + 2) ) {
+    if (sizeof(bufferUI) < totalLen ) {
         return parser_unexpected_buffer_end;
     }
 
