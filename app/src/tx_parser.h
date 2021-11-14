@@ -42,7 +42,7 @@ extern "C" {
     parser_tx_obj.query.out_key_len = (_KEY_LEN); \
     parser_tx_obj.query.out_val_len = (_VAL_LEN);
 
-parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_token_index);
+parser_error_t tx_traverse_find(uint16_t root_token_index, uint16_t *ret_value_token_index);
 
 // Traverses transaction data and fills tx_context
 parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks);

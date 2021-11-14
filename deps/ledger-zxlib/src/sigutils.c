@@ -17,6 +17,10 @@
 #include <sigutils.h>
 #include <zxmacros.h>
 
+#define MINPAYLOADLEN 1
+#define PAYLOADLEN 32
+#define MAXPAYLOADLEN 33
+
 err_convert_e convertDERtoRSV(const uint8_t *inSignatureDER,
                               unsigned int inInfo,
                               uint8_t *outR,
@@ -37,14 +41,18 @@ err_convert_e convertDERtoRSV(const uint8_t *inSignatureDER,
     // S [32]
     // V [1]
 
+    MEMZERO(outR, 32);
+    MEMZERO(outS, 32);
+    MEMZERO(outV, 1);
+
     const uint8_t derPrefix = *(inSignatureDER);
     if (derPrefix != 0x30) {
         return invalid_derPrefix;
     }
 
     const uint8_t payloadLen = *(inSignatureDER + 1);
-    const uint8_t minPayloadLen = 2 + 32 + 2 + 32;
-    const uint8_t maxPayloadLen = 2 + 33 + 2 + 33;
+    const uint8_t minPayloadLen = 2 + MINPAYLOADLEN + 2 + MINPAYLOADLEN;
+    const uint8_t maxPayloadLen = 2 + MAXPAYLOADLEN + 2 + MAXPAYLOADLEN;
     if (payloadLen < minPayloadLen || payloadLen > maxPayloadLen) {
         return invalid_payloadLen;
     }
@@ -54,8 +62,8 @@ err_convert_e convertDERtoRSV(const uint8_t *inSignatureDER,
         return invalid_rmaker;
     }
 
-    const uint8_t rLen = *(inSignatureDER + 3);
-    if (rLen > 33 || rLen < 32) {
+    uint8_t rLen = *(inSignatureDER + 3);
+    if (rLen > MAXPAYLOADLEN || rLen < MINPAYLOADLEN) {
         return invalid_rLen;
     }
 
@@ -64,21 +72,30 @@ err_convert_e convertDERtoRSV(const uint8_t *inSignatureDER,
         return invalid_smarker;
     }
 
-    const uint8_t sLen = *(inSignatureDER + 4 + rLen + 1);
-    if (sLen > 33 || sLen < 32) {
+    uint8_t sLen = *(inSignatureDER + 4 + rLen + 1);
+    if (sLen > MAXPAYLOADLEN || sLen < MINPAYLOADLEN) {
         return invalid_sLen;
     }
 
     // Get data fields
     const uint8_t *rPtr = inSignatureDER + 4;
+    const uint8_t *sPtr = inSignatureDER + 4 + rLen + 2;
+
     // Correct field pointers
-    if (rLen == 33) {
-        rPtr++;       // get only 32 bytes
+    if (rLen < PAYLOADLEN) {
+        outR += PAYLOADLEN - rLen;
+    }
+    if (rLen > PAYLOADLEN) {
+        rPtr += rLen - PAYLOADLEN;       // move forward get only 32 bytes
+        rLen = PAYLOADLEN;
     }
 
-    const uint8_t *sPtr = inSignatureDER + 4 + rLen + 2;
-    if (sLen == 33) {
-        sPtr++;       // get only 32 bytes
+    if (sLen < PAYLOADLEN) {
+        outS += PAYLOADLEN - sLen;
+    }
+    if (sLen > PAYLOADLEN) {
+        sPtr += sLen - PAYLOADLEN;       // move forward get only 32 bytes
+        sLen = PAYLOADLEN;
     }
 
     // Prepare V
@@ -91,8 +108,8 @@ err_convert_e convertDERtoRSV(const uint8_t *inSignatureDER,
     }
 
     // Copy things
-    MEMCPY(outR, rPtr, 32);
-    MEMCPY(outS, sPtr, 32);
+    MEMCPY(outR, rPtr, rLen);
+    MEMCPY(outS, sPtr, sLen);
 
     return no_error;
 }

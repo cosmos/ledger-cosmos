@@ -4,38 +4,37 @@
   "license": "Apache-2.0",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "jest --detectOpenHandles"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Zondax/ledger-cosmos"
-  },
+  "types": "./dist/index.d.ts",
   "keywords": [
-    "zondax"
+    "Zondax",
+    "Ledger"
   ],
+  "scripts": {
+    "test": "jest --detectOpenHandles -t 'Standard'",
+    "testSR25519": "jest --detectOpenHandles --runInBand tests/sr25519.test.ts"
+  },
   "dependencies": {
-    "@zondax/zemu": "^0.7.0",
-    "ledger-cosmos-js": "^2.1.8"
+    "ledger-cosmos-js": "^2.1.8",
+    "@zondax/zemu": "^0.17.2"
   },
   "devDependencies": {
-    "@babel/cli": "^7.12.1",
-    "@babel/core": "^7.12.3",
-    "@babel/node": "^7.12.6",
-    "@babel/plugin-transform-runtime": "^7.12.1",
-    "@babel/preset-env": "^7.12.1",
-    "babel-eslint": "^10.1.0",
-    "babel-jest": "26.6.3",
+    "@types/jest": "^26.0.23",
+    "@types/ledgerhq__hw-transport": "^4.21.3",
+    "@typescript-eslint/eslint-plugin": "^4.24.0",
+    "@typescript-eslint/parser": "^4.24.0",
+    "blakejs": "^1.1.0",
     "crypto-js": "4.0.0",
-    "eslint": "^7.13.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-config-prettier": "^6.15.0",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-jest": "^24.1.3",
-    "eslint-plugin-prettier": "^3.1.4",
+    "eslint": "^7.26.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.23.2",
+    "eslint-plugin-jest": "^24.3.6",
+    "eslint-plugin-prettier": "^3.3.1",
     "jest": "26.6.3",
-    "jest-serial-runner": "^1.1.0 ",
+    "jest-serial-runner": "^1.1.0",
+    "jssha": "^3.1.1",
+    "prettier": "^2.3.0",
+    "ts-jest": "^26.5.6",
+    "typescript": "^4.2.3",
     "secp256k1": "^4.0.2"
   }
 }

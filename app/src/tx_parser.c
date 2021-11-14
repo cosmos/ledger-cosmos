@@ -15,9 +15,9 @@
 ********************************************************************************/
 
 #include <jsmn.h>
-#include <stdio.h>
 #include "tx_parser.h"
 #include "zxmacros.h"
+#include "zxformat.h"
 #include "parser_impl.h"
 
 // strcat but source does not need to be terminated (a chunk from a bigger string is concatenated)
@@ -79,7 +79,7 @@ parser_error_t tx_getToken(uint16_t token_index,
     // empty strings are considered the first page
     *pageCount = 1;
     if (inLen > 0) {
-        for (uint8_t i = 0; i < array_length(value_substitutions); i++) {
+        for (uint32_t i = 0; i < array_length(value_substitutions); i++) {
             const char *substStr = value_substitutions[i].str1;
             const size_t substStrLen = strlen(substStr);
             if (inLen == substStrLen && !MEMCMP(inValue, substStr, substStrLen)) {
@@ -89,9 +89,7 @@ parser_error_t tx_getToken(uint16_t token_index,
             }
         }
 
-        pageStringExt(out_val, out_val_len,
-                      inValue, inLen,
-                      pageIdx, pageCount);
+        pageStringExt(out_val, out_val_len, inValue, inLen, pageIdx, pageCount);
 
     }
 
@@ -114,7 +112,7 @@ __Z_INLINE void append_key_item(int16_t token_index) {
     const int16_t token_start = parser_tx_obj.json.tokens[token_index].start;
     const int16_t token_end = parser_tx_obj.json.tokens[token_index].end;
     const char *address_ptr = parser_tx_obj.tx + token_start;
-    const int16_t new_item_size = token_end - token_start;
+    const int32_t new_item_size = token_end - token_start;
 
     strcat_chunk_s(parser_tx_obj.query.out_key,
                    parser_tx_obj.query.out_key_len,
@@ -128,7 +126,7 @@ __Z_INLINE void append_key_item(int16_t token_index) {
 ///////////////////////////
 ///////////////////////////
 
-parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_token_index) {
+parser_error_t tx_traverse_find(uint16_t root_token_index, uint16_t *ret_value_token_index) {
     const jsmntype_t token_type = parser_tx_obj.json.tokens[root_token_index].type;
 
     CHECK_APP_CANARY()
@@ -188,8 +186,8 @@ parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_to
                 uint16_t key_index;
                 uint16_t value_index;
 
-                CHECK_PARSER_ERR(object_get_nth_key(&parser_tx_obj.json, root_token_index, i, &key_index));
-                CHECK_PARSER_ERR(object_get_nth_value(&parser_tx_obj.json, root_token_index, i, &value_index));
+                CHECK_PARSER_ERR(object_get_nth_key(&parser_tx_obj.json, root_token_index, i, &key_index))
+                CHECK_PARSER_ERR(object_get_nth_value(&parser_tx_obj.json, root_token_index, i, &value_index))
 
                 // Skip writing keys if we are actually exploring to count
                 append_key_item(key_index);
@@ -219,7 +217,7 @@ parser_error_t tx_traverse_find(int16_t root_token_index, uint16_t *ret_value_to
                 uint16_t element_index;
                 CHECK_PARSER_ERR(array_get_nth_element(&parser_tx_obj.json,
                                                        root_token_index, i,
-                                                       &element_index));
+                                                       &element_index))
                 CHECK_APP_CANARY()
 
                 // When iterating along an array,

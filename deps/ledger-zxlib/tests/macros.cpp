@@ -15,6 +15,7 @@
 ********************************************************************************/
 #include <gmock/gmock.h>
 #include <zxmacros.h>
+#include <zxformat.h>
 
 namespace {
     TEST(FORMAT, array_to_hexstr) {
@@ -108,7 +109,7 @@ namespace {
 
         fpstr_to_str(output, sizeof(output), "", 6);
         printf("%10s\n", output);
-        EXPECT_EQ(std::string(output), "0.000000");
+        EXPECT_EQ(std::string(output), "ERR");
 
         fpstr_to_str(output, sizeof(output), "", 7);
         printf("%10s\n", output);
@@ -129,7 +130,7 @@ namespace {
 
         fpstr_to_str(output, sizeof(output), "123", 6);
         printf("%10s\n", output);
-        EXPECT_EQ(std::string(output), "0.000123");
+        EXPECT_EQ(std::string(output), "ERR");
 
         fpstr_to_str(output, sizeof(output), "123", 7);
         printf("%10s\n", output);
@@ -150,7 +151,7 @@ namespace {
 
         fpstr_to_str(output, sizeof(output), "123456", 6);
         printf("%10s\n", output);
-        EXPECT_EQ(std::string(output), "0.123456");
+        EXPECT_EQ(std::string(output), "ERR");
 
         fpstr_to_str(output, sizeof(output), "123456", 7);
         printf("%10s\n", output);
@@ -170,11 +171,17 @@ namespace {
 
         fpstr_to_str(output, sizeof(output), "1234567", 2);
         printf("%10s\n", output);
-        EXPECT_EQ(std::string(output), "12345.67");
+        EXPECT_EQ(std::string(output), "ERR");
 
         fpstr_to_str(output, sizeof(output), "12345678", 2);
         printf("%10s\n", output);
         EXPECT_EQ(std::string(output), "ERR");
+
+        fpstr_to_str(output, sizeof(output), "1234567890", 0);
+        EXPECT_EQ(std::string(output), "ERR");
+
+        fpstr_to_str(output, sizeof(output), "123456", 0);
+        EXPECT_EQ(std::string(output), "123456");
     }
 
     TEST(FORMAT, fpuint64_to_str_zeros) {
@@ -196,6 +203,125 @@ namespace {
         fpuint64_to_str(output, sizeof(output), 10, 1);
         printf("%11s\n", output);
         EXPECT_EQ(std::string(output), "1.0");
+    }
+
+    TEST(FORMAT, number_trimming) {
+        char output[100];
+
+        snprintf(output, sizeof(output), "0");
+        number_inplace_trimming(output, 1);
+        EXPECT_EQ(std::string(output), "0");
+
+        snprintf(output, sizeof(output), "10");
+        number_inplace_trimming(output, 1);
+        EXPECT_EQ(std::string(output), "10");
+
+        snprintf(output, sizeof(output), "10.10");
+        number_inplace_trimming(output, 1);
+        EXPECT_EQ(std::string(output), "10.1");
+
+        snprintf(output, sizeof(output), "0.0");
+        number_inplace_trimming(output, 1);
+        EXPECT_EQ(std::string(output), "0.0");
+
+        snprintf(output, sizeof(output), "0.00");
+        number_inplace_trimming(output, 1);
+        EXPECT_EQ(std::string(output), "0.0");
+
+        snprintf(output, sizeof(output), "0.01");
+        number_inplace_trimming(output, 1);
+        EXPECT_EQ(std::string(output), "0.01");
+
+        snprintf(output, sizeof(output), "0.010");
+        number_inplace_trimming(output, 1);
+        EXPECT_EQ(std::string(output), "0.01");
+
+        snprintf(output, sizeof(output), "0.010000");
+        number_inplace_trimming(output, 1);
+        EXPECT_EQ(std::string(output), "0.01");
+    }
+
+    TEST(FORMAT, intstr_to_fpstr_inplace_trimming_leading) {
+        char number[100];
+        printf("\n");
+
+        snprintf(number, sizeof(number), "0");
+        intstr_to_fpstr_inplace(number, sizeof(number), 0);
+        EXPECT_EQ(std::string(number), "0");
+
+        snprintf(number, sizeof(number), "00");
+        intstr_to_fpstr_inplace(number, sizeof(number), 0);
+        EXPECT_EQ(std::string(number), "0");
+
+        snprintf(number, sizeof(number), "0000");
+        intstr_to_fpstr_inplace(number, sizeof(number), 0);
+        EXPECT_EQ(std::string(number), "0");
+
+        snprintf(number, sizeof(number), "00001");
+        intstr_to_fpstr_inplace(number, sizeof(number), 0);
+        EXPECT_EQ(std::string(number), "1");
+
+        snprintf(number, sizeof(number), "000011");
+        intstr_to_fpstr_inplace(number, sizeof(number), 0);
+        EXPECT_EQ(std::string(number), "11");
+
+        snprintf(number, sizeof(number), "10000");
+        intstr_to_fpstr_inplace(number, sizeof(number), 0);
+        EXPECT_EQ(std::string(number), "10000");
+    }
+
+    TEST(FORMAT, intstr_to_fpstr_inplace_empty) {
+        char number[100];
+        printf("\n");
+
+        MEMZERO(number, sizeof(number));
+        intstr_to_fpstr_inplace(number, sizeof(number), 0);
+        EXPECT_EQ(std::string(number), "0");
+
+        MEMZERO(number, sizeof(number));
+        intstr_to_fpstr_inplace(number, sizeof(number), 5);
+        EXPECT_EQ(std::string(number), "0.00000");
+
+        MEMZERO(number, sizeof(number));
+        intstr_to_fpstr_inplace(number, sizeof(number), 10);
+        EXPECT_EQ(std::string(number), "0.0000000000");
+    }
+
+    TEST(FORMAT, intstr_to_fpstr_inplace) {
+        char number[100];
+        printf("\n");
+
+        snprintf(number, sizeof(number), "1");
+        intstr_to_fpstr_inplace(number, sizeof(number), 0);
+        EXPECT_EQ(std::string(number), "1");
+
+        snprintf(number, sizeof(number), "123");
+        intstr_to_fpstr_inplace(number, sizeof(number), 0);
+        EXPECT_EQ(std::string(number), "123");
+
+        snprintf(number, sizeof(number), "0");
+        intstr_to_fpstr_inplace(number, sizeof(number), 5);
+        EXPECT_EQ(std::string(number), "0.00000");
+
+        snprintf(number, sizeof(number), "123");
+        intstr_to_fpstr_inplace(number, sizeof(number), 5);
+        EXPECT_EQ(std::string(number), "0.00123");
+
+        snprintf(number, sizeof(number), "1234");
+        intstr_to_fpstr_inplace(number, sizeof(number), 5);
+        EXPECT_EQ(std::string(number), "0.01234");
+
+        snprintf(number, sizeof(number), "12345");
+        intstr_to_fpstr_inplace(number, sizeof(number), 5);
+        EXPECT_EQ(std::string(number), "0.12345");
+
+        snprintf(number, sizeof(number), "123456");
+        intstr_to_fpstr_inplace(number, sizeof(number), 5);
+        EXPECT_EQ(std::string(number), "1.23456");
+
+        snprintf(number, sizeof(number), "1234567");
+        intstr_to_fpstr_inplace(number, sizeof(number), 5);
+        EXPECT_EQ(std::string(number), "12.34567");
     }
 
     TEST(INT64_TO_STR, Zero) {
@@ -295,29 +421,28 @@ namespace {
     TEST(STR_TO_INT8, OutsideBoundsPositive) {
         char numberStr[] = "128";
         char error = 0;
-        int8_t number = str_to_int8(numberStr, numberStr + strlen(numberStr), &error);
+        str_to_int8(numberStr, numberStr + strlen(numberStr), &error);
         EXPECT_EQ(1, error);
     }
 
     TEST(STR_TO_INT8, OutsideBoundsNegative) {
         char numberStr[] = "-129";
         char error = 0;
-        int8_t number = str_to_int8(numberStr, numberStr + strlen(numberStr), &error);
+        str_to_int8(numberStr, numberStr + strlen(numberStr), &error);
         EXPECT_EQ(1, error);
     }
-
 
     TEST(STR_TO_INT8, DummyData_Positive) {
         char numberStr[] = "100b0";
         char error = 0;
-        int8_t number = str_to_int8(numberStr, numberStr + strlen(numberStr), &error);
+        str_to_int8(numberStr, numberStr + strlen(numberStr), &error);
         EXPECT_EQ(1, error);
     }
 
     TEST(STR_TO_INT8, DummyData_Negative) {
         char numberStr[] = "-1002xx";
         char error = 0;
-        int8_t number = str_to_int8(numberStr, numberStr + strlen(numberStr), &error);
+        str_to_int8(numberStr, numberStr + strlen(numberStr), &error);
         EXPECT_EQ(1, error);
     }
 
@@ -364,14 +489,14 @@ namespace {
     TEST(STR_TO_INT64, DummyData_Positive) {
         char numberStr[] = "100b0";
         char error = 0;
-        int64_t number = str_to_int64(numberStr, numberStr + strlen(numberStr), &error);
+        str_to_int64(numberStr, numberStr + strlen(numberStr), &error);
         EXPECT_EQ(1, error);
     }
 
     TEST(STR_TO_INT64, DummyData_Negative) {
         char numberStr[] = "-1002xx";
         char error = 0;
-        int64_t number = str_to_int64(numberStr, numberStr + strlen(numberStr), &error);
+        str_to_int64(numberStr, numberStr + strlen(numberStr), &error);
         EXPECT_EQ(1, error);
     }
 }

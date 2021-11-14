@@ -1,7 +1,6 @@
 # Ledger Cosmos app
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CircleCI](https://circleci.com/gh/Zondax/ledger-cosmos.svg?style=shield)](https://circleci.com/gh/Zondax/ledger-cosmos)
-[![CodeFactor](https://www.codefactor.io/repository/github/zondax/ledger-cosmos/badge)](https://www.codefactor.io/repository/github/zondax/ledger-cosmos)
 
 This project contains the Cosmos app for Ledger Nano S and X.
 
@@ -9,20 +8,6 @@ This project contains the Cosmos app for Ledger Nano S and X.
 - Specs / Documentation
 - C++ unit tests
 - Zemu tests
-
-The Cosmos app is already available in [Ledger Live](https://www.ledger.com/pages/ledger-live). Our preferred and recommended hardware wallet!
-
-- Open Ledger Live and go to Settings (gear icon on the right):
-
-![](docs/img/cosmos_app1.png)
-
-- Enable developer mode (last option):
-
-![](docs/img/cosmos_app2.png)
-
-- Now go back to manager and search for Cosmos:
-
-![](docs/img/cosmos_app3.png)
 
 ## ATTENTION
 
@@ -51,7 +36,7 @@ chmod +x ./zxtool.sh
 then run:
 
 ```sh
-./zxtool.sh load
+./installer_s.sh load
 ```
 
 # Development
@@ -78,7 +63,7 @@ then run:
 - You will need python 3 and then run
     - `make deps`
 
-- This project requires Ledger firmware 1.6
+- This project requires Ledger firmware 2.0
     - The current repository keeps track of Ledger's SDK but it is possible to override it by changing the git submodule.
 
 *Warning*: Some IDEs may not use the same python interpreter or virtual enviroment as the one you used when running `pip`.
@@ -143,70 +128,6 @@ make zemu_test
 To run a single specific test:
 
 > At the moment, the recommendation is to run from the IDE. Remember to run `make` if you change the app.
-
-## How to debug a ledger app?
-
-You can use vscode or clion to debug the app. We recommend using CLion but we provide a vscode (unsupported) configuration too.
-
-### Preconditions
-
-If you are using CLion, you need to a configuration file in your home directory: `$HOME/.gdbinit` with the following content:
-
-```
-set auto-load local-gdbinit on
-add-auto-load-safe-path /
-```
-
-### Warnings
-
-There are a few things to take into account when enabling Ledger App debugging:
-
-- Once you enable the local .gdbinit that is located in your project workspace. You **will break** local Rust debugging in your host. The reason is that debugging unit tests will use the same `.gdbinit` configuration that sets the environment to ARM. We are looking at some possible fixes. For now, if you want to debug unit tests instead of the ledger app, you need to comment out the lines in `.gdbinit`
-
-### Debugging
-
-1. Build your app
-
-    ```bash
-    make
-    ```
-
-2. Define your debug scenario
-
-    Open `tests/zemu/tools/debug.mjs` and look for the line:
-
-    ```bash
-    /// TIP you can use zemu commands here to take the app ...
-    ```
-
-    You can adjust this code to get the emulator to trigger a breakpoint in your app:
-    - send clicks
-    - send APDUs, etc
-
-3. Launch the emulator in debug mode
-
-    > If you didnt install Zemu yet (previous section), then run `make zemu_install`
-
-    ```bash
-    make zemu_debug
-    ```
-
-    The emulator will launch and immediately stop. You should see a black window
-
-4. Configure Clion debugger
-
-    Your configuration should look similar to this:
-
-     ![image](docs/img/clion_debugging.png)
-
-    Check that the path mappings are correct
-
-5. Start CLion debugger
-
-    You will hit a breakpoint in main.
-    Add breakpoints in other places and continue.
-
-    Enjoy :)
 
 ## Using a real device
 

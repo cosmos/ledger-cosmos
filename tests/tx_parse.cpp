@@ -19,7 +19,7 @@
 #include <tx_display.h>
 #include <tx_parser.h>
 #include <common/parser.h>
-#include "util/common.h"
+#include "common.h"
 
 namespace {
     parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks) {
@@ -116,7 +116,7 @@ namespace {
         err = tx_traverse(0, &numChunks);
         EXPECT_EQ(err, parser_display_page_out_of_range) << "This call should have resulted in a display out of range";
 
-        // We should find it.. but later tx_display should fail
+        // We should find it. but later tx_display should fail
         INIT_QUERY_CONTEXT(key, sizeof(key), val, sizeof(val), 0, 4)
         err = tx_traverse(0, &numChunks);
         EXPECT_EQ(err, parser_ok);
