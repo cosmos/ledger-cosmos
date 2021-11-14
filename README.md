@@ -3,6 +3,14 @@
 [![CircleCI](https://circleci.com/gh/Zondax/ledger-cosmos.svg?style=shield)](https://circleci.com/gh/Zondax/ledger-cosmos)
 [![CodeFactor](https://www.codefactor.io/repository/github/zondax/ledger-cosmos/badge)](https://www.codefactor.io/repository/github/zondax/ledger-cosmos)
 
+---
+
+![zondax](docs/zondax.jpg)
+
+_Please visit our website at [zondax.ch](zondax.ch)_
+
+---
+
 This project contains the Cosmos app for Ledger Nano S and X.
 
 - Ledger Nano S/X Cosmos app
