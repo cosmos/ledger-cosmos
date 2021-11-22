@@ -68,6 +68,7 @@ void h_paging_init() {
     viewdata.itemIdx = 0;
     viewdata.pageIdx = 0;
     viewdata.pageCount = 1;
+    viewdata.itemCount = 0xFF;
 }
 
 uint8_t h_paging_can_increase() {
