@@ -1,5 +1,9 @@
-name: Build
-on: [ push ]
+name: "Test/Build"
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+    branches: [ main ]
 
 jobs:
   configure:
@@ -22,11 +26,11 @@ jobs:
           sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
           make deps
           brew install conan
-          sudo apt install libbsd-dev
+          conan config install https://github.com/conan-io/conanclientcert.git
       - run: cmake -DCMAKE_BUILD_TYPE=Debug . && make
       - run: GTEST_COLOR=1 ASAN_OPTIONS=detect_leaks=0 ctest -VV
 
-  build_ledger:
+  build_ledger_nano_S:
     needs: configure
     runs-on: ubuntu-latest
     container:
@@ -47,14 +51,30 @@ jobs:
           source $HOME/.cargo/env
           make
 
+  build_ledger_nano_X:
+    needs: configure
+    runs-on: ubuntu-latest
+    container:
+      image: zondax/builder-bolos:latest
+      options: --user ${{ needs.configure.outputs.uid_gid }}
+    env:
+      BOLOS_SDK: ${{ github.workspace }}/deps/nanox-secure-sdk
+      BOLOS_ENV: /opt/bolos
+      HOME: /home/zondax_circle
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Build Standard app
+        shell: bash -l {0}
+        run: |
+          source $HOME/.cargo/env
+          make
+
   test_zemu:
     runs-on: ubuntu-latest
     steps:
-      - name: Test
-        run: |
-          id
-          echo $HOME
-          echo $DISPLAY
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -85,7 +105,7 @@ jobs:
           make zemu_test
 
   build_package:
-    needs: [ configure, build, build_ledger, test_zemu ]
+    needs: [ configure, build, build_ledger_nano_S, build_ledger_nano_X, test_zemu ]
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     container:
@@ -106,17 +126,19 @@ jobs:
         shell: bash -l {0}
         run: |
           source $HOME/.cargo/env
-          make SUBSTRATE_PARSER_FULL=0
-      - name: Set tag name var (1)
-        id: vars_1
-        run: echo ::set-output name=tag_name::$(./app/pkg/installer_s.sh version)
-      - name: Create or Update Release (1)
-        id: create_release_1
+          make
+      - name: Set tag name var
+        id: vars
+        run: |
+          pip install ledgerblue
+          echo ::set-output name=tag_name::$(./app/pkg/installer_s.sh version)
+      - name: Create or Update Release
+        id: create_release
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
           files: ./app/pkg/installer_s.sh
-          tag_name: ${{ steps.vars_1.outputs.tag_name }}
+          tag_name: ${{ steps.vars.outputs.tag_name }}
           draft: false
           prerelease: false
