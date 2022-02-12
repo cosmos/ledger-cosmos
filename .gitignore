@@ -95,3 +95,4 @@ fuzz-*.log
 /fuzz/corpora
 
 .vscode/
+tests_zemu/yarn.lock

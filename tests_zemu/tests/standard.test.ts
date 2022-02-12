@@ -14,22 +14,15 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu, { DEFAULT_START_OPTIONS } from '@zondax/zemu'
+import Zemu from '@zondax/zemu'
 // @ts-ignore
 import CosmosApp from 'ledger-cosmos-js'
-import { APP_SEED, example_tx_str_basic, example_tx_str_basic2, models } from './common'
+import { DEFAULT_OPTIONS, DEVICE_MODELS, example_tx_str_basic, example_tx_str_basic2 } from './common'
 
 // @ts-ignore
 import secp256k1 from 'secp256k1/elliptic'
 // @ts-ignore
 import crypto from 'crypto'
-
-const defaultOptions = {
-  ...DEFAULT_START_OPTIONS,
-  logging: true,
-  custom: `-s "${APP_SEED}"`,
-  X11: false,
-}
 
 jest.setTimeout(60000)
 
@@ -38,29 +31,30 @@ beforeAll(async () => {
 })
 
 describe('Standard', function () {
-  test.each(models)('can start and stop container', async function (m) {
+  // eslint-disable-next-line jest/expect-expect
+  test.each(DEVICE_MODELS)('can start and stop container', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({ ...defaultOptions, model: m.name })
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
     } finally {
       await sim.close()
     }
   })
 
-  test.each(models)('main menu', async function (m) {
+  test.each(DEVICE_MODELS)('main menu', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({ ...defaultOptions, model: m.name })
-      await sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-mainmenu`, [1, 0, 0, 5, -5])
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
+      expect(await sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-mainmenu`, [1, 0, 0, 5, -5])).toEqual(true)
     } finally {
       await sim.close()
     }
   })
 
-  test.each(models)('get app version', async function (m) {
+  test.each(DEVICE_MODELS)('get app version', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({ ...defaultOptions, model: m.name })
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
       const app = new CosmosApp(sim.getTransport())
       const resp = await app.getVersion()
 
@@ -77,10 +71,10 @@ describe('Standard', function () {
     }
   })
 
-  test.each(models)('get address', async function (m) {
+  test.each(DEVICE_MODELS)('get address', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({ ...defaultOptions, model: m.name })
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
       // Derivation path. First 3 items are automatically hardened!
@@ -102,10 +96,10 @@ describe('Standard', function () {
     }
   })
 
-  test.each(models)('show address', async function (m) {
+  test.each(DEVICE_MODELS)('show address', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({ ...defaultOptions, model: m.name })
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
       // Derivation path. First 3 items are automatically hardened!
@@ -132,10 +126,10 @@ describe('Standard', function () {
     }
   })
 
-  test.each(models)('show address HUGE', async function (m) {
+  test.each(DEVICE_MODELS)('show address HUGE', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({ ...defaultOptions, model: m.name })
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
       // Derivation path. First 3 items are automatically hardened!
@@ -150,10 +144,10 @@ describe('Standard', function () {
     }
   })
 
-  test.each(models)('show address HUGE Expect', async function (m) {
+  test.each(DEVICE_MODELS)('show address HUGE Expect', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({ ...defaultOptions, model: m.name })
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
       // Activate expert mode
@@ -187,10 +181,10 @@ describe('Standard', function () {
     }
   })
 
-  test.each(models)('sign basic normal', async function (m) {
+  test.each(DEVICE_MODELS)('sign basic normal', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({ ...defaultOptions, model: m.name })
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]
@@ -216,6 +210,7 @@ describe('Standard', function () {
 
       expect(resp.return_code).toEqual(0x9000)
       expect(resp.error_message).toEqual('No errors')
+      expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
       const hash = crypto.createHash('sha256')
@@ -233,10 +228,10 @@ describe('Standard', function () {
     }
   })
 
-  test.each(models)('sign basic normal2', async function (m) {
+  test.each(DEVICE_MODELS)('sign basic normal2', async function (m) {
     const sim = new Zemu(m.path)
     try {
-      await sim.start({ ...defaultOptions, model: m.name })
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]

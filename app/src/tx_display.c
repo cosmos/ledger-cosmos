@@ -108,9 +108,15 @@ __Z_INLINE parser_error_t calculate_is_default_chainid() {
             outVal, sizeof(outVal),
             0, &pageCount))
 
-    if (strcmp(outVal, COIN_DEFAULT_CHAINID) != 0) {
+    zemu_log_stack(outVal);
+    zemu_log_stack(COIN_DEFAULT_CHAINID);
+
+    if (strcmp(outVal, COIN_DEFAULT_CHAINID) == 0) {
         // If we don't match the default chainid, switch to expert mode
         display_cache.is_default_chain = true;
+        zemu_log_stack("DEFAULT Chain ");
+    } else {
+        zemu_log_stack("Chain is NOT DEFAULT");
     }
 
     return parser_ok;
@@ -293,7 +299,7 @@ __Z_INLINE bool is_default_chainid() {
 }
 
 bool tx_is_expert_mode() {
-    return app_mode_expert() || is_default_chainid();
+    return app_mode_expert() || !is_default_chainid();
 }
 
 __Z_INLINE uint8_t get_subitem_count(root_item_e root_item) {

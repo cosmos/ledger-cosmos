@@ -159,11 +159,11 @@ delete:
 
 .PHONY: loadX
 loadX:
-	${LEDGER_SRC}/pkg/installer_x.sh load
+	${LEDGER_SRC}/pkg/installer_XL.sh load
 
 .PHONY: deleteX
 deleteX:
-	${LEDGER_SRC}/pkg/installer_x.sh delete
+	${LEDGER_SRC}/pkg/installer_XL.sh delete
 
 .PHONY: show_info_recovery_mode
 show_info_recovery_mode:
