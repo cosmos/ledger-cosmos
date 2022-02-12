@@ -38,7 +38,7 @@ typedef enum {
 #define VIEW_ADDRESS_LAST_PAGE_DEFAULT      0
 
 #define MENU_MAIN_APP_LINE1                "Cosmos"
-#define MENU_MAIN_APP_LINE2                "ready"
+#define MENU_MAIN_APP_LINE2                "Ready"
 #define APPVERSION_LINE1                   "Version:"
 #define APPVERSION_LINE2                   ("v" APPVERSION)
 
