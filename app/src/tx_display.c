@@ -353,7 +353,7 @@ __Z_INLINE uint8_t get_subitem_count(root_item_e root_item) {
             break;
         case root_item_fee:
             if (!tx_is_expert_mode()) {
-                tmp_num_items -= 3;     // Hide Gas field
+                tmp_num_items = 1;     // Only Amount
             }
         case root_item_tip:
             tmp_num_items += 0;
