@@ -14,6 +14,7 @@
  *  limitations under the License.
  ******************************************************************************* */
 import { DEFAULT_START_OPTIONS, DeviceModel } from '@zondax/zemu'
+import {DEFAULT_KEY_DELAY} from "@zondax/zemu/src/constants";
 
 const Resolve = require('path').resolve
 
@@ -26,6 +27,7 @@ export const DEFAULT_OPTIONS = {
   ...DEFAULT_START_OPTIONS,
   logging: true,
   custom: `-s "${APP_SEED}"`,
+  pressDelay: 1500,
   X11: false,
 }
 
