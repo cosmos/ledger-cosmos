@@ -98,7 +98,7 @@ __Z_INLINE parser_error_t calculate_is_default_chainid() {
 
     // get chain_id
     char outKey[2];
-    char outVal[20];
+    char outVal[COIN_MAX_CHAINID_LEN];
     uint8_t pageCount;
     INIT_QUERY_CONTEXT(outKey, sizeof(outKey),
                        outVal, sizeof(outVal),
@@ -139,11 +139,6 @@ __Z_INLINE bool address_matches_own(char *addr) {
     }
     return true;
 }
-
-#define INDEXING_TMP_KEYSIZE 70
-#define INDEXING_TMP_VALUESIZE 70
-#define INDEXING_GROUPING_REF_TYPE_SIZE 70
-#define INDEXING_GROUPING_REF_FROM_SIZE 70
 
 parser_error_t tx_indexRootFields() {
     if (parser_tx_obj.flags.cache_valid) {

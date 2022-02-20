@@ -1728,5 +1728,41 @@
       "8 | Tipper : cosmosaccaddr1d9h8qatxTIPPER"
     ],
     "expert": true
+  },
+  {
+    "name": "MsgWithdrawValidatorCommission",
+    "tx": {
+      "account_number": "6571",
+      "chain_id": "cosmoshub-4",
+      "fee": {
+        "amount": [
+          {
+            "amount": "5000",
+            "denom": "uatom"
+          }
+        ],
+        "gas": "200000"
+      },
+      "memo": "Zondax.ch",
+      "msgs": [
+        {
+          "type": "cosmos-sdk/MsgWithdrawValidatorCommission",
+          "value": {
+            "validator_address": "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7"
+          }
+        }
+      ],
+      "sequence": "1"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Type : Withdraw Val. Commission",
+      "1 | Validator [1/2] : cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt",
+      "1 | Validator [2/2] : 9m5s03xfytvz7",
+      "2 | Memo : Zondax.ch",
+      "3 | Fee : 0.005000 ATOM"
+    ],
+    "expert": false
   }
 ]

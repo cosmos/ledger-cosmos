@@ -51,14 +51,15 @@ __Z_INLINE void strcat_chunk_s(char *dst, uint16_t dst_max, const char *src_chun
 ///////////////////////////
 
 static const key_subst_t value_substitutions[] = {
-        {"cosmos-sdk/MsgSend",                     "Send"},
-        {"cosmos-sdk/MsgDelegate",                 "Delegate"},
-        {"cosmos-sdk/MsgUndelegate",               "Undelegate"},
-        {"cosmos-sdk/MsgBeginRedelegate",          "Redelegate"},
-        {"cosmos-sdk/MsgSubmitProposal",           "Propose"},
-        {"cosmos-sdk/MsgDeposit",                  "Deposit"},
-        {"cosmos-sdk/MsgVote",                     "Vote"},
-        {"cosmos-sdk/MsgWithdrawDelegationReward", "Withdraw Reward"},
+        {"cosmos-sdk/MsgSend",                        "Send"},
+        {"cosmos-sdk/MsgDelegate",                    "Delegate"},
+        {"cosmos-sdk/MsgUndelegate",                  "Undelegate"},
+        {"cosmos-sdk/MsgBeginRedelegate",             "Redelegate"},
+        {"cosmos-sdk/MsgSubmitProposal",              "Propose"},
+        {"cosmos-sdk/MsgDeposit",                     "Deposit"},
+        {"cosmos-sdk/MsgVote",                        "Vote"},
+        {"cosmos-sdk/MsgWithdrawDelegationReward",    "Withdraw Reward"},
+        {"cosmos-sdk/MsgWithdrawValidatorCommission", "Withdraw Val. Commission"},
 };
 
 parser_error_t tx_getToken(uint16_t token_index,
@@ -80,7 +81,7 @@ parser_error_t tx_getToken(uint16_t token_index,
     // empty strings are considered the first page
     *pageCount = 1;
     if (inLen > 0) {
-        for (uint32_t i = 0; i <    array_length(value_substitutions); i++) {
+        for (uint32_t i = 0; i < array_length(value_substitutions); i++) {
             const char *substStr = value_substitutions[i].str1;
             const size_t substStrLen = strlen(substStr);
             if (inLen == substStrLen && !MEMCMP(inValue, substStr, substStrLen)) {
