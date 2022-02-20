@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "modernize-deprecated-headers"
 /*******************************************************************************
 *   (c) 2018, 2019 Zondax GmbH
 *
@@ -63,3 +65,5 @@ __Z_INLINE bool is_msg_from_field(char *field_name) {
 #ifdef __cplusplus
 }
 #endif
+
+#pragma clang diagnostic pop

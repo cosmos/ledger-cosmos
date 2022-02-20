@@ -18,8 +18,8 @@
     "testSR25519": "jest --detectOpenHandles --runInBand tests/sr25519.test.ts"
   },
   "dependencies": {
-    "ledger-cosmos-js": "^2.1.8",
-    "@zondax/zemu": "^0.24.1"
+    "@zondax/zemu": "^0.25.1",
+    "ledger-cosmos-js": "^2.1.8"
   },
   "devDependencies": {
     "@types/jest": "^27.4.0",
@@ -33,7 +33,7 @@
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-jest": "^26.1.0",
     "eslint-plugin-prettier": "^4.0.0",
-    "jest": "27.2.5",
+    "jest": "27.5.1",
     "jest-serial-runner": "^1.1.0",
     "jssha": "^3.2.0",
     "prettier": "^2.5.1",

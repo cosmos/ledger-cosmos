@@ -36,6 +36,12 @@ parser_error_t json_parse(parsed_json_t *parsed_json, const char *buffer, uint16
             parsed_json->tokens,
             MAX_NUMBER_OF_TOKENS);
 
+#ifdef APP_TESTING
+    char tmpBuffer[100];
+    snprintf(tmpBuffer, sizeof(tmpBuffer), "tokens: %d", num_tokens);
+    zemu_log(tmpBuffer);
+#endif
+
     if (num_tokens < 0) {
         switch (num_tokens) {
             case JSMN_ERROR_NOMEM:

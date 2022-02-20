@@ -55,12 +55,12 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx __attribute__((unu
     return tx_display_numItems(num_items);
 }
 
-__Z_INLINE bool_t parser_areEqual(uint16_t tokenidx, char *expected) {
-    if (parser_tx_obj.json.tokens[tokenidx].type != JSMN_STRING) {
+__Z_INLINE bool_t parser_areEqual(uint16_t tokenIdx, char *expected) {
+    if (parser_tx_obj.json.tokens[tokenIdx].type != JSMN_STRING) {
         return bool_false;
     }
 
-    int32_t len = parser_tx_obj.json.tokens[tokenidx].end - parser_tx_obj.json.tokens[tokenidx].start;
+    int32_t len = parser_tx_obj.json.tokens[tokenIdx].end - parser_tx_obj.json.tokens[tokenIdx].start;
     if (len < 0) {
         return bool_false;
     }
@@ -69,7 +69,7 @@ __Z_INLINE bool_t parser_areEqual(uint16_t tokenidx, char *expected) {
         return bool_false;
     }
 
-    const char *p = parser_tx_obj.tx + parser_tx_obj.json.tokens[tokenidx].start;
+    const char *p = parser_tx_obj.tx + parser_tx_obj.json.tokens[tokenIdx].start;
     for (int32_t i = 0; i < len; i++) {
         if (expected[i] != *(p + i)) {
             return bool_false;
@@ -80,17 +80,25 @@ __Z_INLINE bool_t parser_areEqual(uint16_t tokenidx, char *expected) {
 }
 
 __Z_INLINE bool_t parser_isAmount(char *key) {
-    if (strcmp(key, "fee/amount") == 0)
+    if (strcmp(key, "fee/amount") == 0) {
         return bool_true;
+    }
 
-    if (strcmp(key, "msgs/inputs/coins") == 0)
+    if (strcmp(key, "msgs/inputs/coins") == 0) {
         return bool_true;
+    }
 
-    if (strcmp(key, "msgs/outputs/coins") == 0)
+    if (strcmp(key, "msgs/outputs/coins") == 0) {
         return bool_true;
+    }
 
-    if (strcmp(key, "msgs/value/amount") == 0)
+    if (strcmp(key, "msgs/value/amount") == 0) {
         return bool_true;
+    }
+
+    if (strcmp(key, "tip/amount") == 0) {
+        return bool_true;
+    }
 
     return bool_false;
 }
@@ -110,16 +118,12 @@ __Z_INLINE bool_t is_default_denom_base(const char *denom, uint8_t denom_len) {
     return bool_false;
 }
 
-__Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
-                                              char *outVal, uint16_t outValLen,
-                                              uint8_t pageIdx, uint8_t *pageCount) {
+__Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
+                                                  char *outVal, uint16_t outValLen,
+                                                  uint8_t pageIdx, uint8_t *pageCount) {
     *pageCount = 0;
-    if (parser_tx_obj.json.tokens[amountToken].type == JSMN_ARRAY) {
-        amountToken++;
-    }
 
     uint16_t numElements;
-
     CHECK_PARSER_ERR(array_get_element_count(&parser_tx_obj.json, amountToken, &numElements))
 
     if (numElements == 0) {
@@ -128,17 +132,21 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
         return parser_ok;
     }
 
-    if (numElements != 4)
+    if (numElements != 4) {
         return parser_unexpected_field;
+    }
 
-    if (parser_tx_obj.json.tokens[amountToken].type != JSMN_OBJECT)
+    if (parser_tx_obj.json.tokens[amountToken].type != JSMN_OBJECT) {
         return parser_unexpected_field;
+    }
 
-    if (!parser_areEqual(amountToken + 1u, "amount"))
+    if (!parser_areEqual(amountToken + 1u, "amount")) {
         return parser_unexpected_field;
+    }
 
-    if (!parser_areEqual(amountToken + 3u, "denom"))
+    if (!parser_areEqual(amountToken + 3u, "denom")) {
         return parser_unexpected_field;
+    }
 
     char bufferUI[160];
     char tmpDenom[COIN_DENOM_MAXSIZE];
@@ -191,6 +199,62 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
     return parser_ok;
 }
 
+__Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
+                                              char *outVal, uint16_t outValLen,
+                                              uint8_t pageIdx, uint8_t *pageCount) {
+    ZEMU_LOGF(200, "[formatAmount] ------- pageidx %d", pageIdx)
+
+    *pageCount = 0;
+    if (parser_tx_obj.json.tokens[amountToken].type != JSMN_ARRAY) {
+        return parser_formatAmountItem(amountToken, outVal, outValLen, pageIdx, pageCount);
+    }
+
+    uint8_t totalPages = 0;
+    bool_t showItemSet = false;
+    uint8_t showPageIdx = pageIdx;
+    uint16_t showItemTokenIdx = 0;
+
+    uint16_t numberAmounts;
+    CHECK_PARSER_ERR(array_get_element_count(&parser_tx_obj.json, amountToken, &numberAmounts))
+
+    // Count total subpagesCount and calculate correct page and TokenIdx
+    for (uint16_t i = 0; i < numberAmounts; i++) {
+        uint16_t itemTokenIdx;
+        uint8_t subpagesCount;
+
+        CHECK_PARSER_ERR(array_get_nth_element(&parser_tx_obj.json, amountToken, i, &itemTokenIdx));
+        CHECK_PARSER_ERR(parser_formatAmountItem(itemTokenIdx, outVal, outValLen, 0, &subpagesCount));
+        totalPages += subpagesCount;
+
+        ZEMU_LOGF(200, "[formatAmount] [%d] TokenIdx: %d - PageIdx: %d - Pages: %d - Total %d", i, itemTokenIdx,
+                  showPageIdx, subpagesCount, totalPages)
+
+        if (!showItemSet) {
+            if (showPageIdx < subpagesCount) {
+                showItemSet = true;
+                showItemTokenIdx = itemTokenIdx;
+                ZEMU_LOGF(200, "[formatAmount] [%d] [SET] TokenIdx %d - PageIdx: %d", i, showItemTokenIdx,
+                          showPageIdx)
+            } else {
+                showPageIdx -= subpagesCount;
+            }
+        }
+    }
+    *pageCount = totalPages;
+    if (pageIdx > totalPages) {
+        return parser_unexpected_value;
+    }
+
+    if (totalPages == 0) {
+        *pageCount = 1;
+        snprintf(outVal, outValLen, "Empty");
+        return parser_ok;
+    }
+
+    uint8_t dummy;
+    return parser_formatAmountItem(showItemTokenIdx, outVal, outValLen, showPageIdx, &dummy);
+}
+
 parser_error_t parser_getItem(const parser_context_t *ctx,
                               uint8_t displayIdx,
                               char *outKey, uint16_t outKeyLen,
@@ -221,10 +285,9 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
     snprintf(outKey, outKeyLen, "%s", tmpKey);
 
     if (parser_isAmount(tmpKey)) {
-        CHECK_PARSER_ERR(
-                parser_formatAmount(ret_value_token_index,
-                                    outVal, outValLen,
-                                    pageIdx, pageCount))
+        CHECK_PARSER_ERR(parser_formatAmount(ret_value_token_index,
+                                             outVal, outValLen,
+                                             pageIdx, pageCount))
     } else {
         CHECK_PARSER_ERR(tx_getToken(ret_value_token_index,
                                      outVal, outValLen,
