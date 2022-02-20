@@ -53,6 +53,12 @@ typedef enum {
 #define COIN_DENOM_MAXSIZE                  50
 #define COIN_AMOUNT_MAXSIZE                 50
 
+#define COIN_MAX_CHAINID_LEN                20
+#define INDEXING_TMP_KEYSIZE 70
+#define INDEXING_TMP_VALUESIZE 70
+#define INDEXING_GROUPING_REF_TYPE_SIZE 70
+#define INDEXING_GROUPING_REF_FROM_SIZE 70
+
 #define MENU_MAIN_APP_LINE2_SECRET         "?"
 #define COIN_SECRET_REQUIRED_CLICKS         0
 
