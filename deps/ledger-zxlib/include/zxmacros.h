@@ -104,7 +104,11 @@ __Z_INLINE void zemu_log(__Z_UNUSED const char *msg) {
 }
 #endif
 
+#if APP_TESTING
 #define ZEMU_LOGF(SIZE, ...) { char tmp[(SIZE)]; snprintf(tmp, (SIZE), __VA_ARGS__); zemu_log(tmp); }
+#else
+#define ZEMU_LOGF(SIZE, ...) {}
+#endif
 
 #ifdef __cplusplus
 }

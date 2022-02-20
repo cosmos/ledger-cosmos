@@ -31,6 +31,7 @@ typedef enum {
     root_item_msgs,
     root_item_memo,
     root_item_fee,
+    root_item_tip,
 } root_item_e;
 
 bool tx_is_expert_mode();

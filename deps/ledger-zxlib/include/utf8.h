@@ -1,4 +1,4 @@
- /* The latest version of this library is available on GitHub;
+/* The latest version of this library is available on GitHub;
  * https://github.com/sheredom/utf8.h */
 
 /* This is free and unencumbered software released into the public domain.

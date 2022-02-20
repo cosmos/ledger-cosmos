@@ -1517,5 +1517,216 @@
       "6 | Fee : 0.000600 ATOM"
     ],
     "expert": false
+  },
+  {
+    "name": "completeTransferWithTips",
+    "tx": {
+      "account_number": "0",
+      "chain_id": "cosmoshub-4",
+      "fee": {
+        "amount": [
+          {
+            "amount": "5",
+            "denom": "feecoin1"
+          },
+          {
+            "amount": "6",
+            "denom": "feecoin2"
+          }
+        ],
+        "gas": "10000",
+        "granter": "cosmosaccaddr1d9h8xxxGRANTER",
+        "payer": "cosmosaccaddr1d9h8qatxxPAYER"
+      },
+      "memo": "testmemo",
+      "msgs": [
+        {
+          "inputs": [
+            {
+              "address": "cosmosaccaddr1d9h8qatxxINPUT",
+              "coins": [
+                {
+                  "amount": "10",
+                  "denom": "atom"
+                }
+              ]
+            }
+          ],
+          "outputs": [
+            {
+              "address": "cosmosaccaddr1da6hguxxOUTPUT",
+              "coins": [
+                {
+                  "amount": "10",
+                  "denom": "atom"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "sequence": "1",
+      "tip": {
+        "amount": [
+          {
+            "amount": "65",
+            "denom": "tipcoin"
+          },
+          {
+            "amount": "66",
+            "denom": "tipcoin2"
+          }
+        ],
+        "tipper": "cosmosaccaddr1d9h8qatxTIPPER"
+      }
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : cosmoshub-4",
+      "1 | Account : 0",
+      "2 | Sequence : 1",
+      "3 | Source Address : cosmosaccaddr1d9h8qatxxINPUT",
+      "4 | Source Coins : 10 atom",
+      "5 | Dest Address : cosmosaccaddr1da6hguxxOUTPUT",
+      "6 | Dest Coins : 10 atom",
+      "7 | Memo : testmemo",
+      "8 | Fee [1/2] : 5 feecoin1",
+      "8 | Fee [2/2] : 6 feecoin2",
+      "9 | Gas : 10000",
+      "10 | Granter : cosmosaccaddr1d9h8xxxGRANTER",
+      "11 | Payer : cosmosaccaddr1d9h8qatxxPAYER",
+      "12 | Tip [1/2] : 65 tipcoin",
+      "12 | Tip [2/2] : 66 tipcoin2",
+      "13 | Tipper : cosmosaccaddr1d9h8qatxTIPPER"
+    ],
+    "expert": true
+  },
+  {
+    "name": "completeTransferWithTipsBasic",
+    "tx": {
+      "account_number": "0",
+      "chain_id": "cosmoshub-4",
+      "fee": {
+        "amount": [
+          {
+            "amount": "5",
+            "denom": "photon"
+          }
+        ],
+        "gas": "10000",
+        "granter": "cosmosaccaddr1d9h8xxxGRANTER",
+        "payer": "cosmosaccaddr1d9h8qatxxPAYER"
+      },
+      "memo": "testmemo",
+      "msgs": [
+        {
+          "inputs": [
+            {
+              "address": "cosmosaccaddr1d9h8qatxxINPUT",
+              "coins": [
+                {
+                  "amount": "10",
+                  "denom": "atom"
+                }
+              ]
+            }
+          ],
+          "outputs": [
+            {
+              "address": "cosmosaccaddr1da6hguxxOUTPUT",
+              "coins": [
+                {
+                  "amount": "10",
+                  "denom": "atom"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "sequence": "1",
+      "tip": {
+        "amount": [
+          {
+            "amount": "65",
+            "denom": "tipcoin"
+          },
+          {
+            "amount": "66",
+            "denom": "tipcoin2"
+          }
+        ],
+        "tipper": "cosmosaccaddr1d9h8qatxTIPPER"
+      }
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Source Address : cosmosaccaddr1d9h8qatxxINPUT",
+      "1 | Source Coins : 10 atom",
+      "2 | Dest Address : cosmosaccaddr1da6hguxxOUTPUT",
+      "3 | Dest Coins : 10 atom",
+      "4 | Memo : testmemo",
+      "5 | Fee : 5 photon",
+      "6 | Tip [1/2] : 65 tipcoin",
+      "6 | Tip [2/2] : 66 tipcoin2",
+      "7 | Tipper : cosmosaccaddr1d9h8qatxTIPPER"
+    ],
+    "expert": false
+  },
+  {
+    "name": "doubleFees",
+    "tx": {
+      "account_number": "0",
+      "chain_id": "cosmoshub-4",
+      "fee": {
+        "amount": [
+          {
+            "amount": "5",
+            "denom": "feecoin1"
+          },
+          {
+            "amount": "6",
+            "denom": "feecoin2"
+          }
+        ],
+        "gas": "10000",
+        "granter": "cosmosaccaddr1d9h8xxxGRANTER",
+        "payer": "cosmosaccaddr1d9h8qatxxPAYER"
+      },
+      "memo": "",
+      "msgs": [],
+      "sequence": "1",
+      "tip": {
+        "amount": [
+          {
+            "amount": "65",
+            "denom": "tipcoin"
+          },
+          {
+            "amount": "66",
+            "denom": "tipcoin2"
+          }
+        ],
+        "tipper": "cosmosaccaddr1d9h8qatxTIPPER"
+      }
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : cosmoshub-4",
+      "1 | Account : 0",
+      "2 | Sequence : 1",
+      "3 | Fee [1/2] : 5 feecoin1",
+      "3 | Fee [2/2] : 6 feecoin2",
+      "4 | Gas : 10000",
+      "5 | Granter : cosmosaccaddr1d9h8xxxGRANTER",
+      "6 | Payer : cosmosaccaddr1d9h8qatxxPAYER",
+      "7 | Tip [1/2] : 65 tipcoin",
+      "7 | Tip [2/2] : 66 tipcoin2",
+      "8 | Tipper : cosmosaccaddr1d9h8qatxTIPPER"
+    ],
+    "expert": true
   }
 ]

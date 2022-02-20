@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "misc-no-recursion"
 /*******************************************************************************
 *   (c) 2018, 2019 Zondax GmbH
 *
@@ -21,7 +23,7 @@
 #include "parser_impl.h"
 #include <zxmacros.h>
 
-#define NUM_REQUIRED_ROOT_PAGES 6
+#define NUM_REQUIRED_ROOT_PAGES 7
 
 const char *get_required_root_item(root_item_e i) {
     switch (i) {
@@ -37,6 +39,8 @@ const char *get_required_root_item(root_item_e i) {
             return "memo";
         case root_item_msgs:
             return "msgs";
+        case root_item_tip:
+            return "tip";
         default:
             return "?";
     }
@@ -44,6 +48,7 @@ const char *get_required_root_item(root_item_e i) {
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "bugprone-branch-clone"
+
 __Z_INLINE uint8_t get_root_max_level(root_item_e i) {
     switch (i) {
         case root_item_chain_id:
@@ -58,10 +63,13 @@ __Z_INLINE uint8_t get_root_max_level(root_item_e i) {
             return 2;
         case root_item_msgs:
             return 2;
+        case root_item_tip:
+            return 1;
         default:
             return 0;
     }
 }
+
 #pragma clang diagnostic pop
 
 typedef struct {
@@ -132,22 +140,32 @@ __Z_INLINE bool address_matches_own(char *addr) {
     return true;
 }
 
+#define INDEXING_TMP_KEYSIZE 70
+#define INDEXING_TMP_VALUESIZE 70
+#define INDEXING_GROUPING_REF_TYPE_SIZE 70
+#define INDEXING_GROUPING_REF_FROM_SIZE 70
+
 parser_error_t tx_indexRootFields() {
     if (parser_tx_obj.flags.cache_valid) {
         return parser_ok;
     }
 
+#ifdef APP_TESTING
+    zemu_log("tx_indexRootFields");
+#endif
+
     // Clear cache
     MEMZERO(&display_cache, sizeof(display_cache_t));
-    char tmp_key[70];
-    char tmp_val[70];
+
+    char tmp_key[INDEXING_TMP_KEYSIZE];
+    char tmp_val[INDEXING_TMP_VALUESIZE];
     MEMZERO(&tmp_key, sizeof(tmp_key));
     MEMZERO(&tmp_val, sizeof(tmp_val));
 
     // Grouping references
-    char reference_msg_type[70];
+    char reference_msg_type[INDEXING_GROUPING_REF_TYPE_SIZE];
+    char reference_msg_from[INDEXING_GROUPING_REF_FROM_SIZE];
     MEMZERO(&reference_msg_type, sizeof(reference_msg_type));
-    char reference_msg_from[70];
     MEMZERO(&reference_msg_from, sizeof(reference_msg_from));
 
     parser_tx_obj.filter_msg_type_count = 0;
@@ -203,7 +221,7 @@ parser_error_t tx_indexRootFields() {
                     parser_tx_obj.query.out_val_len,
                     0, &pageCount))
 
-            // ZEMU_LOGF(200, "[ZEMU] %s : %s", tmp_key, parser_tx_obj.query.out_val);
+            ZEMU_LOGF(200, "[ZEMU] %s : %s", tmp_key, parser_tx_obj.query.out_val)
 
             switch (root_item_idx) {
                 case root_item_memo: {
@@ -257,7 +275,7 @@ parser_error_t tx_indexRootFields() {
                         parser_tx_obj.filter_msg_from_count++;
                     }
 
-                    // ZEMU_LOGF(200, "[ZEMU] %s [%d/%d]", tmp_key, parser_tx_obj.filter_msg_type_count, parser_tx_obj.filter_msg_from_count);
+                    ZEMU_LOGF(200, "[ZEMU] %s [%d/%d]", tmp_key, parser_tx_obj.filter_msg_type_count, parser_tx_obj.filter_msg_from_count);
                     break;
                 }
                 default:
@@ -335,8 +353,11 @@ __Z_INLINE uint8_t get_subitem_count(root_item_e root_item) {
             break;
         case root_item_fee:
             if (!tx_is_expert_mode()) {
-                tmp_num_items -= 1;     // Hide Gas field
+                tmp_num_items = 1;     // Only Amount
             }
+        case root_item_tip:
+            tmp_num_items += 0;
+            break;
         default:
             break;
     }
@@ -443,53 +464,36 @@ static const key_subst_t key_substitutions[] = {
         {"memo",                              "Memo"},
         {"fee/amount",                        "Fee"},
         {"fee/gas",                           "Gas"},
+        {"fee/granter",                       "Granter"},
+        {"fee/payer",                         "Payer"},
         {"msgs/type",                         "Type"},
 
-        // FIXME: Are these obsolete?? multisend?
+        {"tip/amount",                        "Tip"},
+        {"tip/tipper",                        "Tipper"},
+
         {"msgs/inputs/address",               "Source Address"},
         {"msgs/inputs/coins",                 "Source Coins"},
         {"msgs/outputs/address",              "Dest Address"},
         {"msgs/outputs/coins",                "Dest Coins"},
 
-        // MsgSend
         {"msgs/value/from_address",           "From"},
         {"msgs/value/to_address",             "To"},
         {"msgs/value/amount",                 "Amount"},
-
-        // MsgDelegate
         {"msgs/value/delegator_address",      "Delegator"},
         {"msgs/value/validator_address",      "Validator"},
-
-        // MsgUndelegate
-//        {"msgs/value/delegator_address", "Delegator"},
-//        {"msgs/value/validator_address", "Validator"},
-
-        // MsgBeginRedelegate
-//        {"msgs/value/delegator_address", "Delegator"},
         {"msgs/value/validator_src_address",  "Validator Source"},
         {"msgs/value/validator_dst_address",  "Validator Dest"},
-
-        // MsgSubmitProposal
         {"msgs/value/description",            "Description"},
         {"msgs/value/initial_deposit/amount", "Deposit Amount"},
         {"msgs/value/initial_deposit/denom",  "Deposit Denom"},
         {"msgs/value/proposal_type",          "Proposal"},
         {"msgs/value/proposer",               "Proposer"},
         {"msgs/value/title",                  "Title"},
-
-        // MsgDeposit
         {"msgs/value/depositer",              "Sender"},
         {"msgs/value/proposal_id",            "Proposal ID"},
         {"msgs/value/amount",                 "Amount"},
-
-        // MsgVote
         {"msgs/value/voter",                  "Description"},
-//        {"msgs/value/proposal_id",              "Proposal ID"},
         {"msgs/value/option",                 "Option"},
-
-        // MsgWithdrawDelegationReward
-//        {"msgs/value/delegator_address", "Delegator"},      // duplicated
-//        {"msgs/value/validator_address", "Validator"},      // duplicated
 };
 
 parser_error_t tx_display_make_friendly() {
@@ -506,3 +510,5 @@ parser_error_t tx_display_make_friendly() {
     return parser_ok;
 }
 
+
+#pragma clang diagnostic pop

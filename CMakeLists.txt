@@ -95,10 +95,10 @@ file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/formatting.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_impl.c
-        app/src/json/json_parser.c
-        app/src/tx_parser.c
-        app/src/tx_display.c
-        app/src/tx_validate.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/json/json_parser.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/tx_parser.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/tx_display.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/tx_validate.c
         )
 
 add_library(app_lib STATIC
@@ -138,6 +138,7 @@ target_link_libraries(unittests PRIVATE
         CONAN_PKG::jsoncpp)
 
 add_compile_definitions(TESTVECTORS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/")
+add_compile_definitions(APP_TESTING=1)
 add_test(unittests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittests)
 set_tests_properties(unittests PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
