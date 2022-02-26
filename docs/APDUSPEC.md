@@ -134,4 +134,10 @@ All other packets/chunks should contain message to sign
 | SIG     | byte (64) | Signature   |                          |
 | SW1-SW2 | byte (2)  | Return code | see list of return codes |
 
+The signature data is DER encoded. The returned bytes have the following structure.
+
+```
+0x30 <length of whole message> <0x02> <length of R> <R> 0x2 <length of S> <S>
+```
+
 --------------
