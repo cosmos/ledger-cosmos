@@ -15,7 +15,7 @@
 ********************************************************************************/
 
 #include "gtest/gtest.h"
-#include "util/common.h"
+#include "common.h"
 #include <jsmn.h>
 #include <json/json_parser.h>
 

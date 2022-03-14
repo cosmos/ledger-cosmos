@@ -24,10 +24,20 @@ Transactions passed to the Ledger device will be in the following format. The Le
 #### Examples
 
 ```json
+{
+  "account_number": "123",
+  "chain_id": "cosmoshub-4",
+  "fee": {
+    "amount": [{"amount": "4000", "denom": "uatom"}, ...],
+    "gas": "40000"
+  },
+  "memo": "this is a comment",
+  "msgs": [{arbitrary}],
+  "sequence": "42"
+}
 ```
 
-```json
-```
+Note, all the `{number}` values must be passed as string.
 
 #### Display Logic
 

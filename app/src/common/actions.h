@@ -21,32 +21,52 @@
 #include "apdu_codes.h"
 #include <os_io_seproxyhal.h>
 #include "coin.h"
+#include "zxerror.h"
 
-void app_sign();
+extern uint16_t action_addrResponseLen;
 
-void app_set_hrp(char *p);
+__Z_INLINE void app_set_hrp(char *p) {
+    crypto_set_hrp(p);
+}
 
-extern uint8_t action_addr_len;
+__Z_INLINE void app_sign() {
+    uint16_t replyLen = 0;
 
-__Z_INLINE uint8_t app_fill_address(address_kind_e kind) {
+    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+    zxerr_t err = crypto_sign(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 3, &replyLen);
+
+    if (err != zxerr_ok || replyLen == 0) {
+        set_code(G_io_apdu_buffer, 0, APDU_CODE_SIGN_VERIFY_ERROR);
+        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
+    } else {
+        set_code(G_io_apdu_buffer, replyLen, APDU_CODE_OK);
+        io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, replyLen + 2);
+    }
+}
+
+__Z_INLINE zxerr_t app_fill_address() {
     // Put data directly in the apdu buffer
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
 
-    switch (kind) {
-        case addr_secp256k1:
-            action_addr_len = crypto_fillAddress(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 2);
-            break;
-        default:
-            action_addr_len = 0;
-            break;
+    action_addrResponseLen = 0;
+    zxerr_t err = crypto_fillAddress(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 2, &action_addrResponseLen);
+
+    if (err != zxerr_ok || action_addrResponseLen == 0) {
+        THROW(APDU_CODE_EXECUTION_ERROR);
     }
 
-    return action_addr_len;
+    return zxerr_ok;
 }
 
-__Z_INLINE void app_reply_address(address_kind_e kind) {
-    set_code(G_io_apdu_buffer, action_addr_len, APDU_CODE_OK);
-    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, action_addr_len + 2);
+__Z_INLINE void app_reject() {
+    MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+    set_code(G_io_apdu_buffer, 0, APDU_CODE_COMMAND_NOT_ALLOWED);
+    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
+}
+
+__Z_INLINE void app_reply_address() {
+    set_code(G_io_apdu_buffer, action_addrResponseLen, APDU_CODE_OK);
+    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, action_addrResponseLen + 2);
 }
 
 __Z_INLINE void app_reply_error() {

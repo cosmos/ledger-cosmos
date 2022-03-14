@@ -16,6 +16,7 @@
 
 #include <jsmn.h>
 #include <common/parser_common.h>
+#include <zxmacros.h>
 #include "json/json_parser.h"
 
 const char whitespaces[] = {
@@ -28,7 +29,7 @@ const char whitespaces[] = {
 };
 
 int8_t is_space(char c) {
-    for (uint16_t i = 0; i < sizeof(whitespaces); i++) {
+    for (uint32_t i = 0; i < sizeof(whitespaces); i++) {
         if (whitespaces[i] == c) {
             return 1;
         }
@@ -54,7 +55,7 @@ int8_t contains_whitespace(parsed_json_t *json) {
             return 0;
         }
     }
-    while (start <= last_element_index && json->buffer[start] != '\0') {
+    while (start < last_element_index && json->buffer[start] != '\0') {
         if (is_space(json->buffer[start])) {
             return 1;
         }
@@ -63,25 +64,32 @@ int8_t contains_whitespace(parsed_json_t *json) {
     return 0;
 }
 
-int8_t is_sorted(int16_t first_index,
-                 int16_t second_index,
+int8_t is_sorted(uint16_t first_index,
+                 uint16_t second_index,
                  parsed_json_t *json) {
-#if DEBUG_SORTING
     char first[256];
     char second[256];
+    MEMZERO(first, sizeof first);
+    MEMZERO(second, sizeof second);
 
-    int size =  parsed_tx->Tokens[first_index].end - parsed_tx->Tokens[first_index].start;
-    strncpy(first, tx + parsed_tx->Tokens[first_index].start, size);
+    size_t size = json->tokens[first_index].end - json->tokens[first_index].start;
+    if (size >= sizeof(first)) {
+        return 0;
+    }
+
+    strncpy(first, json->buffer + json->tokens[first_index].start, size);
     first[size] = '\0';
-    size =  parsed_tx->Tokens[second_index].end - parsed_tx->Tokens[second_index].start;
-    strncpy(second, tx + parsed_tx->Tokens[second_index].start, size);
-    second[size] = '\0';
-#endif
 
-    if (strcmp((json->buffer + json->tokens[first_index].start),
-               (json->buffer + json->tokens[second_index].start)) <= 0) {
+    size = json->tokens[second_index].end - json->tokens[second_index].start;
+    if (size >= sizeof(second)) return 0;
+
+    strncpy(second, json->buffer + json->tokens[second_index].start, size);
+    second[size] = '\0';
+
+    if (strcmp(first, second) <= 0) {
         return 1;
     }
+
     return 0;
 }
 

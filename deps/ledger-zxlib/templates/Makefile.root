@@ -14,7 +14,7 @@
 #*  limitations under the License.
 #********************************************************************************
 
-# We use BOLOS_SDK to determine the develoment environment that is being used
+# We use BOLOS_SDK to determine the development environment that is being used
 # BOLOS_SDK IS  DEFINED	 	We use the plain Makefile for Ledger
 # BOLOS_SDK NOT DEFINED		We use a containerized build approach
 
@@ -25,5 +25,5 @@ default:
 	$(MAKE) -C app
 %:
 	$(info "Calling app Makefile for target $@")
-	$(MAKE) -C app $@
+	COIN=$(COIN) $(MAKE) -C app $@
 endif

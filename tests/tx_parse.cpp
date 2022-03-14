@@ -19,9 +19,11 @@
 #include <tx_display.h>
 #include <tx_parser.h>
 #include <common/parser.h>
-#include "util/common.h"
+#include "common.h"
 
 namespace {
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "ConstantParameter"
     parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks) {
         uint16_t ret_value_token_index = 0;
         parser_error_t err = tx_traverse_find(root_token_index, &ret_value_token_index);
@@ -34,12 +36,13 @@ namespace {
                            parser_tx_obj.query.out_val, parser_tx_obj.query.out_val_len,
                            parser_tx_obj.query.page_index, numChunks);
     }
+#pragma clang diagnostic pop
 
     TEST(TxParse, Tx_Traverse) {
         auto transaction = R"({"keyA":"123456", "keyB":"abcdefg", "keyC":""})";
 
         parser_tx_obj.tx = transaction;
-        parser_tx_obj.flags.cache_valid = 0;
+        parser_tx_obj.flags.cache_valid = false;
         parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
 
         ASSERT_EQ(err, parser_ok);
@@ -104,7 +107,7 @@ namespace {
         auto transaction = R"({"keyA":"123456", "keyB":"abcdefg"})";
 
         parser_tx_obj.tx = transaction;
-        parser_tx_obj.flags.cache_valid = 0;
+        parser_tx_obj.flags.cache_valid = false;
         parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
         ASSERT_EQ(err, parser_ok);
 
@@ -116,7 +119,7 @@ namespace {
         err = tx_traverse(0, &numChunks);
         EXPECT_EQ(err, parser_display_page_out_of_range) << "This call should have resulted in a display out of range";
 
-        // We should find it.. but later tx_display should fail
+        // We should find it. but later tx_display should fail
         INIT_QUERY_CONTEXT(key, sizeof(key), val, sizeof(val), 0, 4)
         err = tx_traverse(0, &numChunks);
         EXPECT_EQ(err, parser_ok);
@@ -127,7 +130,7 @@ namespace {
         auto transaction = R"({"account_number":"0"})";
 
         parser_tx_obj.tx = transaction;
-        parser_tx_obj.flags.cache_valid = 0;
+        parser_tx_obj.flags.cache_valid = false;
         parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
         EXPECT_EQ(err, parser_ok);
 
@@ -141,7 +144,7 @@ namespace {
         auto transaction = R"({"account_number":"0","chain_id":"test-chain-1","fee":{"amount":[{"amount":"5","denom":"photon"}],"gas":"10000"},"memo":"testmemo","msgs":[{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]}],"sequence":"1"})";
 
         parser_tx_obj.tx = transaction;
-        parser_tx_obj.flags.cache_valid = 0;
+        parser_tx_obj.flags.cache_valid = false;
         parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
         EXPECT_EQ(err, parser_ok);
 
@@ -155,7 +158,7 @@ namespace {
                 R"({"account_number":"0","chain_id":"test-chain-1","fee":{"amount":[{"amount":"5","denom":"photon"}],"gas":"10000"},"memo":"testmemo","msgs":[{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]},{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]},{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]},{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]}],"sequence":"1"})";
 
         parser_tx_obj.tx = transaction;
-        parser_tx_obj.flags.cache_valid = 0;
+        parser_tx_obj.flags.cache_valid = false;
         parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
         EXPECT_EQ(err, parser_ok);
 

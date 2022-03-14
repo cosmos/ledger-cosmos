@@ -33,7 +33,7 @@ class BignumLittleEndianTests : public ::testing::TestWithParam<bignum_testcase_
 class BignumBigEndianTests : public ::testing::TestWithParam<bignum_testcase_t> {
 };
 
-INSTANTIATE_TEST_CASE_P
+INSTANTIATE_TEST_SUITE_P
 
 (
         BignumTestCases, BignumLittleEndianTests, testing::Values(
@@ -67,7 +67,7 @@ TEST_P(BignumLittleEndianTests, print) {
     uint8_t bcdOut[100];
     uint16_t bcdOutLen = sizeof(bcdOut);
 
-    bignumLittleEndian_to_bcd(bcdOut, bcdOutLen, inBuffer, inBufferLen);
+    bignumLittleEndian_to_bcd(bcdOut, bcdOutLen, inBuffer, static_cast<uint16_t>(inBufferLen));
 
     char bufferUI[300];
     bignumLittleEndian_bcdprint(bufferUI, sizeof(bufferUI), bcdOut, bcdOutLen);
@@ -89,7 +89,7 @@ TEST(BignumLittleEndianTests, range) {
 
         uint8_t bcdOut[100];
         uint16_t bcdOutLen = sizeof(bcdOut);
-        bignumLittleEndian_to_bcd(bcdOut, bcdOutLen, inBuffer, inBufferLen);
+        bignumLittleEndian_to_bcd(bcdOut, bcdOutLen, inBuffer, static_cast<uint16_t>(inBufferLen));
         char bufferUI[300];
         bignumLittleEndian_bcdprint(bufferUI, sizeof(bufferUI), bcdOut, bcdOutLen);
 
@@ -99,7 +99,7 @@ TEST(BignumLittleEndianTests, range) {
     }
 }
 
-INSTANTIATE_TEST_CASE_P
+INSTANTIATE_TEST_SUITE_P
 
 (
         BignumTestCases, BignumBigEndianTests, testing::Values(
@@ -134,7 +134,7 @@ TEST_P(BignumBigEndianTests, print) {
 
     uint8_t bcdOut[100];
     uint16_t bcdOutLen = sizeof(bcdOut);
-    bignumBigEndian_to_bcd(bcdOut, bcdOutLen, inBuffer, inBufferLen);
+    bignumBigEndian_to_bcd(bcdOut, bcdOutLen, inBuffer, static_cast<uint16_t>(inBufferLen));
 
     char bufferUI[300];
     bignumBigEndian_bcdprint(bufferUI, sizeof(bufferUI), bcdOut, bcdOutLen);
@@ -153,7 +153,7 @@ TEST(BignumBigEndianTests, range) {
 
         uint8_t bcdOut[100];
         uint16_t bcdOutLen = sizeof(bcdOut);
-        bignumBigEndian_to_bcd(bcdOut, bcdOutLen, inBuffer, inBufferLen);
+        bignumBigEndian_to_bcd(bcdOut, bcdOutLen, inBuffer, static_cast<uint16_t>(inBufferLen));
         char bufferUI[300];
         bignumBigEndian_bcdprint(bufferUI, sizeof(bufferUI), bcdOut, bcdOutLen);
 

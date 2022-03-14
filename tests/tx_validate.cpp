@@ -18,7 +18,7 @@
 #include <json/json_parser.h>
 #include <tx_validate.h>
 #include <common/parser.h>
-#include "util/common.h"
+#include "common.h"
 
 namespace {
     TEST(TxValidationTest, CorrectFormat) {

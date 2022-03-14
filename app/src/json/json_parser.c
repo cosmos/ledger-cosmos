@@ -19,7 +19,7 @@
 #include <common/parser_common.h>
 #include "json_parser.h"
 
-#define EQUALS(_P, _Q, _LEN) (MEMCMP( PIC(_P), PIC(_Q), (_LEN))==0)
+#define EQUALS(_P, _Q, _LEN) (MEMCMP( (const void*) PIC(_P), (const void*) PIC(_Q), (_LEN))==0)
 
 parser_error_t json_parse(parsed_json_t *parsed_json, const char *buffer, uint16_t bufferLen) {
     jsmn_parser parser;
@@ -35,6 +35,12 @@ parser_error_t json_parse(parsed_json_t *parsed_json, const char *buffer, uint16
             parsed_json->bufferLen,
             parsed_json->tokens,
             MAX_NUMBER_OF_TOKENS);
+
+#ifdef APP_TESTING
+    char tmpBuffer[100];
+    snprintf(tmpBuffer, sizeof(tmpBuffer), "tokens: %d", num_tokens);
+    zemu_log(tmpBuffer);
+#endif
 
     if (num_tokens < 0) {
         switch (num_tokens) {
@@ -208,10 +214,10 @@ parser_error_t object_get_nth_value(const parsed_json_t *json,
         return parser_no_data;
     }
 
-    CHECK_PARSER_ERR(object_get_nth_key(json, object_token_index, object_element_index, key_index));
-    (*key_index) ++;
+    CHECK_PARSER_ERR(object_get_nth_key(json, object_token_index, object_element_index, key_index))
+    (*key_index)++;
 
-    return  parser_ok;
+    return parser_ok;
 }
 
 parser_error_t object_get_value(const parsed_json_t *json,

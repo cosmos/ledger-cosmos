@@ -17,7 +17,6 @@
 #pragma once
 
 #include <stdbool.h>
-#include <ux.h>
 #include "apdu_codes.h"
 
 #define OFFSET_CLA                      0
