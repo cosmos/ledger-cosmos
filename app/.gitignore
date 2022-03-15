@@ -49,4 +49,4 @@ bin/app.apdu
 
 \output/app.*
 pkg/zxtool.sh
-pkg/installer_?.sh
+pkg/installer_*.sh
