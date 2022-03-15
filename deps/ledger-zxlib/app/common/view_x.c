@@ -76,6 +76,15 @@ const ux_flow_step_t *const ux_idle_flow [] = {
 
 ///////////
 
+UX_STEP_NOCB(ux_message_flow_1_step, pbb, { &C_icon_app, viewdata.key, viewdata.value,});
+
+UX_FLOW(
+    ux_message_flow,
+    &ux_message_flow_1_step
+);
+
+///////////
+
 UX_STEP_NOCB(ux_error_flow_1_step, bnnn_paging, { .title = viewdata.key, .text = viewdata.value, });
 UX_STEP_VALID(ux_error_flow_2_step, pb, h_error_accept(0), { &C_icon_validate_14, "Ok"});
 
@@ -261,6 +270,16 @@ void view_review_show_impl(){
         ux_stack_push();
     }
     ux_flow_init(0, ux_review_flow, NULL);
+}
+
+void view_message_impl(char *title, char *message) {
+    snprintf(viewdata.key, MAX_CHARS_PER_KEY_LINE, "%s", title);
+    snprintf(viewdata.value, MAX_CHARS_PER_VALUE1_LINE, "%s", message);
+    ux_layout_bnnn_paging_reset();
+    if(G_ux.stack_count == 0) {
+        ux_stack_push();
+    }
+    ux_flow_init(0, ux_message_flow, NULL);
 }
 
 void view_error_show_impl() {
