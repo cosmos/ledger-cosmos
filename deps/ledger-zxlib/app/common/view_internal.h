@@ -102,6 +102,8 @@ max_char_display get_max_char_per_line();
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
 
+void view_initialize_show_impl(uint8_t item_idx, char *statusString);
+
 void view_idle_show_impl(uint8_t item_idx, char *statusString);
 
 void view_message_impl(char *title, char *message);

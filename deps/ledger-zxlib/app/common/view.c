@@ -16,6 +16,7 @@
 ********************************************************************************/
 
 #include "view.h"
+#include "coin.h"
 #include "view_internal.h"
 #include "crypto.h"
 
@@ -58,6 +59,11 @@ void h_error_accept(__Z_UNUSED unsigned int _) {
     view_idle_show(0, NULL);
     UX_WAIT();
     app_reply_error();
+}
+
+void h_initialize(__Z_UNUSED unsigned int _) {
+    view_idle_show(0, NULL);
+    UX_WAIT();
 }
 
 ///////////////////////////////////
