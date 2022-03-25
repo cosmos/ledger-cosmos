@@ -1840,5 +1840,43 @@
       "7 | Gas : 200000"
     ],
     "expert": true
+  },
+  {
+    "name": "minimal_extra_field",
+    "tx": {
+      "account_number": "V1",
+      "chain_id": "V2",
+      "fee": {
+        "amount": [
+          {
+            "amount": "b"
+          },
+          {
+            "c": "d"
+          },
+          {
+            "x": "y"
+          }
+        ],
+        "gas": "V3"
+      },
+      "foo": "bar",
+      "memo": "V4",
+      "msgs": [],
+      "sequence": "V5",
+      "unknown_param": "123456"
+    },
+    "foo": "bar",
+    "parsingErr": "No error",
+    "validationErr": "Unexpected field",
+    "expected": [
+      "0 | Chain ID : V2",
+      "1 | Account : V1",
+      "2 | Sequence : V5",
+      "3 | Memo : V4",
+      "4 | fee/amount : Unexpected field",
+      "5 | Gas : V3"
+    ],
+    "expert": true
   }
 ]
