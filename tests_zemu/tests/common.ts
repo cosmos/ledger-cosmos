@@ -163,3 +163,38 @@ export const example_tx_str_basic2 = {
   ],
   sequence: '6',
 }
+
+export const example_tx_str_basic_extra_fields = {
+  account_number: '108',
+  chain_id: 'cosmoshub-4',
+  extra_field: 'empty',
+  fee: {
+    amount: [
+      {
+        amount: '600',
+        denom: 'uatom',
+      },
+    ],
+    gas: '200000',
+  },
+  foo: 'bar',
+  memo: '',
+  msgs: [
+    {
+      type: 'cosmos-sdk/MsgWithdrawDelegationReward',
+      value: {
+        delegator_address: 'cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h',
+        validator_address: 'cosmosvaloper1kn3wugetjuy4zetlq6wadchfhvu3x740ae6z6x',
+      },
+    },
+    {
+      type: 'cosmos-sdk/MsgWithdrawDelegationReward',
+      value: {
+        delegator_address: 'cosmos1w34k53py5v5xyluazqpq65agyajavep2rflq6h',
+        validator_address: 'cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0',
+      },
+    },
+  ],
+  sequence: '106',
+  unknown_field: 123456
+}
