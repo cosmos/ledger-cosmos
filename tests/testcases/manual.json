@@ -1878,5 +1878,66 @@
       "5 | Gas : V3"
     ],
     "expert": true
+  },
+  {
+    "name": "ibc_denoms",
+    "tx": {
+      "account_number": "0",
+      "chain_id": "cosmoshub-4",
+      "fee": {
+        "amount": [
+          {
+            "amount": "5",
+            "denom": "uatom"
+          }
+        ],
+        "gas": "10000"
+      },
+      "memo": "testmemo",
+      "msgs": [
+        {
+          "inputs": [
+            {
+              "address": "cosmosaccaddr1d9h8qat5e4ehc5",
+              "coins": [
+                {
+                  "amount": "10",
+                  "denom": "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+                }
+              ]
+            }
+          ],
+          "outputs": [
+            {
+              "address": "cosmosaccaddr1da6hgur4wse3jx32",
+              "coins": [
+                {
+                  "amount": "10",
+                  "denom": "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "sequence": "1"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : cosmoshub-4",
+      "1 | Account : 0",
+      "2 | Sequence : 1",
+      "3 | Source Address : cosmosaccaddr1d9h8qat5e4ehc5",
+      "4 | Source Coins [1/2] : 10 ibc/27394FB092D2ECCD56123C74F36E4C1F",
+      "4 | Source Coins [2/2] : 926001CEADA9CA97EA622B25F41E5EB2",
+      "5 | Dest Address : cosmosaccaddr1da6hgur4wse3jx32",
+      "6 | Dest Coins [1/2] : 10 ibc/27394FB092D2ECCD56123C74F36E4C1F",
+      "6 | Dest Coins [2/2] : 926001CEADA9CA97EA622B25F41E5EB2",
+      "7 | Memo : testmemo",
+      "8 | Fee : 5 uatom",
+      "9 | Gas : 10000"
+    ],
+    "expert": true
   }
 ]
