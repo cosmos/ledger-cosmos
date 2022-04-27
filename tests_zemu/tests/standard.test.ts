@@ -319,7 +319,7 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]
-      const tx = JSON.stringify(example_tx_str_basic)
+      const tx = JSON.stringify(ibc_denoms)
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, 'cosmos')
