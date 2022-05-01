@@ -28,8 +28,9 @@ zxerr_t addr_getNumItems(uint8_t *num_items) {
     if (app_mode_expert()) {
         zemu_log("num_items 2\n");
         *num_items = 2;
+    } else {
+        zemu_log("num_items 1\n");
     }
-    zemu_log("num_items 1\n");
     return zxerr_ok;
 }
 
