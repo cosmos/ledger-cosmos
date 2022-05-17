@@ -182,7 +182,7 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrR
     }
 
     // extract pubkey
-    crypto_extractPublicKey(hdPath, buffer, buffer_len);
+    CHECK_ZXERR(crypto_extractPublicKey(hdPath, buffer, buffer_len))
 
     // Hash it
     uint8_t hashed1_pk[CX_SHA256_SIZE];

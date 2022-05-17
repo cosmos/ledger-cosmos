@@ -106,11 +106,17 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                 }
 
                 case INS_GET_ADDR_SECP256K1: {
+                    if( os_global_pin_is_validated() != BOLOS_UX_OK ) {
+                        THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+                    }
                     handleGetAddrSecp256K1(flags, tx, rx);
                     break;
                 }
 
                 case INS_SIGN_SECP256K1: {
+                    if( os_global_pin_is_validated() != BOLOS_UX_OK ) {
+                        THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+                    }
                     handleSignSecp256K1(flags, tx, rx);
                     break;
                 }
