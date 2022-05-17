@@ -113,6 +113,10 @@ zxerr_t crypto_sign(uint8_t *signature,
                                             signatureMaxlen,
                                             &info);
         }
+        CATCH_OTHER(e) {
+            CLOSE_TRY;
+            return zxerr_ledger_api_error;
+        }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
             MEMZERO(privateKeyData, 32);
@@ -182,7 +186,7 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrR
     }
 
     // extract pubkey
-    crypto_extractPublicKey(hdPath, buffer, buffer_len);
+    zxerr_t err = crypto_extractPublicKey(hdPath, buffer, buffer_len);
 
     // Hash it
     uint8_t hashed1_pk[CX_SHA256_SIZE];
@@ -196,5 +200,5 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrR
 
     *addrResponseLen = PK_LEN_SECP256K1 + strlen(addr);
 
-    return zxerr_ok;
+    return err;
 }
