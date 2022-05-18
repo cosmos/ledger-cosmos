@@ -39,6 +39,7 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
         return zxerr_invalid_crypto_settings;
     }
 
+    zxerr_t err = zxerr_ok;
     BEGIN_TRY
     {
         TRY {
@@ -52,8 +53,7 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
             cx_ecfp_generate_pair(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1);
         }
         CATCH_OTHER(e) {
-            CLOSE_TRY;
-            return zxerr_ledger_api_error;
+            err = zxerr_ledger_api_error;
         }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
@@ -61,6 +61,10 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
         }
     }
     END_TRY;
+
+    if (err != zxerr_ok) {
+        return err;
+    }
 
     // Format pubkey
     for (int i = 0; i < 32; i++) {
@@ -73,7 +77,7 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
     //////////////////////
     MEMCPY(pubKey, cx_publicKey.W, PK_LEN_SECP256K1);
 
-    return zxerr_ok;
+    return err;
 }
 
 zxerr_t crypto_sign(uint8_t *signature,
@@ -91,6 +95,8 @@ zxerr_t crypto_sign(uint8_t *signature,
     uint8_t privateKeyData[32];
     unsigned int info = 0;
     int signatureLength = 0;
+
+    zxerr_t err = zxerr_ok;
     BEGIN_TRY
     {
         TRY
@@ -114,8 +120,7 @@ zxerr_t crypto_sign(uint8_t *signature,
                                             &info);
         }
         CATCH_OTHER(e) {
-            CLOSE_TRY;
-            return zxerr_ledger_api_error;
+            err = zxerr_ledger_api_error;
         }
         FINALLY {
             MEMZERO(&cx_privateKey, sizeof(cx_privateKey));
@@ -125,7 +130,7 @@ zxerr_t crypto_sign(uint8_t *signature,
     END_TRY;
 
     *sigSize = signatureLength;
-    return zxerr_ok;
+    return err;
 }
 
 #else
