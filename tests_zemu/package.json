@@ -18,7 +18,7 @@
     "testSR25519": "jest --detectOpenHandles --runInBand tests/sr25519.test.ts"
   },
   "dependencies": {
-    "@zondax/zemu": "^0.27.4",
+    "@zondax/zemu": "^0.32.0",
     "ledger-cosmos-js": "^2.1.8"
   },
   "devDependencies": {
