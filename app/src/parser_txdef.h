@@ -46,6 +46,8 @@ typedef struct {
     int16_t out_val_len;
 } tx_query_t;
 
+
+
 typedef struct {
     // Buffer to the original tx blob
     const char *tx;
@@ -55,10 +57,10 @@ typedef struct {
 
     // internal flags
     struct {
-        unsigned int cache_valid:1;
-        unsigned int msg_type_grouping:1;
-        unsigned int msg_from_grouping:1;
-        unsigned int msg_from_grouping_hide_all:1;
+        bool cache_valid:1;
+        bool msg_type_grouping:1;       // indicates if msg type grouping is enabled
+        bool msg_from_grouping:1;       // indicates if msg from grouping is enabled
+        bool msg_from_grouping_hide_all:1; // indicates if msg from grouping should hide all
     } flags;
 
     // indicates that N identical msg_type fields have been detected
