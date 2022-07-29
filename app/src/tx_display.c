@@ -62,7 +62,7 @@ __Z_INLINE uint8_t get_root_max_level(root_item_e i) {
         case root_item_memo:
             return 2;
         case root_item_msgs:
-            return 2;
+            return extraDepthLevel ? 3 : 2;
         case root_item_tip:
             return 1;
         default:
@@ -470,6 +470,11 @@ static const key_subst_t key_substitutions[] = {
         {"msgs/inputs/coins",                 "Source Coins"},
         {"msgs/outputs/address",              "Dest Address"},
         {"msgs/outputs/coins",                "Dest Coins"},
+
+        {"msgs/value/inputs/address",         "Source Address"},
+        {"msgs/value/inputs/coins",           "Source Coins"},
+        {"msgs/value/outputs/address",        "Dest Address"},
+        {"msgs/value/outputs/coins",          "Dest Coins"},
 
         {"msgs/value/from_address",           "From"},
         {"msgs/value/to_address",             "To"},

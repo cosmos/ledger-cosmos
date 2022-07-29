@@ -28,6 +28,8 @@ extern "C" {
 #endif
 
 #define MAX_RECURSION_DEPTH  6
+#define MULTISEND_KEY_IDX    9
+extern bool extraDepthLevel;
 
 #define INIT_QUERY_CONTEXT(_KEY, _KEY_LEN, _VAL, _VAL_LEN, _PAGE_IDX, _MAX_LEVEL) \
     parser_tx_obj.query._item_index_current = 0; \
