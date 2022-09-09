@@ -16,7 +16,7 @@
 
 import Zemu from '@zondax/zemu'
 // @ts-ignore
-import CosmosApp from 'ledger-cosmos-js'
+import { CosmosApp } from '@zondax/ledger-cosmos-js'
 import { DEFAULT_OPTIONS, DEVICE_MODELS, example_tx_str_basic, example_tx_str_basic2, ibc_denoms } from './common'
 
 // @ts-ignore
