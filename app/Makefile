@@ -41,8 +41,6 @@ all: bin/app.elf
 include $(BOLOS_SDK)/Makefile.defines
 include $(CURDIR)/Makefile.version
 
-DEFINES += APP_SECRET_MODE_ENABLED
-
 $(info ************ TARGET_NAME  = [$(TARGET_NAME)])
 
 ifeq ($(APP_TESTING),1)
