@@ -81,7 +81,11 @@ string(APPEND CMAKE_LINKER_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
 ##############################################################
 #  static libs
 file(GLOB_RECURSE JSMN_SRC
-        deps/jsmn/src/jsmn.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/jsmn/src/jsmn.c
+        )
+file(GLOB_RECURSE TINYCBOR_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src/cborparser.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src/cborvalidation.c
         )
 
 file(GLOB_RECURSE LIB_SRC
@@ -104,14 +108,16 @@ file(GLOB_RECURSE LIB_SRC
 add_library(app_lib STATIC
         ${LIB_SRC}
         ${JSMN_SRC}
+        ${TINYCBOR_SRC}
         )
 
 target_include_directories(app_lib PUBLIC
-        deps/ledger-zxlib/include
-        deps/jsmn/src
-        app/src
-        app/src/common
-        deps/ledger-zxlib/app/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/jsmn/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/app/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src
         )
 
 target_link_libraries(app_lib PUBLIC)
@@ -129,6 +135,7 @@ target_include_directories(unittests PRIVATE
         ${CONAN_INCLUDE_DIRS_FMT}
         ${CONAN_INCLUDE_DIRS_JSONCPP}
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/jsmn/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src
         )
 
 target_link_libraries(unittests PRIVATE

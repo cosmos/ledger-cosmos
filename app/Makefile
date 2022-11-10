@@ -195,6 +195,10 @@ APP_SOURCE_PATH += $(MY_DIR)/../deps/jsmn/src
 SDK_SOURCE_PATH += lib_stusb lib_stusb_impl
 SDK_SOURCE_PATH  += lib_ux
 
+# NanoX SDK does not allow += in APP_SOURCE_PATH or INCLUDES_PATH
+CFLAGS += -I$(MY_DIR)/../deps/tinycbor/src
+APP_SOURCE_PATH += $(MY_DIR)/../deps/tinycbor-ledger
+
 .PHONY: rust
 rust:
 	@echo "No rust code"
