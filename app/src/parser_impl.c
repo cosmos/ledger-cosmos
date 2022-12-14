@@ -15,34 +15,10 @@
 ********************************************************************************/
 
 #include "parser_impl.h"
+#include "cbor.h"
+#include <cbor/cbor_parser_helper.h>
 
 parser_tx_t parser_tx_obj;
-
-parser_error_t parser_init_context(parser_context_t *ctx,
-                                   const uint8_t *buffer,
-                                   uint16_t bufferSize) {
-    ctx->offset = 0;
-
-    if (bufferSize == 0 || buffer == NULL) {
-        // Not available, use defaults
-        ctx->buffer = NULL;
-        ctx->bufferLen = 0;
-        return parser_init_context_empty;
-    }
-
-    ctx->buffer = buffer;
-    ctx->bufferLen = bufferSize;
-
-    return parser_ok;
-}
-
-parser_error_t parser_init(parser_context_t *ctx, const uint8_t *buffer, size_t bufferSize) {
-    parser_error_t err = parser_init_context(ctx, buffer, bufferSize);
-    if (err != parser_ok)
-        return err;
-
-    return err;
-}
 
 const char *parser_getErrorDescription(parser_error_t err) {
     switch (err) {
@@ -70,6 +46,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "item query returned no results";
         case parser_missing_field:
             return "missing field";
+        case parser_unexpected_type:
+            return "unexpected type";
 //////
         case parser_display_idx_out_of_range:
             return "display index out of range";
@@ -100,24 +78,80 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "JSON Missing memo";
         case parser_json_unexpected_error:
             return "JSON Unexpected error";
+        // cbor
+        case parser_cbor_unexpected:
+            return "unexpected CBOR error";
+        case parser_cbor_not_canonical:
+            return "CBOR was not in canonical order";
+        case parser_cbor_unexpected_EOF:
+            return "Unexpected CBOR EOF";
+        // Context specific
+        case parser_context_mismatch:
+            return "context prefix is invalid";
+        case parser_context_unexpected_size:
+            return "context unexpected size";
+        case parser_context_invalid_chars:
+            return "context invalid chars";
+        case parser_transaction_too_big:
+            return "Transaction is too big";
 
         default:
             return "Unrecognized error code";
     }
 }
 
-parser_error_t _readTx(parser_context_t *c, parser_tx_t *v __attribute((unused))) {
-    parser_error_t err = json_parse(&parser_tx_obj.json,
+parser_error_t _read_json_tx(parser_context_t *c, parser_tx_t *v) {
+    parser_error_t err = json_parse(&parser_tx_obj.tx_json.json,
                                     (const char *) c->buffer,
                                     c->bufferLen);
     if (err != parser_ok) {
         return err;
     }
 
-    parser_tx_obj.tx = (const char *) c->buffer;
-    parser_tx_obj.flags.cache_valid = 0;
-    parser_tx_obj.filter_msg_type_count = 0;
-    parser_tx_obj.filter_msg_from_count = 0;
+    parser_tx_obj.tx_json.tx = (const char *) c->buffer;
+    parser_tx_obj.tx_json.flags.cache_valid = 0;
+    parser_tx_obj.tx_json.filter_msg_type_count = 0;
+    parser_tx_obj.tx_json.filter_msg_from_count = 0;
+
+    return parser_ok;
+}
+
+parser_error_t _read_text_tx(parser_context_t *c, parser_tx_t *v) {
+    CborValue it;
+    CHECK_APP_CANARY()
+    INIT_CBOR_PARSER(c, it)
+    CHECK_APP_CANARY()
+
+    //Make sure we have an array of containers and check size
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_array(&it), parser_unexpected_type)
+
+    CHECK_CBOR_MAP_ERR(cbor_value_get_array_length(&it, &v->tx_text.n_containers))
+    // Limit max fields to 255
+    PARSER_ASSERT_OR_ERROR((v->tx_text.n_containers > 0 && v->tx_text.n_containers <= UINT8_MAX), parser_unexpected_number_items)
+
+    CborValue containerArray_ptr;
+    CborValue data;
+    Cbor_container container;
+
+    // Enter array of containers
+    CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&it, &containerArray_ptr))
+
+    for (size_t i = 0; i < v->tx_text.n_containers; i++) {
+        MEMZERO(&container, sizeof(container));
+
+        CHECK_CBOR_MAP_ERR(cbor_value_get_map_length(&containerArray_ptr, &container.n_field))
+        PARSER_ASSERT_OR_ERROR((container.n_field > 0 && container.n_field < 4), parser_unexpected_value)
+
+        CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&containerArray_ptr, &data))
+        CHECK_PARSER_ERR(cbor_check_expert(&data, &container))
+
+        v->tx_text.n_expert += container.screen.expert ? 1 : 0;
+        CHECK_CBOR_MAP_ERR(cbor_value_advance(&containerArray_ptr))
+    }
+    CHECK_CBOR_MAP_ERR(cbor_value_leave_container(&it, &containerArray_ptr))
+
+    // End of buffer does not match end of parsed data
+    PARSER_ASSERT_OR_ERROR(it.source.ptr == c->buffer + c->bufferLen, parser_cbor_unexpected_EOF)
 
     return parser_ok;
 }

@@ -34,6 +34,11 @@ typedef enum {
     addr_secp256k1 = 0,
 } address_kind_e;
 
+typedef enum {
+    tx_json = 0,
+    tx_textual
+} tx_type_e;
+
 #define VIEW_ADDRESS_OFFSET_SECP256K1       PK_LEN_SECP256K1
 #define VIEW_ADDRESS_LAST_PAGE_DEFAULT      0
 

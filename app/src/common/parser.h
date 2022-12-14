@@ -21,13 +21,27 @@ extern "C" {
 #endif
 
 #include "parser_impl.h"
+#include "coin.h"
+
+#define OUTPUT_HANDLER_SIZE 600
+#if defined(TARGET_NANOS)
+#undef OUTPUT_HANDLER_SIZE
+#define OUTPUT_HANDLER_SIZE 500
+#endif
+
+#define MAX_SCREEN_SIZE 600
+#define MAX_KEY_LENGTH 25
+#define SCREEN_BREAK ":"
+#define SCREEN_INDENT ">"
+#define END_OF_STRING_SIZE
 
 const char *parser_getErrorDescription(parser_error_t err);
 
 //// parses a tx buffer
 parser_error_t parser_parse(parser_context_t *ctx,
                             const uint8_t *data,
-                            size_t dataLen);
+                            size_t dataLen,
+                            parser_tx_t *tx_obj);
 
 //// verifies tx fields
 parser_error_t parser_validate(const parser_context_t *ctx);
