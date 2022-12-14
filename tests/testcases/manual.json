@@ -1939,5 +1939,97 @@
       "9 | Gas : 10000"
     ],
     "expert": true
-  }
+  },
+  {
+		"name": "huge_test",
+		"tx": {
+			"account_number": "1",
+			"chain_id": "my-chain",
+			"fee": { "amount": [{ "amount": "2000", "denom": "uatom" }], "gas": "100000", "granter": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs", "payer": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs" },
+			"memo": "\\u003e ⚛️\\u269B⚛️     ",
+			"msgs": [
+				{
+					"type": "cosmos-sdk/MsgExec",
+					"value": {
+						"grantee": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
+						"msgs": [
+							{
+								"type": "cosmos-sdk/MsgSend",
+								"value": {
+									"amount": [{ "amount": "10000000", "denom": "uatom" }],
+									"from_address": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
+									"to_address": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t"
+								}
+							}
+						]
+					}
+				},
+				{
+					"type": "cosmos-sdk/v1/MsgVote",
+					"value": {
+						"metadata": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Also it ends in  a single ampersand @",
+						"option": 1,
+						"proposal_id": "1",
+						"voter": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs"
+					}
+				}
+			],
+			"sequence": "2",
+			"timeout_height": "20",
+			"tip": {
+				"amount": [
+					{ "amount": "20000", "denom": "uatom" },
+					{ "amount": "30000", "denom": "uosmo" }
+				],
+				"tipper": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t"
+			}
+		},
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : my-chain",
+      "1 | Account : 1",
+      "2 | Sequence : 2",
+      "3 | Type : cosmos-sdk/MsgExec",
+      "4 | msgs/value/grantee [1/2] : cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvq",
+      "4 | msgs/value/grantee [2/2] : a8eyhs",
+      "5 | msgs/value/msgs [1/6] : [{\"type\":\"cosmos-sdk/MsgSend\",\"value\":{",
+      "5 | msgs/value/msgs [2/6] : \"amount\":[{\"amount\":\"10000000\",\"denom\":",
+      "5 | msgs/value/msgs [3/6] : \"uatom\"}],\"from_address\":\"cosmos1ulav3h",
+      "5 | msgs/value/msgs [4/6] : senupswqfkw2y3sup5kgtqwnvqa8eyhs\",\"to_a",
+      "5 | msgs/value/msgs [5/6] : ddress\":\"cosmos1ejrf4cur2wy6kfurg9f2jpp",
+      "5 | msgs/value/msgs [6/6] : p2h3afe5h6pkh5t\"}}]",
+      "6 | Type : cosmos-sdk/v1/MsgVote",
+      "7 | msgs/value/metadata [1/13] : Lorem ipsum dolor sit amet, consectetur",
+      "7 | msgs/value/metadata [2/13] :  adipiscing elit, sed do eiusmod tempor",
+      "7 | msgs/value/metadata [3/13] :  incididunt ut labore et dolore magna a",
+      "7 | msgs/value/metadata [4/13] : liqua. Ut enim ad minim veniam, quis no",
+      "7 | msgs/value/metadata [5/13] : strud exercitation ullamco laboris nisi",
+      "7 | msgs/value/metadata [6/13] :  ut aliquip ex ea commodo consequat. Du",
+      "7 | msgs/value/metadata [7/13] : is aute irure dolor in reprehenderit in",
+      "7 | msgs/value/metadata [8/13] :  voluptate velit esse cillum dolore eu",
+      "7 | msgs/value/metadata [9/13] : fugiat nulla pariatur. Excepteur sint o",
+      "7 | msgs/value/metadata [10/13] : ccaecat cupidatat non proident, sunt in",
+      "7 | msgs/value/metadata [11/13] :  culpa qui officia deserunt mollit anim",
+      "7 | msgs/value/metadata [12/13] :  id est laborum. Also it ends in  a sin",
+      "7 | msgs/value/metadata [13/13] : gle ampersand @",
+      "8 | Option : 1",
+      "9 | Proposal ID : 1",
+      "10 | Description [1/2] : cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvq",
+      "10 | Description [2/2] : a8eyhs",
+      "11 | Memo [1/2] : \\\\u003e \\u269b\\ufe0f\\\\u269B\\u269b\\ufe0f",
+      "11 | Memo [2/2] :     ",
+      "12 | Fee : 2000 uatom",
+      "13 | Gas : 100000",
+      "14 | Granter [1/2] : cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvq",
+      "14 | Granter [2/2] : a8eyhs",
+      "15 | Payer [1/2] : cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvq",
+      "15 | Payer [2/2] : a8eyhs",
+      "16 | Tip [1/2] : 20000 uatom",
+      "16 | Tip [2/2] : 30000 uosmo",
+      "17 | Tipper [1/2] : cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h",
+      "17 | Tipper [2/2] : 6pkh5t"
+   ],
+    "expert": true
+	}
 ]

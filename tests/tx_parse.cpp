@@ -33,26 +33,26 @@ namespace {
         }
 
         return tx_getToken(ret_value_token_index,
-                           parser_tx_obj.query.out_val, parser_tx_obj.query.out_val_len,
-                           parser_tx_obj.query.page_index, numChunks);
+                           parser_tx_obj.tx_json.query.out_val, parser_tx_obj.tx_json.query.out_val_len,
+                           parser_tx_obj.tx_json.query.page_index, numChunks);
     }
 #pragma clang diagnostic pop
 
     TEST(TxParse, Tx_Traverse) {
         auto transaction = R"({"keyA":"123456", "keyB":"abcdefg", "keyC":""})";
 
-        parser_tx_obj.tx = transaction;
-        parser_tx_obj.flags.cache_valid = false;
-        parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
+        parser_tx_obj.tx_json.tx = transaction;
+        parser_tx_obj.tx_json.flags.cache_valid = false;
+        parser_error_t err = JSON_PARSE(&parser_tx_obj.tx_json.json, parser_tx_obj.tx_json.tx);
 
         ASSERT_EQ(err, parser_ok);
         // Check some tokens
-        ASSERT_EQ(parser_tx_obj.json.numberOfTokens, 7) << "It should contain 7 = 1 (dict) + 6 (key+value)";
-        ASSERT_EQ(parser_tx_obj.json.tokens[0].start, 0);
-        ASSERT_EQ(parser_tx_obj.json.tokens[0].end, 46);
-        ASSERT_EQ(parser_tx_obj.json.tokens[0].size, 3) << "size should be 3 = 3 key/values contained in the dict";
-        ASSERT_EQ(parser_tx_obj.json.tokens[3].start, 19);
-        ASSERT_EQ(parser_tx_obj.json.tokens[3].end, 23);
+        ASSERT_EQ(parser_tx_obj.tx_json.json.numberOfTokens, 7) << "It should contain 7 = 1 (dict) + 6 (key+value)";
+        ASSERT_EQ(parser_tx_obj.tx_json.json.tokens[0].start, 0);
+        ASSERT_EQ(parser_tx_obj.tx_json.json.tokens[0].end, 46);
+        ASSERT_EQ(parser_tx_obj.tx_json.json.tokens[0].size, 3) << "size should be 3 = 3 key/values contained in the dict";
+        ASSERT_EQ(parser_tx_obj.tx_json.json.tokens[3].start, 19);
+        ASSERT_EQ(parser_tx_obj.tx_json.json.tokens[3].end, 23);
 
         char key[100];
         char val[100];
@@ -60,7 +60,7 @@ namespace {
 
         // Try second key - first chunk
         INIT_QUERY_CONTEXT(key, sizeof(key), val, sizeof(val), 0, 4)
-        parser_tx_obj.query.item_index = 1;
+        parser_tx_obj.tx_json.query.item_index = 1;
 
         err = tx_traverse(0, &numChunks);
         EXPECT_EQ(err, parser_ok) << parser_getErrorDescription(err);
@@ -70,14 +70,14 @@ namespace {
 
         // Try second key - Second chunk
         INIT_QUERY_CONTEXT(key, sizeof(key), val, sizeof(val), 1, 4)
-        parser_tx_obj.query.item_index = 1;
+        parser_tx_obj.tx_json.query.item_index = 1;
         err = tx_traverse(0, &numChunks);
         EXPECT_EQ(err, parser_display_page_out_of_range) << parser_getErrorDescription(err);
         EXPECT_EQ(numChunks, 1) << "Incorrect number of chunks";
 
         // Find first key
         INIT_QUERY_CONTEXT(key, sizeof(key), val, sizeof(val), 0, 4)
-        parser_tx_obj.query.item_index = 0;
+        parser_tx_obj.tx_json.query.item_index = 0;
         err = tx_traverse(0, &numChunks);
         EXPECT_EQ(err, parser_ok) << parser_getErrorDescription(err);
         EXPECT_EQ(numChunks, 1) << "Incorrect number of chunks";
@@ -86,7 +86,7 @@ namespace {
 
         // Try the same again
         INIT_QUERY_CONTEXT(key, sizeof(key), val, sizeof(val), 0, 4)
-        parser_tx_obj.query.item_index = 0;
+        parser_tx_obj.tx_json.query.item_index = 0;
         err = tx_traverse(0, &numChunks);
         EXPECT_EQ(err, parser_ok) << parser_getErrorDescription(err);
         EXPECT_EQ(numChunks, 1) << "Incorrect number of chunks";
@@ -95,7 +95,7 @@ namespace {
 
         // Try last key
         INIT_QUERY_CONTEXT(key, sizeof(key), val, sizeof(val), 0, 4)
-        parser_tx_obj.query.item_index = 2;
+        parser_tx_obj.tx_json.query.item_index = 2;
         err = tx_traverse(0, &numChunks);
         EXPECT_EQ(err, parser_ok) << parser_getErrorDescription(err);
         EXPECT_EQ(numChunks, 1) << "Incorrect number of chunks";
@@ -106,9 +106,9 @@ namespace {
     TEST(TxParse, OutOfBoundsSmall) {
         auto transaction = R"({"keyA":"123456", "keyB":"abcdefg"})";
 
-        parser_tx_obj.tx = transaction;
-        parser_tx_obj.flags.cache_valid = false;
-        parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
+        parser_tx_obj.tx_json.tx = transaction;
+        parser_tx_obj.tx_json.flags.cache_valid = false;
+        parser_error_t err = JSON_PARSE(&parser_tx_obj.tx_json.json, parser_tx_obj.tx_json.tx);
         ASSERT_EQ(err, parser_ok);
 
         char key[1000];
@@ -129,9 +129,9 @@ namespace {
     TEST(TxParse, Count_Minimal) {
         auto transaction = R"({"account_number":"0"})";
 
-        parser_tx_obj.tx = transaction;
-        parser_tx_obj.flags.cache_valid = false;
-        parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
+        parser_tx_obj.tx_json.tx = transaction;
+        parser_tx_obj.tx_json.flags.cache_valid = false;
+        parser_error_t err = JSON_PARSE(&parser_tx_obj.tx_json.json, parser_tx_obj.tx_json.tx);
         EXPECT_EQ(err, parser_ok);
 
         uint8_t numItems;
@@ -143,9 +143,9 @@ namespace {
     TEST(TxParse, Tx_Page_Count) {
         auto transaction = R"({"account_number":"0","chain_id":"test-chain-1","fee":{"amount":[{"amount":"5","denom":"photon"}],"gas":"10000"},"memo":"testmemo","msgs":[{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]}],"sequence":"1"})";
 
-        parser_tx_obj.tx = transaction;
-        parser_tx_obj.flags.cache_valid = false;
-        parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
+        parser_tx_obj.tx_json.tx = transaction;
+        parser_tx_obj.tx_json.flags.cache_valid = false;
+        parser_error_t err = JSON_PARSE(&parser_tx_obj.tx_json.json, parser_tx_obj.tx_json.tx);
         EXPECT_EQ(err, parser_ok);
 
         uint8_t numItems;
@@ -157,9 +157,9 @@ namespace {
         auto transaction =
                 R"({"account_number":"0","chain_id":"test-chain-1","fee":{"amount":[{"amount":"5","denom":"photon"}],"gas":"10000"},"memo":"testmemo","msgs":[{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]},{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]},{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]},{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]}],"sequence":"1"})";
 
-        parser_tx_obj.tx = transaction;
-        parser_tx_obj.flags.cache_valid = false;
-        parser_error_t err = JSON_PARSE(&parser_tx_obj.json, parser_tx_obj.tx);
+        parser_tx_obj.tx_json.tx = transaction;
+        parser_tx_obj.tx_json.flags.cache_valid = false;
+        parser_error_t err = JSON_PARSE(&parser_tx_obj.tx_json.json, parser_tx_obj.tx_json.tx);
         EXPECT_EQ(err, parser_ok);
 
         uint8_t numItems;
