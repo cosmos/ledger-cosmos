@@ -3,10 +3,10 @@ name: Sonarcloud
 on:
   push:
     branches:
-      - main
+      - disable
   pull_request:
     branches:
-      - main
+      - disable
     types: [opened, synchronize, reopened]
 
 jobs:
