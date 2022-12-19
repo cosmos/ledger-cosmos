@@ -24,17 +24,48 @@
 #include "parser_impl.h"
 #include "common/parser.h"
 #include "coin.h"
+#include "app_mode.h"
+#include <cbor/cbor_parser_helper.h>
+
+parser_error_t parser_init_context(parser_context_t *ctx,
+                                   const uint8_t *buffer,
+                                   uint16_t bufferSize) {
+    ctx->offset = 0;
+
+    if (bufferSize == 0 || buffer == NULL) {
+        // Not available, use defaults
+        ctx->buffer = NULL;
+        ctx->bufferLen = 0;
+        return parser_init_context_empty;
+    }
+
+    ctx->buffer = buffer;
+    ctx->bufferLen = bufferSize;
+
+    return parser_ok;
+}
 
 parser_error_t parser_parse(parser_context_t *ctx,
                             const uint8_t *data,
-                            size_t dataLen) {
-    CHECK_PARSER_ERR(tx_display_readTx(ctx, data, dataLen))
-    extraDepthLevel =false;
+                            size_t dataLen,
+                            parser_tx_t *tx_obj) {
+
+    CHECK_PARSER_ERR(parser_init_context(ctx, data, dataLen))
+    ctx->tx_obj = tx_obj;
+    if (tx_obj->tx_type == tx_textual) {
+        CHECK_PARSER_ERR(_read_text_tx(ctx, tx_obj))
+    } else {
+        CHECK_PARSER_ERR(_read_json_tx(ctx, tx_obj))
+    }
+
+    extraDepthLevel = false;
     return parser_ok;
 }
 
 parser_error_t parser_validate(const parser_context_t *ctx) {
-    CHECK_PARSER_ERR(tx_validate(&parser_tx_obj.json))
+    if (ctx->tx_obj->tx_type == tx_json) {
+          CHECK_PARSER_ERR(tx_validate(&parser_tx_obj.tx_json.json))
+    }
 
     // Iterate through all items to check that all can be shown and are valid
     uint8_t numItems = 0;
@@ -42,26 +73,29 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
 
     char tmpKey[40];
     char tmpVal[40];
-
+    uint8_t pageCount = 0;
     for (uint8_t idx = 0; idx < numItems; idx++) {
-        uint8_t pageCount = 0;
         CHECK_PARSER_ERR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal, sizeof(tmpVal), 0, &pageCount))
     }
-
     return parser_ok;
 }
 
-parser_error_t parser_getNumItems(const parser_context_t *ctx __attribute__((unused)), uint8_t *num_items) {
+parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_items) {
     *num_items = 0;
+    if (ctx->tx_obj->tx_type == tx_textual) {
+        *num_items = app_mode_expert() ? (uint8_t) ctx->tx_obj->tx_text.n_containers : (uint8_t) (ctx->tx_obj->tx_text.n_containers - ctx->tx_obj->tx_text.n_expert);
+        return parser_ok;
+    }
+
     return tx_display_numItems(num_items);
 }
 
 __Z_INLINE bool_t parser_areEqual(uint16_t tokenIdx, char *expected) {
-    if (parser_tx_obj.json.tokens[tokenIdx].type != JSMN_STRING) {
+    if (parser_tx_obj.tx_json.json.tokens[tokenIdx].type != JSMN_STRING) {
         return bool_false;
     }
 
-    int32_t len = parser_tx_obj.json.tokens[tokenIdx].end - parser_tx_obj.json.tokens[tokenIdx].start;
+    int32_t len = parser_tx_obj.tx_json.json.tokens[tokenIdx].end - parser_tx_obj.tx_json.json.tokens[tokenIdx].start;
     if (len < 0) {
         return bool_false;
     }
@@ -70,7 +104,7 @@ __Z_INLINE bool_t parser_areEqual(uint16_t tokenIdx, char *expected) {
         return bool_false;
     }
 
-    const char *p = parser_tx_obj.tx + parser_tx_obj.json.tokens[tokenIdx].start;
+    const char *p = parser_tx_obj.tx_json.tx + parser_tx_obj.tx_json.json.tokens[tokenIdx].start;
     for (int32_t i = 0; i < len; i++) {
         if (expected[i] != *(p + i)) {
             return bool_false;
@@ -133,7 +167,7 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
     *pageCount = 0;
 
     uint16_t numElements;
-    CHECK_PARSER_ERR(array_get_element_count(&parser_tx_obj.json, amountToken, &numElements))
+    CHECK_PARSER_ERR(array_get_element_count(&parser_tx_obj.tx_json.json, amountToken, &numElements))
 
     if (numElements == 0) {
         *pageCount = 1;
@@ -145,7 +179,7 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
         return parser_unexpected_field;
     }
 
-    if (parser_tx_obj.json.tokens[amountToken].type != JSMN_OBJECT) {
+    if (parser_tx_obj.tx_json.json.tokens[amountToken].type != JSMN_OBJECT) {
         return parser_unexpected_field;
     }
 
@@ -165,16 +199,16 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
     MEMZERO(outVal, outValLen);
     MEMZERO(bufferUI, sizeof(bufferUI));
 
-    const char *amountPtr = parser_tx_obj.tx + parser_tx_obj.json.tokens[amountToken + 2].start;
-    if (parser_tx_obj.json.tokens[amountToken + 2].start < 0) {
+    const char *amountPtr = parser_tx_obj.tx_json.tx + parser_tx_obj.tx_json.json.tokens[amountToken + 2].start;
+    if (parser_tx_obj.tx_json.json.tokens[amountToken + 2].start < 0) {
         return parser_unexpected_buffer_end;
     }
 
-    const int32_t amountLen = parser_tx_obj.json.tokens[amountToken + 2].end -
-                              parser_tx_obj.json.tokens[amountToken + 2].start;
-    const char *denomPtr = parser_tx_obj.tx + parser_tx_obj.json.tokens[amountToken + 4].start;
-    const int32_t denomLen = parser_tx_obj.json.tokens[amountToken + 4].end -
-                             parser_tx_obj.json.tokens[amountToken + 4].start;
+    const int32_t amountLen = parser_tx_obj.tx_json.json.tokens[amountToken + 2].end -
+                              parser_tx_obj.tx_json.json.tokens[amountToken + 2].start;
+    const char *denomPtr = parser_tx_obj.tx_json.tx + parser_tx_obj.tx_json.json.tokens[amountToken + 4].start;
+    const int32_t denomLen = parser_tx_obj.tx_json.json.tokens[amountToken + 4].end -
+                             parser_tx_obj.tx_json.json.tokens[amountToken + 4].start;
 
     if (denomLen <= 0 || denomLen >= COIN_DENOM_MAXSIZE) {
         return parser_unexpected_error;
@@ -214,7 +248,7 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
     ZEMU_LOGF(200, "[formatAmount] ------- pageidx %d", pageIdx)
 
     *pageCount = 0;
-    if (parser_tx_obj.json.tokens[amountToken].type != JSMN_ARRAY) {
+    if (parser_tx_obj.tx_json.json.tokens[amountToken].type != JSMN_ARRAY) {
         return parser_formatAmountItem(amountToken, outVal, outValLen, pageIdx, pageCount);
     }
 
@@ -224,14 +258,14 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
     uint16_t showItemTokenIdx = 0;
 
     uint16_t numberAmounts;
-    CHECK_PARSER_ERR(array_get_element_count(&parser_tx_obj.json, amountToken, &numberAmounts))
+    CHECK_PARSER_ERR(array_get_element_count(&parser_tx_obj.tx_json.json, amountToken, &numberAmounts))
 
     // Count total subpagesCount and calculate correct page and TokenIdx
     for (uint16_t i = 0; i < numberAmounts; i++) {
         uint16_t itemTokenIdx;
         uint8_t subpagesCount;
 
-        CHECK_PARSER_ERR(array_get_nth_element(&parser_tx_obj.json, amountToken, i, &itemTokenIdx));
+        CHECK_PARSER_ERR(array_get_nth_element(&parser_tx_obj.tx_json.json, amountToken, i, &itemTokenIdx));
         CHECK_PARSER_ERR(parser_formatAmountItem(itemTokenIdx, outVal, outValLen, 0, &subpagesCount));
         totalPages += subpagesCount;
 
@@ -264,11 +298,158 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
     return parser_formatAmountItem(showItemTokenIdx, outVal, outValLen, showPageIdx, &dummy);
 }
 
-parser_error_t parser_getItem(const parser_context_t *ctx,
+__Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
+                                            uint8_t displayIdx,
+                                            Cbor_container *container,
+                                            char *outKey, uint16_t outKeyLen,
+                                            char *outVal, uint16_t outValLen,
+                                            uint8_t pageIdx, uint8_t *pageCount) {
+
+    if (container->screen.len > MAX_SCREEN_SIZE) {
+        return parser_unexpected_value;
+    }
+    MEMZERO(ctx->tx_obj->tx_text.tmpBuffer, sizeof(ctx->tx_obj->tx_text.tmpBuffer));
+    char *tmp = (char*) ctx->tx_obj->tx_text.tmpBuffer;
+    MEMCPY(tmp, container->screen.dataPtr, container->screen.len);
+
+    //Get screen key
+    char *context = NULL;
+    char *tmp_key = strtok_r(tmp, SCREEN_BREAK, &context);
+    if (tmp_key == NULL || strlen(tmp_key) > MAX_SCREEN_SIZE) {
+         return parser_unexpected_value;
+    }
+
+    //Get screen val, if null we have content only screen
+    char *val = strtok_r(NULL, SCREEN_BREAK, &context);
+
+    char out[OUTPUT_HANDLER_SIZE] = {0};
+    // No Tittle screen
+    if (val == NULL) {
+        tx_display_translation(out, sizeof(out),tmp_key);
+        for (uint8_t i = 0; i < container->screen.indent; i++) {
+            z_str3join(out, sizeof(out), SCREEN_INDENT, "");
+        }
+
+        snprintf(outKey, outKeyLen, " ");
+        pageString(outVal, outValLen, out, pageIdx, pageCount);
+        return parser_ok;
+    }
+
+    // Complete screen
+    char key[MAX_KEY_LENGTH + 2] = {0};
+    MEMCPY(key, tmp_key, MAX_KEY_LENGTH);
+    for (uint8_t i = 0; i < container->screen.indent; i++) {
+        z_str3join(key, sizeof(key), SCREEN_INDENT, "");
+    }
+
+    if (strlen(val) == 0) {
+        return parser_unexpected_value;
+    }
+
+    val += (val[0] == ' ' ? 1 :0);
+    if (val[strlen(val)-1] == ' ' || val[strlen(val)-1] == '@' ) {
+        if (strlen(val)+1 > OUTPUT_HANDLER_SIZE) {
+            return parser_unexpected_value;
+        }
+        strncat(val,"@",strlen(val)+1);
+    }
+
+    tx_display_translation(out, sizeof(out),val);
+    // Is content paginated ? trim tittle to 11 char
+    if (outValLen > 0 && (strlen(out)/outValLen) >= 1 && (strlen(out)%outValLen) != 0) {
+        key[11] = 0;
+    }
+
+    snprintf(outKey, outKeyLen, "%s", key);
+    pageString(outVal, outValLen, out, pageIdx, pageCount);
+    
+
+    return parser_ok;
+}
+
+__Z_INLINE parser_error_t parser_getScreenInfo(const parser_context_t *ctx,
+                                               Cbor_container *container,
+                                               uint8_t index) {
+    CborValue it;
+    CborValue containerArray_ptr;
+    INIT_CBOR_PARSER(ctx, it)
+
+    PARSER_ASSERT_OR_ERROR(!cbor_value_at_end(&it), parser_unexpected_buffer_end)
+    CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&it, &containerArray_ptr))
+
+    for (int i = 0; i < index ; i ++) {
+        CHECK_CBOR_MAP_ERR(cbor_value_advance(&containerArray_ptr))
+    }
+
+    CborValue data;
+    CHECK_CBOR_MAP_ERR(cbor_value_get_map_length(&containerArray_ptr, &container->n_field))
+    CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&containerArray_ptr, &data))
+    CHECK_PARSER_ERR(cbor_get_containerInfo(&data, container))
+
+   return parser_ok;
+}
+
+__Z_INLINE parser_error_t parser_getNextNonExpert(const parser_context_t *ctx,
+                                                Cbor_container *container,
+                                                uint8_t displayIdx) {
+
+    PARSER_ASSERT_OR_ERROR(displayIdx < ctx->tx_obj->tx_text.n_containers, parser_unexpected_value);
+
+    uint8_t non_expert = 0;
+    for (size_t containerIdx = 0; containerIdx < ctx->tx_obj->tx_text.n_containers; containerIdx++) {
+        parser_getScreenInfo(ctx, container, containerIdx);
+        if (!container->screen.expert) {
+            non_expert++;
+        } else {
+            continue;
+        }
+        if (non_expert == displayIdx + 1) {
+            break;
+        }
+        PARSER_ASSERT_OR_ERROR(non_expert <= displayIdx, parser_unexpected_value);
+    }
+    return parser_ok;
+}
+
+__Z_INLINE parser_error_t parser_getTextualItem(const parser_context_t *ctx,
+                                            uint8_t displayIdx,
+                                            char *outKey, uint16_t outKeyLen,
+                                            char *outVal, uint16_t outValLen,
+                                            uint8_t pageIdx, uint8_t *pageCount) {
+    *pageCount = 0;
+
+    MEMZERO(outKey, outKeyLen);
+    MEMZERO(outVal, outValLen);
+
+    uint8_t numItems;
+    CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
+    PARSER_ASSERT_OR_ERROR((numItems != 0), parser_unexpected_number_items)
+    PARSER_ASSERT_OR_ERROR((displayIdx < numItems), parser_display_idx_out_of_range)
+
+    CHECK_APP_CANARY()
+
+    Cbor_container container;
+    container.screen.dataPtr = NULL;
+    container.screen.len = 0;
+    container.screen.indent = 0;
+    container.screen.expert = false;
+    CHECK_PARSER_ERR(parser_getScreenInfo(ctx, &container, displayIdx))
+
+    if (!app_mode_expert()) {
+        CHECK_PARSER_ERR(parser_getNextNonExpert(ctx, &container, displayIdx))
+    }
+
+    CHECK_PARSER_ERR(parser_screenPrint(ctx, displayIdx, &container, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount))
+
+    return parser_ok;
+}
+
+__Z_INLINE parser_error_t parser_getJsonItem(const parser_context_t *ctx,
                               uint8_t displayIdx,
                               char *outKey, uint16_t outKeyLen,
                               char *outVal, uint16_t outValLen,
                               uint8_t pageIdx, uint8_t *pageCount) {
+
     *pageCount = 0;
 
     char tmpKey[100];
@@ -309,6 +490,28 @@ parser_error_t parser_getItem(const parser_context_t *ctx,
 
     snprintf(outKey, outKeyLen, "%s", tmpKey);
     CHECK_APP_CANARY()
+
+    return parser_ok;
+}
+
+parser_error_t parser_getItem(const parser_context_t *ctx,
+                              uint8_t displayIdx,
+                              char *outKey, uint16_t outKeyLen,
+                              char *outVal, uint16_t outValLen,
+                              uint8_t pageIdx, uint8_t *pageCount) {
+
+    if (ctx->tx_obj->tx_type == tx_textual) {
+        CHECK_PARSER_ERR(parser_getTextualItem(ctx,displayIdx,
+                        outKey, outKeyLen,
+                        outVal, outValLen,
+                        pageIdx, pageCount));
+
+    } else {
+        CHECK_PARSER_ERR(parser_getJsonItem(ctx,displayIdx,
+                        outKey, outKeyLen,
+                        outVal, outValLen,
+                        pageIdx, pageCount));
+    }
 
     return parser_ok;
 }

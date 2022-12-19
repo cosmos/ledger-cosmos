@@ -22,8 +22,16 @@
 #include "tx_parser.h"
 #include "parser_impl.h"
 #include <zxmacros.h>
+#include <zxformat.h>
+#include "utf8.h"
 
 #define NUM_REQUIRED_ROOT_PAGES 7
+
+#define ASSERT_PTR_BOUNDS(count, dstLen)    \
+    count++;                                \
+    if(count > dstLen) {                    \
+        return parser_transaction_too_big;     \
+    }                                       \
 
 const char *get_required_root_item(root_item_e i) {
     switch (i) {
@@ -87,12 +95,6 @@ typedef struct {
 
 display_cache_t display_cache;
 
-parser_error_t tx_display_readTx(parser_context_t *ctx, const uint8_t *data, size_t dataLen) {
-    CHECK_PARSER_ERR(parser_init(ctx, data, dataLen))
-    CHECK_PARSER_ERR(_readTx(ctx, &parser_tx_obj))
-    return parser_ok;
-}
-
 __Z_INLINE parser_error_t calculate_is_default_chainid() {
     display_cache.is_default_chain = false;
 
@@ -103,8 +105,8 @@ __Z_INLINE parser_error_t calculate_is_default_chainid() {
     INIT_QUERY_CONTEXT(outKey, sizeof(outKey),
                        outVal, sizeof(outVal),
                        0, get_root_max_level(root_item_chain_id))
-    parser_tx_obj.query.item_index = 0;
-    parser_tx_obj.query._item_index_current = 0;
+    parser_tx_obj.tx_json.query.item_index = 0;
+    parser_tx_obj.tx_json.query._item_index_current = 0;
 
     uint16_t ret_value_token_index;
     CHECK_PARSER_ERR(tx_traverse_find(
@@ -131,17 +133,17 @@ __Z_INLINE parser_error_t calculate_is_default_chainid() {
 }
 
 __Z_INLINE bool address_matches_own(char *addr) {
-    if (parser_tx_obj.own_addr == NULL) {
+    if (parser_tx_obj.tx_json.own_addr == NULL) {
         return false;
     }
-    if (strcmp(parser_tx_obj.own_addr, addr) != 0) {
+    if (strcmp(parser_tx_obj.tx_json.own_addr, addr) != 0) {
         return false;
     }
     return true;
 }
 
 parser_error_t tx_indexRootFields() {
-    if (parser_tx_obj.flags.cache_valid) {
+    if (parser_tx_obj.tx_json.flags.cache_valid) {
         return parser_ok;
     }
 
@@ -163,10 +165,10 @@ parser_error_t tx_indexRootFields() {
     MEMZERO(&reference_msg_type, sizeof(reference_msg_type));
     MEMZERO(&reference_msg_from, sizeof(reference_msg_from));
 
-    parser_tx_obj.filter_msg_type_count = 0;
-    parser_tx_obj.filter_msg_from_count = 0;
-    parser_tx_obj.flags.msg_type_grouping = 1;
-    parser_tx_obj.flags.msg_from_grouping = 1;
+    parser_tx_obj.tx_json.filter_msg_type_count = 0;
+    parser_tx_obj.tx_json.filter_msg_from_count = 0;
+    parser_tx_obj.tx_json.flags.msg_type_grouping = 1;
+    parser_tx_obj.tx_json.flags.msg_from_grouping = 1;
 
     // Look for all expected root items in the JSON tree
     // mark them as found/valid,
@@ -177,7 +179,7 @@ parser_error_t tx_indexRootFields() {
         const char *required_root_item_key = get_required_root_item(root_item_idx);
 
         parser_error_t err = object_get_value(
-                &parser_tx_obj.json,
+                &parser_tx_obj.tx_json.json,
                 ROOT_TOKEN_INDEX,
                 required_root_item_key,
                 &req_root_item_key_token_idx);
@@ -198,10 +200,10 @@ parser_error_t tx_indexRootFields() {
                                tmp_val, sizeof(tmp_val),
                                0, get_root_max_level(root_item_idx))
 
-            parser_tx_obj.query.item_index = current_item_idx;
-            strncpy_s(parser_tx_obj.query.out_key,
+            parser_tx_obj.tx_json.query.item_index = current_item_idx;
+            strncpy_s(parser_tx_obj.tx_json.query.out_key,
                       required_root_item_key,
-                      parser_tx_obj.query.out_key_len);
+                      parser_tx_obj.tx_json.query.out_key_len);
 
             uint16_t ret_value_token_index;
             err = tx_traverse_find(display_cache.root_item_start_token_idx[root_item_idx], &ret_value_token_index);
@@ -212,15 +214,15 @@ parser_error_t tx_indexRootFields() {
             uint8_t pageCount;
             CHECK_PARSER_ERR(tx_getToken(
                     ret_value_token_index,
-                    parser_tx_obj.query.out_val,
-                    parser_tx_obj.query.out_val_len,
+                    parser_tx_obj.tx_json.query.out_val,
+                    parser_tx_obj.tx_json.query.out_val_len,
                     0, &pageCount))
 
-            ZEMU_LOGF(200, "[ZEMU] %s : %s", tmp_key, parser_tx_obj.query.out_val)
+            ZEMU_LOGF(200, "[ZEMU] %s : %s", tmp_key, parser_tx_obj.tx_json.query.out_val)
 
             switch (root_item_idx) {
                 case root_item_memo: {
-                    if (strlen(parser_tx_obj.query.out_val) == 0) {
+                    if (strlen(parser_tx_obj.tx_json.query.out_val) == 0) {
                         err = parser_query_no_results;
                         continue;
                     }
@@ -232,45 +234,45 @@ parser_error_t tx_indexRootFields() {
                     // This is indicated by `parser_tx_obj.flags.msg_type_grouping`
 
                     // GROUPING: Message Type
-                    if (parser_tx_obj.flags.msg_type_grouping && is_msg_type_field(tmp_key)) {
+                    if (parser_tx_obj.tx_json.flags.msg_type_grouping && is_msg_type_field(tmp_key)) {
                         // First message, initialize expected type
-                        if (parser_tx_obj.filter_msg_type_count == 0) {
+                        if (parser_tx_obj.tx_json.filter_msg_type_count == 0) {
 
                             if (strlen(tmp_val) >= sizeof(reference_msg_type)) {
                                 return parser_unexpected_type;
                             }
 
                             snprintf(reference_msg_type, sizeof(reference_msg_type), "%s", tmp_val);
-                            parser_tx_obj.filter_msg_type_valid_idx = current_item_idx;
+                            parser_tx_obj.tx_json.filter_msg_type_valid_idx = current_item_idx;
                         }
 
                         if (strcmp(reference_msg_type, tmp_val) != 0) {
                             // different values, so disable grouping
-                            parser_tx_obj.flags.msg_type_grouping = 0;
-                            parser_tx_obj.filter_msg_type_count = 0;
+                            parser_tx_obj.tx_json.flags.msg_type_grouping = 0;
+                            parser_tx_obj.tx_json.filter_msg_type_count = 0;
                         }
 
-                        parser_tx_obj.filter_msg_type_count++;
+                        parser_tx_obj.tx_json.filter_msg_type_count++;
                     }
 
                     // GROUPING: Message From
-                    if (parser_tx_obj.flags.msg_from_grouping && is_msg_from_field(tmp_key)) {
+                    if (parser_tx_obj.tx_json.flags.msg_from_grouping && is_msg_from_field(tmp_key)) {
                         // First message, initialize expected from
-                        if (parser_tx_obj.filter_msg_from_count == 0) {
+                        if (parser_tx_obj.tx_json.filter_msg_from_count == 0) {
                             snprintf(reference_msg_from, sizeof(reference_msg_from), "%s", tmp_val);
-                            parser_tx_obj.filter_msg_from_valid_idx = current_item_idx;
+                            parser_tx_obj.tx_json.filter_msg_from_valid_idx = current_item_idx;
                         }
 
                         if (strcmp(reference_msg_from, tmp_val) != 0) {
                             // different values, so disable grouping
-                            parser_tx_obj.flags.msg_from_grouping = 0;
-                            parser_tx_obj.filter_msg_from_count = 0;
+                            parser_tx_obj.tx_json.flags.msg_from_grouping = 0;
+                            parser_tx_obj.tx_json.filter_msg_from_count = 0;
                         }
 
-                        parser_tx_obj.filter_msg_from_count++;
+                        parser_tx_obj.tx_json.filter_msg_from_count++;
                     }
 
-                    ZEMU_LOGF(200, "[ZEMU] %s [%d/%d]", tmp_key, parser_tx_obj.filter_msg_type_count, parser_tx_obj.filter_msg_from_count);
+                    ZEMU_LOGF(200, "[ZEMU] %s [%d/%d]", tmp_key, parser_tx_obj.tx_json.filter_msg_type_count, parser_tx_obj.tx_json.filter_msg_from_count);
                     break;
                 }
                 default:
@@ -288,19 +290,19 @@ parser_error_t tx_indexRootFields() {
         display_cache.total_item_count += display_cache.root_item_number_subitems[root_item_idx];
     }
 
-    parser_tx_obj.flags.cache_valid = 1;
+    parser_tx_obj.tx_json.flags.cache_valid = 1;
 
     CHECK_PARSER_ERR(calculate_is_default_chainid())
 
     // turn off grouping if we are not in expert mode
     if (tx_is_expert_mode()) {
-        parser_tx_obj.flags.msg_from_grouping = 0;
+        parser_tx_obj.tx_json.flags.msg_from_grouping = 0;
     }
 
     // check if from reference value matches the device address that will be signing
-    parser_tx_obj.flags.msg_from_grouping_hide_all = 0;
+    parser_tx_obj.tx_json.flags.msg_from_grouping_hide_all = 0;
     if (address_matches_own(reference_msg_from)) {
-        parser_tx_obj.flags.msg_from_grouping_hide_all = 1;
+        parser_tx_obj.tx_json.flags.msg_from_grouping_hide_all = 1;
     }
 
     return parser_ok;
@@ -332,15 +334,15 @@ __Z_INLINE uint8_t get_subitem_count(root_item_e root_item) {
             break;
         case root_item_msgs: {
             // Remove grouped items from list
-            if (parser_tx_obj.flags.msg_type_grouping && parser_tx_obj.filter_msg_type_count > 0) {
+            if (parser_tx_obj.tx_json.flags.msg_type_grouping && parser_tx_obj.tx_json.filter_msg_type_count > 0) {
                 tmp_num_items += 1; // we leave main type
-                tmp_num_items -= parser_tx_obj.filter_msg_type_count;
+                tmp_num_items -= parser_tx_obj.tx_json.filter_msg_type_count;
             }
-            if (parser_tx_obj.flags.msg_from_grouping && parser_tx_obj.filter_msg_from_count > 0) {
-                if (!parser_tx_obj.flags.msg_from_grouping_hide_all) {
+            if (parser_tx_obj.tx_json.flags.msg_from_grouping && parser_tx_obj.tx_json.filter_msg_from_count > 0) {
+                if (!parser_tx_obj.tx_json.flags.msg_from_grouping_hide_all) {
                     tmp_num_items += 1; // we leave main from
                 }
-                tmp_num_items -= parser_tx_obj.filter_msg_from_count;
+                tmp_num_items -= parser_tx_obj.tx_json.filter_msg_from_count;
             }
             break;
         }
@@ -422,8 +424,8 @@ parser_error_t tx_display_query(uint16_t displayIdx,
     static char tmp_val[2];
     INIT_QUERY_CONTEXT(outKey, outKeyLen, tmp_val, sizeof(tmp_val),
                        0, get_root_max_level(root_index))
-    parser_tx_obj.query.item_index = subitem_index;
-    parser_tx_obj.query._item_index_current = 0;
+    parser_tx_obj.tx_json.query.item_index = subitem_index;
+    parser_tx_obj.tx_json.query._item_index_current = 0;
 
     strncpy_s(outKey, get_required_root_item(root_index), outKeyLen);
 
@@ -501,8 +503,8 @@ parser_error_t tx_display_make_friendly() {
 
     // post process keys
     for (size_t i = 0; i < array_length(key_substitutions); i++) {
-        if (!strcmp(parser_tx_obj.query.out_key, key_substitutions[i].str1)) {
-            strncpy_s(parser_tx_obj.query.out_key, key_substitutions[i].str2, parser_tx_obj.query.out_key_len);
+        if (!strcmp(parser_tx_obj.tx_json.query.out_key, key_substitutions[i].str1)) {
+            strncpy_s(parser_tx_obj.tx_json.query.out_key, key_substitutions[i].str2, parser_tx_obj.tx_json.query.out_key_len);
             break;
         }
     }
@@ -510,5 +512,66 @@ parser_error_t tx_display_make_friendly() {
     return parser_ok;
 }
 
+static const ascii_subst_t ascii_substitutions[] = {
+    {0x07, 'a'}, {0x08, 'b'}, {0x0C, 'f'},
+    {0x0A, 'n'}, {0x0D, 'r'}, {0x09, 't'},
+    {0x0B, 'v'}, {0x5C, '\\'},
+};
+
+parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src)  {
+    MEMZERO(dst, dstLen);
+    char *p = src;
+    uint8_t count = 0;
+
+    while (*p) {
+        utf8_int32_t tmp_codepoint = 0;
+        p = utf8codepoint(p, &tmp_codepoint);
+
+        if (tmp_codepoint < 0x0F) {
+            for (size_t i = 0; i < array_length(ascii_substitutions); i++) {
+                if ((char)tmp_codepoint == ascii_substitutions[i].ascii_code) {
+                    *dst++ = '\\';
+                    ASSERT_PTR_BOUNDS(count, dstLen);
+                    *dst++ = ascii_substitutions[i].str;
+                    ASSERT_PTR_BOUNDS(count, dstLen);
+                    break;
+                }
+            }
+        } else if (tmp_codepoint >= 32 && tmp_codepoint<=((int32_t) 0x7F)) {
+            *dst++ = (char) tmp_codepoint;
+            ASSERT_PTR_BOUNDS(count, dstLen);
+        } else {
+            *dst++ = '\\';
+            ASSERT_PTR_BOUNDS(count, dstLen);
+            
+            uint8_t bytes_to_print = 8;
+            int32_t swapped = ZX_SWAP(tmp_codepoint);
+            if (tmp_codepoint > 0xFFFF) {
+                *dst++ = 'U';
+                ASSERT_PTR_BOUNDS(count, dstLen);
+            } else {
+                *dst++ = 'u';
+                ASSERT_PTR_BOUNDS(count, dstLen);
+                bytes_to_print = 4;
+                swapped = (swapped >> 16) & 0xFFFF;
+            }
+            
+            if(dstLen < bytes_to_print) {
+                return parser_unexpected_value;
+            }
+
+            char buf[18] = {0};
+            array_to_hexstr(buf, sizeof(buf), (uint8_t *)&swapped, 8);
+            for (int i = 0; i < bytes_to_print; i++) {
+                *dst++ = (buf[i] >= 'a' && buf[i] <= 'z') ? (buf[i] - 32) : buf[i];
+                ASSERT_PTR_BOUNDS(count, dstLen);
+            }
+        }
+    }
+
+    // Terminate string
+    *dst = 0;
+    return parser_ok;
+}
 
 #pragma clang diagnostic pop

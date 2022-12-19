@@ -104,7 +104,8 @@ First three items in the derivation path will be hardened automatically hardened
 | P1    | byte (1) | Payload desc           | 0 = init  |
 |       |          |                        | 1 = add   |
 |       |          |                        | 2 = last  |
-| P2    | byte (1) | ----                   | not used  |
+| P2    | byte (1) | Transaction Format     | 0 = json  |
+|       |          |                        | 1 = textual |
 | L     | byte (1) | Bytes in payload       | (depends) |
 
 The first packet/chunk includes only the derivation path
