@@ -62,8 +62,8 @@ static const key_subst_t value_substitutions[] = {
         {"cosmos-sdk/MsgVote",                        "Vote"},
         {"cosmos-sdk/MsgWithdrawDelegationReward",    "Withdraw Reward"},
         {"cosmos-sdk/MsgWithdrawValidatorCommission", "Withdraw Val. Commission"},
-        {"cosmos-sdk/MsgMultiSend",                   "Multi Send"},
         {"cosmos-sdk/MsgSetWithdrawAddress",          "Withdraw Set Address"},
+        {"cosmos-sdk/MsgMultiSend",                   "Multi Send"},
 
 };
 
@@ -82,7 +82,6 @@ parser_error_t tx_getToken(uint16_t token_index,
 
     const char *inValue = parser_tx_obj.tx_json.tx + token_start;
     uint16_t inLen = token_end - token_start;
-
     // empty strings are considered the first page
     *pageCount = 1;
     if (inLen > 0) {
@@ -94,7 +93,11 @@ parser_error_t tx_getToken(uint16_t token_index,
                 inLen = strlen(value_substitutions[i].str2);
 
                 //Extra Depth level for Multisend type
-                extraDepthLevel = (i == MULTISEND_KEY_IDX);
+                extraDepthLevel = false;
+                if (strstr(inValue, "Multi") != NULL) {
+                    extraDepthLevel = true;
+                }
+
                 break;
             }
         }
