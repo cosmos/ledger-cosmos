@@ -2031,5 +2031,59 @@
       "17 | Tipper [2/2] : 6pkh5t"
    ],
     "expert": true
-	}
+	},
+  {
+    "name": "MsgSetWithdrawAddress",
+    "tx":{
+      "account_number": "8",
+      "chain_id": "testing",
+      "fee": {
+        "amount": [
+          {
+            "amount": "5000",
+            "denom": "uatom"
+          }
+        ],
+        "gas": "200000"
+      },
+      "memo": "",
+      "msgs": [
+        {
+          "type": "cosmos-sdk/MsgSetWithdrawAddress",
+          "value": {
+            "delegator_address": "cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv",
+            "withdraw_address": "cosmos12d64j98tjjpqkx70r08aspc4nvntqp2w6wr2de"
+          }
+        },
+        {
+          "type": "cosmos-sdk/MsgWithdrawDelegationReward",
+          "value": {
+            "delegator_address": "cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv",
+            "validator_address": "cosmosvaloper13dr26wdygna3s8fdl5tlc45m2le2ydyddxzj49"
+          }
+        }
+      ],
+      "sequence": "7"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : testing",
+      "1 | Account : 8",
+      "2 | Sequence : 7",
+      "3 | Type : Withdraw Set Address",
+      "4 | Delegator [1/2] : cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p",
+      "4 | Delegator [2/2] : 69d6cv",
+      "5 | Withdraw Address [1/2] : cosmos12d64j98tjjpqkx70r08aspc4nvntqp2w",
+      "5 | Withdraw Address [2/2] : 6wr2de",
+      "6 | Type : Withdraw Reward",
+      "7 | Delegator [1/2] : cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p",
+      "7 | Delegator [2/2] : 69d6cv",
+      "8 | Validator [1/2] : cosmosvaloper13dr26wdygna3s8fdl5tlc45m2",
+      "8 | Validator [2/2] : le2ydyddxzj49",
+      "9 | Fee : 5000 uatom",
+      "10 | Gas : 200000"
+    ],
+    "expert": true
+  }
 ]

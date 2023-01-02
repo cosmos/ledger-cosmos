@@ -63,7 +63,8 @@ static const key_subst_t value_substitutions[] = {
         {"cosmos-sdk/MsgWithdrawDelegationReward",    "Withdraw Reward"},
         {"cosmos-sdk/MsgWithdrawValidatorCommission", "Withdraw Val. Commission"},
         {"cosmos-sdk/MsgMultiSend",                   "Multi Send"},
-        
+        {"cosmos-sdk/MsgSetWithdrawAddress",          "Withdraw Set Address"},
+
 };
 
 parser_error_t tx_getToken(uint16_t token_index,
@@ -91,11 +92,11 @@ parser_error_t tx_getToken(uint16_t token_index,
             if (inLen == substStrLen && !MEMCMP(inValue, substStr, substStrLen)) {
                 inValue = value_substitutions[i].str2;
                 inLen = strlen(value_substitutions[i].str2);
-                
+
                 //Extra Depth level for Multisend type
                 extraDepthLevel = (i == MULTISEND_KEY_IDX);
                 break;
-            }   
+            }
         }
 
         pageStringExt(out_val, out_val_len, inValue, inLen, pageIdx, pageCount);

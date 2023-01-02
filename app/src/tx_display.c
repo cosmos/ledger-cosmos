@@ -483,6 +483,7 @@ static const key_subst_t key_substitutions[] = {
         {"msgs/value/amount",                 "Amount"},
         {"msgs/value/delegator_address",      "Delegator"},
         {"msgs/value/validator_address",      "Validator"},
+        {"msgs/value/withdraw_address",       "Withdraw Address"},
         {"msgs/value/validator_src_address",  "Validator Source"},
         {"msgs/value/validator_dst_address",  "Validator Dest"},
         {"msgs/value/description",            "Description"},
@@ -543,7 +544,7 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src)  {
         } else {
             *dst++ = '\\';
             ASSERT_PTR_BOUNDS(count, dstLen);
-            
+
             uint8_t bytes_to_print = 8;
             int32_t swapped = ZX_SWAP(tmp_codepoint);
             if (tmp_codepoint > 0xFFFF) {
@@ -555,7 +556,7 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src)  {
                 bytes_to_print = 4;
                 swapped = (swapped >> 16) & 0xFFFF;
             }
-            
+
             if(dstLen < bytes_to_print) {
                 return parser_unexpected_value;
             }
