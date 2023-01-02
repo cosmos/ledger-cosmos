@@ -492,9 +492,8 @@ static const key_subst_t key_substitutions[] = {
         {"msgs/value/proposal_type",          "Proposal"},
         {"msgs/value/proposer",               "Proposer"},
         {"msgs/value/title",                  "Title"},
-        {"msgs/value/depositer",              "Sender"},
+        {"msgs/value/depositor",              "Sender"},
         {"msgs/value/proposal_id",            "Proposal ID"},
-        {"msgs/value/amount",                 "Amount"},
         {"msgs/value/voter",                  "Description"},
         {"msgs/value/option",                 "Option"},
 };

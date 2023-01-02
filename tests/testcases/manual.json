@@ -2085,5 +2085,99 @@
       "10 | Gas : 200000"
     ],
     "expert": true
+  },
+  {
+    "name": "Gaia_Sign_00",
+    "tx": {
+      "account_number":"8",
+      "sequence":"2",
+      "chain_id":"my-chain",
+      "memo":"A B C",
+      "fee":{
+          "amount":[],
+          "gas":"200000"
+      },
+      "msgs":[{
+        "type":"cosmos-sdk/MsgDeposit",
+        "value":{
+          "amount":[{
+            "amount":"10",
+            "denom":"stake"
+            }],
+          "depositor":"cosmos1xl2256vdh0j68khz9wq88hnyqcq0f5f4za2480",
+          "proposal_id":"1"
+        }
+      }]
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : my-chain",
+      "1 | Account : 8",
+      "2 | Sequence : 2",
+      "3 | Type : Deposit",
+      "4 | Amount : 10 stake",
+      "5 | Sender [1/2] : cosmos1xl2256vdh0j68khz9wq88hnyqcq0f5f4",
+      "5 | Sender [2/2] : za2480",
+      "6 | Proposal ID : 1",
+      "7 | Memo : A B C",
+      "8 | Fee : Empty",
+      "9 | Gas : 200000"
+    ],
+    "expert": true
+  },
+  {
+    "name": "Gaia_Sign_01",
+    "tx": {
+      "account_number":"123",
+      "sequence":"8",
+      "chain_id":"my-chain",
+      "fee":{
+        "amount":[{
+          "denom":"uatom",
+          "amount":"54"
+        }],
+        "gas_limit":"106309",
+        "granter": "cosmosaccaddr1d9h8xxxGRANTER",
+        "payer": "cosmosaccaddr1d9h8qatxxPAYER"
+      },
+
+      "msgs":[{
+        "type":"cosmos-sdk/MsgDeposit",
+        "value":{
+          "amount":[{
+            "amount":"255000000",
+            "denom":"uatom"
+          }],
+          "depositor":"cosmos1849m9wncrqp6v4tkss6a3j8uzvuv0cp7wcgvqa",
+          "proposal_id":"44"
+        }
+      }],
+      "memo":"",
+      "timeout_height":"0",
+      "extension_options":[],
+      "non_critical_extension_options":[],
+      "auth_info":{
+        "signer_infos":[]
+      },
+      "signatures":[]
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : my-chain",
+      "1 | Account : 123",
+      "2 | Sequence : 8",
+      "3 | Type : Deposit",
+      "4 | Amount : 255000000 uatom",
+      "5 | Sender [1/2] : cosmos1849m9wncrqp6v4tkss6a3j8uzvuv0cp7",
+      "5 | Sender [2/2] : wcgvqa",
+      "6 | Proposal ID : 44",
+      "7 | Fee : 54 uatom",
+      "8 | fee/gas_limit : 106309",
+      "9 | Granter : cosmosaccaddr1d9h8xxxGRANTER",
+      "10 | Payer : cosmosaccaddr1d9h8qatxxPAYER"
+    ],
+    "expert": true
   }
 ]
