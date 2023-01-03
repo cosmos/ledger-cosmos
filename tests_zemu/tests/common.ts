@@ -14,7 +14,6 @@
  *  limitations under the License.
  ******************************************************************************* */
 import { DEFAULT_START_OPTIONS, DeviceModel } from '@zondax/zemu'
-import {DEFAULT_KEY_DELAY} from "@zondax/zemu/src/constants";
 
 const Resolve = require('path').resolve
 
@@ -245,3 +244,59 @@ export const ibc_denoms = {
   ],
   sequence: '1'
 }
+
+export const setWithdrawAddress = {
+    account_number: '8',
+    chain_id: 'testing',
+    fee: {
+      amount: [
+        {
+          amount: '5000',
+          denom: 'uatom'
+        }
+      ],
+      gas: '200000'
+    },
+    memo: '',
+    msgs: [
+      {
+        type: 'cosmos-sdk/MsgSetWithdrawAddress',
+        value: {
+          delegator_address: 'cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv',
+          withdraw_address: 'cosmos12d64j98tjjpqkx70r08aspc4nvntqp2w6wr2de'
+        }
+      },
+      {
+        type: 'cosmos-sdk/MsgWithdrawDelegationReward',
+        value: {
+          delegator_address: 'cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv',
+          validator_address: 'cosmosvaloper13dr26wdygna3s8fdl5tlc45m2le2ydyddxzj49'
+        }
+      }
+    ],
+    sequence: '7'
+  }
+
+  export const cliGovDeposit = {
+    account_number: '8',
+    chain_id: 'my-chain',
+    fee: {
+      amount: [],
+      gas: '200000'
+    },
+    memo: 'A B C',
+    msgs: [
+      {
+        type: 'cosmos-sdk/MsgDeposit',
+        value: {
+          amount: [{
+            amount: '10',
+            denom: 'stake',
+          }],
+          depositor: 'cosmos1xl2256vdh0j68khz9wq88hnyqcq0f5f4za2480',
+          proposal_id: '1'
+        }
+      },
+    ],
+    sequence: '2'
+  }
