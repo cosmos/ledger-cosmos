@@ -25,8 +25,6 @@ jobs:
         run: |
           sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
           make deps
-          brew install conan
-          conan config install https://github.com/conan-io/conanclientcert.git
       - run: cmake -DCMAKE_BUILD_TYPE=Debug . && make
       - run: GTEST_COLOR=1 ASAN_OPTIONS=detect_leaks=0 ctest -VV
 
