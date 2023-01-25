@@ -16,7 +16,7 @@
 
 import Zemu from '@zondax/zemu'
 // @ts-ignore
-import CosmosApp from 'ledger-cosmos-js'
+import { CosmosApp } from '@zondax/ledger-cosmos-js'
 import { DEFAULT_OPTIONS, DEVICE_MODELS, example_tx_str_basic, example_tx_str_basic2, ibc_denoms } from './common'
 
 // @ts-ignore
@@ -185,7 +185,7 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]
-      const tx = JSON.stringify(example_tx_str_basic)
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, 'cosmos')
@@ -230,7 +230,7 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]
-      const tx = JSON.stringify(example_tx_str_basic2)
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic2), "utf-8")
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, 'cosmos')
@@ -274,7 +274,7 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]
-      const tx = JSON.stringify(example_tx_str_basic)
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, 'cosmos')
@@ -319,7 +319,8 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]
-      const tx = JSON.stringify(ibc_denoms)
+      const tx = Buffer.from(JSON.stringify(ibc_denoms), "utf-8")
+
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, 'cosmos')
