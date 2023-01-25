@@ -518,10 +518,11 @@ static const ascii_subst_t ascii_substitutions[] = {
     {0x0B, 'v'}, {0x5C, '\\'},
 };
 
-parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src)  {
+parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src, uint16_t srcLen) {
     MEMZERO(dst, dstLen);
     char *p = src;
     uint8_t count = 0;
+    uint8_t verified_bytes = 0;
 
     while (*p) {
         utf8_int32_t tmp_codepoint = 0;
@@ -556,17 +557,25 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src)  {
                 swapped = (swapped >> 16) & 0xFFFF;
             }
 
-            if(dstLen < bytes_to_print) {
+            if (dstLen < bytes_to_print) {
                 return parser_unexpected_value;
             }
 
             char buf[18] = {0};
-            array_to_hexstr(buf, sizeof(buf), (uint8_t *)&swapped, 8);
+            array_to_hexstr(buf, sizeof(buf), (uint8_t *) &swapped, 8);
             for (int i = 0; i < bytes_to_print; i++) {
                 *dst++ = (buf[i] >= 'a' && buf[i] <= 'z') ? (buf[i] - 32) : buf[i];
                 ASSERT_PTR_BOUNDS(count, dstLen);
             }
         }
+        verified_bytes ++;
+    }
+
+    if (src[srcLen - 1] == ' ' || src[srcLen - 1] == '@') {
+        if (src[dstLen - 1] + 1 > dstLen) {
+            return parser_unexpected_value;
+        }
+        *dst++ = '@';
     }
 
     // Terminate string
