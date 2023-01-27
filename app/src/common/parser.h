@@ -29,10 +29,13 @@ extern "C" {
 #define OUTPUT_HANDLER_SIZE 500
 #endif
 
-#define MAX_SCREEN_SIZE 600
-#define MAX_KEY_LENGTH 25
+#define MAX_CONTENT_SIZE 600
+#define MAX_TITLE_SIZE 40
+#define PRINTABLE_TITLE_SIZE 17
+#define PRINTABLE_PAGINATED_TITLE_SIZE 10
 #define SCREEN_BREAK ":"
 #define SCREEN_INDENT ">"
+#define TITLE_TRUNCATE_REPLACE "---"
 #define END_OF_STRING_SIZE
 
 const char *parser_getErrorDescription(parser_error_t err);

@@ -140,7 +140,7 @@ parser_error_t _read_text_tx(parser_context_t *c, parser_tx_t *v) {
         MEMZERO(&container, sizeof(container));
 
         CHECK_CBOR_MAP_ERR(cbor_value_get_map_length(&containerArray_ptr, &container.n_field))
-        PARSER_ASSERT_OR_ERROR((container.n_field > 0 && container.n_field < 4), parser_unexpected_value)
+        PARSER_ASSERT_OR_ERROR((container.n_field > 0 && container.n_field < 5), parser_unexpected_value)
 
         CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&containerArray_ptr, &data))
         CHECK_PARSER_ERR(cbor_check_expert(&data, &container))

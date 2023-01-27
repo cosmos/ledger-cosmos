@@ -48,7 +48,7 @@ parser_error_t tx_display_numItems(uint8_t *num_items);
 
 parser_error_t tx_display_make_friendly();
 
-parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src);
+parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src, uint16_t srcLen);
 //---------------------------------------------
 
 #ifdef __cplusplus

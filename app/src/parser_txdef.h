@@ -26,13 +26,16 @@ extern "C" {
 #include "cbor.h"
 
 #define MAX_NUMBER_SCREENS 50
-#define SCREEN_KEY_ID 1
-#define INDENT_KEY_ID 2
-#define EXPERT_KEY_ID 3
+#define TITLE_KEY_ID    1
+#define CONTENT_KEY_ID  2
+#define INDENT_KEY_ID   3
+#define EXPERT_KEY_ID   4
 
 typedef struct screen_arg_t {
-    char *dataPtr;
-    size_t len;
+    char *titlePtr;
+    size_t titleLen;
+    char *contentPtr;
+    size_t contentLen;
     uint8_t indent;
     bool expert;
 } screen_arg_t;
@@ -40,7 +43,7 @@ typedef struct screen_arg_t {
 typedef struct tx_textual_t{
     size_t n_containers;
     uint8_t n_expert;
-    uint8_t tmpBuffer[600];
+    uint8_t tmpBuffer[650];
 } tx_textual_t;
 
 typedef struct {

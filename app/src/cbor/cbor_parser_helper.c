@@ -68,16 +68,41 @@ static parser_error_t cbor_check_optFields(CborValue *data, Cbor_container *cont
 
 static parser_error_t cbor_check_screen(CborValue *data, Cbor_container *container) {
     int screen_key;
-    //check screen Key
+    //check title Key
     PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(data), parser_unexpected_type)
     CHECK_CBOR_MAP_ERR(cbor_value_get_int(data, &screen_key))
-    PARSER_ASSERT_OR_ERROR(screen_key==SCREEN_KEY_ID, parser_unexpected_type)
+    if (screen_key != TITLE_KEY_ID) {
+        PARSER_ASSERT_OR_ERROR(screen_key==CONTENT_KEY_ID, parser_unexpected_type)
+        
+        // No title
+        container->screen.titlePtr = NULL;
+        container->screen.titleLen = 0;
+        CHECK_CBOR_MAP_ERR(cbor_value_advance(data))
+
+        //get content ptr
+        READ_STRING_PTR_SIZE(data, container->screen.contentPtr, container->screen.contentLen)
+        PARSER_ASSERT_OR_ERROR(container->screen.contentLen <= MAX_CONTENT_SIZE, parser_unexpected_value)
+        return parser_ok;
+    }
 
     CHECK_CBOR_MAP_ERR(cbor_value_advance(data))
 
-    //get screen
-    READ_STRING_PTR_SIZE(data, container->screen.dataPtr, container->screen.len)
-    PARSER_ASSERT_OR_ERROR(container->screen.len <= MAX_SCREEN_SIZE, parser_unexpected_value)
+    //get title ptr
+    READ_STRING_PTR_SIZE(data, container->screen.titlePtr, container->screen.titleLen)
+    PARSER_ASSERT_OR_ERROR(container->screen.titleLen <= MAX_CONTENT_SIZE, parser_unexpected_value)
+
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(data));
+
+    //check content Key
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(data), parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_get_int(data, &screen_key))
+    PARSER_ASSERT_OR_ERROR(screen_key==CONTENT_KEY_ID, parser_unexpected_type)
+
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(data))
+
+    //get content ptr
+    READ_STRING_PTR_SIZE(data, container->screen.contentPtr, container->screen.contentLen)
+    PARSER_ASSERT_OR_ERROR(container->screen.contentLen <= MAX_CONTENT_SIZE, parser_unexpected_value)
 
     return parser_ok;
 }
@@ -91,8 +116,8 @@ parser_error_t cbor_get_containerInfo(CborValue *data, Cbor_container *container
     CHECK_PARSER_ERR(cbor_check_screen(data, container))
     CHECK_CBOR_MAP_ERR(cbor_value_advance(data))
 
-    if (container->n_field > 1) {
-        container->n_field -= 1;
+    if (container->n_field > 2) {
+        container->n_field -= 2;
         CHECK_PARSER_ERR(cbor_check_optFields(data, container))
     } else {
         container->screen.indent = 0;

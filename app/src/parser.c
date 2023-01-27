@@ -305,27 +305,19 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
                                             char *outVal, uint16_t outValLen,
                                             uint8_t pageIdx, uint8_t *pageCount) {
 
-    if (container->screen.len > MAX_SCREEN_SIZE) {
+    //verification assures that content + title < size(tmp), to be used in string manipulation
+    if (container->screen.titleLen > MAX_TITLE_SIZE || container->screen.contentLen > MAX_CONTENT_SIZE) {
         return parser_unexpected_value;
     }
     MEMZERO(ctx->tx_obj->tx_text.tmpBuffer, sizeof(ctx->tx_obj->tx_text.tmpBuffer));
     char *tmp = (char*) ctx->tx_obj->tx_text.tmpBuffer;
-    MEMCPY(tmp, container->screen.dataPtr, container->screen.len);
-
-    //Get screen key
-    char *context = NULL;
-    char *tmp_key = strtok_r(tmp, SCREEN_BREAK, &context);
-    if (tmp_key == NULL || strlen(tmp_key) > MAX_SCREEN_SIZE) {
-         return parser_unexpected_value;
-    }
-
-    //Get screen val, if null we have content only screen
-    char *val = strtok_r(NULL, SCREEN_BREAK, &context);
-
+    size_t tmp_len = sizeof(ctx->tx_obj->tx_text.tmpBuffer);
     char out[OUTPUT_HANDLER_SIZE] = {0};
+
     // No Tittle screen
-    if (val == NULL) {
-        tx_display_translation(out, sizeof(out),tmp_key);
+    if (container->screen.titleLen == 0) {
+        MEMCPY(tmp, container->screen.contentPtr, container->screen.contentLen);
+        tx_display_translation(out, sizeof(out),tmp, container->screen.contentLen);
         for (uint8_t i = 0; i < container->screen.indent; i++) {
             z_str3join(out, sizeof(out), SCREEN_INDENT, "");
         }
@@ -335,34 +327,39 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
         return parser_ok;
     }
 
-    // Complete screen
-    char key[MAX_KEY_LENGTH + 2] = {0};
-    MEMCPY(key, tmp_key, MAX_KEY_LENGTH);
+    //Translate output, cpy to tmp to assure it ends in \0
+    MEMZERO(tmp, tmp_len);
+    MEMCPY(tmp, container->screen.contentPtr, container->screen.contentLen);
+    tx_display_translation(out, sizeof(out), tmp,container->screen.contentLen);
+
+    uint8_t titleLen = container->screen.titleLen + container->screen.indent;
+    //Title needs to be truncated, so we concat title witn content
+    if ((titleLen > PRINTABLE_TITLE_SIZE ) || ((outValLen > 0 && (strlen(out)/outValLen) >= 1 &&
+        (strlen(out)%outValLen) != 0 && titleLen > PRINTABLE_PAGINATED_TITLE_SIZE))) {
+        
+        char key[MAX_TITLE_SIZE + 2] = {0};
+        MEMCPY(key, TITLE_TRUNCATE_REPLACE, strlen(TITLE_TRUNCATE_REPLACE));
+        for (uint8_t i = 0; i < container->screen.indent; i++) {
+            z_str3join(key, sizeof(key), SCREEN_INDENT, "");
+        }
+
+        MEMZERO(ctx->tx_obj->tx_text.tmpBuffer, sizeof(ctx->tx_obj->tx_text.tmpBuffer));
+        MEMCPY(tmp, container->screen.titlePtr, container->screen.titleLen);
+        MEMCPY(tmp + container->screen.titleLen,": ",2);
+        MEMCPY(tmp + container->screen.titleLen + 2, out, sizeof(out) - container->screen.titleLen -2);
+        snprintf(outKey, outKeyLen, "%s", key);
+        pageString(outVal, outValLen, tmp, pageIdx, pageCount);
+        return parser_ok;
+    }
+    
+    //Normal print case - Prepare title
+    char key[MAX_TITLE_SIZE + 2] = {0};
+    MEMCPY(key, container->screen.titlePtr, container->screen.titleLen);
     for (uint8_t i = 0; i < container->screen.indent; i++) {
         z_str3join(key, sizeof(key), SCREEN_INDENT, "");
     }
-
-    if (strlen(val) == 0) {
-        return parser_unexpected_value;
-    }
-
-    val += (val[0] == ' ' ? 1 :0);
-    if (val[strlen(val)-1] == ' ' || val[strlen(val)-1] == '@' ) {
-        if (strlen(val)+1 > OUTPUT_HANDLER_SIZE) {
-            return parser_unexpected_value;
-        }
-        strncat(val,"@",strlen(val)+1);
-    }
-
-    tx_display_translation(out, sizeof(out),val);
-    // Is content paginated ? trim tittle to 11 char
-    if (outValLen > 0 && (strlen(out)/outValLen) >= 1 && (strlen(out)%outValLen) != 0) {
-        key[11] = 0;
-    }
-
     snprintf(outKey, outKeyLen, "%s", key);
     pageString(outVal, outValLen, out, pageIdx, pageCount);
-    
 
     return parser_ok;
 }
@@ -429,8 +426,10 @@ __Z_INLINE parser_error_t parser_getTextualItem(const parser_context_t *ctx,
     CHECK_APP_CANARY()
 
     Cbor_container container;
-    container.screen.dataPtr = NULL;
-    container.screen.len = 0;
+    container.screen.titlePtr = NULL;
+    container.screen.titleLen = 0;
+    container.screen.contentPtr = NULL;
+    container.screen.contentLen = 0;
     container.screen.indent = 0;
     container.screen.expert = false;
     CHECK_PARSER_ERR(parser_getScreenInfo(ctx, &container, displayIdx))
