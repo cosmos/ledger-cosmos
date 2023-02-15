@@ -334,9 +334,9 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
 
     uint8_t titleLen = container->screen.titleLen + container->screen.indent;
     //Title needs to be truncated, so we concat title witn content
-    if ((titleLen > PRINTABLE_TITLE_SIZE ) || ((outValLen > 0 && (strlen(out)/outValLen) >= 1 &&
-        (strlen(out)%outValLen) != 0 && titleLen > PRINTABLE_PAGINATED_TITLE_SIZE))) {
-        
+    if ((titleLen > PRINTABLE_TITLE_SIZE ) || (outValLen > 0 && ((strlen(out)/outValLen) >= 1
+        && titleLen > PRINTABLE_PAGINATED_TITLE_SIZE))) {
+
         char key[MAX_TITLE_SIZE + 2] = {0};
         MEMCPY(key, TITLE_TRUNCATE_REPLACE, strlen(TITLE_TRUNCATE_REPLACE));
         for (uint8_t i = 0; i < container->screen.indent; i++) {
@@ -351,7 +351,7 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
         pageString(outVal, outValLen, tmp, pageIdx, pageCount);
         return parser_ok;
     }
-    
+
     //Normal print case - Prepare title
     char key[MAX_TITLE_SIZE + 2] = {0};
     MEMCPY(key, container->screen.titlePtr, container->screen.titleLen);
