@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@zondax/ledger-cosmos-js": "^3.0.2",
-    "@zondax/zemu": "^0.34.0"
+    "@zondax/zemu": "^0.35.1"
   },
   "devDependencies": {
     "@types/jest": "^29.2.3",
