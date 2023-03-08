@@ -43,7 +43,7 @@ typedef struct screen_arg_t {
 typedef struct tx_textual_t{
     size_t n_containers;
     uint8_t n_expert;
-    uint8_t tmpBuffer[650];
+    uint8_t tmpBuffer[625];
 } tx_textual_t;
 
 typedef struct {

@@ -2174,10 +2174,96 @@
       "5 | Sender [2/2] : wcgvqa",
       "6 | Proposal ID : 44",
       "7 | Fee : 54 uatom",
-      "8 | fee/gas_limit : 106309",
+      "8 | Gas : 106309",
       "9 | Granter : cosmosaccaddr1d9h8xxxGRANTER",
       "10 | Payer : cosmosaccaddr1d9h8qatxxPAYER"
     ],
     "expert": true
-  }
+  },
+  {
+    "name": "AMINO_MultiSend",
+    "tx": {
+      "account_number": "10",
+      "chain_id": "chain-WiONzW",
+      "fee": {
+          "amount": [],
+          "gas": "200000"
+      },
+      "memo": "",
+      "msgs": [
+          {
+              "type": "cosmos-sdk/MsgMultiSend",
+              "value": {
+                  "inputs": [
+                      {
+                          "address": "cosmos1w4efqfklkezgyt6lncjdwxncrzyzpr2efzcqal",
+                          "coins": [
+                              {
+                                  "amount": "30",
+                                  "denom": "stake"
+                              }
+                          ]
+                      }
+                  ],
+                  "outputs": [
+                      {
+                          "address": "cosmos184hgxlzat3qhm7p28563w4jyw4aa3wcgnj6gtv",
+                          "coins": [
+                              {
+                                  "amount": "10",
+                                  "denom": "stake"
+                              }
+                          ]
+                      },
+                      {
+                          "address": "cosmos1pfyz36qx8z8dm8ktd75mwx5j5vsmkzfn7wrgp9",
+                          "coins": [
+                              {
+                                  "amount": "10",
+                                  "denom": "stake"
+                              }
+                          ]
+                      },
+                      {
+                          "address": "cosmos1xu388ml6krya3ysmlrup2ylxjtzhl4hlaem3ng",
+                          "coins": [
+                              {
+                                  "amount": "10",
+                                  "denom": "stake"
+                              }
+                          ]
+                      }
+                  ]
+              }
+          }
+      ],
+      "sequence": "16"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : chain-WiONzW",
+      "1 | Account : 10",
+      "2 | Sequence : 16",
+      "3 | Type : Multi Send",
+      "4 | Source Address [1/2] : cosmos1w4efqfklkezgyt6lncjdwxncrzyzpr2e",
+      "4 | Source Address [2/2] : fzcqal",
+      "5 | Source Coins : 30 stake",
+      "6 | Dest Address [1/2] : cosmos184hgxlzat3qhm7p28563w4jyw4aa3wcg",
+      "6 | Dest Address [2/2] : nj6gtv",
+      "7 | Dest Coins : 10 stake",
+      "8 | Dest Address [1/2] : cosmos1pfyz36qx8z8dm8ktd75mwx5j5vsmkzfn",
+      "8 | Dest Address [2/2] : 7wrgp9",
+      "9 | Dest Coins : 10 stake",
+      "10 | Dest Address [1/2] : cosmos1xu388ml6krya3ysmlrup2ylxjtzhl4hl",
+      "10 | Dest Address [2/2] : aem3ng",
+      "11 | Dest Coins : 10 stake",
+      "12 | Fee : Empty",
+      "13 | Gas : 200000"
+    ],
+    "expert": true
+
+}
+
+
 ]

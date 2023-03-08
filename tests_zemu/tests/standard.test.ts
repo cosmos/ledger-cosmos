@@ -28,7 +28,7 @@ jest.setTimeout(60000)
 
 describe('Standard', function () {
   // eslint-disable-next-line jest/expect-expect
-  test.each(DEVICE_MODELS)('can start and stop container', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('can start and stop container', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -37,7 +37,7 @@ describe('Standard', function () {
     }
   })
 
-  test.each(DEVICE_MODELS)('main menu', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('main menu', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -47,7 +47,7 @@ describe('Standard', function () {
     }
   })
 
-  test.each(DEVICE_MODELS)('get app version', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('get app version', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -67,7 +67,7 @@ describe('Standard', function () {
     }
   })
 
-  test.each(DEVICE_MODELS)('get address', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('get address', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -92,7 +92,7 @@ describe('Standard', function () {
     }
   })
 
-  test.each(DEVICE_MODELS)('show address', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('show address', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -121,7 +121,7 @@ describe('Standard', function () {
     }
   })
 
-  test.each(DEVICE_MODELS)('show address HUGE', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('show address HUGE', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -139,7 +139,7 @@ describe('Standard', function () {
     }
   })
 
-  test.each(DEVICE_MODELS)('show address HUGE Expert', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('show address HUGE Expert', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })

@@ -450,8 +450,7 @@ __Z_INLINE parser_error_t parser_getJsonItem(const parser_context_t *ctx,
                               uint8_t pageIdx, uint8_t *pageCount) {
 
     *pageCount = 0;
-
-    char tmpKey[100];
+    char tmpKey[35] = {0};
 
     MEMZERO(outKey, outKeyLen);
     MEMZERO(outVal, outValLen);

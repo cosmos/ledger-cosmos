@@ -74,7 +74,7 @@ APP_LOAD_PARAMS = --delete $(COMMON_LOAD_PARAMS) --path $(APPPATH)
 
 ifeq ($(TARGET_NAME),TARGET_NANOS)
 APP_LOAD_PARAMS += --appFlags 0x000
-APP_STACK_SIZE:=1800
+APP_STACK_SIZE:=1815
 ICONNAME:=$(CURDIR)/nanos_icon.gif
 OUTPUT_ELF ?= $(CURDIR)/output/app_s.elf
 OUTPUT_INSTALLER := $(CURDIR)/pkg/installer_s.sh
@@ -190,6 +190,7 @@ APP_SOURCE_PATH += $(MY_DIR)/glyphs
 APP_SOURCE_PATH += $(MY_DIR)/../deps/ledger-zxlib/include
 APP_SOURCE_PATH += $(MY_DIR)/../deps/ledger-zxlib/src
 APP_SOURCE_PATH += $(MY_DIR)/../deps/ledger-zxlib/app/common
+APP_SOURCE_PATH += $(MY_DIR)/../deps/ledger-zxlib/app/ui
 APP_SOURCE_PATH += $(MY_DIR)/../deps/jsmn/src
 
 SDK_SOURCE_PATH += lib_stusb lib_stusb_impl
