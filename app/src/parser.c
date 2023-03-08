@@ -369,9 +369,13 @@ __Z_INLINE parser_error_t parser_getScreenInfo(const parser_context_t *ctx,
                                                uint8_t index) {
     CborValue it;
     CborValue containerArray_ptr;
-    INIT_CBOR_PARSER(ctx, it)
+    CborValue mapStruct_ptr;
+    INIT_CBOR_PARSER(ctx, mapStruct_ptr)
 
-    PARSER_ASSERT_OR_ERROR(!cbor_value_at_end(&it), parser_unexpected_buffer_end)
+    PARSER_ASSERT_OR_ERROR(!cbor_value_at_end(&mapStruct_ptr), parser_unexpected_buffer_end)
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_map(&mapStruct_ptr), parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&mapStruct_ptr, &it))
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&it))
     CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&it, &containerArray_ptr))
 
     for (int i = 0; i < index ; i ++) {
