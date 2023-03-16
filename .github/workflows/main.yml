@@ -1,9 +1,11 @@
-name: "Test/Build"
+name: Build
 on:
   workflow_dispatch:
   push:
   pull_request:
-    branches: [ main, develop ]
+    branches:
+      - main
+      - develop
 
 jobs:
   configure:
@@ -12,131 +14,91 @@ jobs:
       uid_gid: ${{ steps.get-user.outputs.uid_gid }}
     steps:
       - id: get-user
-        run: echo "::set-output name=uid_gid::$(id -u):$(id -g)"
+        run: echo "uid_gid=$(id -u):$(id -g)" >> $GITHUB_OUTPUT
 
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: true
       - name: Install deps
         run: |
           sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
           make deps
-      - run: cmake -DCMAKE_BUILD_TYPE=Debug . && make
-      - run: GTEST_COLOR=1 ASAN_OPTIONS=detect_leaks=0 ctest -VV
+      - run: make cpp_test
 
-  build_ledger_nano_S:
+  build_ledger:
     needs: configure
     runs-on: ubuntu-latest
     container:
-      image: zondax/builder-bolos:latest
+      image: zondax/ledger-app-builder:latest
       options: --user ${{ needs.configure.outputs.uid_gid }}
-    env:
-      BOLOS_SDK: ${{ github.workspace }}/deps/nanos-secure-sdk
-      BOLOS_ENV: /opt/bolos
-      HOME: /home/zondax_circle
+      env:
+        BOLOS_SDK: /opt/nanos-secure-sdk
+    outputs:
+      size: ${{steps.build.outputs.size}}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: true
       - name: Build Standard app
+        id: build
         shell: bash -l {0}
         run: |
-          source $HOME/.cargo/env
           make
+          echo "size=$(python3 deps/ledger-zxlib/scripts/getSize.py s)" >> $GITHUB_OUTPUT
 
-  build_ledger_nano_X:
-    needs: configure
+  size_nano_s:
+    needs: build_ledger
     runs-on: ubuntu-latest
-    container:
-      image: zondax/builder-bolos:latest
-      options: --user ${{ needs.configure.outputs.uid_gid }}
     env:
-      BOLOS_SDK: ${{ github.workspace }}/deps/nanox-secure-sdk
-      BOLOS_ENV: /opt/bolos
-      HOME: /home/zondax_circle
+      NANOS_LIMIT_SIZE: 136
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: true
-      - name: Build Standard app
-        shell: bash -l {0}
-        run: |
-          source $HOME/.cargo/env
-          make
-
-  build_ledger_nano_SP:
-    needs: configure
-    runs-on: ubuntu-latest
-    container:
-      image: zondax/builder-bolos:latest
-      options: --user ${{ needs.configure.outputs.uid_gid }}
-    env:
-      BOLOS_SDK: ${{ github.workspace }}/deps/nanosplus-secure-sdk
-      BOLOS_ENV: /opt/bolos
-      HOME: /home/zondax_circle
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: true
-      - name: Build Standard app
-        shell: bash -l {0}
-        run: |
-          source $HOME/.cargo/env
-          make
+      - run: |
+          echo "LNS app size: ${{needs.build_ledger.outputs.size}} KiB"
+          [ ${{needs.build_ledger.outputs.size}} -le $NANOS_LIMIT_SIZE ]
 
   test_zemu:
     runs-on: ubuntu-latest
     steps:
+      - name: Test
+        run: |
+          id
+          echo $HOME
+          echo $DISPLAY
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: true
       - run: sudo apt-get update -y && sudo apt-get install -y libusb-1.0.0 libudev-dev
       - name: Install rust
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake binutils-dev libcurl4-openssl-dev libiberty-dev libelf-dev libdw-dev
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --no-modify-path --default-toolchain none -y;
-      - name: Install node
-        uses: actions/setup-node@v2
+        uses: actions-rs/toolchain@v1
         with:
-          node-version: '14.17.0'
+          toolchain: stable
+      - name: Install node
+        uses: actions/setup-node@v3
       - name: Install yarn
         run: |
           npm install -g yarn
-      - name: Build Ledger app
+      - name: Build and run zemu tests
         run: |
-          make
-      - name: Build/Install build js deps
-        run: |
-          export PATH=~/.cargo/bin:$PATH
-          make zemu_install
-      - name: Run zemu tests
-        run: |
-          export PATH=~/.cargo/bin:$PATH
-          make zemu_test
+          make test_all
 
   build_package_nanos:
-    needs: [ configure, build, build_ledger_nano_S, build_ledger_nano_X, build_ledger_nano_SP, test_zemu ]
+    needs: [configure, build, build_ledger, test_zemu]
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     container:
-      image: zondax/builder-bolos:latest
+      image: zondax/ledger-app-builder:latest
       options: --user ${{ needs.configure.outputs.uid_gid }}
     env:
-      BOLOS_SDK: ${{ github.workspace }}/deps/nanos-secure-sdk
-      BOLOS_ENV: /opt/bolos
-      HOME: /home/zondax_circle
+      BOLOS_SDK: /opt/nanos-secure-sdk
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: true
       - name: Install deps
@@ -145,17 +107,13 @@ jobs:
       - name: Build NanoS
         shell: bash -l {0}
         run: |
-          source $HOME/.cargo/env
           make
           mv ./app/pkg/installer_s.sh ./app/pkg/installer_nanos.sh
-
       - name: Set tag
         id: nanos
-        run: |
-          pip install ledgerblue
-          echo ::set-output name=tag_name::$(./app/pkg/installer_nanos.sh version)
-      - name: Create Release
-        id: create_release
+        run: echo "tag_name=$(./app/pkg/installer_nanos.sh version)" >> $GITHUB_OUTPUT
+      - name: Create or Update Release (1)
+        id: create_release_0
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
@@ -165,20 +123,18 @@ jobs:
           draft: false
           prerelease: false
 
-  build_package_nanos_plus:
-    needs: [ configure, build, build_ledger_nano_S, build_ledger_nano_X, build_ledger_nano_SP, test_zemu ]
+  build_package_nanosp:
+    needs: [configure, build, build_ledger, test_zemu]
     if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     container:
-      image: zondax/builder-bolos:latest
+      image: zondax/ledger-app-builder:latest
       options: --user ${{ needs.configure.outputs.uid_gid }}
-    env:
-      BOLOS_SDK: ${{ github.workspace }}/deps/nanosplus-secure-sdk
-      BOLOS_ENV: /opt/bolos
-      HOME: /home/zondax_circle
+      env:
+        BOLOS_SDK: /opt/nanosplus-secure-sdk
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: true
       - name: Install deps
@@ -187,17 +143,13 @@ jobs:
       - name: Build NanoSP
         shell: bash -l {0}
         run: |
-          source $HOME/.cargo/env
           make
           mv ./app/pkg/installer_s2.sh ./app/pkg/installer_nanos_plus.sh
-
       - name: Set tag
         id: nanosp
-        run: |
-          pip install ledgerblue
-          echo ::set-output name=tag_name::$(./app/pkg/installer_nanos_plus.sh version)
+        run: echo "tag_name=$(./app/pkg/installer_nanos_plus.sh version)" >> $GITHUB_OUTPUT
       - name: Update Release
-        id: update_release
+        id: update_release_2
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
