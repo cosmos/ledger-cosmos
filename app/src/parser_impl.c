@@ -118,9 +118,21 @@ parser_error_t _read_json_tx(parser_context_t *c, parser_tx_t *v) {
 
 parser_error_t _read_text_tx(parser_context_t *c, parser_tx_t *v) {
     CborValue it;
+    CborValue mapStruct_ptr;
     CHECK_APP_CANARY()
-    INIT_CBOR_PARSER(c, it)
+    INIT_CBOR_PARSER(c, mapStruct_ptr)
     CHECK_APP_CANARY()
+
+    //Make sure we have a map/struct
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_map(&mapStruct_ptr), parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&mapStruct_ptr, &it))
+
+    //Make sure we have screen_key set to 1
+    int screen_key = 0;
+    PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(&it), parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_get_int(&it, &screen_key))
+    PARSER_ASSERT_OR_ERROR(screen_key == 1, parser_unexpected_type)
+    CHECK_CBOR_MAP_ERR(cbor_value_advance(&it))
 
     //Make sure we have an array of containers and check size
     PARSER_ASSERT_OR_ERROR(cbor_value_is_array(&it), parser_unexpected_type)

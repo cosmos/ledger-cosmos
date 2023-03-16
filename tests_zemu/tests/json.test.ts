@@ -17,18 +17,18 @@
 import Zemu from '@zondax/zemu'
 // @ts-ignore
 import { CosmosApp } from '@zondax/ledger-cosmos-js'
-import { DEFAULT_OPTIONS, DEVICE_MODELS, example_tx_str_basic, example_tx_str_basic2, ibc_denoms, AMINO_JSON_TX, setWithdrawAddress, cliGovDeposit } from './common'
+import { DEFAULT_OPTIONS, DEVICE_MODELS, example_tx_str_basic, example_tx_str_basic2, ibc_denoms, AMINO_JSON_TX, setWithdrawAddress, cliGovDeposit, example_tx_str_msgMultiSend } from './common'
 
 // @ts-ignore
 import secp256k1 from 'secp256k1/elliptic'
 // @ts-ignore
 import crypto from 'crypto'
 
-jest.setTimeout(60000)
+jest.setTimeout(120000)
 
 describe('Json', function () {
   // eslint-disable-next-line jest/expect-expect
-  test.each(DEVICE_MODELS)('can start and stop container', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('can start and stop container', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -37,7 +37,7 @@ describe('Json', function () {
     }
   })
 
-  test.each(DEVICE_MODELS)('sign basic normal', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('sign basic normal', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -82,7 +82,7 @@ describe('Json', function () {
     }
   })
 
-  test.each(DEVICE_MODELS)('sign basic normal2', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('sign basic normal2', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -126,7 +126,7 @@ describe('Json', function () {
     }
   })
 
-  test.each(DEVICE_MODELS)('sign basic with extra fields', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('sign basic with extra fields', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -171,7 +171,7 @@ describe('Json', function () {
     }
   })
 
-  test.each(DEVICE_MODELS)('ibc denoms', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('ibc denoms', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -216,7 +216,7 @@ describe('Json', function () {
     }
   })
 
-  test.each(DEVICE_MODELS)('SetWithdrawAddress', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('SetWithdrawAddress', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -261,7 +261,7 @@ describe('Json', function () {
     }
   })
 
-  test.each(DEVICE_MODELS)('CLIGovDeposit', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('CLIGovDeposit', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -282,6 +282,56 @@ describe('Json', function () {
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
       await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-govDeposit`)
+
+      const resp = await signatureRequest
+      console.log(resp)
+
+      expect(resp.return_code).toEqual(0x9000)
+      expect(resp.error_message).toEqual('No errors')
+      expect(resp).toHaveProperty('signature')
+
+      // Now verify the signature
+      const hash = crypto.createHash('sha256')
+      const msgHash = Uint8Array.from(hash.update(tx).digest())
+
+      const signatureDER = resp.signature
+      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+
+      const pk = Uint8Array.from(respPk.compressed_pk)
+
+      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      expect(signatureOk).toEqual(true)
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(DEVICE_MODELS)('MsgMultisend', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      // Activate expert mode
+      await sim.clickRight()
+      await sim.clickBoth()
+      await sim.clickLeft()
+
+      const path = [44, 118, 0, 0, 0]
+      const tx = Buffer.from(JSON.stringify(example_tx_str_msgMultiSend))
+
+      // get address / publickey
+      const respPk = await app.getAddressAndPubKey(path, 'cosmos')
+      expect(respPk.return_code).toEqual(0x9000)
+      expect(respPk.error_message).toEqual('No errors')
+      console.log(respPk)
+
+      // do not wait here..
+      const signatureRequest = app.sign(path, tx, 0x0)
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-msgMultiSend`)
 
       const resp = await signatureRequest
       console.log(resp)

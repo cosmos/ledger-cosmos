@@ -503,7 +503,7 @@ parser_error_t tx_display_make_friendly() {
 
     // post process keys
     for (size_t i = 0; i < array_length(key_substitutions); i++) {
-        if (!strcmp(parser_tx_obj.tx_json.query.out_key, key_substitutions[i].str1)) {
+        if (!strncmp(parser_tx_obj.tx_json.query.out_key, key_substitutions[i].str1, strlen(key_substitutions[i].str1))) {
             strncpy_s(parser_tx_obj.tx_json.query.out_key, key_substitutions[i].str2, parser_tx_obj.tx_json.query.out_key_len);
             break;
         }
