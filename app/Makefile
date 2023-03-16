@@ -52,7 +52,7 @@ endef
 $(error "$(error_message)")
 endif
 
-APP_LOAD_PARAMS = --delete $(COMMON_LOAD_PARAMS) --path $(APPPATH)
+APP_LOAD_PARAMS = --curve secp256k1 $(COMMON_LOAD_PARAMS) --path $(APPPATH)
 
 NANOS_STACK_SIZE:=1815
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.devices
@@ -67,6 +67,8 @@ endif
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.platform
 LDFLAGS += -z muldefs
 CFLAGS += -Wvla
+
+DEFINES += HAVE_HASH HAVE_BLAKE2 HAVE_SHA256 HAVE_SHA512
 
 APP_SOURCE_PATH += $(MY_DIR)/src
 APP_SOURCE_PATH += $(MY_DIR)/glyphs
