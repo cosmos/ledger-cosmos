@@ -181,7 +181,7 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]
-      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), 'utf-8')
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, 'cosmos')
@@ -226,7 +226,7 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]
-      const tx = Buffer.from(JSON.stringify(example_tx_str_basic2), 'utf-8')
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic2), "utf-8")
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, 'cosmos')
@@ -270,7 +270,7 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]
-      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), 'utf-8')
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, 'cosmos')
@@ -315,7 +315,8 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]
-      const tx = Buffer.from(JSON.stringify(ibc_denoms), 'utf-8')
+      const tx = Buffer.from(JSON.stringify(ibc_denoms), "utf-8")
+
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, 'cosmos')
