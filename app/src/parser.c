@@ -149,11 +149,11 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
         return parser_unexpected_field;
     }
 
-    if (!parser_areEqual(amountToken + 1u, "amount")) {
+    if (!parser_areEqual(amountToken + 1u, (char*) "amount")) {
         return parser_unexpected_field;
     }
 
-    if (!parser_areEqual(amountToken + 3u, "denom")) {
+    if (!parser_areEqual(amountToken + 3u, (char*) "denom")) {
         return parser_unexpected_field;
     }
 

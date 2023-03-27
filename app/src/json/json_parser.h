@@ -39,6 +39,11 @@ extern "C" {
 #define MAX_NUMBER_OF_TOKENS    96
 #endif
 
+#if defined(TARGET_STAX)
+#undef MAX_NUMBER_OF_TOKENS
+#define MAX_NUMBER_OF_TOKENS    600
+#endif
+
 #define ROOT_TOKEN_INDEX 0
 
 //---------------------------------------------
