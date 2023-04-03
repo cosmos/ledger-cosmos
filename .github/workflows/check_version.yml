@@ -1,9 +1,11 @@
-name: "Verify PRs to main"
+name: Verify PRs to main
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - main
+      - develop
 
 jobs:
   configure:
@@ -12,33 +14,26 @@ jobs:
       uid_gid: ${{ steps.get-user.outputs.uid_gid }}
     steps:
       - id: get-user
-        run: echo "::set-output name=uid_gid::$(id -u):$(id -g)"
+        run: echo "uid_gid=$(id -u):$(id -g)" >> $GITHUB_OUTPUT
 
   get_version:
     needs: configure
     runs-on: ubuntu-latest
     container:
-      image: zondax/builder-bolos:latest
+      image: zondax/ledger-app-builder:latest
       options: --user ${{ needs.configure.outputs.uid_gid }}
     env:
-      BOLOS_ENV: /opt/bolos
-      HOME: /home/zondax_circle
+      SDK_VARNAME: NANOSP_SDK
     outputs:
       version: ${{ steps.store-version.outputs.version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: true
-
-      - name: Invoke `version`
-        shell: bash -l {0}
-        env:
-          BOLOS_SDK: ${{ github.workspace }}/deps/nanos-secure-sdk
-        run: make version
-
+      - run: make version
       - id: store-version
-        run: echo ::set-output name=version::$(cat ./app/app.version)
+        run: echo "version=$(cat ./app/app.version)" >> $GITHUB_OUTPUT
 
   check_app_version:
     needs: get_version
