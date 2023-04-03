@@ -74,18 +74,23 @@ jobs:
         with:
           submodules: true
       - run: sudo apt-get update -y && sudo apt-get install -y libusb-1.0.0 libudev-dev
-      - name: Install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
       - name: Install node
         uses: actions/setup-node@v3
       - name: Install yarn
         run: |
           npm install -g yarn
-      - name: Build and run zemu tests
-        run: |
-          make test_all
+      - name: Build Ledger app
+        run: make
+      - name: Build/Install build js deps
+        run: make zemu_install
+      - name: Run zemu tests
+        run: "cd tests_zemu; yarn test"
+      - name: Upload Snapshots (only failure)
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: snapshots-tmp
+          path: tests_zemu/snapshots-tmp/
 
   build_package_nanos:
     needs: [configure, build, build_ledger, test_zemu]
@@ -94,8 +99,8 @@ jobs:
     container:
       image: zondax/ledger-app-builder:latest
       options: --user ${{ needs.configure.outputs.uid_gid }}
-    env:
-      BOLOS_SDK: /opt/nanos-secure-sdk
+      env:
+        BOLOS_SDK: /opt/nanos-secure-sdk
     steps:
       - name: Checkout
         uses: actions/checkout@v3
