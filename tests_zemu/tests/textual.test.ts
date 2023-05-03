@@ -14,76 +14,74 @@
  *  limitations under the License.
  ******************************************************************************* */
 
- import Zemu from '@zondax/zemu'
- // @ts-ignore
- import { CosmosApp } from '@zondax/ledger-cosmos-js'
- import { DEFAULT_OPTIONS, DEVICE_MODELS, tx_sign_textual, TEXTUAL_TX } from './common'
+import Zemu from '@zondax/zemu'
+// @ts-ignore
+import { CosmosApp } from '@zondax/ledger-cosmos-js'
+import { DEFAULT_OPTIONS, DEVICE_MODELS, tx_sign_textual, TEXTUAL_TX } from './common'
+// @ts-ignore
+import secp256k1 from 'secp256k1/elliptic'
+// @ts-ignore
+import crypto from 'crypto'
 
- // @ts-ignore
- import secp256k1 from 'secp256k1/elliptic'
- // @ts-ignore
- import crypto from 'crypto'
+jest.setTimeout(60000)
 
- jest.setTimeout(60000)
+describe('Textual', function () {
+  // eslint-disable-next-line jest/expect-expect
+  test.concurrent.each(DEVICE_MODELS)('can start and stop container', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
+    } finally {
+      await sim.close()
+    }
+  })
 
- describe('Textual', function () {
-   // eslint-disable-next-line jest/expect-expect
-   test.concurrent.each(DEVICE_MODELS)('can start and stop container', async function (m) {
-     const sim = new Zemu(m.path)
-     try {
-       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
-     } finally {
-       await sim.close()
-     }
-   })
+  test.concurrent.each(DEVICE_MODELS)('sign basic textual', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
 
-   test.concurrent.each(DEVICE_MODELS)('sign basic textual', async function (m) {
-     const sim = new Zemu(m.path)
-     try {
-       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
-       const app = new CosmosApp(sim.getTransport())
+      const path = [44, 118, 0, 0, 0]
+      const tx = Buffer.from(tx_sign_textual, 'hex')
 
-       const path = [44, 118, 0, 0, 0]
-       const tx = Buffer.from(tx_sign_textual, 'hex')
+      // get address / publickey
+      const respPk = await app.getAddressAndPubKey(path, 'cosmos')
+      expect(respPk.return_code).toEqual(0x9000)
+      expect(respPk.error_message).toEqual('No errors')
+      console.log(respPk)
 
-       // get address / publickey
-       const respPk = await app.getAddressAndPubKey(path, 'cosmos')
-       expect(respPk.return_code).toEqual(0x9000)
-       expect(respPk.error_message).toEqual('No errors')
-       console.log(respPk)
+      // do not wait here..
+      const signatureRequest = app.sign(path, tx, TEXTUAL_TX)
 
-       // do not wait here..
-       const signatureRequest = app.sign(path, tx, TEXTUAL_TX)
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-textual-sign_basic`)
 
-       // Wait until we are not in the main menu
-       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-       await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-textual-sign_basic`)
+      const resp = await signatureRequest
+      console.log(resp)
 
-       const resp = await signatureRequest
-       console.log(resp)
+      expect(resp.return_code).toEqual(0x9000)
+      expect(resp.error_message).toEqual('No errors')
+      expect(resp).toHaveProperty('signature')
 
-       expect(resp.return_code).toEqual(0x9000)
-       expect(resp.error_message).toEqual('No errors')
-       expect(resp).toHaveProperty('signature')
+      // Now verify the signature
+      const hash = crypto.createHash('sha256')
+      const msgHash = Uint8Array.from(hash.update(tx).digest())
 
-       // Now verify the signature
-       const hash = crypto.createHash('sha256')
-       const msgHash = Uint8Array.from(hash.update(tx).digest())
+      const signatureDER = resp.signature
+      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
 
-       const signatureDER = resp.signature
-       const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+      const pk = Uint8Array.from(respPk.compressed_pk)
 
-       const pk = Uint8Array.from(respPk.compressed_pk)
+      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      expect(signatureOk).toEqual(true)
+    } finally {
+      await sim.close()
+    }
+  })
 
-       const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
-       expect(signatureOk).toEqual(true)
-     } finally {
-       await sim.close()
-     }
-   })
-
-
-   test.concurrent.each(DEVICE_MODELS)('sign basic textual expert', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('sign basic textual expert', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
@@ -132,4 +130,49 @@
       await sim.close()
     }
   })
- })
+
+  test.concurrent.each(DEVICE_MODELS)('sign basic textual eth', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      const path = [44, 60, 0, 0, 0]
+      const tx = Buffer.from(tx_sign_textual, 'hex')
+
+      // get address / publickey
+      const respPk = await app.getAddressAndPubKey(path, 'cosmos')
+      expect(respPk.return_code).toEqual(0x9000)
+      expect(respPk.error_message).toEqual('No errors')
+      console.log(respPk)
+
+      // do not wait here..
+      const signatureRequest = app.sign(path, tx, TEXTUAL_TX)
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-textual-sign_basic_eth`)
+
+      const resp = await signatureRequest
+      console.log(resp)
+
+      expect(resp.return_code).toEqual(0x9000)
+      expect(resp.error_message).toEqual('No errors')
+      expect(resp).toHaveProperty('signature')
+
+      // Now verify the signature
+      const sha3 = require('js-sha3')
+      const msgHash = Buffer.from(sha3.keccak256(tx), 'hex')
+
+      const signatureDER = resp.signature
+      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+
+      const pk = Uint8Array.from(respPk.compressed_pk)
+
+      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      expect(signatureOk).toEqual(true)
+    } finally {
+      await sim.close()
+    }
+  })
+})

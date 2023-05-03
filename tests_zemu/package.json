@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@zondax/ledger-cosmos-js": "^3.0.2",
-    "@zondax/zemu": "^0.35.1"
+    "@zondax/zemu": "^0.41.2"
   },
   "devDependencies": {
     "@types/jest": "^29.2.3",
@@ -37,6 +37,7 @@
     "jssha": "^3.2.0",
     "prettier": "^2.5.1",
     "secp256k1": "^4.0.3",
+    "js-sha3": "0.8.0",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
     "typescript": "^4.5.5"
