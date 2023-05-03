@@ -25,6 +25,7 @@ extern "C" {
 
 #define HDPATH_0_DEFAULT     (0x80000000u | 0x2cu)
 #define HDPATH_1_DEFAULT     (0x80000000u | 0x76u)
+#define HDPATH_ETH_1_DEFAULT (0x80000000u | 0x3cu)
 #define HDPATH_2_DEFAULT     (0x80000000u | 0u)
 #define HDPATH_3_DEFAULT     (0u)
 

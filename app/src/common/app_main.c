@@ -103,7 +103,7 @@ void extractHDPath(uint32_t rx, uint32_t offset) {
 
     // Check values
     if (hdPath[0] != HDPATH_0_DEFAULT ||
-        hdPath[1] != HDPATH_1_DEFAULT ||
+        ((hdPath[1] != HDPATH_1_DEFAULT) && (hdPath[1] != HDPATH_ETH_1_DEFAULT)) ||
         hdPath[3] != HDPATH_3_DEFAULT) {
         THROW(APDU_CODE_DATA_INVALID);
     }

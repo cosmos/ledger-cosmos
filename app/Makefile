@@ -41,6 +41,7 @@ ifeq ($(COIN),ATOM)
 # Main app configuration
 APPNAME = "Cosmos"
 APPPATH = "44'/118'"
+APPPATH2 = "44'/60'"
 else
 define error_message
 
@@ -52,7 +53,7 @@ endef
 $(error "$(error_message)")
 endif
 
-APP_LOAD_PARAMS = --curve secp256k1 $(COMMON_LOAD_PARAMS) --path $(APPPATH)
+APP_LOAD_PARAMS = --curve secp256k1 $(COMMON_LOAD_PARAMS) --path $(APPPATH)  --path $(APPPATH2)
 
 NANOS_STACK_SIZE:=1815
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.devices

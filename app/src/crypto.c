@@ -89,7 +89,27 @@ zxerr_t crypto_sign(uint8_t *signature,
     // Hash it
     const uint8_t *message = tx_get_buffer();
     const uint16_t messageLen = tx_get_buffer_length();
-    cx_hash_sha256(message, messageLen, messageDigest, CX_SHA256_SIZE);
+
+    switch(hdPath[1]) {
+        case HDPATH_1_DEFAULT:
+            cx_hash_sha256(message, messageLen, messageDigest, CX_SHA256_SIZE);
+            break;
+        case HDPATH_ETH_1_DEFAULT: {
+            uint8_t sha3_tmp[sizeof(cx_sha3_t)];
+            cx_sha3_t *sha3 = (cx_sha3_t *)sha3_tmp;
+
+            cx_err_t status;            
+            status = cx_keccak_init_no_throw(sha3, 256);
+            if (status != CX_OK) {
+                 return zxerr_ledger_api_error;
+            }
+            status = cx_hash_no_throw((cx_hash_t*)sha3, CX_LAST, message, messageLen, messageDigest, CX_SHA256_SIZE);
+            if (status != CX_OK) {
+                return zxerr_ledger_api_error;
+            }
+        }
+        break;
+    }
 
     cx_ecfp_private_key_t cx_privateKey;
     uint8_t privateKeyData[32];
