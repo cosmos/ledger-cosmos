@@ -71,6 +71,10 @@ typedef enum {
 #define MENU_MAIN_APP_LINE2_SECRET         "?"
 #define COIN_SECRET_REQUIRED_CLICKS         0
 
+#define INS_GET_VERSION                 0x00
+#define INS_SIGN_SECP256K1              0x02
+#define INS_GET_ADDR_SECP256K1          0x04
+
 #ifdef __cplusplus
 }
 #endif

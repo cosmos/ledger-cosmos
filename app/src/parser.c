@@ -183,11 +183,11 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
         return parser_unexpected_field;
     }
 
-    if (!parser_areEqual(amountToken + 1u, "amount")) {
+    if (!parser_areEqual(amountToken + 1u, (char*) "amount")) {
         return parser_unexpected_field;
     }
 
-    if (!parser_areEqual(amountToken + 3u, "denom")) {
+    if (!parser_areEqual(amountToken + 3u, (char*) "denom")) {
         return parser_unexpected_field;
     }
 
@@ -299,7 +299,6 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
 }
 
 __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
-                                            uint8_t displayIdx,
                                             Cbor_container *container,
                                             char *outKey, uint16_t outKeyLen,
                                             char *outVal, uint16_t outValLen,
@@ -442,7 +441,7 @@ __Z_INLINE parser_error_t parser_getTextualItem(const parser_context_t *ctx,
         CHECK_PARSER_ERR(parser_getNextNonExpert(ctx, &container, displayIdx))
     }
 
-    CHECK_PARSER_ERR(parser_screenPrint(ctx, displayIdx, &container, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount))
+    CHECK_PARSER_ERR(parser_screenPrint(ctx, &container, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount))
 
     return parser_ok;
 }

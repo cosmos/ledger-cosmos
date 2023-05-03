@@ -100,7 +100,7 @@ const char *parser_getErrorDescription(parser_error_t err) {
     }
 }
 
-parser_error_t _read_json_tx(parser_context_t *c, parser_tx_t *v) {
+parser_error_t _read_json_tx(parser_context_t *c, __Z_UNUSED parser_tx_t *v) {
     parser_error_t err = json_parse(&parser_tx_obj.tx_json.json,
                                     (const char *) c->buffer,
                                     c->bufferLen);
