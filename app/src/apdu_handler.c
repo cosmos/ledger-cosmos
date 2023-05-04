@@ -89,18 +89,18 @@ static bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
 
     uint32_t added;
     switch (payloadType) {
-        case 0:
+        case P1_INIT:
             tx_initialize();
             tx_reset();
             extractHDPath(rx, OFFSET_DATA);
             return false;
-        case 1:
+        case P1_ADD:
             added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
             if (added != rx - OFFSET_DATA) {
                 THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
             }
             return false;
-        case 2:
+        case P1_LAST:
             added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
             if (added != rx - OFFSET_DATA) {
                 THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);

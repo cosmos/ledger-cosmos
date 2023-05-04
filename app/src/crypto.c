@@ -83,8 +83,7 @@ zxerr_t crypto_extractPublicKey(const uint32_t path[HDPATH_LEN_DEFAULT], uint8_t
 zxerr_t crypto_sign(uint8_t *signature,
                    uint16_t signatureMaxlen,
                    uint16_t *sigSize) {
-    uint8_t messageDigest[CX_SHA256_SIZE];
-    MEMZERO(messageDigest,sizeof(messageDigest));
+    uint8_t messageDigest[CX_SHA256_SIZE] = {0};
 
     // Hash it
     const uint8_t *message = tx_get_buffer();
@@ -95,15 +94,12 @@ zxerr_t crypto_sign(uint8_t *signature,
             cx_hash_sha256(message, messageLen, messageDigest, CX_SHA256_SIZE);
             break;
         case HDPATH_ETH_1_DEFAULT: {
-            uint8_t sha3_tmp[sizeof(cx_sha3_t)];
-            cx_sha3_t *sha3 = (cx_sha3_t *)sha3_tmp;
-
-            cx_err_t status;            
-            status = cx_keccak_init_no_throw(sha3, 256);
+            cx_sha3_t sha3 = {0};
+            cx_err_t status = cx_keccak_init_no_throw(&sha3, 256);
             if (status != CX_OK) {
                  return zxerr_ledger_api_error;
             }
-            status = cx_hash_no_throw((cx_hash_t*)sha3, CX_LAST, message, messageLen, messageDigest, CX_SHA256_SIZE);
+            status = cx_hash_no_throw((cx_hash_t*) &sha3, CX_LAST, message, messageLen, messageDigest, CX_SHA256_SIZE);
             if (status != CX_OK) {
                 return zxerr_ledger_api_error;
             }
