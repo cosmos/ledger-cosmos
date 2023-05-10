@@ -14,7 +14,7 @@
 *  limitations under the License.
 ********************************************************************************/
 #pragma once
-
+#include "stdbool.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,6 +31,7 @@ extern "C" {
 
 #define PK_LEN_SECP256K1     33u
 
+extern bool isEthPath;
 typedef enum {
     addr_secp256k1 = 0,
 } address_kind_e;

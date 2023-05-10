@@ -316,7 +316,11 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
     // No Tittle screen
     if (container->screen.titleLen == 0) {
         MEMCPY(tmp, container->screen.contentPtr, container->screen.contentLen);
-        tx_display_translation(out, sizeof(out),tmp, container->screen.contentLen);
+        parser_error_t err = tx_display_translation(out, sizeof(out),tmp, container->screen.contentLen);
+        if (err != parser_ok) {
+            return err;
+        }
+        
         for (uint8_t i = 0; i < container->screen.indent; i++) {
             z_str3join(out, sizeof(out), SCREEN_INDENT, "");
         }
@@ -329,7 +333,10 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
     //Translate output, cpy to tmp to assure it ends in \0
     MEMZERO(tmp, tmp_len);
     MEMCPY(tmp, container->screen.contentPtr, container->screen.contentLen);
-    tx_display_translation(out, sizeof(out), tmp,container->screen.contentLen);
+    parser_error_t err = tx_display_translation(out, sizeof(out), tmp,container->screen.contentLen);
+    if (err != parser_ok) {
+        return err;
+    }
 
     uint8_t titleLen = container->screen.titleLen + container->screen.indent;
     //Title needs to be truncated, so we concat title witn content

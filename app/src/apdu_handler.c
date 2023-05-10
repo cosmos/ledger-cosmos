@@ -35,6 +35,11 @@
 #include "parser_impl.h"
 #include "view_internal.h"
 
+bool isEthPath = false;
+
+static const char *msg_error1 = "Expert Mode";
+static const char *msg_error2 = "Required";
+
 __Z_INLINE void handle_getversion(__Z_UNUSED volatile uint32_t *flags, volatile uint32_t *tx, __Z_UNUSED uint32_t rx) {
 #ifdef DEBUG
     G_io_apdu_buffer[0] = 0xFF;
@@ -68,6 +73,9 @@ static void extractHDPath(uint32_t rx, uint32_t offset) {
         hdPath[3] != HDPATH_3_DEFAULT) {
         THROW(APDU_CODE_DATA_INVALID);
     }
+
+    // Set EthPath flag
+    isEthPath = (hdPath[1] == HDPATH_ETH_1_DEFAULT) ? true : false;
 
     // Limit values unless the app is running in expert mode
     if (!app_mode_expert()) {
@@ -150,6 +158,11 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
     }
     parser_tx_obj.tx_json.own_addr = (const char *) (G_io_apdu_buffer + VIEW_ADDRESS_OFFSET_SECP256K1);
 
+    if (isEthPath && !app_mode_expert()) {
+        *flags |= IO_ASYNCH_REPLY;
+        view_custom_error_show(PIC(msg_error1),PIC(msg_error2));
+        THROW(APDU_CODE_DATA_INVALID);
+    }
     const char *error_msg = tx_parse(sign_type);
 
     if (error_msg != NULL) {
