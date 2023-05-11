@@ -121,6 +121,35 @@ describe('Standard', function () {
     }
   })
 
+    test.concurrent.each(DEVICE_MODELS)('show Eth address', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      // Derivation path. First 3 items are automatically hardened!
+      const path = [44, 60, 0, 0, 1]
+      const respRequest = app.showAddressAndPubKey(path, 'cosmos')
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-show_eth_address`)
+
+      const resp = await respRequest
+      console.log(resp)
+
+      expect(resp.return_code).toEqual(0x9000)
+      expect(resp.error_message).toEqual('No errors')
+
+      expect(resp).toHaveProperty('bech32_address')
+      expect(resp).toHaveProperty('compressed_pk')
+
+      expect(resp.bech32_address).toEqual('cosmos148thdqj6vnkkmsfd58ej4xjuacmqq7qwawg0ak')
+      expect(resp.compressed_pk.length).toEqual(33)
+    } finally {
+      await sim.close()
+    }
+  })
+
   test.concurrent.each(DEVICE_MODELS)('show address HUGE', async function (m) {
     const sim = new Zemu(m.path)
     try {
@@ -349,6 +378,86 @@ describe('Standard', function () {
 
       const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
       expect(signatureOk).toEqual(true)
+    } finally {
+      await sim.close()
+    }
+  })
+
+    test.concurrent.each(DEVICE_MODELS)('sign basic normal Eth', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      // Enable expert to allow sign with eth path
+      await sim.clickRight();
+      await sim.clickBoth();
+      await sim.clickLeft();
+
+      const path = [44, 60, 0, 0, 0]
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
+
+      // get address / publickey
+      const respPk = await app.getAddressAndPubKey(path, 'cosmos')
+      expect(respPk.return_code).toEqual(0x9000)
+      expect(respPk.error_message).toEqual('No errors')
+      console.log(respPk)
+
+      // do not wait here..
+      const signatureRequest = app.sign(path, tx)
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign_basic_eth`)
+
+      const resp = await signatureRequest
+      console.log(resp)
+
+      expect(resp.return_code).toEqual(0x9000)
+      expect(resp.error_message).toEqual('No errors')
+
+      // Now verify the signature
+      const sha3 = require('js-sha3')
+      const msgHash = Buffer.from(sha3.keccak256(tx), 'hex')
+
+      const signatureDER = resp.signature
+      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+
+      const pk = Uint8Array.from(respPk.compressed_pk)
+
+      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      expect(signatureOk).toEqual(true)
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(DEVICE_MODELS)('sign basic normal Eth no expert', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      const path = [44, 60, 0, 0, 0]
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
+
+      // get address / publickey
+      const respPk = await app.getAddressAndPubKey(path, 'cosmos')
+      expect(respPk.return_code).toEqual(0x9000)
+      expect(respPk.error_message).toEqual('No errors')
+      console.log(respPk)
+
+      // do not wait here..
+      const signatureRequest = app.sign(path, tx)
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      await sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-sign_basic_eth_warning`, [1,0], false)
+
+      const resp = await signatureRequest
+      console.log(resp)
+
+      expect(resp.return_code).toEqual(0x6984)
     } finally {
       await sim.close()
     }

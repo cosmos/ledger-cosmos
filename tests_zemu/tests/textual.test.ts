@@ -131,11 +131,16 @@ describe('Textual', function () {
     }
   })
 
-  test.concurrent.each(DEVICE_MODELS)('sign basic textual eth', async function (m) {
+  test.concurrent.each(DEVICE_MODELS)('sign basic textual eth ', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
       const app = new CosmosApp(sim.getTransport())
+
+      // Enable expert to allow sign with eth path
+      await sim.clickRight();
+      await sim.clickBoth();
+      await sim.clickLeft();
 
       const path = [44, 60, 0, 0, 0]
       const tx = Buffer.from(tx_sign_textual, 'hex')
@@ -171,6 +176,37 @@ describe('Textual', function () {
 
       const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
       expect(signatureOk).toEqual(true)
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(DEVICE_MODELS)('sign basic textual eth warning ', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+      
+      const path = [44, 60, 0, 0, 0]
+      const tx = Buffer.from(tx_sign_textual, 'hex')
+
+      // get address / publickey
+      const respPk = await app.getAddressAndPubKey(path, 'cosmos')
+      expect(respPk.return_code).toEqual(0x9000)
+      expect(respPk.error_message).toEqual('No errors')
+      console.log(respPk)
+
+      // do not wait here..
+      const signatureRequest = app.sign(path, tx, TEXTUAL_TX)
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      await sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-textual-sign_basic_eth_warning`, [1,0], false)
+
+      const resp = await signatureRequest
+      console.log(resp)
+
+      expect(resp.return_code).toEqual(0x6984)
     } finally {
       await sim.close()
     }
