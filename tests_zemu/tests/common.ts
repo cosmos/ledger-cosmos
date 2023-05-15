@@ -29,7 +29,6 @@ export const DEFAULT_OPTIONS = {
   ...DEFAULT_START_OPTIONS,
   logging: true,
   custom: `-s "${APP_SEED}"`,
-  pressDelay: 1500,
   X11: false,
 }
 

@@ -90,7 +90,7 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
     return tx_display_numItems(num_items);
 }
 
-__Z_INLINE bool_t parser_areEqual(uint16_t tokenIdx, char *expected) {
+__Z_INLINE bool_t parser_areEqual(uint16_t tokenIdx, const char *expected) {
     if (parser_tx_obj.tx_json.json.tokens[tokenIdx].type != JSMN_STRING) {
         return bool_false;
     }
@@ -299,7 +299,6 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
 }
 
 __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
-                                            uint8_t displayIdx,
                                             Cbor_container *container,
                                             char *outKey, uint16_t outKeyLen,
                                             char *outVal, uint16_t outValLen,
@@ -317,7 +316,11 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
     // No Tittle screen
     if (container->screen.titleLen == 0) {
         MEMCPY(tmp, container->screen.contentPtr, container->screen.contentLen);
-        tx_display_translation(out, sizeof(out),tmp, container->screen.contentLen);
+        parser_error_t err = tx_display_translation(out, sizeof(out),tmp, container->screen.contentLen);
+        if (err != parser_ok) {
+            return err;
+        }
+        
         for (uint8_t i = 0; i < container->screen.indent; i++) {
             z_str3join(out, sizeof(out), SCREEN_INDENT, "");
         }
@@ -330,7 +333,10 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
     //Translate output, cpy to tmp to assure it ends in \0
     MEMZERO(tmp, tmp_len);
     MEMCPY(tmp, container->screen.contentPtr, container->screen.contentLen);
-    tx_display_translation(out, sizeof(out), tmp,container->screen.contentLen);
+    parser_error_t err = tx_display_translation(out, sizeof(out), tmp,container->screen.contentLen);
+    if (err != parser_ok) {
+        return err;
+    }
 
     uint8_t titleLen = container->screen.titleLen + container->screen.indent;
     //Title needs to be truncated, so we concat title witn content
@@ -442,7 +448,7 @@ __Z_INLINE parser_error_t parser_getTextualItem(const parser_context_t *ctx,
         CHECK_PARSER_ERR(parser_getNextNonExpert(ctx, &container, displayIdx))
     }
 
-    CHECK_PARSER_ERR(parser_screenPrint(ctx, displayIdx, &container, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount))
+    CHECK_PARSER_ERR(parser_screenPrint(ctx, &container, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount))
 
     return parser_ok;
 }

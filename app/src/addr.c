@@ -25,7 +25,7 @@
 zxerr_t addr_getNumItems(uint8_t *num_items) {
     zemu_log_stack("addr_getNumItems");
     *num_items = 1;
-    if (app_mode_expert()) {
+    if (app_mode_expert() || isEthPath) {
         zemu_log("num_items 2\n");
         *num_items = 2;
     } else {
@@ -47,7 +47,7 @@ zxerr_t addr_getItem(int8_t displayIdx,
             ZEMU_LOGF(200, "[addr_getItem] pageCount %d\n", *pageCount)
             return zxerr_ok;
         case 1: {
-            if (!app_mode_expert()) {
+            if (!app_mode_expert() && !isEthPath) {
                 return zxerr_no_data;
             }
 

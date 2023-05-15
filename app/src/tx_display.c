@@ -1,5 +1,3 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "misc-no-recursion"
 /*******************************************************************************
 *   (c) 2018, 2019 Zondax GmbH
 *
@@ -15,6 +13,10 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
+#ifdef __cplusplus
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "misc-no-recursion"
+#endif
 
 #include "coin.h"
 #include "app_mode.h"
@@ -54,8 +56,10 @@ const char *get_required_root_item(root_item_e i) {
     }
 }
 
+#ifdef __cplusplus
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "bugprone-branch-clone"
+#endif
 
 __Z_INLINE uint8_t get_root_max_level(root_item_e i) {
     switch (i) {
@@ -78,7 +82,9 @@ __Z_INLINE uint8_t get_root_max_level(root_item_e i) {
     }
 }
 
+#ifdef __cplusplus
 #pragma clang diagnostic pop
+#endif
 
 typedef struct {
     bool root_item_start_token_valid[NUM_REQUIRED_ROOT_PAGES];
@@ -352,6 +358,7 @@ __Z_INLINE uint8_t get_subitem_count(root_item_e root_item) {
             if (!tx_is_expert_mode()) {
                 tmp_num_items = 1;     // Only Amount
             }
+            break;
         case root_item_tip:
             tmp_num_items += 0;
             break;
@@ -521,38 +528,38 @@ static const ascii_subst_t ascii_substitutions[] = {
 parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src, uint16_t srcLen) {
     MEMZERO(dst, dstLen);
     char *p = src;
-    uint8_t count = 0;
+    uint16_t count = 0;
     uint8_t verified_bytes = 0;
 
     while (*p) {
         utf8_int32_t tmp_codepoint = 0;
         p = utf8codepoint(p, &tmp_codepoint);
 
-        if (tmp_codepoint < 0x0F) {
+        if (tmp_codepoint < 0x0F || tmp_codepoint == 0x5C) {
             for (size_t i = 0; i < array_length(ascii_substitutions); i++) {
                 if ((char)tmp_codepoint == ascii_substitutions[i].ascii_code) {
+                    ASSERT_PTR_BOUNDS(count, dstLen);
                     *dst++ = '\\';
                     ASSERT_PTR_BOUNDS(count, dstLen);
                     *dst++ = ascii_substitutions[i].str;
-                    ASSERT_PTR_BOUNDS(count, dstLen);
                     break;
                 }
             }
         } else if (tmp_codepoint >= 32 && tmp_codepoint<=((int32_t) 0x7F)) {
+            ASSERT_PTR_BOUNDS(count, dstLen);
             *dst++ = (char) tmp_codepoint;
-            ASSERT_PTR_BOUNDS(count, dstLen);
         } else {
-            *dst++ = '\\';
             ASSERT_PTR_BOUNDS(count, dstLen);
+            *dst++ = '\\';
 
             uint8_t bytes_to_print = 8;
             int32_t swapped = ZX_SWAP(tmp_codepoint);
             if (tmp_codepoint > 0xFFFF) {
+                ASSERT_PTR_BOUNDS(count, dstLen);
                 *dst++ = 'U';
-                ASSERT_PTR_BOUNDS(count, dstLen);
             } else {
-                *dst++ = 'u';
                 ASSERT_PTR_BOUNDS(count, dstLen);
+                *dst++ = 'u';
                 bytes_to_print = 4;
                 swapped = (swapped >> 16) & 0xFFFF;
             }
@@ -562,10 +569,10 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src, uin
             }
 
             char buf[18] = {0};
-            array_to_hexstr(buf, sizeof(buf), (uint8_t *) &swapped, 8);
+            array_to_hexstr(buf, sizeof(buf), (uint8_t *) &swapped, 4);
             for (int i = 0; i < bytes_to_print; i++) {
-                *dst++ = (buf[i] >= 'a' && buf[i] <= 'z') ? (buf[i] - 32) : buf[i];
                 ASSERT_PTR_BOUNDS(count, dstLen);
+                *dst++ = (buf[i] >= 'a' && buf[i] <= 'z') ? (buf[i] - 32) : buf[i];
             }
         }
         verified_bytes ++;
@@ -582,5 +589,6 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src, uin
     *dst = 0;
     return parser_ok;
 }
-
+#ifdef __cplusplus
 #pragma clang diagnostic pop
+#endif

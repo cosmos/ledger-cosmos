@@ -14,7 +14,7 @@
 *  limitations under the License.
 ********************************************************************************/
 #pragma once
-
+#include "stdbool.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,11 +25,13 @@ extern "C" {
 
 #define HDPATH_0_DEFAULT     (0x80000000u | 0x2cu)
 #define HDPATH_1_DEFAULT     (0x80000000u | 0x76u)
+#define HDPATH_ETH_1_DEFAULT (0x80000000u | 0x3cu)
 #define HDPATH_2_DEFAULT     (0x80000000u | 0u)
 #define HDPATH_3_DEFAULT     (0u)
 
 #define PK_LEN_SECP256K1     33u
 
+extern bool isEthPath;
 typedef enum {
     addr_secp256k1 = 0,
 } address_kind_e;
@@ -69,6 +71,10 @@ typedef enum {
 
 #define MENU_MAIN_APP_LINE2_SECRET         "?"
 #define COIN_SECRET_REQUIRED_CLICKS         0
+
+#define INS_GET_VERSION                 0x00
+#define INS_SIGN_SECP256K1              0x02
+#define INS_GET_ADDR_SECP256K1          0x04
 
 #ifdef __cplusplus
 }
