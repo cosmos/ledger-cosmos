@@ -529,7 +529,6 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src, uin
     MEMZERO(dst, dstLen);
     char *p = src;
     uint16_t count = 0;
-    uint8_t verified_bytes = 0;
 
     while (*p) {
         utf8_int32_t tmp_codepoint = 0;
@@ -564,7 +563,7 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src, uin
                 swapped = (swapped >> 16) & 0xFFFF;
             }
 
-            if (dstLen < bytes_to_print) {
+            if (dstLen < (bytes_to_print + count)) {
                 return parser_unexpected_value;
             }
 
@@ -575,17 +574,18 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src, uin
                 *dst++ = (buf[i] >= 'a' && buf[i] <= 'z') ? (buf[i] - 32) : buf[i];
             }
         }
-        verified_bytes ++;
     }
 
     if (src[srcLen - 1] == ' ' || src[srcLen - 1] == '@') {
         if (src[dstLen - 1] + 1 > dstLen) {
             return parser_unexpected_value;
         }
+        ASSERT_PTR_BOUNDS(count, dstLen);
         *dst++ = '@';
     }
 
     // Terminate string
+    ASSERT_PTR_BOUNDS(count, dstLen);
     *dst = 0;
     return parser_ok;
 }
