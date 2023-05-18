@@ -145,7 +145,7 @@ parser_error_t tx_traverse_find(uint16_t root_token_index, uint16_t *ret_value_t
 
     CHECK_APP_CANARY()
 
-    if (parser_tx_obj.tx_json.tx == NULL || root_token_index < 0) {
+    if (parser_tx_obj.tx_json.tx == NULL) {
         return parser_no_data;
     }
 
