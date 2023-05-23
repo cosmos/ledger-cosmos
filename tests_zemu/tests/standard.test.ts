@@ -129,7 +129,8 @@ describe('Standard', function () {
 
       // Derivation path. First 3 items are automatically hardened!
       const path = [44, 60, 0, 0, 1]
-      const respRequest = app.showAddressAndPubKey(path, 'cosmos')
+      const hrp = 'cosmos'
+      const respRequest = app.showAddressAndPubKey(path, hrp)
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
       await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-show_eth_address`)
@@ -143,8 +144,21 @@ describe('Standard', function () {
       expect(resp).toHaveProperty('bech32_address')
       expect(resp).toHaveProperty('compressed_pk')
 
-      expect(resp.bech32_address).toEqual('cosmos148thdqj6vnkkmsfd58ej4xjuacmqq7qwawg0ak')
       expect(resp.compressed_pk.length).toEqual(33)
+
+      // Verify address
+      const secp256k1 = require("secp256k1");
+      const keccak = require("keccak256");
+      const { bech32 } = require("bech32");
+
+      // Take the compressed pubkey and verify that the expected address can be computed
+      const uncompressPubKeyUint8Array = secp256k1.publicKeyConvert(resp.compressed_pk, false).subarray(1);
+      const ethereumAddressBuffer = Buffer.from(keccak(Buffer.from(uncompressPubKeyUint8Array))).subarray(-20);
+      const eth_address = bech32.encode(hrp, bech32.toWords(ethereumAddressBuffer)); // "cosmos15n2h0lzvfgc8x4fm6fdya89n78x6ee2fm7fxr3"
+
+      expect(resp.bech32_address).toEqual(eth_address)
+      expect(resp.bech32_address).toEqual('cosmos15n2h0lzvfgc8x4fm6fdya89n78x6ee2fm7fxr3')
+
     } finally {
       await sim.close()
     }
@@ -390,9 +404,7 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Enable expert to allow sign with eth path
-      await sim.clickRight();
-      await sim.clickBoth();
-      await sim.clickLeft();
+      await sim.toggleExpertMode();
 
       const path = [44, 60, 0, 0, 0]
       const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
