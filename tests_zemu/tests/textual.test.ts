@@ -138,9 +138,7 @@ describe('Textual', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Enable expert to allow sign with eth path
-      await sim.clickRight();
-      await sim.clickBoth();
-      await sim.clickLeft();
+      await sim.toggleExpertMode();
 
       const path = [44, 60, 0, 0, 0]
       const tx = Buffer.from(tx_sign_textual, 'hex')
@@ -186,7 +184,7 @@ describe('Textual', function () {
     try {
       await sim.start({ ...DEFAULT_OPTIONS, model: m.name })
       const app = new CosmosApp(sim.getTransport())
-      
+
       const path = [44, 60, 0, 0, 0]
       const tx = Buffer.from(tx_sign_textual, 'hex')
 

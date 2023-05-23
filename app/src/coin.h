@@ -30,6 +30,7 @@ extern "C" {
 #define HDPATH_3_DEFAULT     (0u)
 
 #define PK_LEN_SECP256K1     33u
+#define PK_LEN_SECP256K1_UNCOMPRESSED   65u
 
 extern bool isEthPath;
 typedef enum {
