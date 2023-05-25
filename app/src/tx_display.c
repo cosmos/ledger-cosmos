@@ -530,19 +530,29 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src, uin
     char *p = src;
     uint16_t count = 0;
 
-    while (*p) {
+    while (p < src + srcLen) {
         utf8_int32_t tmp_codepoint = 0;
         p = utf8codepoint(p, &tmp_codepoint);
 
         if (tmp_codepoint < 0x0F || tmp_codepoint == 0x5C) {
+            bool found = false;
             for (size_t i = 0; i < array_length(ascii_substitutions); i++) {
                 if ((char)tmp_codepoint == ascii_substitutions[i].ascii_code) {
                     ASSERT_PTR_BOUNDS(count, dstLen);
                     *dst++ = '\\';
                     ASSERT_PTR_BOUNDS(count, dstLen);
                     *dst++ = ascii_substitutions[i].str;
+                    found = true;
                     break;
                 }
+            }
+            if (!found) {
+                // Write out the value as a hex escape, \xNN
+                if (count > dstLen) {
+                    return parser_unexpected_value;
+                }
+                snprintf(dst, 4, "\\x%.02X", tmp_codepoint);
+                dst += 4;
             }
         } else if (tmp_codepoint >= 32 && tmp_codepoint<=((int32_t) 0x7F)) {
             ASSERT_PTR_BOUNDS(count, dstLen);

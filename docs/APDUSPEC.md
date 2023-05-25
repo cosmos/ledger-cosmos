@@ -59,6 +59,7 @@ The general structure of commands and responses is as follows:
 | MINOR   | byte (1) | Version Minor    |                                 |
 | PATCH   | byte (1) | Version Patch    |                                 |
 | LOCKED  | byte (1) | Device is locked |                                 |
+| TARGET_ID  | byte (4) | Device ID     | Identifier for NanoS/SP/X/ or Stax  |
 | SW1-SW2 | byte (2) | Return code      | see list of return codes        |
 
 --------------

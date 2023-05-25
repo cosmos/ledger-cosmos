@@ -38,7 +38,7 @@ zxerr_t crypto_extractUncompressedPublicKey(const uint32_t path[HDPATH_LEN_DEFAU
         return zxerr_invalid_crypto_settings;
     }
 
-    zxerr_t err = zxerr_unknown;
+    volatile zxerr_t err = zxerr_unknown;
     BEGIN_TRY
     {
         TRY {
@@ -86,8 +86,8 @@ __Z_INLINE zxerr_t compressPubkey(const uint8_t *pubkey, uint16_t pubkeyLen, uin
 }
 
 zxerr_t crypto_sign(uint8_t *signature,
-                   uint16_t signatureMaxlen,
-                   uint16_t *sigSize) {
+                    uint16_t signatureMaxlen,
+                    uint16_t *sigSize) {
     uint8_t messageDigest[CX_SHA256_SIZE] = {0};
 
     // Hash it
@@ -112,12 +112,12 @@ zxerr_t crypto_sign(uint8_t *signature,
         break;
     }
 
-    cx_ecfp_private_key_t cx_privateKey;
-    uint8_t privateKeyData[32];
+    cx_ecfp_private_key_t cx_privateKey = {0};
+    uint8_t privateKeyData[32] = {0};
     unsigned int info = 0;
-    int signatureLength = 0;
+    volatile int signatureLength = 0;
 
-    zxerr_t err = zxerr_unknown;
+    volatile zxerr_t err = zxerr_unknown;
     BEGIN_TRY
     {
         TRY
@@ -197,7 +197,7 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrR
     CHECK_ZXERR(compressPubkey(uncompressedPubkey, sizeof(uncompressedPubkey), buffer, buffer_len))
     char *addr = (char *) (buffer + PK_LEN_SECP256K1);
 
-    uint8_t hashed1_pk[CX_SHA256_SIZE];
+    uint8_t hashed1_pk[CX_SHA256_SIZE] = {0};
     if (isEthPath) {
         cx_sha3_t ctx;
         if (cx_keccak_init_no_throw(&ctx, 256) != CX_OK) {

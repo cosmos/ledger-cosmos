@@ -146,7 +146,7 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
     if (!process_chunk(tx, rx)) {
         THROW(APDU_CODE_OK);
     }
-    
+
     // Let grab P2 value and if it's not valid, the parser should reject it
     const tx_type_e sign_type = (tx_type_e) G_io_apdu_buffer[OFFSET_P2];
 
@@ -179,7 +179,7 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
 }
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
-    uint16_t sw = 0;
+    volatile uint16_t sw = 0;
 
     BEGIN_TRY
     {
@@ -231,7 +231,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     break;
             }
             G_io_apdu_buffer[*tx] = sw >> 8;
-            G_io_apdu_buffer[*tx + 1] = sw;
+            G_io_apdu_buffer[*tx + 1] = sw & 0xFF;
             *tx += 2;
         }
         FINALLY
