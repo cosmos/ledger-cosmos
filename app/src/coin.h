@@ -32,7 +32,6 @@ extern "C" {
 #define PK_LEN_SECP256K1     33u
 #define PK_LEN_SECP256K1_UNCOMPRESSED   65u
 
-extern bool isEthPath;
 typedef enum {
     addr_secp256k1 = 0,
 } address_kind_e;
@@ -41,6 +40,12 @@ typedef enum {
     tx_json = 0,
     tx_textual
 } tx_type_e;
+
+typedef enum {
+    BECH32_COSMOS = 0,
+    BECH32_ETH,
+    UNSUPPORTED = 0xFF,
+} address_encoding_e;
 
 #define VIEW_ADDRESS_OFFSET_SECP256K1       PK_LEN_SECP256K1
 #define VIEW_ADDRESS_LAST_PAGE_DEFAULT      0
