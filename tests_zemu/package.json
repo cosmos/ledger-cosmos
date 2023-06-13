@@ -14,7 +14,7 @@
     "Ledger"
   ],
   "scripts": {
-    "test": "ts-node tests/pullImageKillOld.ts && jest"
+    "test": "ts-node tests/pullImageKillOld.ts && jest --maxConcurrency 2"
   },
   "dependencies": {
     "@zondax/ledger-cosmos-js": "^3.0.2",

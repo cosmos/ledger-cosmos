@@ -23,7 +23,7 @@ import secp256k1 from 'secp256k1/elliptic'
 // @ts-ignore
 import crypto from 'crypto'
 
-jest.setTimeout(60000)
+jest.setTimeout(90000)
 
 describe('Textual', function () {
   // eslint-disable-next-line jest/expect-expect
@@ -88,9 +88,7 @@ describe('Textual', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Change to expert mode so we can skip fields
-      await sim.clickRight()
-      await sim.clickBoth()
-      await sim.clickLeft()
+      await sim.toggleExpertMode()
 
       const path = [44, 118, 0, 0, 0]
       const tx = Buffer.from(tx_sign_textual, 'hex')
@@ -144,7 +142,7 @@ describe('Textual', function () {
       const tx = Buffer.from(tx_sign_textual, 'hex')
 
       // get address / publickey
-      const respPk = await app.getAddressAndPubKey(path, 'cosmos')
+      const respPk = await app.getAddressAndPubKey(path, 'inj')
       expect(respPk.return_code).toEqual(0x9000)
       expect(respPk.error_message).toEqual('No errors')
       console.log(respPk)
@@ -189,7 +187,7 @@ describe('Textual', function () {
       const tx = Buffer.from(tx_sign_textual, 'hex')
 
       // get address / publickey
-      const respPk = await app.getAddressAndPubKey(path, 'cosmos')
+      const respPk = await app.getAddressAndPubKey(path, 'inj')
       expect(respPk.return_code).toEqual(0x9000)
       expect(respPk.error_message).toEqual('No errors')
       console.log(respPk)

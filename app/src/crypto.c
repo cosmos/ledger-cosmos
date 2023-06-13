@@ -21,11 +21,13 @@
 #include "tx.h"
 
 #include <bech32.h>
+#include "chain_config.h"
 
 uint32_t hdPath[HDPATH_LEN_DEFAULT];
 
 uint8_t bech32_hrp_len;
 char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
+address_encoding_e encoding;
 
 #include "cx.h"
 
@@ -94,11 +96,13 @@ zxerr_t crypto_sign(uint8_t *signature,
     const uint8_t *message = tx_get_buffer();
     const uint16_t messageLen = tx_get_buffer_length();
 
-    switch(hdPath[1]) {
-        case HDPATH_1_DEFAULT:
+    switch (encoding) {
+        case BECH32_COSMOS: {
             cx_hash_sha256(message, messageLen, messageDigest, CX_SHA256_SIZE);
             break;
-        case HDPATH_ETH_1_DEFAULT: {
+        }
+
+        case BECH32_ETH: {
             cx_sha3_t sha3 = {0};
             cx_err_t status = cx_keccak_init_no_throw(&sha3, 256);
             if (status != CX_OK) {
@@ -108,8 +112,11 @@ zxerr_t crypto_sign(uint8_t *signature,
             if (status != CX_OK) {
                 return zxerr_ledger_api_error;
             }
+            break;
         }
-        break;
+
+        default:
+            return zxerr_unknown;
     }
 
     cx_ecfp_private_key_t cx_privateKey = {0};
@@ -198,20 +205,32 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrR
     char *addr = (char *) (buffer + PK_LEN_SECP256K1);
 
     uint8_t hashed1_pk[CX_SHA256_SIZE] = {0};
-    if (isEthPath) {
-        cx_sha3_t ctx;
-        if (cx_keccak_init_no_throw(&ctx, 256) != CX_OK) {
-            return zxerr_unknown;
+
+    switch (encoding) {
+        case BECH32_COSMOS: {
+            // Hash it
+            cx_hash_sha256(buffer, PK_LEN_SECP256K1, hashed1_pk, CX_SHA256_SIZE);
+            uint8_t hashed2_pk[CX_RIPEMD160_SIZE];
+            ripemd160_32(hashed2_pk, hashed1_pk);
+            CHECK_ZXERR(bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE, 1, BECH32_ENCODING_BECH32))
+            break;
         }
-        cx_hash((cx_hash_t *)&ctx, CX_LAST, uncompressedPubkey+1, sizeof(uncompressedPubkey)-1, hashed1_pk, sizeof(hashed1_pk));
-        CHECK_ZXERR(bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed1_pk + 12, sizeof(hashed1_pk) - 12, 1, BECH32_ENCODING_BECH32))
-    } else {
-        // Hash it
-        cx_hash_sha256(buffer, PK_LEN_SECP256K1, hashed1_pk, CX_SHA256_SIZE);
-        uint8_t hashed2_pk[CX_RIPEMD160_SIZE];
-        ripemd160_32(hashed2_pk, hashed1_pk);
-        CHECK_ZXERR(bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE, 1, BECH32_ENCODING_BECH32))
+
+        case BECH32_ETH: {
+            cx_sha3_t ctx;
+            if (cx_keccak_init_no_throw(&ctx, 256) != CX_OK) {
+                return zxerr_unknown;
+            }
+            cx_hash((cx_hash_t *)&ctx, CX_LAST, uncompressedPubkey+1, sizeof(uncompressedPubkey)-1, hashed1_pk, sizeof(hashed1_pk));
+            CHECK_ZXERR(bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed1_pk + 12, sizeof(hashed1_pk) - 12, 1, BECH32_ENCODING_BECH32))
+            break;
+        }
+
+        default:
+            *addrResponseLen = 0;
+            return zxerr_encoding_failed;
     }
+
     *addrResponseLen = PK_LEN_SECP256K1 + strnlen(addr, (buffer_len - PK_LEN_SECP256K1));
 
     return zxerr_ok;

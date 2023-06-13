@@ -323,9 +323,7 @@ describe('Json', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Activate expert mode
-      await sim.clickRight()
-      await sim.clickBoth()
-      await sim.clickLeft()
+      await sim.toggleExpertMode();
 
       const path = [44, 118, 0, 0, 0]
       const tx = Buffer.from(JSON.stringify(example_tx_str_msgMultiSend))
@@ -373,15 +371,13 @@ describe('Json', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Change to expert mode so we can skip fields
-      await sim.clickRight()
-      await sim.clickBoth()
-      await sim.clickLeft()
+      await sim.toggleExpertMode();
 
       const path = [44, 60, 0, 0, 0]
       const tx = Buffer.from(JSON.stringify(setWithdrawAddress))
 
       // get address / publickey
-      const respPk = await app.getAddressAndPubKey(path, 'cosmos')
+      const respPk = await app.getAddressAndPubKey(path, 'inj')
       expect(respPk.return_code).toEqual(0x9000)
       expect(respPk.error_message).toEqual('No errors')
       console.log(respPk)
