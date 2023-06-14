@@ -34,6 +34,11 @@
 #include "parser_impl.h"
 #include "view_internal.h"
 
+#include "chain_config.h"
+
+static const char *msg_error1 = "Expert Mode";
+static const char *msg_error2 = "Required";
+
 __Z_INLINE void handle_getversion(__Z_UNUSED volatile uint32_t *flags, volatile uint32_t *tx, __Z_UNUSED uint32_t rx) {
 #ifdef DEBUG
     G_io_apdu_buffer[0] = 0xFF;
@@ -64,9 +69,15 @@ static void extractHDPath(uint32_t rx, uint32_t offset) {
 
     // Check values
     if (hdPath[0] != HDPATH_0_DEFAULT ||
-        hdPath[1] != HDPATH_1_DEFAULT ||
+        ((hdPath[1] != HDPATH_1_DEFAULT) && (hdPath[1] != HDPATH_ETH_1_DEFAULT)) ||
         hdPath[3] != HDPATH_3_DEFAULT) {
         THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    encoding = checkChainConfig(hdPath[1], bech32_hrp, bech32_hrp_len);
+    if (encoding == UNSUPPORTED) {
+        ZEMU_LOGF(50, "Chain config not supported for: %s\n", bech32_hrp)
+        THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
     }
 
     // Limit values unless the app is running in expert mode
@@ -93,18 +104,18 @@ static bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
 
     uint32_t added;
     switch (payloadType) {
-        case 0:
+        case P1_INIT:
             tx_initialize();
             tx_reset();
             extractHDPath(rx, OFFSET_DATA);
             return false;
-        case 1:
+        case P1_ADD:
             added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
             if (added != rx - OFFSET_DATA) {
                 THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
             }
             return false;
-        case 2:
+        case P1_LAST:
             added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
             if (added != rx - OFFSET_DATA) {
                 THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
@@ -120,7 +131,6 @@ __Z_INLINE void handleGetAddrSecp256K1(volatile uint32_t *flags, volatile uint32
     extractHDPath(rx, OFFSET_DATA + 1 + len);
 
     uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
-
     zxerr_t zxerr = app_fill_address();
     if (zxerr != zxerr_ok) {
         *tx = 0;
@@ -151,6 +161,11 @@ __Z_INLINE void handleSignSecp256K1(volatile uint32_t *flags, volatile uint32_t 
     }
     parser_tx_obj.own_addr = (const char *) (G_io_apdu_buffer + VIEW_ADDRESS_OFFSET_SECP256K1);
 
+    if ((encoding != BECH32_COSMOS) && !app_mode_expert()) {
+        *flags |= IO_ASYNCH_REPLY;
+        view_custom_error_show(PIC(msg_error1),PIC(msg_error2));
+        THROW(APDU_CODE_DATA_INVALID);
+    }
     const char *error_msg = tx_parse();
 
     if (error_msg != NULL) {

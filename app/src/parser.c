@@ -56,7 +56,7 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx __attribute__((unu
     return tx_display_numItems(num_items);
 }
 
-__Z_INLINE bool_t parser_areEqual(uint16_t tokenIdx, char *expected) {
+__Z_INLINE bool_t parser_areEqual(uint16_t tokenIdx, const char *expected) {
     if (parser_tx_obj.json.tokens[tokenIdx].type != JSMN_STRING) {
         return bool_false;
     }
@@ -149,11 +149,11 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
         return parser_unexpected_field;
     }
 
-    if (!parser_areEqual(amountToken + 1u, (char*) "amount")) {
+    if (!parser_areEqual(amountToken + 1u, "amount")) {
         return parser_unexpected_field;
     }
 
-    if (!parser_areEqual(amountToken + 3u, (char*) "denom")) {
+    if (!parser_areEqual(amountToken + 3u, "denom")) {
         return parser_unexpected_field;
     }
 
