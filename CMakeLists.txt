@@ -91,6 +91,8 @@ file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/hexutils.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/zxmacros.c
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/zxformat.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/bech32.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/src/segwit_addr.c
         ####
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/formatting.c
@@ -99,6 +101,7 @@ file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/tx_parser.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/tx_display.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/tx_validate.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinykeccak/keccak-tiny.c
         )
 
 add_library(app_lib STATIC
@@ -107,11 +110,12 @@ add_library(app_lib STATIC
         )
 
 target_include_directories(app_lib PUBLIC
-        deps/ledger-zxlib/include
-        deps/jsmn/src
-        app/src
-        app/src/common
-        deps/ledger-zxlib/app/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/jsmn/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/app/common
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinykeccak
         )
 
 target_link_libraries(app_lib PUBLIC)

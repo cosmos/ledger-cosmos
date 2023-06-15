@@ -90,6 +90,8 @@ app/src/glyphs.h
 /build
 .vscode/dryrun.log
 .vscode/targets.log
+app/build/*
+.DS_Store
 
 fuzz-*.log
 /fuzz/corpora
