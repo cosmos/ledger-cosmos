@@ -171,35 +171,10 @@ zxerr_t crypto_sign(uint8_t *signature,
     return err;
 }
 
-uint8_t extractHRP(uint32_t rx, uint32_t offset) {
-    if (rx < offset + 1) {
-        THROW(APDU_CODE_DATA_INVALID);
-    }
-    MEMZERO(bech32_hrp, MAX_BECH32_HRP_LEN);
-
-    bech32_hrp_len = G_io_apdu_buffer[offset];
-
-    if (bech32_hrp_len == 0 || bech32_hrp_len > MAX_BECH32_HRP_LEN) {
-        THROW(APDU_CODE_DATA_INVALID);
-    }
-
-    memcpy(bech32_hrp, G_io_apdu_buffer + offset + 1, bech32_hrp_len);
-    bech32_hrp[bech32_hrp_len] = 0;     // zero terminate
-
-    return bech32_hrp_len;
-}
-
 void ripemd160_32(uint8_t *out, uint8_t *in) {
     cx_ripemd160_t rip160;
     cx_ripemd160_init(&rip160);
     cx_hash(&rip160.header, CX_LAST, in, CX_SHA256_SIZE, out, CX_RIPEMD160_SIZE);
-}
-
-void crypto_set_hrp(char *p) {
-    bech32_hrp_len = strlen(p);
-    if (bech32_hrp_len < MAX_BECH32_HRP_LEN) {
-        snprintf(bech32_hrp, sizeof(bech32_hrp), "%s", p);
-    }
 }
 
 zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrResponseLen) {

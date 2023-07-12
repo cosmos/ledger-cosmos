@@ -25,10 +25,6 @@
 
 extern uint16_t action_addrResponseLen;
 
-__Z_INLINE void app_set_hrp(char *p) {
-    crypto_set_hrp(p);
-}
-
 __Z_INLINE void app_sign() {
     uint16_t replyLen = 0;
 

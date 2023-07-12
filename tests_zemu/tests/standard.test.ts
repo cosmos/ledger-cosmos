@@ -431,20 +431,17 @@ test.concurrent.each(DEVICE_MODELS)('sign basic normal Eth', async function (m) 
 
       const path = [44, 60, 0, 0, 0]
       const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
+      const hrp = 'inj'
 
       // check with invalid HRP
       const errorRespPk = await app.getAddressAndPubKey(path, 'forbiddenHRP')
       expect(errorRespPk.return_code).toEqual(0x6986)
       expect(errorRespPk.error_message).toEqual('Transaction rejected')
 
-      // get address / publickey
-      const respPk = await app.getAddressAndPubKey(path, 'inj')
-      expect(respPk.return_code).toEqual(0x9000)
-      expect(respPk.error_message).toEqual('No errors')
-      console.log(respPk)
-
       // do not wait here..
       const signatureRequest = app.sign(path, tx)
+      // Update JS package before calling this
+      // const signatureRequest = app.sign(path, tx, hrp)
 
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
@@ -456,6 +453,12 @@ test.concurrent.each(DEVICE_MODELS)('sign basic normal Eth', async function (m) 
       expect(resp.return_code).toEqual(0x9000)
       expect(resp.error_message).toEqual('No errors')
       expect(resp).toHaveProperty('signature')
+
+      // get address / publickey
+      const respPk = await app.getAddressAndPubKey(path, hrp)
+      expect(respPk.return_code).toEqual(0x9000)
+      expect(respPk.error_message).toEqual('No errors')
+      console.log(respPk)
 
       // Now verify the signature
       const sha3 = require('js-sha3')
