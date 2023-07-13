@@ -439,9 +439,7 @@ test.concurrent.each(DEVICE_MODELS)('sign basic normal Eth', async function (m) 
       expect(errorRespPk.error_message).toEqual('Transaction rejected')
 
       // do not wait here..
-      const signatureRequest = app.sign(path, tx)
-      // Update JS package before calling this
-      // const signatureRequest = app.sign(path, tx, hrp)
+      const signatureRequest = app.sign(path, tx, hrp)
 
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
