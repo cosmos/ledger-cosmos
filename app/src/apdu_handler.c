@@ -61,7 +61,25 @@ __Z_INLINE void handle_getversion(__Z_UNUSED volatile uint32_t *flags, volatile 
     THROW(APDU_CODE_OK);
 }
 
-static void extractHDPath(uint32_t rx, uint32_t offset) {
+__Z_INLINE uint8_t extractHRP(uint32_t rx, uint32_t offset) {
+    if (rx < offset + 1) {
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+    MEMZERO(bech32_hrp, MAX_BECH32_HRP_LEN);
+
+    bech32_hrp_len = G_io_apdu_buffer[offset];
+
+    if (bech32_hrp_len == 0 || bech32_hrp_len > MAX_BECH32_HRP_LEN) {
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+    memcpy(bech32_hrp, G_io_apdu_buffer + offset + 1, bech32_hrp_len);
+    bech32_hrp[bech32_hrp_len] = 0;     // zero terminate
+
+    return bech32_hrp_len;
+}
+
+__Z_INLINE void extractHDPath(uint32_t rx, uint32_t offset) {
     if ((rx - offset) < sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
@@ -75,18 +93,30 @@ static void extractHDPath(uint32_t rx, uint32_t offset) {
         THROW(APDU_CODE_DATA_INVALID);
     }
 
-    encoding = checkChainConfig(hdPath[1], bech32_hrp, bech32_hrp_len);
-    if (encoding == UNSUPPORTED) {
-        ZEMU_LOGF(50, "Chain config not supported for: %s\n", bech32_hrp)
-        THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
-    }
-
     // Limit values unless the app is running in expert mode
     if (!app_mode_expert()) {
         for(int i=2; i < HDPATH_LEN_DEFAULT; i++) {
             // hardened or unhardened values should be below 20
             if ( (hdPath[i] & 0x7FFFFFFF) > 100) THROW(APDU_CODE_CONDITIONS_NOT_SATISFIED);
         }
+    }
+}
+
+static void extractHDPath_HRP(uint32_t rx, uint32_t offset) {
+    extractHDPath(rx, offset);
+    // Set BECH32_COSMOS as default for backward compatibility
+    encoding = BECH32_COSMOS;
+
+    // Check if HRP was sent
+    if ((rx - offset) > sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
+        extractHRP(rx, offset + sizeof(uint32_t) * HDPATH_LEN_DEFAULT);
+        encoding = checkChainConfig(hdPath[1], bech32_hrp, bech32_hrp_len);
+        if (encoding == UNSUPPORTED) {
+            ZEMU_LOGF(50, "Chain config not supported for: %s\n", bech32_hrp)
+            THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+        }
+    } else if (hdPath[1] == HDPATH_ETH_1_DEFAULT) {
+        THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
     }
 }
 
@@ -108,7 +138,8 @@ static bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
         case P1_INIT:
             tx_initialize();
             tx_reset();
-            extractHDPath(rx, OFFSET_DATA);
+            extractHDPath_HRP(rx, OFFSET_DATA);
+
             return false;
         case P1_ADD:
             added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
@@ -130,6 +161,13 @@ static bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
 __Z_INLINE void handleGetAddrSecp256K1(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     uint8_t len = extractHRP(rx, OFFSET_DATA);
     extractHDPath(rx, OFFSET_DATA + 1 + len);
+
+    // Verify encoding
+    encoding = checkChainConfig(hdPath[1], bech32_hrp, bech32_hrp_len);
+    if (encoding == UNSUPPORTED) {
+        ZEMU_LOGF(50, "Chain config not supported for: %s\n", bech32_hrp)
+        THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+    }
 
     uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
     zxerr_t zxerr = app_fill_address();
@@ -154,6 +192,13 @@ __Z_INLINE void handleSignSecp256K1(volatile uint32_t *flags, volatile uint32_t 
         THROW(APDU_CODE_OK);
     }
 
+    if ((hdPath[1] == HDPATH_ETH_1_DEFAULT) && !app_mode_expert()) {
+        *flags |= IO_ASYNCH_REPLY;
+        view_custom_error_show(PIC(msg_error1),PIC(msg_error2));
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
+
     // Put address in output buffer, we will use it to confirm source address
     zxerr_t zxerr = app_fill_address();
     if (zxerr != zxerr_ok) {
@@ -161,12 +206,6 @@ __Z_INLINE void handleSignSecp256K1(volatile uint32_t *flags, volatile uint32_t 
         THROW(APDU_CODE_DATA_INVALID);
     }
     parser_tx_obj.own_addr = (const char *) (G_io_apdu_buffer + VIEW_ADDRESS_OFFSET_SECP256K1);
-
-    if ((encoding != BECH32_COSMOS) && !app_mode_expert()) {
-        *flags |= IO_ASYNCH_REPLY;
-        view_custom_error_show(PIC(msg_error1),PIC(msg_error2));
-        THROW(APDU_CODE_DATA_INVALID);
-    }
     const char *error_msg = tx_parse();
 
     if (error_msg != NULL) {
@@ -183,7 +222,7 @@ __Z_INLINE void handleSignSecp256K1(volatile uint32_t *flags, volatile uint32_t 
 }
 
 void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
-    uint16_t sw = 0;
+    volatile uint16_t sw = 0;
 
     BEGIN_TRY
     {
@@ -235,7 +274,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
                     break;
             }
             G_io_apdu_buffer[*tx] = sw >> 8;
-            G_io_apdu_buffer[*tx + 1] = sw;
+            G_io_apdu_buffer[*tx + 1] = sw & 0xFF;
             *tx += 2;
         }
         FINALLY
