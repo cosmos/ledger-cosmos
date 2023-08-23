@@ -25,15 +25,11 @@
 
 extern uint16_t action_addrResponseLen;
 
-__Z_INLINE void app_set_hrp(char *p) {
-    crypto_set_hrp(p);
-}
-
 __Z_INLINE void app_sign() {
     uint16_t replyLen = 0;
 
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
-    zxerr_t err = crypto_sign(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 3, &replyLen);
+    const zxerr_t err = crypto_sign(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 3, &replyLen);
 
     if (err != zxerr_ok || replyLen == 0) {
         set_code(G_io_apdu_buffer, 0, APDU_CODE_SIGN_VERIFY_ERROR);
@@ -49,7 +45,7 @@ __Z_INLINE zxerr_t app_fill_address() {
     MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
 
     action_addrResponseLen = 0;
-    zxerr_t err = crypto_fillAddress(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 2, &action_addrResponseLen);
+    const zxerr_t err = crypto_fillAddress(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 2, &action_addrResponseLen);
 
     if (err != zxerr_ok || action_addrResponseLen == 0) {
         THROW(APDU_CODE_EXECUTION_ERROR);

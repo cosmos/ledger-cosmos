@@ -23,6 +23,7 @@
 #include "bech32.h"
 #include "hexutils.h"
 #include "gmock/gmock.h"
+#include "coin.h"
 
 std::vector<std::string> dumpUI(parser_context_t *ctx,
                                 uint16_t maxKeyLen,

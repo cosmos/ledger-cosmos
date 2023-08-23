@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018, 2019 Zondax GmbH
+*   (c) 2018 - 2023 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -599,6 +599,7 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src, uin
     *dst = 0;
     return parser_ok;
 }
+
 #ifdef __cplusplus
 #pragma clang diagnostic pop
 #endif

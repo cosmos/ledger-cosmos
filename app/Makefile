@@ -1,6 +1,6 @@
 #*******************************************************************************
 #  Ledger App
-#  (c) 2018 - 2022 Zondax GmbH
+#  (c) 2018 - 2023 Zondax AG
 #  (c) 2017 Ledger
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,7 +43,6 @@ APPNAME = "Cosmos"
 APPPATH = "44'/118'" --path "44'/60'"
 else
 define error_message
-
 
 COIN value not supported: [$(COIN)]
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018, 2019 Zondax GmbH
+*   (c) 2018 - 2023 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -37,6 +37,11 @@ extern "C" {
 #if defined(TARGET_NANOS)
 #undef MAX_NUMBER_OF_TOKENS
 #define MAX_NUMBER_OF_TOKENS    70
+#endif
+
+#if defined(TARGET_STAX)
+#undef MAX_NUMBER_OF_TOKENS
+#define MAX_NUMBER_OF_TOKENS    600
 #endif
 
 #define ROOT_TOKEN_INDEX 0

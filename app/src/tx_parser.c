@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2018, 2019 Zondax GmbH
+*   (c) 2018 - 2023 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "misc-no-recursion"
 #endif
+
 #include <jsmn.h>
 #include "tx_parser.h"
 #include "zxmacros.h"
