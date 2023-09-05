@@ -26,7 +26,7 @@ namespace {
 #pragma ide diagnostic ignored "ConstantParameter"
     parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks) {
         uint16_t ret_value_token_index = 0;
-        parser_error_t err = tx_traverse_find(root_token_index, &ret_value_token_index);
+        const parser_error_t err = tx_traverse_find(root_token_index, &ret_value_token_index);
 
         if (err != parser_ok){
             return err;
@@ -145,7 +145,7 @@ namespace {
 
         parser_tx_obj.tx_json.tx = transaction;
         parser_tx_obj.tx_json.flags.cache_valid = false;
-        parser_error_t err = JSON_PARSE(&parser_tx_obj.tx_json.json, parser_tx_obj.tx_json.tx);
+        const parser_error_t err = JSON_PARSE(&parser_tx_obj.tx_json.json, parser_tx_obj.tx_json.tx);
         EXPECT_EQ(err, parser_ok);
 
         uint8_t numItems;
