@@ -40,7 +40,11 @@ $(info COIN  = [$(COIN)])
 ifeq ($(COIN),ATOM)
 # Main app configuration
 APPNAME = "Cosmos"
-APPPATH = "44'/118'" --path "44'/60'"
+COIN_TYPE=118
+else
+ifeq ($(COIN),FNSA)
+APPNAME = "Finschia"
+COIN_TYPE=438
 else
 define error_message
 
@@ -50,6 +54,10 @@ COIN value not supported: [$(COIN)]
 endef
 $(error "$(error_message)")
 endif
+endif
+
+APPPATH="44'/$(COIN_TYPE)'"
+HDPATH_1_DEFAULT ="(0x80000000u | "$(COIN_TYPE)"u)"
 
 APP_LOAD_PARAMS = --curve secp256k1 $(COMMON_LOAD_PARAMS) --path $(APPPATH)
 
@@ -65,7 +73,7 @@ endif
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.platform
 DEFINES += HAVE_HASH HAVE_BLAKE2 HAVE_SHA256 HAVE_SHA512
-CFLAGS += -I$(MY_DIR)/../deps/tinycbor/src
+CFLAGS += -I$(MY_DIR)/../deps/tinycbor/src -DHDPATH_1_DEFAULT=$(HDPATH_1_DEFAULT) -DAPPNAME=$(APPNAME)
 APP_SOURCE_PATH += $(MY_DIR)/../deps/tinycbor-ledger
 APP_SOURCE_PATH += $(MY_DIR)/../deps/jsmn/src
 
@@ -89,7 +97,7 @@ dep/%.d: %.c Makefile
 
 .PHONY: listvariants
 listvariants:
-	@echo VARIANTS COIN ATOM
+	@echo VARIANTS COIN ATOM FNSA
 
 .PHONY: version
 version:
