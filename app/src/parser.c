@@ -146,19 +146,25 @@ __Z_INLINE bool_t parser_isAmount(char *key) {
     return bool_false;
 }
 
-__Z_INLINE bool_t is_default_denom_base(const char *denom, uint8_t denom_len) {
-    if (tx_is_expert_mode()) {
-        return false;
+__Z_INLINE parser_error_t is_default_denom_base(const char *denom, uint8_t denom_len, bool *is_default) {
+    bool is_expert_or_default = false;
+    CHECK_PARSER_ERR(tx_is_expert_mode_or_not_default_chainid(&is_expert_or_default))
+    if (is_expert_or_default) {
+        *is_default = false;
+        return parser_ok;
     }
 
     if (strlen(COIN_DEFAULT_DENOM_BASE) != denom_len) {
-        return bool_false;
+        *is_default = bool_false;
+        return parser_ok;
     }
 
-    if (memcmp(denom, COIN_DEFAULT_DENOM_BASE, denom_len) == 0)
-        return bool_true;
+    if (memcmp(denom, COIN_DEFAULT_DENOM_BASE, denom_len) == 0) {
+        *is_default = bool_true;
+        return parser_ok;
+    }
 
-    return bool_false;
+    return parser_ok;
 }
 
 __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
@@ -199,10 +205,11 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
     MEMZERO(outVal, outValLen);
     MEMZERO(bufferUI, sizeof(bufferUI));
 
-    const char *amountPtr = parser_tx_obj.tx_json.tx + parser_tx_obj.tx_json.json.tokens[amountToken + 2].start;
-    if (parser_tx_obj.tx_json.json.tokens[amountToken + 2].start < 0) {
+    if (parser_tx_obj.tx_json.json.tokens[amountToken + 2].start < 0 || 
+        parser_tx_obj.tx_json.json.tokens[amountToken + 4].start < 0) {
         return parser_unexpected_buffer_end;
     }
+    const char *amountPtr = parser_tx_obj.tx_json.tx + parser_tx_obj.tx_json.json.tokens[amountToken + 2].start;
 
     const int32_t amountLen = parser_tx_obj.tx_json.json.tokens[amountToken + 2].end -
                               parser_tx_obj.tx_json.json.tokens[amountToken + 2].start;
@@ -228,7 +235,9 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
 
     snprintf(bufferUI, sizeof(bufferUI), "%s ", tmpAmount);
     // If denomination has been recognized format and replace
-    if (is_default_denom_base(denomPtr, denomLen)) {
+    bool is_default =false;
+    CHECK_PARSER_ERR(is_default_denom_base(denomPtr, denomLen, &is_default))
+    if (is_default) {
         if (fpstr_to_str(bufferUI, sizeof(bufferUI), tmpAmount, COIN_DEFAULT_DENOM_FACTOR) != 0) {
             return parser_unexpected_error;
         }

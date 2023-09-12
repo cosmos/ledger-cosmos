@@ -301,7 +301,9 @@ parser_error_t tx_indexRootFields() {
     CHECK_PARSER_ERR(calculate_is_default_chainid())
 
     // turn off grouping if we are not in expert mode
-    if (tx_is_expert_mode()) {
+    bool is_expert_or_default = false;
+    CHECK_PARSER_ERR(tx_is_expert_mode_or_not_default_chainid(&is_expert_or_default))
+    if (is_expert_or_default) {
         parser_tx_obj.tx_json.flags.msg_from_grouping = 0;
     }
 
@@ -314,27 +316,37 @@ parser_error_t tx_indexRootFields() {
     return parser_ok;
 }
 
-__Z_INLINE bool is_default_chainid() {
+__Z_INLINE parser_error_t is_default_chainid(bool *is_default) {
     CHECK_PARSER_ERR(tx_indexRootFields())
-    return display_cache.is_default_chain;
+    *is_default = display_cache.is_default_chain;
+
+    return parser_ok;
 }
 
-bool tx_is_expert_mode() {
-    return app_mode_expert() || !is_default_chainid();
+parser_error_t tx_is_expert_mode_or_not_default_chainid(bool *expert_or_default) {
+    bool is_default = false;
+    CHECK_PARSER_ERR(is_default_chainid(&is_default))
+    *expert_or_default = app_mode_expert() || !is_default;
+
+    return parser_ok;
 }
 
-__Z_INLINE uint8_t get_subitem_count(root_item_e root_item) {
+__Z_INLINE parser_error_t get_subitem_count(root_item_e root_item, uint8_t *num_items) {
     CHECK_PARSER_ERR(tx_indexRootFields())
-    if (display_cache.total_item_count == 0)
-        return 0;
+    if (display_cache.total_item_count == 0) {
+        *num_items = 0;
+        return parser_ok;
+    }
 
     int32_t tmp_num_items = display_cache.root_item_number_subitems[root_item];
-
+    bool is_expert_or_default = false;
+    
     switch (root_item) {
         case root_item_chain_id:
         case root_item_sequence:
         case root_item_account_number:
-            if (!tx_is_expert_mode()) {
+            CHECK_PARSER_ERR(tx_is_expert_mode_or_not_default_chainid(&is_expert_or_default))
+            if (!is_expert_or_default) {
                 tmp_num_items = 0;
             }
             break;
@@ -355,7 +367,8 @@ __Z_INLINE uint8_t get_subitem_count(root_item_e root_item) {
         case root_item_memo:
             break;
         case root_item_fee:
-            if (!tx_is_expert_mode()) {
+            CHECK_PARSER_ERR(tx_is_expert_mode_or_not_default_chainid(&is_expert_or_default))
+            if (!is_expert_or_default) {
                 tmp_num_items = 1;     // Only Amount
             }
             break;
@@ -365,8 +378,9 @@ __Z_INLINE uint8_t get_subitem_count(root_item_e root_item) {
         default:
             break;
     }
+    *num_items = tmp_num_items;
 
-    return tmp_num_items;
+    return parser_ok;
 }
 
 __Z_INLINE parser_error_t retrieve_tree_indexes(uint8_t display_index, root_item_e *root_item, uint8_t *subitem_index) {
@@ -374,19 +388,28 @@ __Z_INLINE parser_error_t retrieve_tree_indexes(uint8_t display_index, root_item
     // consume indexed subpages until we get the item index in the subpage
     *root_item = 0;
     *subitem_index = 0;
-    while (get_subitem_count(*root_item) == 0) {
+    uint8_t num_items;
+
+    CHECK_PARSER_ERR(get_subitem_count(*root_item, &num_items));
+    while (num_items == 0) {
         (*root_item)++;
+        CHECK_PARSER_ERR(get_subitem_count(*root_item, &num_items));
     }
 
     for (uint16_t i = 0; i < display_index; i++) {
         (*subitem_index)++;
-        const uint8_t subitem_count = get_subitem_count(*root_item);
+        uint8_t subitem_count = 0;
+        CHECK_PARSER_ERR(get_subitem_count(*root_item, &subitem_count));
         if (*subitem_index >= subitem_count) {
             // Advance root index and skip empty items
             *subitem_index = 0;
             (*root_item)++;
-            while (get_subitem_count(*root_item) == 0) {
+
+            uint8_t num_items_2 = 0;
+            CHECK_PARSER_ERR(get_subitem_count(*root_item, &num_items_2));
+            while (num_items_2 == 0) {
                 (*root_item)++;
+                CHECK_PARSER_ERR(get_subitem_count(*root_item, &num_items_2));
             }
         }
     }
@@ -403,8 +426,10 @@ parser_error_t tx_display_numItems(uint8_t *num_items) {
     CHECK_PARSER_ERR(tx_indexRootFields())
 
     *num_items = 0;
+    uint8_t n_items = 0;
     for (root_item_e root_item = 0; root_item < NUM_REQUIRED_ROOT_PAGES; root_item++) {
-        *num_items += get_subitem_count(root_item);
+        CHECK_PARSER_ERR( get_subitem_count(root_item, &n_items))
+        *num_items += n_items;
     }
 
     return parser_ok;
@@ -419,7 +444,7 @@ parser_error_t tx_display_query(uint16_t displayIdx,
     uint8_t num_items;
     CHECK_PARSER_ERR(tx_display_numItems(&num_items))
 
-    if (displayIdx < 0 || displayIdx >= num_items) {
+    if (displayIdx >= num_items) {
         return parser_display_idx_out_of_range;
     }
 

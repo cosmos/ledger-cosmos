@@ -36,7 +36,7 @@ typedef enum {
     root_item_tip,
 } root_item_e;
 
-bool tx_is_expert_mode();
+parser_error_t tx_is_expert_mode_or_not_default_chainid(bool *expert_or_default);
 
 const char *get_required_root_item(root_item_e i);
 
