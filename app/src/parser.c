@@ -467,7 +467,7 @@ __Z_INLINE parser_error_t parser_getJsonItem(const parser_context_t *ctx,
         return parser_unexpected_number_items;
     }
 
-    if (displayIdx < 0 || displayIdx >= numItems) {
+    if (displayIdx >= numItems) {
         return parser_display_idx_out_of_range;
     }
 
