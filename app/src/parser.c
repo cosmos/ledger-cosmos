@@ -338,6 +338,9 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
 
     //Translate output, cpy to tmp to assure it ends in \0
     MEMZERO(tmp, tmp_len);
+    if(container->screen.contentPtr == NULL) {
+        return parser_unexpected_value;
+    }
     MEMCPY(tmp, container->screen.contentPtr, container->screen.contentLen);
     CHECK_PARSER_ERR(tx_display_translation(out, sizeof(out), tmp,container->screen.contentLen))
 
@@ -353,6 +356,9 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
         }
 
         MEMZERO(ctx->tx_obj->tx_text.tmpBuffer, sizeof(ctx->tx_obj->tx_text.tmpBuffer));
+        if(container->screen.titlePtr == NULL) {
+            return parser_unexpected_value;
+        }
         MEMCPY(tmp, container->screen.titlePtr, container->screen.titleLen);
         MEMCPY(tmp + container->screen.titleLen,": ",2);
         MEMCPY(tmp + container->screen.titleLen + 2, out, sizeof(out) - container->screen.titleLen -2);
@@ -363,6 +369,9 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
 
     //Normal print case - Prepare title
     char key[MAX_TITLE_SIZE + 2] = {0};
+    if(container->screen.titlePtr == NULL) {
+        return parser_unexpected_value;
+    }
     MEMCPY(key, container->screen.titlePtr, container->screen.titleLen);
     for (uint8_t i = 0; i < container->screen.indent; i++) {
         z_str3join(key, sizeof(key), SCREEN_INDENT, "");
@@ -446,6 +455,16 @@ __Z_INLINE parser_error_t parser_getTextualItem(const parser_context_t *ctx,
     container.screen.indent = 0;
     container.screen.expert = false;
     CHECK_PARSER_ERR(parser_getScreenInfo(ctx, &container, displayIdx))
+
+    // title and content can be Null depending on the screen for chain id they cant be null
+    if (container.screen.titlePtr != NULL && container.screen.contentPtr != NULL) {
+        if (!strncmp(container.screen.titlePtr, "Chain id", container.screen.titleLen)){
+            if(!strncmp(container.screen.contentPtr, "0", container.screen.contentLen) ||
+               !strncmp(container.screen.contentPtr, "1", container.screen.contentLen)) {
+                return parser_unexpected_chain;
+         }
+     }
+    }
 
     if (!app_mode_expert()) {
         CHECK_PARSER_ERR(parser_getNextNonExpert(ctx, &container, displayIdx))

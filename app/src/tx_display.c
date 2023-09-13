@@ -131,6 +131,9 @@ __Z_INLINE parser_error_t calculate_is_default_chainid() {
         // If we don't match the default chainid, switch to expert mode
         display_cache.is_default_chain = true;
         zemu_log_stack("DEFAULT Chain ");
+    } else if ((outVal[0] == 0x30 || outVal[0] == 0x31) && strlen(outVal) == 1) {
+        zemu_log_stack("Not Allowed chain");
+        return parser_unexpected_chain;
     } else {
         zemu_log_stack("Chain is NOT DEFAULT");
     }
