@@ -90,75 +90,85 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
     return tx_display_numItems(num_items);
 }
 
-__Z_INLINE bool_t parser_areEqual(uint16_t tokenIdx, const char *expected) {
+__Z_INLINE bool parser_areEqual(uint16_t tokenIdx, const char *expected) {
     if (parser_tx_obj.tx_json.json.tokens[tokenIdx].type != JSMN_STRING) {
-        return bool_false;
+        return false;
     }
 
     int32_t len = parser_tx_obj.tx_json.json.tokens[tokenIdx].end - parser_tx_obj.tx_json.json.tokens[tokenIdx].start;
     if (len < 0) {
-        return bool_false;
+        return false;
     }
 
     if (strlen(expected) != (size_t) len) {
-        return bool_false;
+        return false;
     }
 
     const char *p = parser_tx_obj.tx_json.tx + parser_tx_obj.tx_json.json.tokens[tokenIdx].start;
     for (int32_t i = 0; i < len; i++) {
         if (expected[i] != *(p + i)) {
-            return bool_false;
+            return false;
         }
     }
 
-    return bool_true;
+    return true;
 }
 
-__Z_INLINE bool_t parser_isAmount(char *key) {
+__Z_INLINE bool parser_isAmount(char *key) {
     if (strcmp(key, "fee/amount") == 0) {
-        return bool_true;
+        return true;
     }
 
     if (strcmp(key, "msgs/inputs/coins") == 0) {
-        return bool_true;
+        return true;
     }
 
     if (strcmp(key, "msgs/outputs/coins") == 0) {
-        return bool_true;
+        return true;
     }
 
     if (strcmp(key, "msgs/value/inputs/coins") == 0) {
-        return bool_true;
+        return true;
     }
 
     if (strcmp(key, "msgs/value/outputs/coins") == 0) {
-        return bool_true;
+        return true;
     }
 
     if (strcmp(key, "msgs/value/amount") == 0) {
-        return bool_true;
+        return true;
     }
 
     if (strcmp(key, "tip/amount") == 0) {
-        return bool_true;
+        return true;
     }
 
-    return bool_false;
+    return false;
 }
 
-__Z_INLINE bool_t is_default_denom_base(const char *denom, uint8_t denom_len) {
-    if (tx_is_expert_mode()) {
-        return false;
+__Z_INLINE parser_error_t is_default_denom_base(const char *denom, uint8_t denom_len, bool *is_default) {
+    if (is_default == NULL) {
+        return parser_unexpected_value;
+    }
+
+    bool is_expert_or_default = false;
+    CHECK_PARSER_ERR(tx_is_expert_mode_or_not_default_chainid(&is_expert_or_default))
+    if (is_expert_or_default) {
+        *is_default = false;
+        return parser_ok;
     }
 
     if (strlen(COIN_DEFAULT_DENOM_BASE) != denom_len) {
-        return bool_false;
+        *is_default = false;
+        return parser_ok;
     }
 
-    if (memcmp(denom, COIN_DEFAULT_DENOM_BASE, denom_len) == 0)
-        return bool_true;
+    if (memcmp(denom, COIN_DEFAULT_DENOM_BASE, denom_len) == 0) {
+        *is_default = true;
+        return parser_ok;
+    }
 
-    return bool_false;
+    return parser_ok;
 }
 
 __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
@@ -199,10 +209,11 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
     MEMZERO(outVal, outValLen);
     MEMZERO(bufferUI, sizeof(bufferUI));
 
-    const char *amountPtr = parser_tx_obj.tx_json.tx + parser_tx_obj.tx_json.json.tokens[amountToken + 2].start;
-    if (parser_tx_obj.tx_json.json.tokens[amountToken + 2].start < 0) {
+    if (parser_tx_obj.tx_json.json.tokens[amountToken + 2].start < 0 ||
+        parser_tx_obj.tx_json.json.tokens[amountToken + 4].start < 0) {
         return parser_unexpected_buffer_end;
     }
+    const char *amountPtr = parser_tx_obj.tx_json.tx + parser_tx_obj.tx_json.json.tokens[amountToken + 2].start;
 
     const int32_t amountLen = parser_tx_obj.tx_json.json.tokens[amountToken + 2].end -
                               parser_tx_obj.tx_json.json.tokens[amountToken + 2].start;
@@ -228,7 +239,9 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
 
     snprintf(bufferUI, sizeof(bufferUI), "%s ", tmpAmount);
     // If denomination has been recognized format and replace
-    if (is_default_denom_base(denomPtr, denomLen)) {
+    bool is_default =false;
+    CHECK_PARSER_ERR(is_default_denom_base(denomPtr, denomLen, &is_default))
+    if (is_default) {
         if (fpstr_to_str(bufferUI, sizeof(bufferUI), tmpAmount, COIN_DEFAULT_DENOM_FACTOR) != 0) {
             return parser_unexpected_error;
         }
@@ -253,7 +266,7 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
     }
 
     uint8_t totalPages = 0;
-    bool_t showItemSet = false;
+    uint8_t showItemSet = 0;
     uint8_t showPageIdx = pageIdx;
     uint16_t showItemTokenIdx = 0;
 
@@ -274,7 +287,7 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
 
         if (!showItemSet) {
             if (showPageIdx < subpagesCount) {
-                showItemSet = true;
+                showItemSet = 1;
                 showItemTokenIdx = itemTokenIdx;
                 ZEMU_LOGF(200, "[formatAmount] [%d] [SET] TokenIdx %d - PageIdx: %d", i, showItemTokenIdx,
                           showPageIdx)
@@ -329,6 +342,9 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
 
     //Translate output, cpy to tmp to assure it ends in \0
     MEMZERO(tmp, tmp_len);
+    if(container->screen.contentPtr == NULL) {
+        return parser_unexpected_value;
+    }
     MEMCPY(tmp, container->screen.contentPtr, container->screen.contentLen);
     CHECK_PARSER_ERR(tx_display_translation(out, sizeof(out), tmp,container->screen.contentLen))
 
@@ -344,6 +360,9 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
         }
 
         MEMZERO(ctx->tx_obj->tx_text.tmpBuffer, sizeof(ctx->tx_obj->tx_text.tmpBuffer));
+        if(container->screen.titlePtr == NULL) {
+            return parser_unexpected_value;
+        }
         MEMCPY(tmp, container->screen.titlePtr, container->screen.titleLen);
         MEMCPY(tmp + container->screen.titleLen,": ",2);
         MEMCPY(tmp + container->screen.titleLen + 2, out, sizeof(out) - container->screen.titleLen -2);
@@ -354,6 +373,9 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
 
     //Normal print case - Prepare title
     char key[MAX_TITLE_SIZE + 2] = {0};
+    if(container->screen.titlePtr == NULL) {
+        return parser_unexpected_value;
+    }
     MEMCPY(key, container->screen.titlePtr, container->screen.titleLen);
     for (uint8_t i = 0; i < container->screen.indent; i++) {
         z_str3join(key, sizeof(key), SCREEN_INDENT, "");
@@ -438,6 +460,16 @@ __Z_INLINE parser_error_t parser_getTextualItem(const parser_context_t *ctx,
     container.screen.expert = false;
     CHECK_PARSER_ERR(parser_getScreenInfo(ctx, &container, displayIdx))
 
+    // title and content can be Null depending on the screen for chain id they cant be null
+    if (container.screen.titlePtr != NULL && container.screen.contentPtr != NULL) {
+        if (!strncmp(container.screen.titlePtr, "Chain id", container.screen.titleLen)){
+            if(!strncmp(container.screen.contentPtr, "0", container.screen.contentLen) ||
+               !strncmp(container.screen.contentPtr, "1", container.screen.contentLen)) {
+                return parser_unexpected_chain;
+         }
+     }
+    }
+
     if (!app_mode_expert()) {
         CHECK_PARSER_ERR(parser_getNextNonExpert(ctx, &container, displayIdx))
     }
@@ -467,7 +499,7 @@ __Z_INLINE parser_error_t parser_getJsonItem(const parser_context_t *ctx,
         return parser_unexpected_number_items;
     }
 
-    if (displayIdx < 0 || displayIdx >= numItems) {
+    if (displayIdx >= numItems) {
         return parser_display_idx_out_of_range;
     }
 

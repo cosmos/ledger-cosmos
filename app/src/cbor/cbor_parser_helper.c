@@ -35,6 +35,9 @@ parser_error_t parser_mapCborError(CborError err) {
 }
 
 static parser_error_t cbor_check_optFields(CborValue *data, Cbor_container *container) {
+    if (data == NULL || container == NULL) { 
+        return parser_unexpected_value;
+    }
     int key;
     for (size_t i = 0; i < container->n_field; i++) {
 
@@ -67,6 +70,10 @@ static parser_error_t cbor_check_optFields(CborValue *data, Cbor_container *cont
 }
 
 static parser_error_t cbor_check_screen(CborValue *data, Cbor_container *container) {
+    if (data == NULL || container == NULL) { 
+        return parser_unexpected_value;
+    }
+
     int screen_key;
     //check title Key
     PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(data), parser_unexpected_type)

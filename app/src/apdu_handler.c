@@ -63,6 +63,7 @@ __Z_INLINE void handle_getversion(__Z_UNUSED volatile uint32_t *flags, volatile 
 }
 
 __Z_INLINE uint8_t extractHRP(uint32_t rx, uint32_t offset) {
+    uint8_t hrp_len = 0;
     if (rx < offset + 1) {
         THROW(APDU_CODE_DATA_INVALID);
     }
@@ -77,10 +78,15 @@ __Z_INLINE uint8_t extractHRP(uint32_t rx, uint32_t offset) {
     memcpy(bech32_hrp, G_io_apdu_buffer + offset + 1, bech32_hrp_len);
     bech32_hrp[bech32_hrp_len] = 0;     // zero terminate
 
-    return bech32_hrp_len;
+    hrp_len = bech32_hrp_len;
+    return hrp_len;
 }
 
 __Z_INLINE void extractHDPath(uint32_t rx, uint32_t offset) {
+    if (rx < offset + 1) {
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
     if ((rx - offset) < sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
@@ -110,8 +116,8 @@ static void extractHDPath_HRP(uint32_t rx, uint32_t offset) {
 
     // Check if HRP was sent
     if ((rx - offset) > sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
-        extractHRP(rx, offset + sizeof(uint32_t) * HDPATH_LEN_DEFAULT);
-        encoding = checkChainConfig(hdPath[1], bech32_hrp, bech32_hrp_len);
+        uint8_t hrp_bech32_len = extractHRP(rx, offset + sizeof(uint32_t) * HDPATH_LEN_DEFAULT);
+        encoding = checkChainConfig(hdPath[1], bech32_hrp, hrp_bech32_len);
         if (encoding == UNSUPPORTED) {
             ZEMU_LOGF(50, "Chain config not supported for: %s\n", bech32_hrp)
             THROW(APDU_CODE_COMMAND_NOT_ALLOWED);

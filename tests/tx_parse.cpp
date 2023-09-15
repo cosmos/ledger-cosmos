@@ -26,7 +26,7 @@ namespace {
 #pragma ide diagnostic ignored "ConstantParameter"
     parser_error_t tx_traverse(int16_t root_token_index, uint8_t *numChunks) {
         uint16_t ret_value_token_index = 0;
-        parser_error_t err = tx_traverse_find(root_token_index, &ret_value_token_index);
+        const parser_error_t err = tx_traverse_find(root_token_index, &ret_value_token_index);
 
         if (err != parser_ok){
             return err;
@@ -127,7 +127,7 @@ namespace {
     }
 
     TEST(TxParse, Count_Minimal) {
-        auto transaction = R"({"account_number":"0"})";
+        auto transaction = R"({"account_number":"3"})";
 
         parser_tx_obj.tx_json.tx = transaction;
         parser_tx_obj.tx_json.flags.cache_valid = false;
@@ -140,12 +140,25 @@ namespace {
         EXPECT_EQ(1, numItems) << "Wrong number of items";
     }
 
+    TEST(TxParse, Tx_Chain_not_Allowed) {
+        auto transaction = R"({"account_number":"0","chain_id":"0","fee":{"amount":[{"amount":"5","denom":"photon"}],"gas":"10000"},"memo":"testmemo","msgs":[{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]}],"sequence":"1"})";
+
+        parser_tx_obj.tx_json.tx = transaction;
+        parser_tx_obj.tx_json.flags.cache_valid = false;
+        parser_error_t err = JSON_PARSE(&parser_tx_obj.tx_json.json, parser_tx_obj.tx_json.tx);
+        EXPECT_EQ(err, parser_ok);
+
+        uint8_t numItems;
+        parser_error_t err2 = tx_display_numItems(&numItems);
+        EXPECT_EQ(err2, parser_unexpected_chain);
+    }
+
     TEST(TxParse, Tx_Page_Count) {
         auto transaction = R"({"account_number":"0","chain_id":"test-chain-1","fee":{"amount":[{"amount":"5","denom":"photon"}],"gas":"10000"},"memo":"testmemo","msgs":[{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]}],"sequence":"1"})";
 
         parser_tx_obj.tx_json.tx = transaction;
         parser_tx_obj.tx_json.flags.cache_valid = false;
-        parser_error_t err = JSON_PARSE(&parser_tx_obj.tx_json.json, parser_tx_obj.tx_json.tx);
+        const parser_error_t err = JSON_PARSE(&parser_tx_obj.tx_json.json, parser_tx_obj.tx_json.tx);
         EXPECT_EQ(err, parser_ok);
 
         uint8_t numItems;

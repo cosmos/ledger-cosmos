@@ -3,6 +3,7 @@
 #include <cstdio>
 
 #include "parser.h"
+#include "zxformat.h"
 
 
 #ifdef NDEBUG
@@ -11,22 +12,27 @@
 
 
 using std::size_t;
+namespace {
+    char PARSER_KEY[16384];
+    char PARSER_VALUE[16384];
+}
 
-static char PARSER_KEY[16384];
-static char PARSER_VALUE[16384];
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     parser_context_t ctx;
     parser_error_t rc;
+    parser_tx_t tx_obj;
 
+    MEMZERO(&tx_obj, sizeof(tx_obj));
     char buffer[1000];
     array_to_hexstr(buffer, sizeof(buffer), data, size);
-    fprintf(stderr, "%s\n", buffer);
+    
+    (void)fprintf(stderr, "%s\n", buffer);
 
-    fprintf(stderr, "----------------------------------------------\n");
+    (void)fprintf(stderr, "----------------------------------------------\n");
 
-    rc = parser_parse(&ctx, data, size);
+    rc = parser_parse(&ctx, data, size, &tx_obj);
     if (rc != parser_ok) {
         return 0;
     }
@@ -39,7 +45,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     uint8_t num_items;
     rc = parser_getNumItems(&ctx, &num_items);
     if (rc != parser_ok) {
-        fprintf(stderr,
+        (void)fprintf(stderr,
                 "error in parser_getNumItems: %s\n",
                 parser_getErrorDescription(rc));
         assert(false);
@@ -57,7 +63,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 //            fprintf(stderr, "%s = %s\n", PARSER_KEY, PARSER_VALUE);
 
             if (rc != parser_ok) {
-                fprintf(stderr,
+                (void)fprintf(stderr,
                         "error getting item %u at page index %u: %s\n",
                         (unsigned)i,
                         (unsigned)page_idx,

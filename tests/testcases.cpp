@@ -21,11 +21,11 @@
 std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile) {
     auto answer = std::vector<testcase_t>();
 
-    Json::CharReaderBuilder builder;
-    std::shared_ptr<Json::Value> obj(new Json::Value());
+    const Json::CharReaderBuilder builder;
+    const std::shared_ptr<Json::Value> obj(new Json::Value());
 
 
-    std::string fullPathJsonFile = std::string(TESTVECTORS_DIR) + jsonFile;
+    const std::string fullPathJsonFile = std::string(TESTVECTORS_DIR) + jsonFile;
 
     std::ifstream inFile(fullPathJsonFile);
     if (!inFile.is_open()) {
@@ -44,7 +44,7 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile) {
         Json::StreamWriterBuilder wbuilder;
         wbuilder["commentStyle"] = "None";
         wbuilder["indentation"] = "";
-        std::string txStr = Json::writeString(wbuilder, v["tx"]);
+        const std::string txStr = Json::writeString(wbuilder, v["tx"]);
 
         auto expected = std::vector<std::string>();
         for (const auto j : v["expected"]) {
@@ -73,10 +73,10 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile) {
 std::vector<testcase_t> GetJsonTextualTestCases(const std::string &jsonFile) {
      auto answer = std::vector<testcase_t>();
 
-    Json::CharReaderBuilder builder;
+    const Json::CharReaderBuilder builder;
     Json::Value obj;
 
-    std::string fullPathJsonFile = std::string(TESTVECTORS_DIR) + jsonFile;
+    const std::string fullPathJsonFile = std::string(TESTVECTORS_DIR) + jsonFile;
 
     std::ifstream inFile(fullPathJsonFile);
     if (!inFile.is_open()) {
