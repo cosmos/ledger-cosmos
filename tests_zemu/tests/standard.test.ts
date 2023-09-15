@@ -87,6 +87,7 @@ describe('Standard', function () {
 
       expect(resp.bech32_address).toEqual('cosmos1wkd9tfm5pqvhhaxq77wv9tvjcsazuaykwsld65')
       expect(resp.compressed_pk.length).toEqual(33)
+      expect(resp.compressed_pk.toString("hex")).toEqual('035c986b9ae5fbfb8e1e9c12c817f5ef8fdb821cdecaa407f1420ec4f8f1d766bf')
     } finally {
       await sim.close()
     }
@@ -121,6 +122,7 @@ describe('Standard', function () {
 
       expect(resp.bech32_address).toEqual('cosmos1wkd9tfm5pqvhhaxq77wv9tvjcsazuaykwsld65')
       expect(resp.compressed_pk.length).toEqual(33)
+      expect(resp.compressed_pk.toString("hex")).toEqual('035c986b9ae5fbfb8e1e9c12c817f5ef8fdb821cdecaa407f1420ec4f8f1d766bf')
     } finally {
       await sim.close()
     }

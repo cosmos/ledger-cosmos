@@ -320,6 +320,10 @@ parser_error_t tx_indexRootFields() {
 }
 
 __Z_INLINE parser_error_t is_default_chainid(bool *is_default) {
+    if (is_default == NULL) {
+        return parser_unexpected_value;
+    }
+    
     CHECK_PARSER_ERR(tx_indexRootFields())
     *is_default = display_cache.is_default_chain;
 
@@ -327,6 +331,10 @@ __Z_INLINE parser_error_t is_default_chainid(bool *is_default) {
 }
 
 parser_error_t tx_is_expert_mode_or_not_default_chainid(bool *expert_or_default) {
+    if (expert_or_default == NULL) {
+        return parser_unexpected_value;
+    }
+
     bool is_default = false;
     CHECK_PARSER_ERR(is_default_chainid(&is_default))
     *expert_or_default = app_mode_expert() || !is_default;
@@ -335,6 +343,10 @@ parser_error_t tx_is_expert_mode_or_not_default_chainid(bool *expert_or_default)
 }
 
 __Z_INLINE parser_error_t get_subitem_count(root_item_e root_item, uint8_t *num_items) {
+    if (num_items == NULL) {
+        return parser_unexpected_value;
+    }
+
     CHECK_PARSER_ERR(tx_indexRootFields())
     if (display_cache.total_item_count == 0) {
         *num_items = 0;

@@ -186,7 +186,7 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrR
         case BECH32_COSMOS: {
             // Hash it
             cx_hash_sha256(buffer, PK_LEN_SECP256K1, hashed1_pk, CX_SHA256_SIZE);
-            uint8_t hashed2_pk[CX_RIPEMD160_SIZE];
+            uint8_t hashed2_pk[CX_RIPEMD160_SIZE] = {0};
             ripemd160_32(hashed2_pk, hashed1_pk);
             CHECK_ZXERR(bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE, 1, BECH32_ENCODING_BECH32))
             break;

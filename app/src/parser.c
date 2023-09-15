@@ -90,63 +90,67 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
     return tx_display_numItems(num_items);
 }
 
-__Z_INLINE bool_t parser_areEqual(uint16_t tokenIdx, const char *expected) {
+__Z_INLINE bool parser_areEqual(uint16_t tokenIdx, const char *expected) {
     if (parser_tx_obj.tx_json.json.tokens[tokenIdx].type != JSMN_STRING) {
-        return bool_false;
+        return false;
     }
 
     int32_t len = parser_tx_obj.tx_json.json.tokens[tokenIdx].end - parser_tx_obj.tx_json.json.tokens[tokenIdx].start;
     if (len < 0) {
-        return bool_false;
+        return false;
     }
 
     if (strlen(expected) != (size_t) len) {
-        return bool_false;
+        return false;
     }
 
     const char *p = parser_tx_obj.tx_json.tx + parser_tx_obj.tx_json.json.tokens[tokenIdx].start;
     for (int32_t i = 0; i < len; i++) {
         if (expected[i] != *(p + i)) {
-            return bool_false;
+            return false;
         }
     }
 
-    return bool_true;
+    return true;
 }
 
-__Z_INLINE bool_t parser_isAmount(char *key) {
+__Z_INLINE bool parser_isAmount(char *key) {
     if (strcmp(key, "fee/amount") == 0) {
-        return bool_true;
+        return true;
     }
 
     if (strcmp(key, "msgs/inputs/coins") == 0) {
-        return bool_true;
+        return true;
     }
 
     if (strcmp(key, "msgs/outputs/coins") == 0) {
-        return bool_true;
+        return true;
     }
 
     if (strcmp(key, "msgs/value/inputs/coins") == 0) {
-        return bool_true;
+        return true;
     }
 
     if (strcmp(key, "msgs/value/outputs/coins") == 0) {
-        return bool_true;
+        return true;
     }
 
     if (strcmp(key, "msgs/value/amount") == 0) {
-        return bool_true;
+        return true;
     }
 
     if (strcmp(key, "tip/amount") == 0) {
-        return bool_true;
+        return true;
     }
 
-    return bool_false;
+    return false;
 }
 
 __Z_INLINE parser_error_t is_default_denom_base(const char *denom, uint8_t denom_len, bool *is_default) {
+    if (is_default == NULL) {
+        return parser_unexpected_value;
+    }
+
     bool is_expert_or_default = false;
     CHECK_PARSER_ERR(tx_is_expert_mode_or_not_default_chainid(&is_expert_or_default))
     if (is_expert_or_default) {
@@ -155,12 +159,12 @@ __Z_INLINE parser_error_t is_default_denom_base(const char *denom, uint8_t denom
     }
 
     if (strlen(COIN_DEFAULT_DENOM_BASE) != denom_len) {
-        *is_default = bool_false;
+        *is_default = false;
         return parser_ok;
     }
 
     if (memcmp(denom, COIN_DEFAULT_DENOM_BASE, denom_len) == 0) {
-        *is_default = bool_true;
+        *is_default = true;
         return parser_ok;
     }
 
@@ -205,7 +209,7 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
     MEMZERO(outVal, outValLen);
     MEMZERO(bufferUI, sizeof(bufferUI));
 
-    if (parser_tx_obj.tx_json.json.tokens[amountToken + 2].start < 0 || 
+    if (parser_tx_obj.tx_json.json.tokens[amountToken + 2].start < 0 ||
         parser_tx_obj.tx_json.json.tokens[amountToken + 4].start < 0) {
         return parser_unexpected_buffer_end;
     }
@@ -262,7 +266,7 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
     }
 
     uint8_t totalPages = 0;
-    bool_t showItemSet = false;
+    uint8_t showItemSet = 0;
     uint8_t showPageIdx = pageIdx;
     uint16_t showItemTokenIdx = 0;
 
@@ -283,7 +287,7 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
 
         if (!showItemSet) {
             if (showPageIdx < subpagesCount) {
-                showItemSet = true;
+                showItemSet = 1;
                 showItemTokenIdx = itemTokenIdx;
                 ZEMU_LOGF(200, "[formatAmount] [%d] [SET] TokenIdx %d - PageIdx: %d", i, showItemTokenIdx,
                           showPageIdx)
