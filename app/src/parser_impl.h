@@ -26,17 +26,26 @@ extern "C" {
 #endif
 
 typedef struct {
+    const uint8_t *buffer;
+    uint16_t bufferLen;
+    uint16_t offset;
+    parser_tx_t *tx_obj;
+} parser_context_t;
+
+typedef struct {
     char str1[50];
     char str2[50];
 } key_subst_t;
 
+typedef struct {
+    char ascii_code;
+    char str;
+} ascii_subst_t;
+
 extern parser_tx_t parser_tx_obj;
 
-parser_error_t parser_init(parser_context_t *ctx,
-                           const uint8_t *buffer,
-                           size_t bufferSize);
-
-parser_error_t _readTx(parser_context_t *c, parser_tx_t *v);
+parser_error_t _read_json_tx(parser_context_t *c, parser_tx_t *v);
+parser_error_t _read_text_tx(parser_context_t *c, parser_tx_t *v);
 
 #ifdef __cplusplus
 }

@@ -21,8 +21,30 @@ extern "C" {
 
 #include <stdint.h>
 #include <stddef.h>
-
 #include <json/json_parser.h>
+#include "coin.h"
+#include "cbor.h"
+
+#define MAX_NUMBER_SCREENS 50
+#define TITLE_KEY_ID    1
+#define CONTENT_KEY_ID  2
+#define INDENT_KEY_ID   3
+#define EXPERT_KEY_ID   4
+
+typedef struct screen_arg_t {
+    char *titlePtr;
+    size_t titleLen;
+    char *contentPtr;
+    size_t contentLen;
+    uint8_t indent;
+    bool expert;
+} screen_arg_t;
+
+typedef struct tx_textual_t{
+    size_t n_containers;
+    uint8_t n_expert;
+    uint8_t tmpBuffer[625];
+} tx_textual_t;
 
 typedef struct {
     // These are internal values used for tracking the state of the query/search
@@ -46,9 +68,8 @@ typedef struct {
     int16_t out_val_len;
 } tx_query_t;
 
-
-
-typedef struct {
+typedef struct
+{
     // Buffer to the original tx blob
     const char *tx;
 
@@ -74,6 +95,16 @@ typedef struct {
 
     // current tx query
     tx_query_t query;
+}tx_json_t;
+
+
+typedef struct {
+    tx_type_e tx_type;
+
+     union {
+        tx_json_t tx_json;
+        tx_textual_t tx_text;
+     };
 } parser_tx_t;
 
 #ifdef __cplusplus

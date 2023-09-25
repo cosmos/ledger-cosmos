@@ -50,6 +50,7 @@ typedef enum {
     parser_unexpected_chain,
     parser_missing_field,
     parser_query_no_results,
+    parser_transaction_too_big,
     // Coin Specific
     parser_json_zero_tokens,
     parser_json_too_many_tokens,    // "NOMEM: JSON string contains too many tokens"
@@ -63,13 +64,16 @@ typedef enum {
     parser_json_missing_account_number,
     parser_json_missing_memo,
     parser_json_unexpected_error,
+    //cbor
+    parser_cbor_unexpected,
+    parser_cbor_unexpected_EOF,
+    parser_cbor_not_canonical,
+    // context
+    parser_context_mismatch,
+    parser_context_unexpected_size,
+    parser_context_invalid_chars,
+    parser_context_unknown_prefix,
 } parser_error_t;
-
-typedef struct {
-    const uint8_t *buffer;
-    uint16_t bufferLen;
-    uint16_t offset;
-} parser_context_t;
 
 #ifdef __cplusplus
 }
