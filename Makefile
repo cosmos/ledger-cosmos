@@ -1,5 +1,5 @@
 #*******************************************************************************
-#*   (c) 2019 Zondax GmbH
+#*   (c) 2019 - 2023 Zondax AG
 #*
 #*  Licensed under the Apache License, Version 2.0 (the "License");
 #*  you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 # BOLOS_SDK NOT DEFINED		We use a containerized build approach
 
 ifeq ($(BOLOS_SDK),)
+ZXLIB_COMPILE_STAX ?= 1
 include $(CURDIR)/deps/ledger-zxlib/dockerized_build.mk
 else
 default:
@@ -30,5 +31,5 @@ endif
 
 test_all:
 	make zemu_install
-	make clean_build && make
+	make
 	make zemu_test

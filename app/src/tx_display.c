@@ -1,7 +1,5 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "misc-no-recursion"
 /*******************************************************************************
-*   (c) 2018, 2019 Zondax GmbH
+*   (c) 2018 - 2023 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -15,6 +13,10 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
+#ifdef __cplusplus
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "misc-no-recursion"
+#endif
 
 #include "coin.h"
 #include "app_mode.h"
@@ -46,8 +48,10 @@ const char *get_required_root_item(root_item_e i) {
     }
 }
 
+#ifdef __cplusplus
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "bugprone-branch-clone"
+#endif
 
 __Z_INLINE uint8_t get_root_max_level(root_item_e i) {
     switch (i) {
@@ -70,7 +74,9 @@ __Z_INLINE uint8_t get_root_max_level(root_item_e i) {
     }
 }
 
+#ifdef __cplusplus
 #pragma clang diagnostic pop
+#endif
 
 typedef struct {
     bool root_item_start_token_valid[NUM_REQUIRED_ROOT_PAGES];
@@ -350,6 +356,7 @@ __Z_INLINE uint8_t get_subitem_count(root_item_e root_item) {
             if (!tx_is_expert_mode()) {
                 tmp_num_items = 1;     // Only Amount
             }
+            break;
         case root_item_tip:
             tmp_num_items += 0;
             break;
@@ -510,5 +517,6 @@ parser_error_t tx_display_make_friendly() {
     return parser_ok;
 }
 
-
+#ifdef __cplusplus
 #pragma clang diagnostic pop
+#endif

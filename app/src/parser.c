@@ -56,7 +56,7 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx __attribute__((unu
     return tx_display_numItems(num_items);
 }
 
-__Z_INLINE bool_t parser_areEqual(uint16_t tokenIdx, char *expected) {
+__Z_INLINE bool_t parser_areEqual(uint16_t tokenIdx, const char *expected) {
     if (parser_tx_obj.json.tokens[tokenIdx].type != JSMN_STRING) {
         return bool_false;
     }

@@ -29,9 +29,9 @@ extern "C" {
 #define MAX_BECH32_HRP_LEN      83u
 
 extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
-extern char *hrp;
-
-uint8_t extractHRP(uint32_t rx, uint32_t offset);
+extern char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
+extern uint8_t bech32_hrp_len;
+extern address_encoding_e encoding;
 
 void crypto_set_hrp(char *p);
 
