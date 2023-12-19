@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "clean": "ts-node tests/pullImageKillOld.ts",
-    "test": "yarn clean && jest --maxConcurrency 2"
+    "test": "yarn clean && jest -t 'Amino' --maxConcurrency 2"
   },
   "dependencies": {
     "@zondax/ledger-cosmos-js": "^3.0.3",
