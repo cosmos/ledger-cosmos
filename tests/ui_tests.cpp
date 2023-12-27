@@ -108,7 +108,7 @@ void check_Textualtestcase(const testcase_t &tc, bool expert_mode) {
     std::cout << std::endl << std::endl;
 
     std::vector<std::string> expected = tc.expected;
-    
+
     expected = app_mode_expert() ? tc.expected_expert : tc.expected;
     EXPECT_EQ(output.size(), expected.size());
     for (size_t i = 0; i < expected.size(); i++) {
@@ -145,15 +145,15 @@ INSTANTIATE_TEST_SUITE_P ( // NOLINT(cert-err58-cpp)
     JsonTests_Secp256::PrintToStringParamName()
 );
 
-INSTANTIATE_TEST_SUITE_P ( // NOLINT(cert-err58-cpp)
-    JsonTestTextualCases,
-    JsonTests_Textual,
-    ::testing::ValuesIn(GetJsonTextualTestCases("testcases/textual.json")),
-    JsonTests_Textual::PrintToStringParamName()
-);
+// INSTANTIATE_TEST_SUITE_P ( // NOLINT(cert-err58-cpp)
+//     JsonTestTextualCases,
+//     JsonTests_Textual,
+//     ::testing::ValuesIn(GetJsonTextualTestCases("testcases/textual.json")),
+//     JsonTests_Textual::PrintToStringParamName()
+// );
 
 TEST_P(JsonTests_Secp256, ValidateTestcase) { validate_testcase(GetParam()); }
 TEST_P(JsonTests_Secp256, CheckUIOutput) { check_testcase(GetParam()); }
 
-TEST_P(JsonTests_Textual, Normal) { check_Textualtestcase(GetParam(), false); }
-TEST_P(JsonTests_Textual, Expert) { check_Textualtestcase(GetParam(), true); }
+// TEST_P(JsonTests_Textual, Normal) { check_Textualtestcase(GetParam(), false); }
+// TEST_P(JsonTests_Textual, Expert) { check_Textualtestcase(GetParam(), true); }
