@@ -33,8 +33,8 @@ typedef struct {
 } parser_context_t;
 
 typedef struct {
-    char str1[50];
-    char str2[50];
+    const char *str1;
+    const char *str2;
 } key_subst_t;
 
 typedef struct {

@@ -203,18 +203,10 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
         THROW(APDU_CODE_DATA_INVALID);
     }
 
-    // Put address in output buffer, we will use it to confirm source address
-    zxerr_t zxerr = app_fill_address();
-    if (zxerr != zxerr_ok) {
-        *tx = 0;
-        THROW(APDU_CODE_DATA_INVALID);
-    }
-
     parser_tx_obj.tx_json.own_addr = (const char *) (G_io_apdu_buffer + VIEW_ADDRESS_OFFSET_SECP256K1);
     const char *error_msg = tx_parse(sign_type);
-
     if (error_msg != NULL) {
-        int error_msg_length = strlen(error_msg);
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
         THROW(APDU_CODE_DATA_INVALID);
