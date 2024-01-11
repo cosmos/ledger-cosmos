@@ -2174,7 +2174,7 @@
       "5 | Sender [2/2] : wcgvqa",
       "6 | Proposal ID : 44",
       "7 | Fee : 54 uatom",
-      "8 | Gas : 106309",
+      "8 | Gas Limit : 106309",
       "9 | Granter : cosmosaccaddr1d9h8xxxGRANTER",
       "10 | Payer : cosmosaccaddr1d9h8qatxxPAYER"
     ],

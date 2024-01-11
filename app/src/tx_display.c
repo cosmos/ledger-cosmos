@@ -323,7 +323,7 @@ __Z_INLINE parser_error_t is_default_chainid(bool *is_default) {
     if (is_default == NULL) {
         return parser_unexpected_value;
     }
-    
+
     CHECK_PARSER_ERR(tx_indexRootFields())
     *is_default = display_cache.is_default_chain;
 
@@ -355,7 +355,7 @@ __Z_INLINE parser_error_t get_subitem_count(root_item_e root_item, uint8_t *num_
 
     int32_t tmp_num_items = display_cache.root_item_number_subitems[root_item];
     bool is_expert_or_default = false;
-    
+
     switch (root_item) {
         case root_item_chain_id:
         case root_item_sequence:
@@ -508,6 +508,7 @@ static const key_subst_t key_substitutions[] = {
         {"memo",                              "Memo"},
         {"fee/amount",                        "Fee"},
         {"fee/gas",                           "Gas"},
+        {"fee/gas_limit",                     "Gas Limit"},
         {"fee/granter",                       "Granter"},
         {"fee/payer",                         "Payer"},
         {"msgs/type",                         "Type"},
@@ -550,9 +551,18 @@ parser_error_t tx_display_make_friendly() {
 
     // post process keys
     for (size_t i = 0; i < array_length(key_substitutions); i++) {
-        if (!strncmp(parser_tx_obj.tx_json.query.out_key, key_substitutions[i].str1, strlen(key_substitutions[i].str1))) {
-            strncpy_s(parser_tx_obj.tx_json.query.out_key, key_substitutions[i].str2, parser_tx_obj.tx_json.query.out_key_len);
-            break;
+        const char* str1 = (const char*) PIC(key_substitutions[i].str1);
+        const char* str2 = (const char*) PIC(key_substitutions[i].str2);
+        const uint16_t str1Len = strlen(str1);
+        const uint16_t str2Len = strlen(str2);
+
+
+        const uint16_t outKeyLen = strnlen(parser_tx_obj.tx_json.query.out_key, parser_tx_obj.tx_json.query.out_key_len);
+        if ((outKeyLen == str1Len && strncmp(parser_tx_obj.tx_json.query.out_key, str1, str1Len) == 0)
+            && parser_tx_obj.tx_json.query.out_key_len >= str2Len) {
+                MEMZERO(parser_tx_obj.tx_json.query.out_key, parser_tx_obj.tx_json.query.out_key_len);
+                MEMCPY(parser_tx_obj.tx_json.query.out_key, str2, str2Len);
+                break;
         }
     }
 

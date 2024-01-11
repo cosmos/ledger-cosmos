@@ -84,28 +84,29 @@ parser_error_t tx_getToken(uint16_t token_index,
 
     const char *inValue = parser_tx_obj.tx_json.tx + token_start;
     uint16_t inLen = token_end - token_start;
+
     // empty strings are considered the first page
     *pageCount = 1;
     if (inLen > 0) {
         for (uint32_t i = 0; i < array_length(value_substitutions); i++) {
-            const char *substStr = value_substitutions[i].str1;
-            const size_t substStrLen = strlen(substStr);
-            if (inLen == substStrLen && !MEMCMP(inValue, substStr, substStrLen)) {
-                inValue = value_substitutions[i].str2;
-                inLen = strlen(value_substitutions[i].str2);
+            const char* str1 = (const char*) PIC(value_substitutions[i].str1);
+            const char* str2 = (const char*) PIC(value_substitutions[i].str2);
+            const uint16_t str1Len = strlen(str1);
+            const uint16_t str2Len = strlen(str2);
+
+            if (inLen == str1Len && strncmp(inValue, str1, str1Len) == 0) {
+                inValue = str2;
+                inLen = str2Len;
 
                 //Extra Depth level for Multisend type
                 extraDepthLevel = false;
                 if (strstr(inValue, "Multi") != NULL) {
                     extraDepthLevel = true;
                 }
-
                 break;
             }
         }
-
         pageStringExt(out_val, out_val_len, inValue, inLen, pageIdx, pageCount);
-
     }
 
     if (pageIdx >= *pageCount) {
