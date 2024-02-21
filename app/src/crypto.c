@@ -1,5 +1,5 @@
 /*******************************************************************************
-*   (c) 2019 Zondax GmbH
+*   (c) 2023 Zondax AG
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -51,11 +51,11 @@ static zxerr_t crypto_extractUncompressedPublicKey(uint8_t *pubKey, uint16_t pub
                                                      privateKeyData,
                                                      NULL,
                                                      NULL,
-                                                     0))
+                                                     0));
 
-    CATCH_CXERROR(cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey))
-    CATCH_CXERROR(cx_ecfp_init_public_key_no_throw(CX_CURVE_256K1, NULL, 0, &cx_publicKey))
-    CATCH_CXERROR(cx_ecfp_generate_pair_no_throw(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1))
+    CATCH_CXERROR(cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey));
+    CATCH_CXERROR(cx_ecfp_init_public_key_no_throw(CX_CURVE_256K1, NULL, 0, &cx_publicKey));
+    CATCH_CXERROR(cx_ecfp_generate_pair_no_throw(CX_CURVE_256K1, &cx_publicKey, &cx_privateKey, 1));
     memcpy(pubKey, cx_publicKey.W, PK_LEN_SECP256K1_UNCOMPRESSED);
     error = zxerr_ok;
 
@@ -88,7 +88,6 @@ __Z_INLINE zxerr_t compressPubkey(const uint8_t *pubkey, uint16_t pubkeyLen, uin
     output[0] = pubkey[64] & 1 ? 0x03 : 0x02; // "Compress" public key in place
     return zxerr_ok;
 }
-
 
 static zxerr_t crypto_hashBuffer(const uint8_t *input, const uint16_t inputLen,
                           uint8_t *output, uint16_t outputLen) {
@@ -131,7 +130,7 @@ zxerr_t crypto_sign(uint8_t *output,
     const uint8_t *message = tx_get_buffer();
     const uint16_t messageLen = tx_get_buffer_length();
 
-    CHECK_ZXERR(crypto_hashBuffer(message, messageLen, messageDigest, CX_SHA256_SIZE))
+    CHECK_ZXERR(crypto_hashBuffer(message, messageLen, messageDigest, CX_SHA256_SIZE));
     CHECK_APP_CANARY()
 
     cx_ecfp_private_key_t cx_privateKey;
@@ -149,15 +148,15 @@ zxerr_t crypto_sign(uint8_t *output,
                                                      privateKeyData,
                                                      NULL,
                                                      NULL,
-                                                     0))
-    CATCH_CXERROR(cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey))
+                                                     0));
+    CATCH_CXERROR(cx_ecfp_init_private_key_no_throw(CX_CURVE_256K1, privateKeyData, 32, &cx_privateKey));
     CATCH_CXERROR(cx_ecdsa_sign_no_throw(&cx_privateKey,
                                          CX_RND_RFC6979 | CX_LAST,
                                          CX_SHA256,
                                          messageDigest,
                                          CX_SHA256_SIZE,
                                          output,
-                                         &signatureLength, &tmpInfo))
+                                         &signatureLength, &tmpInfo));
     *sigSize = signatureLength;
     error = zxerr_ok;
 
@@ -172,10 +171,11 @@ catch_cx_error:
     return error;
 }
 
-void ripemd160_32(uint8_t *out, uint8_t *in) {
+static zxerr_t ripemd160_32(uint8_t *out, uint8_t *in) {
     cx_ripemd160_t rip160;
-    cx_ripemd160_init(&rip160);
-    cx_hash_no_throw(&rip160.header, CX_LAST, in, CX_SHA256_SIZE, out, CX_RIPEMD160_SIZE);
+    CHECK_CX_OK(cx_ripemd160_init_no_throw(&rip160));
+    CHECK_CX_OK(cx_hash_no_throw(&rip160.header, CX_LAST, in, CX_SHA256_SIZE, out, CX_RIPEMD160_SIZE));
+    return zxerr_ok;
 }
 
 zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrResponseLen) {
@@ -185,8 +185,8 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrR
 
     // extract pubkey
     uint8_t uncompressedPubkey [PK_LEN_SECP256K1_UNCOMPRESSED] = {0};
-    CHECK_ZXERR(crypto_extractUncompressedPublicKey(uncompressedPubkey, sizeof(uncompressedPubkey)))
-    CHECK_ZXERR(compressPubkey(uncompressedPubkey, sizeof(uncompressedPubkey), buffer, buffer_len))
+    CHECK_ZXERR(crypto_extractUncompressedPublicKey(uncompressedPubkey, sizeof(uncompressedPubkey)));
+    CHECK_ZXERR(compressPubkey(uncompressedPubkey, sizeof(uncompressedPubkey), buffer, buffer_len));
     char *addr = (char *) (buffer + PK_LEN_SECP256K1);
 
     uint8_t hashed1_pk[CX_SHA256_SIZE] = {0};
@@ -195,9 +195,9 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrR
         case BECH32_COSMOS: {
             // Hash it
             cx_hash_sha256(buffer, PK_LEN_SECP256K1, hashed1_pk, CX_SHA256_SIZE);
-            uint8_t hashed2_pk[CX_RIPEMD160_SIZE];
-            ripemd160_32(hashed2_pk, hashed1_pk);
-            CHECK_ZXERR(bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE, 1, BECH32_ENCODING_BECH32))
+            uint8_t hashed2_pk[CX_RIPEMD160_SIZE] = {0};
+            CHECK_ZXERR(ripemd160_32(hashed2_pk, hashed1_pk));
+            CHECK_ZXERR(bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed2_pk, CX_RIPEMD160_SIZE, 1, BECH32_ENCODING_BECH32));
             break;
         }
 
@@ -206,8 +206,8 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrR
             if (cx_keccak_init_no_throw(&ctx, 256) != CX_OK) {
                 return zxerr_unknown;
             }
-            cx_hash_no_throw((cx_hash_t *)&ctx, CX_LAST, uncompressedPubkey+1, sizeof(uncompressedPubkey)-1, hashed1_pk, sizeof(hashed1_pk));
-            CHECK_ZXERR(bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed1_pk + 12, sizeof(hashed1_pk) - 12, 1, BECH32_ENCODING_BECH32))
+            CHECK_CX_OK(cx_hash_no_throw((cx_hash_t *)&ctx, CX_LAST, uncompressedPubkey+1, sizeof(uncompressedPubkey)-1, hashed1_pk, sizeof(hashed1_pk)));
+            CHECK_ZXERR(bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed1_pk + 12, sizeof(hashed1_pk) - 12, 1, BECH32_ENCODING_BECH32));
             break;
         }
 
