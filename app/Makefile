@@ -69,7 +69,6 @@ endif
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.platform
 
-DEFINES += HAVE_SHA3 HAVE_HASH HAVE_BLAKE2 HAVE_SHA256 HAVE_SHA512
 APP_SOURCE_PATH += $(MY_DIR)/../deps/jsmn/src
 
 .PHONY: rust
