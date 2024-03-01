@@ -24,11 +24,6 @@ extern "C" {
 #include "coin.h"
 
 #define OUTPUT_HANDLER_SIZE 600
-#if defined(TARGET_NANOS)
-#undef OUTPUT_HANDLER_SIZE
-#define OUTPUT_HANDLER_SIZE 450
-#endif
-
 #define MAX_CONTENT_SIZE 550
 #define MAX_TITLE_SIZE 40
 #define PRINTABLE_TITLE_SIZE 17
@@ -36,7 +31,6 @@ extern "C" {
 #define SCREEN_BREAK ":"
 #define SCREEN_INDENT ">"
 #define TITLE_TRUNCATE_REPLACE "---"
-#define END_OF_STRING_SIZE
 
 const char *parser_getErrorDescription(parser_error_t err);
 
