@@ -104,7 +104,7 @@ parser_error_t tx_getToken(uint16_t token_index,
                     extraDepthLevel = true;
                 }
                 break;
-            }
+            }   
         }
         pageStringExt(out_val, out_val_len, inValue, inLen, pageIdx, pageCount);
     }
