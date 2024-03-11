@@ -52,8 +52,13 @@ endif
 
 APP_LOAD_PARAMS = --curve secp256k1 $(COMMON_LOAD_PARAMS) --path $(APPPATH)
 
-NANOS_STACK_SIZE := 1890
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.devices
+
+# On zxlib v19.7.1, Makefile.devices will set a default value for APP_STACK_SIZE
+# to follow the most recent nanos-secure-sdk rules we will clean APP_STACK_SIZE value
+# and set a minimum value
+APP_STACK_SIZE :=
+APP_STACK_MIN_SIZE := 1444
 
 $(info TARGET_NAME  = [$(TARGET_NAME)])
 $(info ICONNAME  = [$(ICONNAME)])
@@ -64,7 +69,6 @@ endif
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.platform
 
-DEFINES += HAVE_HASH HAVE_BLAKE2 HAVE_SHA256 HAVE_SHA512
 APP_SOURCE_PATH += $(MY_DIR)/../deps/jsmn/src
 
 .PHONY: rust
