@@ -205,5 +205,8 @@ The Makefile will build the firmware in a docker container and leave the binary 
 
 ## APDU Specifications
 
+### DISCLAIMER
+Ledger NanoS does not support Cosmos Textual Mode due to memory restriction
+
 - [APDU Protocol](docs/APDUSPEC.md)
 - [Transaction format](docs/TXSPEC.md)

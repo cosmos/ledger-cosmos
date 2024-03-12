@@ -311,6 +311,7 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
     return parser_formatAmountItem(showItemTokenIdx, outVal, outValLen, showPageIdx, &dummy);
 }
 
+#if defined(COMPILE_TEXTUAL)
 __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
                                             Cbor_container *container,
                                             char *outKey, uint16_t outKeyLen,
@@ -433,12 +434,24 @@ __Z_INLINE parser_error_t parser_getNextNonExpert(const parser_context_t *ctx,
     }
     return parser_ok;
 }
+#endif
 
 __Z_INLINE parser_error_t parser_getTextualItem(const parser_context_t *ctx,
                                             uint8_t displayIdx,
                                             char *outKey, uint16_t outKeyLen,
                                             char *outVal, uint16_t outValLen,
                                             uint8_t pageIdx, uint8_t *pageCount) {
+#if !defined(COMPILE_TEXTUAL)
+    UNUSED(ctx);
+    UNUSED(displayIdx);
+    UNUSED(outKey);
+    UNUSED(outKeyLen);
+    UNUSED(outVal);
+    UNUSED(outValLen);
+    UNUSED(pageIdx);
+    UNUSED(pageCount);
+    return parser_value_out_of_range;
+#else
     *pageCount = 0;
 
     MEMZERO(outKey, outKeyLen);
@@ -477,6 +490,7 @@ __Z_INLINE parser_error_t parser_getTextualItem(const parser_context_t *ctx,
     CHECK_PARSER_ERR(parser_screenPrint(ctx, &container, outKey, outKeyLen, outVal, outValLen, pageIdx, pageCount))
 
     return parser_ok;
+#endif
 }
 
 __Z_INLINE parser_error_t parser_getJsonItem(const parser_context_t *ctx,

@@ -151,6 +151,7 @@ target_link_libraries(unittests PRIVATE
 
 add_compile_definitions(TESTVECTORS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/")
 add_compile_definitions(APP_TESTING=1)
+add_compile_definitions(COMPILE_TEXTUAL=1)
 add_test(unittests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittests)
 set_tests_properties(unittests PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
