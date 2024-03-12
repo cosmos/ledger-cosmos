@@ -117,6 +117,11 @@ parser_error_t _read_json_tx(parser_context_t *c, __Z_UNUSED parser_tx_t *v) {
 }
 
 parser_error_t _read_text_tx(parser_context_t *c, parser_tx_t *v) {
+#if !defined(COMPILE_TEXTUAL)
+    UNUSED(c);
+    UNUSED(v);
+    return parser_value_out_of_range;
+#else
     CborValue it;
     CborValue mapStruct_ptr;
     CHECK_APP_CANARY()
@@ -166,4 +171,5 @@ parser_error_t _read_text_tx(parser_context_t *c, parser_tx_t *v) {
     PARSER_ASSERT_OR_ERROR(it.source.ptr == c->buffer + c->bufferLen, parser_cbor_unexpected_EOF)
 
     return parser_ok;
+#endif
 }
