@@ -25,7 +25,7 @@
 #define RAM_BUFFER_SIZE 8192
 #define FLASH_BUFFER_SIZE 16384
 #elif defined(TARGET_NANOS)
-#define RAM_BUFFER_SIZE 256
+#define RAM_BUFFER_SIZE 0
 #define FLASH_BUFFER_SIZE 8192
 #endif
 
@@ -76,13 +76,24 @@ uint8_t *tx_get_buffer()
 
 static parser_tx_t tx_obj;
 
-const char *tx_parse()
+const char *tx_parse(tx_type_e type)
 {
-    MEMZERO(&tx_obj, sizeof(tx_obj));
+#if defined(COMPILE_TEXTUAL)
+    if (type != tx_json && type != tx_textual) {
+        return parser_getErrorDescription(parser_value_out_of_range);
+    }
+#else 
+    if (type != tx_json) {
+        return parser_getErrorDescription(parser_value_out_of_range);
+    }
+#endif
 
+    MEMZERO(&tx_obj, sizeof(tx_obj));
+    tx_obj.tx_type = type;
     uint8_t err = parser_parse(&ctx_parsed_tx,
                                tx_get_buffer(),
-                               tx_get_buffer_length());
+                               tx_get_buffer_length(),
+                               &tx_obj);
     zemu_log_stack("parse|parsed");
 
     if (err != parser_ok)
@@ -91,6 +102,7 @@ const char *tx_parse()
     }
 
     err = parser_validate(&ctx_parsed_tx);
+
     CHECK_APP_CANARY()
 
     if (err != parser_ok)

@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define CLA                  0x55
+#define CLA                  0x55u
 
 #define HDPATH_LEN_DEFAULT   5
 
@@ -34,6 +34,11 @@ extern "C" {
 typedef enum {
     addr_secp256k1 = 0,
 } address_kind_e;
+
+typedef enum {
+    tx_json = 0,
+    tx_textual
+} tx_type_e;
 
 typedef enum {
     BECH32_COSMOS = 0,
@@ -54,8 +59,8 @@ typedef enum {
 // In non-expert mode, the app will convert from uatom to ATOM
 #define COIN_DEFAULT_DENOM_BASE             "uatom"
 #define COIN_DEFAULT_DENOM_REPR             "ATOM"
-#define COIN_DEFAULT_DENOM_FACTOR           6
-#define COIN_DEFAULT_DENOM_TRIMMING         6
+#define COIN_DEFAULT_DENOM_FACTOR           6u
+#define COIN_DEFAULT_DENOM_TRIMMING         6u
 
 // Coin denoms may be up to 128 characters long
 // https://github.com/cosmos/cosmos-sdk/blob/master/types/coin.go#L780
@@ -63,18 +68,18 @@ typedef enum {
 #define COIN_DENOM_MAXSIZE                  129
 #define COIN_AMOUNT_MAXSIZE                 50
 
-#define COIN_MAX_CHAINID_LEN                20
-#define INDEXING_TMP_KEYSIZE 70
-#define INDEXING_TMP_VALUESIZE 70
-#define INDEXING_GROUPING_REF_TYPE_SIZE 70
-#define INDEXING_GROUPING_REF_FROM_SIZE 70
+#define COIN_MAX_CHAINID_LEN                20u
+#define INDEXING_TMP_KEYSIZE                70u
+#define INDEXING_TMP_VALUESIZE              70u
+#define INDEXING_GROUPING_REF_TYPE_SIZE     70u
+#define INDEXING_GROUPING_REF_FROM_SIZE     70u
 
 #define MENU_MAIN_APP_LINE2_SECRET         "?"
 #define COIN_SECRET_REQUIRED_CLICKS         0
 
 #define INS_GET_VERSION                 0x00
-#define INS_SIGN_SECP256K1              0x02
-#define INS_GET_ADDR_SECP256K1          0x04
+#define INS_SIGN_SECP256K1              0x02u
+#define INS_GET_ADDR_SECP256K1          0x04u
 
 #ifdef __cplusplus
 }

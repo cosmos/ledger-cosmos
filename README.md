@@ -4,15 +4,18 @@
 
 ---
 
-![zondax](docs/zondax.jpg)
+![zondax_light](docs/zondax_light.png#gh-light-mode-only)
+![zondax_dark](docs/zondax_dark.png#gh-dark-mode-only)
 
 _Please visit our website at [zondax.ch](zondax.ch)_
 
+You can also visit [Zondax Hub](https://hub.zondax.ch/cosmos) to test any of the versions of the app
+
 ---
 
-This project contains the Cosmos app for Ledger Nano S and X.
+This project contains the Cosmos app for Ledger Nano S, Nano S+, X and Stax.
 
-- Ledger Nano S/X Cosmos app
+- Ledger Nano S/S+/X/Stax Cosmos app
 - Specs / Documentation
 - C++ unit tests
 - Zemu tests
@@ -201,6 +204,9 @@ The Makefile will build the firmware in a docker container and leave the binary 
    ```
 
 ## APDU Specifications
+
+### DISCLAIMER
+Ledger NanoS does not support Cosmos Textual Mode due to memory restriction
 
 - [APDU Protocol](docs/APDUSPEC.md)
 - [Transaction format](docs/TXSPEC.md)

@@ -33,8 +33,6 @@ extern char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
 extern uint8_t bech32_hrp_len;
 extern address_encoding_e encoding;
 
-void crypto_set_hrp(char *p);
-
 zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrResponseLen);
 
 zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, uint16_t *signatureLen);
