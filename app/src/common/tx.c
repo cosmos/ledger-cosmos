@@ -21,8 +21,11 @@
 #include <string.h>
 #include "zxmacros.h"
 
-#if defined(TARGET_NANOX) || defined(TARGET_NANOS2) || defined(TARGET_STAX)
+#if defined(TARGET_NANOS2) || defined(TARGET_STAX)
 #define RAM_BUFFER_SIZE 8192
+#define FLASH_BUFFER_SIZE 16384
+#elif defined(TARGET_NANOX)
+#define RAM_BUFFER_SIZE 8158
 #define FLASH_BUFFER_SIZE 16384
 #elif defined(TARGET_NANOS)
 #define RAM_BUFFER_SIZE 0
