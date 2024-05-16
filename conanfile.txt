@@ -1,6 +1,0 @@
-[requires]
-jsoncpp/1.9.5
-fmt/8.1.1
-
-[generators]
-cmake
