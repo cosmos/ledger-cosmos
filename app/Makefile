@@ -70,7 +70,7 @@ endif
 
 ifeq ($(TARGET_NAME),TARGET_NANOS)
 	APP_STACK_MIN_SIZE := 1600
-else ifeq ($(TARGET_NAME),TARGET_NANOX)
+else
 	APP_STACK_MIN_SIZE := 3800
 endif
 
