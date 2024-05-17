@@ -68,7 +68,11 @@ ifneq ($(TARGET_NAME),TARGET_NANOS)
     DEFINES += COMPILE_TEXTUAL
 endif
 
-APP_STACK_MIN_SIZE := 1600
+ifeq ($(TARGET_NAME),TARGET_NANOS)
+	APP_STACK_MIN_SIZE := 1600
+else
+	APP_STACK_MIN_SIZE := 3800
+endif
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.platform
 CFLAGS += -I$(MY_DIR)/../deps/tinycbor/src
