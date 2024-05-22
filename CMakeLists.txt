@@ -14,11 +14,21 @@
 #*  limitations under the License.
 #********************************************************************************
 cmake_minimum_required(VERSION 3.0)
+include("cmake/HunterGate.cmake")
+HunterGate(
+    URL "https://github.com/cpp-pm/hunter/archive/v0.25.5.tar.gz"
+    SHA1 "a20151e4c0740ee7d0f9994476856d813cdead29"
+    LOCAL
+)
+
 project(ledger-cosmos VERSION 0.0.0)
 enable_testing()
 
 cmake_policy(SET CMP0025 NEW)
 set(CMAKE_CXX_STANDARD 11)
+
+set(HUNTER_STATUS_DEBUG ON)
+set(HUNTER_TLS_VERIFY OFF)
 
 option(ENABLE_FUZZING "Build with fuzzing instrumentation and build fuzz targets" OFF)
 option(ENABLE_COVERAGE "Build with source code coverage instrumentation" OFF)
@@ -29,6 +39,13 @@ string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -g")
 string(APPEND CMAKE_LINKER_FLAGS " -fno-omit-frame-pointer -g")
 
 add_definitions(-DAPP_STANDARD)
+
+hunter_add_package(fmt)
+find_package(fmt CONFIG REQUIRED)
+hunter_add_package(jsoncpp)
+find_package(jsoncpp CONFIG REQUIRED)
+hunter_add_package(GTest)
+find_package(GTest CONFIG REQUIRED)
 
 if(ENABLE_FUZZING)
     add_definitions(-DFUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION=1)
@@ -71,9 +88,6 @@ if(ENABLE_SANITIZERS)
     string(APPEND CMAKE_LINKER_FLAGS " -fsanitize=address,undefined -fsanitize-recover=address,undefined")
 endif()
 
-include(cmake/conan/CMakeLists.txt)
-add_subdirectory(cmake/gtest)
-
 string(APPEND CMAKE_CXX_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
 string(APPEND CMAKE_LINKER_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
 
@@ -81,7 +95,11 @@ string(APPEND CMAKE_LINKER_FLAGS " -fsanitize=address -fno-omit-frame-pointer")
 ##############################################################
 #  static libs
 file(GLOB_RECURSE JSMN_SRC
-        deps/jsmn/src/jsmn.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/jsmn/src/jsmn.c
+        )
+file(GLOB_RECURSE TINYCBOR_SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src/cborparser.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src/cborvalidation.c
         )
 
 file(GLOB_RECURSE LIB_SRC
@@ -98,6 +116,7 @@ file(GLOB_RECURSE LIB_SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/formatting.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/parser_impl.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/json/json_parser.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/cbor/cbor_parser_helper.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/tx_parser.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/tx_display.c
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/tx_validate.c
@@ -107,6 +126,7 @@ file(GLOB_RECURSE LIB_SRC
 add_library(app_lib STATIC
         ${LIB_SRC}
         ${JSMN_SRC}
+        ${TINYCBOR_SRC}
         )
 
 target_include_directories(app_lib PUBLIC
@@ -115,7 +135,8 @@ target_include_directories(app_lib PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src
         ${CMAKE_CURRENT_SOURCE_DIR}/app/src/common
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/ledger-zxlib/app/common
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinykeccak
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinykeccak/
         )
 
 target_link_libraries(app_lib PUBLIC)
@@ -128,22 +149,20 @@ file(GLOB_RECURSE TESTS_SRC
 
 add_executable(unittests ${TESTS_SRC})
 target_include_directories(unittests PRIVATE
-        ${gtest_SOURCE_DIR}/include
-        ${gmock_SOURCE_DIR}/include
-        ${CONAN_INCLUDE_DIRS_FMT}
-        ${CONAN_INCLUDE_DIRS_JSONCPP}
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/jsmn/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/tinycbor/src
         )
 
 target_link_libraries(unittests PRIVATE
-        gtest_main
+        GTest::gtest_main
         app_lib
-        CONAN_PKG::fmt
-        CONAN_PKG::jsoncpp)
+        fmt::fmt
+        JsonCpp::JsonCpp)
 
 add_compile_definitions(TESTVECTORS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/")
 add_compile_definitions(APP_TESTING=1)
-add_test(unittests ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittests)
+add_compile_definitions(COMPILE_TEXTUAL=1)
+add_test(NAME unittests COMMAND unittests)
 set_tests_properties(unittests PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 
 ##############################################################

@@ -3,6 +3,9 @@ name: Verify PRs to main
 on:
   workflow_dispatch:
   pull_request:
+    paths:
+      - app/**
+      - deps/**
     branches:
       - main
       - develop

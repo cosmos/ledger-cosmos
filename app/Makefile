@@ -54,12 +54,6 @@ APP_LOAD_PARAMS = --curve secp256k1 $(COMMON_LOAD_PARAMS) --path $(APPPATH)
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.devices
 
-# On zxlib v19.7.1, Makefile.devices will set a default value for APP_STACK_SIZE
-# to follow the most recent nanos-secure-sdk rules we will clean APP_STACK_SIZE value
-# and set a minimum value
-APP_STACK_SIZE :=
-APP_STACK_MIN_SIZE := 1444
-
 $(info TARGET_NAME  = [$(TARGET_NAME)])
 $(info ICONNAME  = [$(ICONNAME)])
 
@@ -67,8 +61,22 @@ ifndef ICONNAME
 $(error ICONNAME is not set)
 endif
 
-include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.platform
+# Compile textual mode for all devices excetpt Nano S, 
+# and define a Min stack size for Nano S with some margin
+# to get an error if app grows too much
+ifneq ($(TARGET_NAME),TARGET_NANOS)
+    DEFINES += COMPILE_TEXTUAL
+endif
 
+ifeq ($(TARGET_NAME),TARGET_NANOS)
+	APP_STACK_MIN_SIZE := 1600
+else
+	APP_STACK_MIN_SIZE := 3800
+endif
+
+include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.platform
+CFLAGS += -I$(MY_DIR)/../deps/tinycbor/src
+APP_SOURCE_PATH += $(MY_DIR)/../deps/tinycbor-ledger
 APP_SOURCE_PATH += $(MY_DIR)/../deps/jsmn/src
 
 .PHONY: rust

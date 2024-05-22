@@ -23,6 +23,7 @@
 #include <ux.h>
 
 #include "view.h"
+#include "view_internal.h"
 #include "actions.h"
 #include "tx.h"
 #include "addr.h"
@@ -62,6 +63,7 @@ __Z_INLINE void handle_getversion(__Z_UNUSED volatile uint32_t *flags, volatile 
 }
 
 __Z_INLINE uint8_t extractHRP(uint32_t rx, uint32_t offset) {
+    uint8_t hrp_len = 0;
     if (rx < offset + 1) {
         THROW(APDU_CODE_DATA_INVALID);
     }
@@ -76,10 +78,15 @@ __Z_INLINE uint8_t extractHRP(uint32_t rx, uint32_t offset) {
     memcpy(bech32_hrp, G_io_apdu_buffer + offset + 1, bech32_hrp_len);
     bech32_hrp[bech32_hrp_len] = 0;     // zero terminate
 
-    return bech32_hrp_len;
+    hrp_len = bech32_hrp_len;
+    return hrp_len;
 }
 
 __Z_INLINE void extractHDPath(uint32_t rx, uint32_t offset) {
+    if (rx < offset + 1) {
+        THROW(APDU_CODE_DATA_INVALID);
+    }
+
     if ((rx - offset) < sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
@@ -109,8 +116,8 @@ static void extractHDPath_HRP(uint32_t rx, uint32_t offset) {
 
     // Check if HRP was sent
     if ((rx - offset) > sizeof(uint32_t) * HDPATH_LEN_DEFAULT) {
-        extractHRP(rx, offset + sizeof(uint32_t) * HDPATH_LEN_DEFAULT);
-        encoding = checkChainConfig(hdPath[1], bech32_hrp, bech32_hrp_len);
+        uint8_t hrp_bech32_len = extractHRP(rx, offset + sizeof(uint32_t) * HDPATH_LEN_DEFAULT);
+        encoding = checkChainConfig(hdPath[1], bech32_hrp, hrp_bech32_len);
         if (encoding == UNSUPPORTED) {
             ZEMU_LOGF(50, "Chain config not supported for: %s\n", bech32_hrp)
             THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
@@ -125,10 +132,6 @@ static bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
 
     const uint8_t payloadType = G_io_apdu_buffer[OFFSET_PAYLOAD_TYPE];
 
-    if (G_io_apdu_buffer[OFFSET_P2] != 0) {
-        THROW(APDU_CODE_INVALIDP1P2);
-    }
-
     if (rx < OFFSET_DATA) {
         THROW(APDU_CODE_WRONG_LENGTH);
     }
@@ -139,7 +142,6 @@ static bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
             tx_initialize();
             tx_reset();
             extractHDPath_HRP(rx, OFFSET_DATA);
-
             return false;
         case P1_ADD:
             added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
@@ -187,10 +189,13 @@ __Z_INLINE void handleGetAddrSecp256K1(volatile uint32_t *flags, volatile uint32
     THROW(APDU_CODE_OK);
 }
 
-__Z_INLINE void handleSignSecp256K1(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
+__Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
     if (!process_chunk(tx, rx)) {
         THROW(APDU_CODE_OK);
     }
+
+    // Let grab P2 value and if it's not valid, the parser should reject it
+    const tx_type_e sign_type = (tx_type_e) G_io_apdu_buffer[OFFSET_P2];
 
     if ((hdPath[1] == HDPATH_ETH_1_DEFAULT) && !app_mode_expert()) {
         *flags |= IO_ASYNCH_REPLY;
@@ -198,18 +203,10 @@ __Z_INLINE void handleSignSecp256K1(volatile uint32_t *flags, volatile uint32_t 
         THROW(APDU_CODE_DATA_INVALID);
     }
 
-
-    // Put address in output buffer, we will use it to confirm source address
-    zxerr_t zxerr = app_fill_address();
-    if (zxerr != zxerr_ok) {
-        *tx = 0;
-        THROW(APDU_CODE_DATA_INVALID);
-    }
-    parser_tx_obj.own_addr = (const char *) (G_io_apdu_buffer + VIEW_ADDRESS_OFFSET_SECP256K1);
-    const char *error_msg = tx_parse();
-
+    parser_tx_obj.tx_json.own_addr = (const char *) (G_io_apdu_buffer + VIEW_ADDRESS_OFFSET_SECP256K1);
+    const char *error_msg = tx_parse(sign_type);
     if (error_msg != NULL) {
-        int error_msg_length = strlen(error_msg);
+        const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
         THROW(APDU_CODE_DATA_INVALID);
@@ -250,7 +247,7 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
                 case INS_SIGN_SECP256K1: {
                     CHECK_PIN_VALIDATED()
-                    handleSignSecp256K1(flags, tx, rx);
+                    handleSign(flags, tx, rx);
                     break;
                 }
 

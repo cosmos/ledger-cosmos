@@ -99,6 +99,7 @@ TEST(Address, EVMAddressEvmos) {
     const char bech32_hrp[] = "evmos";
     char address[100] = {0};
     const zxerr_t err = bech32EncodeFromBytes(address, sizeof(address), bech32_hrp, eth_address, 20, 0, BECH32_ENCODING_BECH32);
+    EXPECT_EQ(err, zxerr_ok);
 
     const std::string evm_address(address, address + strnlen(address, sizeof(address)));
     EXPECT_EQ(evm_address, "evmos1dj7dw0xcazjzs3rx9u9quakh77d0myeamrkupf");
@@ -125,7 +126,8 @@ TEST(Address, EVMAddressCosmos) {
     const char bech32_hrp[] = "cosmos";
     char address[100] = {0};
     const zxerr_t err = bech32EncodeFromBytes(address, sizeof(address), bech32_hrp, eth_address, 20, 0, BECH32_ENCODING_BECH32);
-
+    EXPECT_EQ(err, zxerr_ok);
+    
     const std::string evm_address(address, address + strnlen(address, sizeof(address)));
     EXPECT_EQ(evm_address, "cosmos15n2h0lzvfgc8x4fm6fdya89n78x6ee2fm7fxr3");
 }
