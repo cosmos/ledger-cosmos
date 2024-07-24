@@ -13,3 +13,6 @@
 [submodule "deps/stax-secure-sdk"]
 	path = deps/stax-secure-sdk
 	url = https://github.com/LedgerHQ/ledger-secure-sdk
+[submodule "deps/ledger-secure-sdk"]
+	path = deps/ledger-secure-sdk
+	url = https://github.com/LedgerHQ/ledger-secure-sdk

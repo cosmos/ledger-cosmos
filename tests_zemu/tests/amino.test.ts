@@ -1,5 +1,5 @@
 /** ******************************************************************************
- *  (c) 2018-2022 Zondax GmbH
+ *  (c) 2018 - 2024 Zondax AG
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  *  limitations under the License.
  ******************************************************************************* */
 
-import Zemu, { ClickNavigation, TouchNavigation } from '@zondax/zemu'
+import Zemu, { ClickNavigation, TouchNavigation, isTouchDevice } from '@zondax/zemu'
 // @ts-ignore
 import { CosmosApp } from '@zondax/ledger-cosmos-js'
 import {
@@ -33,7 +33,7 @@ import {
 import secp256k1 from 'secp256k1/elliptic'
 // @ts-ignore
 import crypto from 'crypto'
-import { ButtonKind, IButton } from '@zondax/zemu/dist/types'
+import { ButtonKind, IButton, SwipeDirection } from '@zondax/zemu/dist/types'
 
 jest.setTimeout(120000)
 
@@ -496,13 +496,14 @@ describe('Amino', function () {
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
       let nav = undefined;
-      if (m.name === 'stax') {
+      if (isTouchDevice(m.name)) {
         const okButton: IButton = {
           x: 200,
           y: 540,
           delay: 0.25,
+          direction: SwipeDirection.NoSwipe,
         };
-        nav = new TouchNavigation([
+        nav = new TouchNavigation(m.name, [
           ButtonKind.ConfirmYesButton,
         ]);
         nav.schedule[0].button = okButton;

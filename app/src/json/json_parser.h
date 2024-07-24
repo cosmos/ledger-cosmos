@@ -39,7 +39,7 @@ extern "C" {
 #define MAX_NUMBER_OF_TOKENS    96
 #endif
 
-#if defined(TARGET_STAX)
+#if defined(TARGET_STAX) || defined(TARGET_FLEX)
 #undef MAX_NUMBER_OF_TOKENS
 #define MAX_NUMBER_OF_TOKENS    600
 #endif
