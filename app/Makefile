@@ -27,7 +27,19 @@ include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.installer_script
 include $(BOLOS_SDK)/Makefile.defines
 include $(CURDIR)/Makefile.version
 
+PRODUCTION_BUILD ?= 1
+
+# Display the target name
 $(info ************ TARGET_NAME  = [$(TARGET_NAME)])
+
+# Display whether this is a production build or for internal use
+ifeq ($(PRODUCTION_BUILD), 1)
+    $(info ************ PRODUCTION_BUILD  = [PRODUCTION BUILD])
+else
+    $(info ************ PRODUCTION_BUILD  = [INTERNAL USE])
+endif
+# Add the PRODUCTION_BUILD definition to the compiler flags
+DEFINES += PRODUCTION_BUILD=$(PRODUCTION_BUILD)
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.app_testing
 
@@ -61,7 +73,7 @@ ifndef ICONNAME
 $(error ICONNAME is not set)
 endif
 
-# Compile textual mode for all devices excetpt Nano S, 
+# Compile textual mode for all devices excetpt Nano S,
 # and define a Min stack size for Nano S with some margin
 # to get an error if app grows too much
 ifneq ($(TARGET_NAME),TARGET_NANOS)
@@ -71,7 +83,7 @@ endif
 ifeq ($(TARGET_NAME),TARGET_NANOS)
 	APP_STACK_MIN_SIZE := 1600
 else
-	APP_STACK_MIN_SIZE := 3800
+	APP_STACK_MIN_SIZE := 1850
 endif
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.platform
