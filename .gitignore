@@ -78,3 +78,5 @@ tests_tools/target
 fuzz-*.log
 
 /scan-build
+
+tests_zemu/bun.lockb

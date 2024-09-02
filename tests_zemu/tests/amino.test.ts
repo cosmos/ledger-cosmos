@@ -15,7 +15,6 @@
  ******************************************************************************* */
 
 import Zemu, { ClickNavigation, TouchNavigation, isTouchDevice } from '@zondax/zemu'
-// @ts-ignore
 import { CosmosApp } from '@zondax/ledger-cosmos-js'
 import {
   defaultOptions,
@@ -29,11 +28,10 @@ import {
   example_tx_str_msgMultiSend,
 } from './common'
 
-// @ts-ignore
-import secp256k1 from 'secp256k1/elliptic'
-// @ts-ignore
-import crypto from 'crypto'
 import { ButtonKind, IButton, SwipeDirection } from '@zondax/zemu/dist/types'
+import { secp256k1 } from '@noble/curves/secp256k1'
+import { sha256 } from '@noble/hashes/sha256'
+import { keccak_256 } from '@noble/hashes/sha3'
 
 jest.setTimeout(120000)
 
@@ -55,7 +53,7 @@ describe('Amino', function () {
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 118, 0, 0, 0]
-      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), 'utf-8')
       const hrp = 'cosmos'
 
       // get address / publickey
@@ -79,15 +77,13 @@ describe('Amino', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const hash = crypto.createHash('sha256')
-      const msgHash = Uint8Array.from(hash.update(tx).digest())
+      const msgHash = sha256(tx)
 
-      const signatureDER = resp.signature
-      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+      const signature = secp256k1.Signature.fromDER(resp.signature)
 
       const pk = Uint8Array.from(respPk.compressed_pk)
 
-      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      const signatureOk = secp256k1.verify(signature, msgHash, pk)
       expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()
@@ -124,15 +120,13 @@ describe('Amino', function () {
       expect(resp.error_message).toEqual('No errors')
 
       // Now verify the signature
-      const hash = crypto.createHash('sha256')
-      const msgHash = Uint8Array.from(hash.update(tx).digest())
+      const msgHash = sha256(tx)
 
-      const signatureDER = resp.signature
-      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+      const signature = secp256k1.Signature.fromDER(resp.signature)
 
       const pk = Uint8Array.from(respPk.compressed_pk)
 
-      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      const signatureOk = secp256k1.verify(signature, msgHash, pk)
       expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()
@@ -170,15 +164,13 @@ describe('Amino', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const hash = crypto.createHash('sha256')
-      const msgHash = Uint8Array.from(hash.update(tx).digest())
+      const msgHash = sha256(tx)
 
-      const signatureDER = resp.signature
-      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+      const signature = secp256k1.Signature.fromDER(resp.signature)
 
       const pk = Uint8Array.from(respPk.compressed_pk)
 
-      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      const signatureOk = secp256k1.verify(signature, msgHash, pk)
       expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()
@@ -216,15 +208,13 @@ describe('Amino', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const hash = crypto.createHash('sha256')
-      const msgHash = Uint8Array.from(hash.update(tx).digest())
+      const msgHash = sha256(tx)
 
-      const signatureDER = resp.signature
-      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+      const signature = secp256k1.Signature.fromDER(resp.signature)
 
       const pk = Uint8Array.from(respPk.compressed_pk)
 
-      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      const signatureOk = secp256k1.verify(signature, msgHash, pk)
       expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()
@@ -262,15 +252,13 @@ describe('Amino', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const hash = crypto.createHash('sha256')
-      const msgHash = Uint8Array.from(hash.update(tx).digest())
+      const msgHash = sha256(tx)
 
-      const signatureDER = resp.signature
-      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+      const signature = secp256k1.Signature.fromDER(resp.signature)
 
       const pk = Uint8Array.from(respPk.compressed_pk)
 
-      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      const signatureOk = secp256k1.verify(signature, msgHash, pk)
       expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()
@@ -308,15 +296,13 @@ describe('Amino', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const hash = crypto.createHash('sha256')
-      const msgHash = Uint8Array.from(hash.update(tx).digest())
+      const msgHash = sha256(tx)
 
-      const signatureDER = resp.signature
-      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+      const signature = secp256k1.Signature.fromDER(resp.signature)
 
       const pk = Uint8Array.from(respPk.compressed_pk)
 
-      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      const signatureOk = secp256k1.verify(signature, msgHash, pk)
       expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()
@@ -330,7 +316,7 @@ describe('Amino', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Activate expert mode
-      await sim.toggleExpertMode();
+      await sim.toggleExpertMode()
 
       const path = [44, 118, 0, 0, 0]
       const tx = Buffer.from(JSON.stringify(example_tx_str_msgMultiSend))
@@ -357,15 +343,13 @@ describe('Amino', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const hash = crypto.createHash('sha256')
-      const msgHash = Uint8Array.from(hash.update(tx).digest())
+      const msgHash = sha256(tx)
 
-      const signatureDER = resp.signature
-      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+      const signature = secp256k1.Signature.fromDER(resp.signature)
 
       const pk = Uint8Array.from(respPk.compressed_pk)
 
-      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      const signatureOk = secp256k1.verify(signature, msgHash, pk)
       expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()
@@ -379,7 +363,7 @@ describe('Amino', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Change to expert mode so we can skip fields
-      await sim.toggleExpertMode();
+      await sim.toggleExpertMode()
 
       const path = [44, 60, 0, 0, 0]
       const tx = Buffer.from(JSON.stringify(setWithdrawAddress))
@@ -406,15 +390,13 @@ describe('Amino', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const sha3 = require('js-sha3')
-      const msgHash = Buffer.from(sha3.keccak256(tx), 'hex')
+      const msgHash = keccak_256(tx)
 
-      const signatureDER = resp.signature
-      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+      const signature = secp256k1.Signature.fromDER(resp.signature)
 
       const pk = Uint8Array.from(respPk.compressed_pk)
 
-      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      const signatureOk = secp256k1.verify(signature, msgHash, pk)
       expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()
@@ -428,10 +410,10 @@ describe('Amino', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Enable expert to allow sign with eth path
-      await sim.toggleExpertMode();
+      await sim.toggleExpertMode()
 
       const path = [44, 60, 0, 0, 0]
-      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), 'utf-8')
       const hrp = 'inj'
 
       // check with invalid HRP
@@ -460,15 +442,13 @@ describe('Amino', function () {
       console.log(respPk)
 
       // Now verify the signature
-      const sha3 = require('js-sha3')
-      const msgHash = Buffer.from(sha3.keccak256(tx), 'hex')
+      const msgHash = keccak_256(tx)
 
-      const signatureDER = resp.signature
-      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+      const signature = secp256k1.Signature.fromDER(resp.signature)
 
       const pk = Uint8Array.from(respPk.compressed_pk)
 
-      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      const signatureOk = secp256k1.verify(signature, msgHash, pk)
       expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()
@@ -482,7 +462,7 @@ describe('Amino', function () {
       const app = new CosmosApp(sim.getTransport())
 
       const path = [44, 60, 0, 0, 0]
-      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), 'utf-8')
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, 'inj')
@@ -495,22 +475,20 @@ describe('Amino', function () {
 
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-      let nav = undefined;
+      let nav = undefined
       if (isTouchDevice(m.name)) {
         const okButton: IButton = {
           x: 200,
           y: 540,
           delay: 0.25,
           direction: SwipeDirection.NoSwipe,
-        };
-        nav = new TouchNavigation(m.name, [
-          ButtonKind.ConfirmYesButton,
-        ]);
-        nav.schedule[0].button = okButton;
+        }
+        nav = new TouchNavigation(m.name, [ButtonKind.ConfirmYesButton])
+        nav.schedule[0].button = okButton
       } else {
-        nav = new ClickNavigation([1, 0]);
+        nav = new ClickNavigation([1, 0])
       }
-      await sim.navigate('.', `${m.prefix.toLowerCase()}-sign_basic_eth_warning`, nav.schedule);
+      await sim.navigate('.', `${m.prefix.toLowerCase()}-sign_basic_eth_warning`, nav.schedule)
 
       const resp = await signatureRequest
       console.log(resp)

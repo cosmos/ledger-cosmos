@@ -15,13 +15,11 @@
  ******************************************************************************* */
 
 import Zemu, { ClickNavigation, TouchNavigation, isTouchDevice } from '@zondax/zemu'
-// @ts-ignore
 import { CosmosApp } from '@zondax/ledger-cosmos-js'
 import { defaultOptions, DEVICE_MODELS, tx_sign_textual, TEXTUAL_TX } from './common'
-// @ts-ignore
-import secp256k1 from 'secp256k1/elliptic'
-// @ts-ignore
-import crypto from 'crypto'
+import { secp256k1 } from '@noble/curves/secp256k1'
+import { sha256 } from '@noble/hashes/sha256'
+import { keccak_256 } from '@noble/hashes/sha3'
 import { ButtonKind, IButton, SwipeDirection } from '@zondax/zemu/dist/types'
 
 jest.setTimeout(90000)
@@ -71,15 +69,10 @@ describe('Textual', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const hash = crypto.createHash('sha256')
-      const msgHash = Uint8Array.from(hash.update(tx).digest())
-
-      const signatureDER = resp.signature
-      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
-
-      const pk = Uint8Array.from(respPk.compressed_pk)
-
-      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      const hash = sha256(tx)
+      const signature = secp256k1.Signature.fromDER(resp.signature)
+      const pk = secp256k1.ProjectivePoint.fromHex(respPk.compressed_pk)
+      const signatureOk = secp256k1.verify(signature, hash, pk.toRawBytes())
       expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()
@@ -120,29 +113,24 @@ describe('Textual', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const hash = crypto.createHash('sha256')
-      const msgHash = Uint8Array.from(hash.update(tx).digest())
-
-      const signatureDER = resp.signature
-      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
-
-      const pk = Uint8Array.from(respPk.compressed_pk)
-
-      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      const hash = sha256(tx)
+      const signature = secp256k1.Signature.fromDER(resp.signature)
+      const pk = secp256k1.ProjectivePoint.fromHex(respPk.compressed_pk)
+      const signatureOk = secp256k1.verify(signature, hash, pk.toRawBytes())
       expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()
     }
   })
 
-  test.concurrent.each(TEXTUAL_MODELS)('sign basic textual eth ', async function (m) {
+  test.concurrent.each(TEXTUAL_MODELS)('sign basic textual eth', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
       // Enable expert to allow sign with eth path
-      await sim.toggleExpertMode();
+      await sim.toggleExpertMode()
 
       const path = [44, 60, 0, 0, 0]
       const tx = Buffer.from(tx_sign_textual, 'hex')
@@ -169,15 +157,10 @@ describe('Textual', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const sha3 = require('js-sha3')
-      const msgHash = Buffer.from(sha3.keccak256(tx), 'hex')
-
-      const signatureDER = resp.signature
-      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
-
-      const pk = Uint8Array.from(respPk.compressed_pk)
-
-      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      const msgHash = keccak_256(tx)
+      const signature = secp256k1.Signature.fromDER(resp.signature)
+      const pk = secp256k1.ProjectivePoint.fromHex(respPk.compressed_pk)
+      const signatureOk = secp256k1.verify(signature, msgHash, pk.toRawBytes())
       expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()
@@ -205,22 +188,20 @@ describe('Textual', function () {
 
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-      let nav = undefined;
+      let nav = undefined
       if (isTouchDevice(m.name)) {
         const okButton: IButton = {
           x: 200,
           y: 540,
           delay: 0.25,
           direction: SwipeDirection.NoSwipe,
-        };
-        nav = new TouchNavigation(m.name, [
-          ButtonKind.ConfirmYesButton,
-        ]);
-        nav.schedule[0].button = okButton;
+        }
+        nav = new TouchNavigation(m.name, [ButtonKind.ConfirmYesButton])
+        nav.schedule[0].button = okButton
       } else {
-        nav = new ClickNavigation([1, 0]);
+        nav = new ClickNavigation([1, 0])
       }
-      await sim.navigate('.', `${m.prefix.toLowerCase()}-textual-sign_basic_eth_warning`, nav.schedule);
+      await sim.navigate('.', `${m.prefix.toLowerCase()}-textual-sign_basic_eth_warning`, nav.schedule)
 
       const resp = await signatureRequest
       console.log(resp)
@@ -271,15 +252,10 @@ describe('Textual', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const sha3 = require('js-sha3')
-      const msgHash = Buffer.from(sha3.keccak256(tx), 'hex')
-
-      const signatureDER = resp.signature
-      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
-
-      const pk = Uint8Array.from(respPk.compressed_pk)
-
-      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      const msgHash = keccak_256(tx)
+      const signature = secp256k1.Signature.fromDER(resp.signature)
+      const pk = secp256k1.ProjectivePoint.fromHex(respPk.compressed_pk)
+      const signatureOk = secp256k1.verify(signature, msgHash, pk.toRawBytes())
       expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()

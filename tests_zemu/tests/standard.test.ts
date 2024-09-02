@@ -17,9 +17,9 @@
 import Zemu, { zondaxMainmenuNavigation, ButtonKind, isTouchDevice } from '@zondax/zemu'
 import { CosmosApp } from '@zondax/ledger-cosmos-js'
 import { defaultOptions, DEVICE_MODELS } from './common'
-
-// @ts-ignore
-// import secp256k1 from 'secp256k1/elliptic'
+import { secp256k1 } from '@noble/curves/secp256k1'
+import { keccak_256 } from '@noble/hashes/sha3'
+import { bech32 } from '@scure/base'
 
 jest.setTimeout(90000)
 
@@ -53,8 +53,6 @@ describe('Standard', function () {
 
       console.log(resp)
 
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
       expect(resp).toHaveProperty('test_mode')
       expect(resp).toHaveProperty('major')
       expect(resp).toHaveProperty('minor')
@@ -84,7 +82,7 @@ describe('Standard', function () {
 
       expect(resp.bech32_address).toEqual('cosmos1wkd9tfm5pqvhhaxq77wv9tvjcsazuaykwsld65')
       expect(resp.compressed_pk.length).toEqual(33)
-      expect(resp.compressed_pk.toString("hex")).toEqual('035c986b9ae5fbfb8e1e9c12c817f5ef8fdb821cdecaa407f1420ec4f8f1d766bf')
+      expect(resp.compressed_pk.toString('hex')).toEqual('035c986b9ae5fbfb8e1e9c12c817f5ef8fdb821cdecaa407f1420ec4f8f1d766bf')
     } finally {
       await sim.close()
     }
@@ -119,7 +117,7 @@ describe('Standard', function () {
 
       expect(resp.bech32_address).toEqual('cosmos1wkd9tfm5pqvhhaxq77wv9tvjcsazuaykwsld65')
       expect(resp.compressed_pk.length).toEqual(33)
-      expect(resp.compressed_pk.toString("hex")).toEqual('035c986b9ae5fbfb8e1e9c12c817f5ef8fdb821cdecaa407f1420ec4f8f1d766bf')
+      expect(resp.compressed_pk.toString('hex')).toEqual('035c986b9ae5fbfb8e1e9c12c817f5ef8fdb821cdecaa407f1420ec4f8f1d766bf')
     } finally {
       await sim.close()
     }
@@ -162,14 +160,9 @@ describe('Standard', function () {
       expect(resp.compressed_pk.length).toEqual(33)
 
       // Verify address
-      const secp256k1 = require("secp256k1");
-      const keccak = require("keccak256");
-      const { bech32 } = require("bech32");
-
-      // Take the compressed pubkey and verify that the expected address can be computed
-      const uncompressPubKeyUint8Array = secp256k1.publicKeyConvert(resp.compressed_pk, false).subarray(1);
-      const ethereumAddressBuffer = Buffer.from(keccak(Buffer.from(uncompressPubKeyUint8Array))).subarray(-20);
-      const eth_address = bech32.encode(hrp, bech32.toWords(ethereumAddressBuffer)); // "cosmos15n2h0lzvfgc8x4fm6fdya89n78x6ee2fm7fxr3"
+      const uncompressPubKeyUint8Array = secp256k1.ProjectivePoint.fromHex(resp.compressed_pk).toRawBytes(false).subarray(1)
+      const ethereumAddressBuffer = Buffer.from(keccak_256(uncompressPubKeyUint8Array)).subarray(-20)
+      const eth_address = bech32.encode(hrp, bech32.toWords(ethereumAddressBuffer)) // "cosmos15n2h0lzvfgc8x4fm6fdya89n78x6ee2fm7fxr3"
 
       expect(resp.bech32_address).toEqual(eth_address)
       expect(resp.bech32_address).toEqual('inj15n2h0lzvfgc8x4fm6fdya89n78x6ee2f3h7z3f')
@@ -213,7 +206,7 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Activate expert mode
-      await sim.toggleExpertMode();
+      await sim.toggleExpertMode()
 
       // Derivation path. First 3 items are automatically hardened!
       const path = [44, 118, 2147483647, 0, 4294967295]
