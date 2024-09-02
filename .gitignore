@@ -47,55 +47,36 @@
 # Kernel Module Compile Results
 *.mod*
 *.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
 
-\cmake-build-debug
-\.idea/
-/tmp/
-/deps/nano2-sdk/
+##########################
 
-# Created by cmake
-googletest-download/
-googletest-src/
-googletest-build/
-CMakeFiles/
-CMakeCache.txt
-unittests
-*.cmake
-Testing/
-cmake-build-fuzz/
+tests_zemu/.yarn/*
+tests_zemu/!.yarn/patches
+tests_zemu/!.yarn/releases
+tests_zemu/!.yarn/plugins
+tests_zemu/!.yarn/sdks
+tests_zemu/!.yarn/versions
+tests_zemu/.pnp.*
+#########################
 
-# Others
-/cmake-build-debug/
-/cmake-build-fuzz/
-\.idea
-/app/bin/
-/app/debug/
-/app/obj/
+.vscode
+.idea
 
-\deps/*
-!\deps/nanos-secure-sdk
-!\deps/nanox-secure-sdk
-!\deps/ledger-zxlib
-!\deps/tinycbor
-!\deps/tinycbor-ledger
-!\deps/BLAKE
+node_modules
+fuzz/corpora
 
-app/src/glyphs.c
+!build/.gitkeep
 
-app/src/glyphs.h
-/build
-.vscode/dryrun.log
-.vscode/targets.log
+
+build/*
+cmake-build-debug
 app/build/*
-.DS_Store
 
-fuzz-*.log
-/fuzz/corpora
-
-.vscode/
+tests_zemu/snapshots-tmp
 tests_zemu/yarn.lock
+tests_tools/target
+fuzz-*.log
+
+/scan-build
+
+tests_zemu/bun.lockb

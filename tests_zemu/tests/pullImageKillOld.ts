@@ -1,4 +1,7 @@
 import Zemu from '@zondax/zemu'
 
-Zemu.checkAndPullImage()
-Zemu.stopAllEmuContainers()
+async function main() {
+  await Zemu.checkAndPullImage()
+  await Zemu.stopAllEmuContainers()
+}
+main().catch(console.error)
