@@ -37,7 +37,7 @@ int8_t is_space(char c) {
     return 0;
 }
 
-int8_t contains_whitespace(parsed_json_t *json) {
+parser_error_t contains_whitespace(parsed_json_t *json) {
     int start = 0;
     const int last_element_index = json->tokens[0].end;
 
@@ -47,21 +47,26 @@ int8_t contains_whitespace(parsed_json_t *json) {
             const int end = json->tokens[i].start;
             for (int j = start; j < end; j++) {
                 if (is_space(json->buffer[j]) == 1) {
-                    return 1;
+                    return parser_json_contains_whitespace;
                 }
             }
             start = json->tokens[i].end + 1;
         } else {
-            return 0;
+            return parser_ok;
         }
     }
+
+    if (start < 0) {
+        return parser_json_unexpected_error;
+    }
+
     while (start < last_element_index && json->buffer[start] != '\0') {
         if (is_space(json->buffer[start])) {
-            return 1;
+            return parser_json_contains_whitespace;
         }
         start++;
     }
-    return 0;
+    return parser_ok;
 }
 
 int8_t is_sorted(uint16_t first_index,
@@ -128,8 +133,9 @@ int8_t dictionaries_sorted(parsed_json_t *json) {
 }
 
 parser_error_t tx_validate(parsed_json_t *json) {
-    if (contains_whitespace(json) == 1) {
-        return parser_json_contains_whitespace;
+    parser_error_t err = contains_whitespace(json);
+    if (err != parser_ok) {
+        return err;
     }
 
     if (dictionaries_sorted(json) != 1) {
@@ -137,7 +143,6 @@ parser_error_t tx_validate(parsed_json_t *json) {
     }
 
     uint16_t token_index;
-    parser_error_t err;
 
     err = object_get_value(json, 0, "chain_id", &token_index);
     if (err != parser_ok)
