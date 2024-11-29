@@ -51,13 +51,12 @@ parser_error_t contains_whitespace(parsed_json_t *json) {
                 }
             }
             start = json->tokens[i].end + 1;
+            if (start < 0) {
+                return parser_json_unexpected_error;
+            }
         } else {
             return parser_ok;
         }
-    }
-
-    if (start < 0) {
-        return parser_json_unexpected_error;
     }
 
     while (start < last_element_index && json->buffer[start] != '\0') {
