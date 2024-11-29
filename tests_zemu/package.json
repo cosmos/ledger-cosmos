@@ -19,17 +19,17 @@
   },
   "dependencies": {
     "@zondax/ledger-cosmos-js": "^3.0.3",
-    "@zondax/zemu": "^0.50.2"
+    "@zondax/zemu": "^0.52.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/ledgerhq__hw-transport": "^4.21.8",
-    "@typescript-eslint/eslint-plugin": "^7.17.0",
-    "@typescript-eslint/parser": "^7.17.0",
+    "@typescript-eslint/eslint-plugin": "^8.16.0",
+    "@typescript-eslint/parser": "^8.16.0",
     "bech32": "^2.0.0",
     "blakejs": "^1.1.1",
     "crypto-js": "4.2.0",
-    "eslint": "^9.7.0",
+    "eslint": "^9.15.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jest": "^28.6.0",
@@ -39,10 +39,10 @@
     "js-sha3": "0.9.3",
     "jssha": "^3.2.0",
     "keccak256": "^1.0.6",
-    "prettier": "^3.3.3",
+    "prettier": "^3.4.1",
     "secp256k1": "^5.0.0",
     "ts-jest": "^29.2.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.7.2"
   }
 }
