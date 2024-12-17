@@ -27,7 +27,18 @@ include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.installer_script
 include $(BOLOS_SDK)/Makefile.defines
 include $(CURDIR)/Makefile.version
 
+ifndef COIN
+COIN=ATOM
+endif
+
 PRODUCTION_BUILD ?= 1
+ifeq ($(COIN),ATOM)
+ifeq ($(TARGET_NAME),TARGET_NANOS)
+    HAVE_SWAP ?= 0
+else
+    HAVE_SWAP ?= 1
+endif
+endif
 
 # Display the target name
 $(info ************ TARGET_NAME  = [$(TARGET_NAME)])
@@ -38,14 +49,21 @@ ifeq ($(PRODUCTION_BUILD), 1)
 else
     $(info ************ PRODUCTION_BUILD  = [INTERNAL USE])
 endif
+
+ifeq ($(HAVE_SWAP), 1)
+    $(info ************ HAVE_SWAP  = [ENABLED])
+    DEFINES += HAVE_SWAP=$(HAVE_SWAP)
+else
+    $(info ************ HAVE_SWAP  = [DISABLED])
+endif
+
+
 # Add the PRODUCTION_BUILD definition to the compiler flags
 DEFINES += PRODUCTION_BUILD=$(PRODUCTION_BUILD)
 
 include $(CURDIR)/../deps/ledger-zxlib/makefiles/Makefile.app_testing
 
-ifndef COIN
-COIN=ATOM
-endif
+
 
 $(info COIN  = [$(COIN)])
 
