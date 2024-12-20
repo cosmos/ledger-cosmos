@@ -80,7 +80,7 @@ bool copy_transaction_parameters(create_transaction_parameters_t *sign_transacti
 }
 
 // Ensure the received transaction matches what was validated in the Exchange app UI
-// at this poin, transaction was parsed by the app,so we need to compare what we aprsed with what is saved in the global state
+// at this point, transaction was parsed by the app, so we need to compare what we parsed with what is saved in the global state
 parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
     parser_error_t err = parser_unexpected_error;
     if (ctx_parsed_tx == NULL) {

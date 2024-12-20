@@ -8,12 +8,11 @@ on:
     - master
     - main
     - develop
-    - swap
 
 jobs:
   job_functional_tests:
-    uses: Zondax/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@swap-cosmos
+    uses: LedgerHQ/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@develop
     with:
-      branch_for_polkadot: ${{ github.ref }}
-      repo_for_polkadot: ${{ github.repository }}
-      test_filter: '"Atom or atom or Cosmos or cosmos"'
+      branch_for_cosmos: ${{ github.ref }}
+      repo_for_cosmos: ${{ github.repository }}
+      test_filter: '"ATOM or atom or Cosmos or cosmos"'
