@@ -21,6 +21,10 @@
 #include <string.h>
 #include "zxmacros.h"
 
+#ifdef HAVE_SWAP
+#include "swap.h"
+#endif
+
 #if defined(TARGET_NANOS2) || defined(TARGET_STAX) || defined(TARGET_FLEX)
 #define RAM_BUFFER_SIZE 8192
 #define FLASH_BUFFER_SIZE 16384
@@ -112,6 +116,26 @@ const char *tx_parse(tx_type_e type)
     {
         return parser_getErrorDescription(err);
     }
+
+    #ifdef HAVE_SWAP
+    // If in swap mode, compare swap tx parameters with stored info.
+    if (G_swap_state.called_from_swap) {
+        if (G_swap_state.should_exit == 1) {
+            // Safety against trying to make the app sign multiple TX
+            // This panic quit is a failsafe that should never trigger, as the app is supposed to
+            // exit after the first send when started in swap mode
+            os_sched_exit(-1);
+        } else {
+            // We will quit the app after this transaction, whether it succeeds or fails
+            G_swap_state.should_exit = 1;
+        }
+        err = check_swap_conditions(&ctx_parsed_tx);
+        CHECK_APP_CANARY()
+        if (err != parser_ok) {
+            return parser_getErrorDescription(err);
+        }
+    }
+#endif
 
     return NULL;
 }
