@@ -23,7 +23,7 @@
 
 
 void handle_check_address(check_address_parameters_t *params) {
-    if (params == NULL || params->address_to_check == 0) {
+    if (params == NULL || params->address_to_check == NULL) {
         return;
     }
 
@@ -41,7 +41,7 @@ void handle_check_address(check_address_parameters_t *params) {
     }
 
     for (uint32_t i = 0; i < HDPATH_LEN_DEFAULT; i++) {
-        readU32BE(params->address_parameters + 2 + (i * 4), &bip32_path[i]);
+        readU32BE(params->address_parameters + 1 + (i * 4), &bip32_path[i]);
     }
 
     char address_computed[100] = {0};
