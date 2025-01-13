@@ -31,10 +31,10 @@ void handle_check_address(check_address_parameters_t *params) {
     params->result = 0;
 
     // Address parameters have the following structure
-    // 00 byte |path length (1 byte) | bip32 path (4 * pathLength bytes)
+    // path length (1 byte) | bip32 path (4 * pathLength bytes)
     // Get the path
     uint32_t bip32_path[HDPATH_LEN_DEFAULT] = {0};
-    uint8_t bip32_path_length = params->address_parameters[1];
+    uint8_t bip32_path_length = params->address_parameters[0];
 
     if (bip32_path_length != HDPATH_LEN_DEFAULT) {
         return;
