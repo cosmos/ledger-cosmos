@@ -21,6 +21,7 @@
 #include "swap.h"
 #include "swap_utils.h"
 #include "zxformat.h"
+#include "app_mode.h"
 
 swap_globals_t G_swap_state;
 
@@ -79,8 +80,43 @@ bool copy_transaction_parameters(create_transaction_parameters_t *sign_transacti
     return true;
 }
 
-// Ensure the received transaction matches what was validated in the Exchange app UI
-// at this point, transaction was parsed by the app, so we need to compare what we parsed with what is saved in the global state
+/*
+ * This function verifies that a received transaction follows the expected format
+ * based on the current application mode (expert or normal). The verification
+ * process includes checking the number of items in the transaction and validating
+ * that the items at its respective display index matches the expected content.
+ * If any item does not meet the expected criteria, the function will return an error.
+ *
+ * Expected transaction format:
+ *
+ * Expert Mode:
+ *   0 | Chain ID        : cosmoshub-4
+ *   1 | Account         : 0
+ *   2 | Sequence        : 1
+ *   3 | Source Address  : cosmosaccaddr1d9h8qat5e4ehc5
+ *   4 | Source Coins    : 10 atom
+ *   5 | Dest Address    : cosmosaccaddr1da6hgur4wse3jx32
+ *   6 | Dest Coins      : 10 atom
+ *   7 | Memo            : testmemo
+ *   8 | Fee             : 5 photon
+ *   9 | Gas             : 10000
+ *
+ * Normal Mode:
+ *   0 | Source Address  : cosmosaccaddr1d9h8qat5e4ehc5
+ *   1 | Source Coins    : 10 atom
+ *   2 | Dest Address    : cosmosaccaddr1da6hgur4wse3jx32
+ *   3 | Dest Coins      : 10 atom
+ *   4 | Memo            : testmemo
+ *   5 | Fee             : 5 photon
+ *
+ * Verification Details:
+ * - The function will first confirm that the number of items in the transaction
+ *   matches the expected count for the current mode.
+ * - Each item's content will be checked against the predefined values for the
+ *   corresponding display index.
+ * - If any discrepancy is found (either in item count or content), the function
+ *   will return an error.
+ */
 parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
     parser_error_t err = parser_unexpected_error;
     if (ctx_parsed_tx == NULL) {
@@ -92,6 +128,10 @@ parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
     uint8_t pageCount = 0;
     char tmpKey[20] = {0};
     char tmpValue[65] = {0};
+
+    if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items > 10) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items > 6)) {
+        return parser_unexpected_error;
+    }
 
     // Cosmos App in normal mode requires that chain id is the default one. If not, it will print expert mode fields
     // this means if we reach this point and no chain_id is printed, chain_id must be the default one
