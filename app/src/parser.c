@@ -87,7 +87,10 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx, uint8_t *num_item
         return parser_ok;
     }
 
-    return tx_display_numItems(num_items);
+    parser_error_t ret = tx_display_numItems(num_items);
+    ctx->tx_obj->tx_json.num_items = *num_items;
+
+    return ret;
 }
 
 __Z_INLINE bool parser_areEqual(uint16_t tokenIdx, const char *expected) {

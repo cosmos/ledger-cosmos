@@ -104,8 +104,6 @@ __attribute__((section(".boot"))) int main(int arg0) {
         }
 #endif
     } else {
-        // The app has been launched from the dashboard
-        // G_swap_state.called_from_swap = false;
         BEGIN_TRY
         {
             TRY
