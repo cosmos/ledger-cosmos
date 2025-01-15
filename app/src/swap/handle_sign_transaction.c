@@ -129,7 +129,7 @@ parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
     char tmpKey[20] = {0};
     char tmpValue[65] = {0};
 
-    if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items > 10) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items > 6)) {
+    if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_MODE_ITEMS) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_MODE_ITEMS)) {
         return parser_unexpected_error;
     }
 

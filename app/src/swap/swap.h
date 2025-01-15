@@ -26,6 +26,8 @@
 
 #define ADDRESS_MAXSIZE 50
 #define MEMO_MAXSIZE 50
+#define EXPERT_MODE_ITEMS 10
+#define NORMAL_MODE_ITEMS 6
 typedef struct {
     uint8_t amount[COIN_AMOUNT_MAXSIZE];
     uint8_t amount_length;
