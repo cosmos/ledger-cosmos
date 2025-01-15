@@ -213,11 +213,6 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx, uint
         const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
         MEMCPY(G_io_apdu_buffer, error_msg, error_msg_length);
         *tx += (error_msg_length);
-
-#ifdef HAVE_SWAP
-        // Finalize the transaction with failure status
-        finalize_exchange_sign_transaction(false);
-#endif 
         THROW(APDU_CODE_DATA_INVALID);
     }
 

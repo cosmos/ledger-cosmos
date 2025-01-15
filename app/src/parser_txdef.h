@@ -95,6 +95,7 @@ typedef struct
 
     // current tx query
     tx_query_t query;
+    uint8_t num_items;
 }tx_json_t;
 
 
