@@ -28,6 +28,17 @@ swap_globals_t G_swap_state;
 // Save the BSS address where we will write the return value when finished
 static uint8_t *G_swap_sign_return_value_address;
 
+static const char * chain_ids[] = { COIN_DEFAULT_CHAINID, OSMOSIS_CHAINID, DYDX_CHAINID};
+
+bool is_allowed_chainid(const char *chainId) {
+    for (uint32_t i = 0; i < array_length(chain_ids); i++) {
+        if (strcmp(chainId, chain_ids[i]) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool copy_transaction_parameters(create_transaction_parameters_t *sign_transaction_params) {
     if (sign_transaction_params == NULL) {
         return false;
@@ -135,14 +146,12 @@ parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
 
     // Cosmos App in normal mode requires that chain id is the default one. If not, it will print expert mode fields
     // this means if we reach this point and no chain_id is printed, chain_id must be the default one
-    const char *default_chain_id = "cosmoshub-4";
     CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
 
     // Check if chain_id is printed, expert fields
     if (strcmp(tmpKey, "Chain ID") == 0) {
-        // For now allow only default chain id
-        if (strcmp(tmpValue, default_chain_id) != 0) {
-            ZEMU_LOGF(200, "Wrong Chain Id. ('%s', should be : '%s').\n", tmpValue, default_chain_id);
+        if (!is_allowed_chainid(tmpValue)) {
+            ZEMU_LOGF(200, " Not supported Chain Id\n");
             return parser_unexpected_error;
         }
         displayIdx += 5; // skip account_number, sequence, source_address, source_coins
