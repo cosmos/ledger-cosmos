@@ -20,6 +20,7 @@
 #include "swap.h"
 #include "zxformat.h"
 #include "swap_utils.h"
+#include "chain_config.h"
 
 
 void handle_check_address(check_address_parameters_t *params) {
@@ -31,10 +32,20 @@ void handle_check_address(check_address_parameters_t *params) {
     params->result = 0;
 
     // Address parameters have the following structure
-    // path length (1 byte) | bip32 path (4 * pathLength bytes)
-    // Get the path
+    // hrp length (1 byte) | hrp (hrp length bytes) | bip32 path length (1 byte) | bip32 path (4 * pathLength bytes)
+    // Get HRP
+    uint8_t hrp_length = params->address_parameters[0];
+    char hrp[MAX_BECH32_HRP_LEN + 1] = {0};
+
+    if (hrp_length == 0 || hrp_length > MAX_BECH32_HRP_LEN) {
+        return;
+    }
+    memcpy(hrp, params->address_parameters + 1, hrp_length);
+    hrp[hrp_length] = 0;
+
+    // Get bip32 path
+    uint8_t bip32_path_length = params->address_parameters[1 + hrp_length];
     uint32_t bip32_path[HDPATH_LEN_DEFAULT] = {0};
-    uint8_t bip32_path_length = params->address_parameters[0];
 
     if (bip32_path_length != HDPATH_LEN_DEFAULT) {
         return;
@@ -44,11 +55,16 @@ void handle_check_address(check_address_parameters_t *params) {
         readU32BE(params->address_parameters + 1 + (i * 4), &bip32_path[i]);
     }
 
+    // Check if the chain is supported with the HRP and path
+    address_encoding_e encode_type = checkChainConfig(bip32_path[1], hrp, hrp_length);
+    if (encode_type == UNSUPPORTED) {
+        return;
+    }
+
     char address_computed[100] = {0};
     uint16_t reply_len = 0;
-    zxerr_t err = crypto_swap_fillAddress(bip32_path,
-                                                bip32_path_length, address_computed, sizeof(address_computed),
-                                                &reply_len);
+    zxerr_t err = crypto_swap_fillAddress(bip32_path, bip32_path_length, hrp, encode_type, address_computed, 
+                                            sizeof(address_computed), &reply_len);
     if (err != zxerr_ok) {
         MEMZERO(address_computed, sizeof(address_computed));
         return;
