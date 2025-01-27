@@ -202,6 +202,8 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t buffer_len, uint16_t *addrR
 // Fill address using a hd path coming from check_address_parameters_t
 zxerr_t crypto_swap_fillAddress(uint32_t *hdPath_swap,
                                       uint8_t hdPathLen_swap,
+                                      char *hrp,
+                                      address_encoding_e encode_type,
                                       char *buffer,
                                       uint16_t bufferLen,
                                       uint16_t *addrResponseLen) {
@@ -216,12 +218,27 @@ zxerr_t crypto_swap_fillAddress(uint32_t *hdPath_swap,
     CHECK_ZXERR(compressPubkey(uncompressedPubkey, sizeof(uncompressedPubkey), compressedPubkey, sizeof(compressedPubkey)));
 
     uint8_t hashed1_pk[CX_SHA256_SIZE] = {0};
-    cx_hash_sha256(compressedPubkey, PK_LEN_SECP256K1, hashed1_pk, CX_SHA256_SIZE);
-    
-    uint8_t hashed2_pk[CX_RIPEMD160_SIZE] = {0};
-    CHECK_CX_OK(cx_ripemd160_hash(hashed1_pk, CX_SHA256_SIZE, hashed2_pk));
-    // support only cosmos for now we might need to send the hrp as an address parameter
-    CHECK_ZXERR(bech32EncodeFromBytes(buffer, bufferLen, "cosmos", hashed2_pk, CX_RIPEMD160_SIZE, 1, BECH32_ENCODING_BECH32));
+    switch (encode_type) {
+        case BECH32_COSMOS: {
+            // Hash it
+            cx_hash_sha256(compressedPubkey, PK_LEN_SECP256K1, hashed1_pk, CX_SHA256_SIZE);
+            uint8_t hashed2_pk[CX_RIPEMD160_SIZE] = {0};
+            CHECK_CX_OK(cx_ripemd160_hash(hashed1_pk, CX_SHA256_SIZE, hashed2_pk));
+            CHECK_ZXERR(bech32EncodeFromBytes(buffer, bufferLen, hrp, hashed2_pk, CX_RIPEMD160_SIZE, 1, BECH32_ENCODING_BECH32));
+            break;
+        }
+
+        case BECH32_ETH: {
+            CHECK_CX_OK(cx_keccak_256_hash(uncompressedPubkey+1, sizeof(uncompressedPubkey)-1, hashed1_pk));
+            CHECK_ZXERR(bech32EncodeFromBytes(buffer, bufferLen, hrp, hashed1_pk + 12, sizeof(hashed1_pk) - 12, 1, BECH32_ENCODING_BECH32));
+            break;
+        }
+
+        default:
+            *addrResponseLen = 0;
+            return zxerr_encoding_failed;
+    }
+
             
     *addrResponseLen = strnlen(buffer, bufferLen);
     return zxerr_ok;
