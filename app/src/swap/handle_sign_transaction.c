@@ -28,7 +28,7 @@ swap_globals_t G_swap_state;
 // Save the BSS address where we will write the return value when finished
 static uint8_t *G_swap_sign_return_value_address;
 
-static const char * chain_ids[] = {COIN_DEFAULT_CHAINID, OSMOSIS_CHAINID, DYDX_CHAINID};
+static const char * chain_ids[] = {COIN_DEFAULT_CHAINID, OSMOSIS_CHAINID, DYDX_CHAINID, MANTRA_CHAINID, XION_CHAINID};
 
 bool is_allowed_chainid(const char *chainId) {
     for (uint32_t i = 0; i < array_length(chain_ids); i++) {
@@ -121,12 +121,12 @@ bool copy_transaction_parameters(create_transaction_parameters_t *sign_transacti
  *   5 | Fee             : 5 photon
  *
  * Verification Details:
- * - The function will first confirm that the number of items in the transaction
- *   matches the expected count for the current mode.
  * - Each item's content will be checked against the predefined values for the
  *   corresponding display index.
  * - If any discrepancy is found (either in item count or content), the function
  *   will return an error.
+  * - The function will confirm that the number of items in the transaction
+ *   matches the expected count for the current mode.
  */
 parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
     parser_error_t err = parser_unexpected_error;
@@ -139,10 +139,6 @@ parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
     uint8_t pageCount = 0;
     char tmpKey[20] = {0};
     char tmpValue[65] = {0};
-
-    if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items > EXPERT_MODE_ITEMS) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items > NORMAL_MODE_ITEMS)) {
-        return parser_unexpected_error;
-    }
 
     // Cosmos App in normal mode requires that chain id is the default one. If not, it will print expert mode fields
     // this means if we reach this point and no chain_id is printed, chain_id must be the default one
@@ -182,8 +178,10 @@ parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
 
     // Check if memo is present
     displayIdx += 1;
+    uint8_t has_memo = 0;
     CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
     if (strcmp(tmpKey, "Memo") == 0) {
+        has_memo = 1;
         if(strcmp(tmpValue, G_swap_state.memo) != 0) {
             ZEMU_LOGF(200, "Wrong swap tx memo ('%s', should be : '%s').\n", tmpValue, G_swap_state.memo);
             return parser_unexpected_error;
@@ -203,6 +201,21 @@ parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
     if (strcmp(tmpKey, "Fee") != 0 || strcmp(tmp_amount, tmpValue) != 0) {
         ZEMU_LOGF(200, "Wrong swap tx fees ('%s', should be : '%s').\n",  tmpValue, tmp_amount);
         return parser_unexpected_error;
+    }
+
+    switch (has_memo){
+        case 0:
+            if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_MODE_ITEMS - 1) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_MODE_ITEMS - 1)) {
+                return parser_unexpected_error;
+            }
+            break;
+        case 1:
+            if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_MODE_ITEMS) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_MODE_ITEMS)) {
+                return parser_unexpected_error;
+            }
+            break;
+        default:
+            break;
     }
 
     return parser_ok;
