@@ -22,7 +22,12 @@
 #include "swap_utils.h"
 #include "chain_config.h"
 
-
+/*
+Address parameters have the following structure;
+    - bip32 path length (1 byte) | bip32 path (4 * pathLength bytes)
+Coin Configuration has the following structure;
+    - hrp length (1 byte) | hrp (hrp length bytes)
+*/
 void handle_check_address(check_address_parameters_t *params) {
     if (params == NULL || params->address_to_check == NULL) {
         return;
@@ -31,20 +36,24 @@ void handle_check_address(check_address_parameters_t *params) {
     // Reset result
     params->result = 0;
 
-    // Address parameters have the following structure
-    // hrp length (1 byte) | hrp (hrp length bytes) | bip32 path length (1 byte) | bip32 path (4 * pathLength bytes)
     // Get HRP
-    uint8_t hrp_length = params->address_parameters[0];
+    if (params->coin_configuration == NULL) {
+        ZEMU_LOGF(200, "Coin configuration is NULL\n");
+        return;
+    }
+
+    uint8_t hrp_length = params->coin_configuration[0];
+    ZEMU_LOGF(200, "HRP length: %d\n", hrp_length);
     char hrp[MAX_BECH32_HRP_LEN + 1] = {0};
 
     if (hrp_length == 0 || hrp_length > MAX_BECH32_HRP_LEN) {
         return;
     }
-    memcpy(hrp, params->address_parameters + 1, hrp_length);
+    memcpy(hrp, params->coin_configuration + 1, hrp_length);
     hrp[hrp_length] = 0;
 
     // Get bip32 path
-    uint8_t bip32_path_length = params->address_parameters[1 + hrp_length];
+    uint8_t bip32_path_length = params->address_parameters[0];
     uint32_t bip32_path[HDPATH_LEN_DEFAULT] = {0};
 
     if (bip32_path_length != HDPATH_LEN_DEFAULT) {
