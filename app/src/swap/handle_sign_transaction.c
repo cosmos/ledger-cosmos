@@ -28,7 +28,7 @@ swap_globals_t G_swap_state;
 // Save the BSS address where we will write the return value when finished
 static uint8_t *G_swap_sign_return_value_address;
 
-static const char * chain_ids[] = { COIN_DEFAULT_CHAINID, OSMOSIS_CHAINID, DYDX_CHAINID};
+static const char * chain_ids[] = {COIN_DEFAULT_CHAINID, OSMOSIS_CHAINID, DYDX_CHAINID};
 
 bool is_allowed_chainid(const char *chainId) {
     for (uint32_t i = 0; i < array_length(chain_ids); i++) {
@@ -140,7 +140,7 @@ parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
     char tmpKey[20] = {0};
     char tmpValue[65] = {0};
 
-    if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_MODE_ITEMS) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_MODE_ITEMS)) {
+    if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items > EXPERT_MODE_ITEMS) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items > NORMAL_MODE_ITEMS)) {
         return parser_unexpected_error;
     }
 
