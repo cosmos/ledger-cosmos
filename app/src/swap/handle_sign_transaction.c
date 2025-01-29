@@ -91,6 +91,139 @@ bool copy_transaction_parameters(create_transaction_parameters_t *sign_transacti
     return true;
 }
 
+
+/*
+ * This function verifies that a received transaction follows the expected format
+ * based on the current application mode (expert or normal). The verification
+ * process includes checking the number of items in the transaction and validating
+ * that the items at its respective display index matches the expected content.
+ * If any item does not meet the expected criteria, the function will return an error.
+ *
+ * Expected transaction format:
+ *
+ * Expert Mode:
+ * 0 | Chain ID : cosmoshub-4
+ * 1 | Account : 3225600
+ * 2 | Sequence : 0
+ * 3 | Type : Send
+ * 4 | Amount : 6000000 ATOM
+ * 5 | From [1/2] : cosmos12fuhfs6juf3m47dgplrhdrkvdyn9wc2j
+ * 5 | From [2/2] : mp4sw40
+ * 6 | To [1/2] : cosmos1s3mu2eyc7ql5hrcqvuerfhxxfxs7ax4k
+ * 7 | To [2/2] : zye8hz
+ * 8 | Fee : 3093 ATOM
+ * 9 | Gas : 123705
+ *
+ * Normal Mode:
+ *
+ * 0 | Type : Send
+ * 1 | Amount : 6000000 ATOM
+ * 2 | From [1/2] : cosmos12fuhfs6juf3m47dgplrhdrkvdyn9wc2j
+ * 2 | From [2/2] : mp4sw40
+ * 3 | To [1/2] : cosmos1s3mu2eyc7ql5hrcqvuerfhxxfxs7ax4k
+ * 3 | To [2/2] : zye8hz
+ * 4 | Fee : 3093 ATOM
+ *
+ * Verification Details:
+ * - Each item's content will be checked against the predefined values for the
+ *   corresponding display index.
+ * - If any discrepancy is found (either in item count or content), the function
+ *   will return an error.
+  * - The function will confirm that the number of items in the transaction
+ *   matches the expected count for the current mode.
+ */
+parser_error_t parser_msg_send(parser_context_t *ctx_parsed_tx, uint8_t displayIdx, uint8_t pageIdx, uint8_t pageCount){
+    if (ctx_parsed_tx == NULL) {
+        return parser_unexpected_error;
+    }
+    char tmpKey[20] = {0};
+    char tmpValue[65] = {0};
+
+    // Check if app is in expert mode
+    CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
+    if (strcmp(tmpKey, "Chain ID") == 0) {
+        if (!is_allowed_chainid(tmpValue)) {
+            ZEMU_LOGF(200, " Not supported Chain Id\n");
+            return parser_swap_wrong_chain_id;
+        }
+
+        // If in expert mode check idx 3 for source address
+        displayIdx += 3;
+    }
+
+    // Check source address is present
+    CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
+    if (strcmp(tmpKey, "Type") != 0 && strcmp(tmpValue, "Send") != 0) {
+        return parser_swap_unexpected_field;
+    }
+
+    // Check amount
+    displayIdx += 1;
+    char tmp_amount[100] = {0};
+    zxerr_t zxerr = bytesAmountToStringBalance(G_swap_state.amount, G_swap_state.amount_length, tmp_amount, sizeof(tmp_amount));
+    if (zxerr != zxerr_ok) {
+        return parser_swap_wrap_amount_computation_error;
+    }
+
+    CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
+    if (strcmp(tmpKey, "Amount") != 0 || strcmp(tmp_amount, tmpValue) != 0) {
+        ZEMU_LOGF(200, "Wrong swap tx amount ('%s', should be : '%s').\n", tmpValue, tmp_amount);
+        return parser_swap_wrong_amount;
+    }
+
+    displayIdx += 2;
+    // Check destination address
+    CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
+    if (strcmp(tmpKey, "To") != 0 || strcmp(tmpValue, G_swap_state.destination_address) != 0) {
+        ZEMU_LOGF(200, "Wrong swap tx destination address ('%s', should be : '%s').\n", tmpValue, G_swap_state.destination_address);
+        return parser_swap_wrong_dest_address;
+    }
+
+    // Check if memo is present
+    displayIdx += 1;
+    uint8_t has_memo = 0;
+    CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
+    if (strcmp(tmpKey, "Memo") == 0) {
+        has_memo = 1;
+        if(strcmp(tmpValue, G_swap_state.memo) != 0) {
+            ZEMU_LOGF(200, "Wrong swap tx memo ('%s', should be : '%s').\n", tmpValue, G_swap_state.memo);
+            return parser_swap_wrong_memo;
+        }
+
+        // Prepare for fees
+        displayIdx += 1;   
+        CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
+    }
+
+    //Check fees
+    zxerr = bytesAmountToStringBalance(G_swap_state.fees, G_swap_state.fees_length, tmp_amount, sizeof(tmp_amount));
+    if (zxerr != zxerr_ok) {
+        return parser_swap_wrap_amount_computation_error;
+    }
+
+    if (strcmp(tmpKey, "Fee") != 0 || strcmp(tmp_amount, tmpValue) != 0) {
+        ZEMU_LOGF(200, "Wrong swap tx fees ('%s', should be : '%s').\n",  tmpValue, tmp_amount);
+        return parser_swap_wrong_fee;
+    }
+
+    switch (has_memo){
+        case 0:
+            if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_SEND_MODE_ITEMS - 1) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_SEND_MODE_ITEMS - 1)) {
+                return parser_swap_unexpected_number_of_items;
+            }
+            break;
+        case 1:
+            if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_SEND_MODE_ITEMS) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_SEND_MODE_ITEMS)) {
+                return parser_swap_unexpected_number_of_items;
+            }
+            break;
+        default:
+            break;
+    }
+
+    return parser_ok;
+}
+
 /*
  * This function verifies that a received transaction follows the expected format
  * based on the current application mode (expert or normal). The verification
@@ -128,52 +261,52 @@ bool copy_transaction_parameters(create_transaction_parameters_t *sign_transacti
   * - The function will confirm that the number of items in the transaction
  *   matches the expected count for the current mode.
  */
-parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
-    parser_error_t err = parser_unexpected_error;
+parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx, uint8_t displayIdx, uint8_t pageIdx, uint8_t pageCount){
     if (ctx_parsed_tx == NULL) {
-        return err;
+        return parser_unexpected_error;
     }
 
-    uint8_t displayIdx = 0;
-    uint8_t pageIdx = 0;
-    uint8_t pageCount = 0;
     char tmpKey[20] = {0};
     char tmpValue[65] = {0};
 
-    // Cosmos App in normal mode requires that chain id is the default one. If not, it will print expert mode fields
-    // this means if we reach this point and no chain_id is printed, chain_id must be the default one
+    // Check if app is in expert mode
     CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
-
-    // Check if chain_id is printed, expert fields
     if (strcmp(tmpKey, "Chain ID") == 0) {
         if (!is_allowed_chainid(tmpValue)) {
             ZEMU_LOGF(200, " Not supported Chain Id\n");
-            return parser_unexpected_error;
+            return parser_swap_wrong_chain_id;
         }
-        displayIdx += 5; // skip account_number, sequence, source_address, source_coins
-    } else {
-        displayIdx += 2; // skipsource_address, source_coins
+
+        // If in expert mode check idx 3 for source address
+        displayIdx += 3;
+    }
+
+    // Check source address is present
+    CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
+        if (strcmp(tmpKey, "Source Address") != 0) {
+        return parser_swap_unexpected_field;
     }
 
     // Check destination address
+    displayIdx += 2;
     CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
     if (strcmp(tmpKey, "Dest Address") != 0 || strcmp(tmpValue, G_swap_state.destination_address) != 0) {
         ZEMU_LOGF(200, "Wrong swap tx destination address ('%s', should be : '%s').\n", tmpValue, G_swap_state.destination_address);
-        return parser_unexpected_error;
+        return parser_swap_wrong_dest_address;
     }
 
     // Check destination coins
     char tmp_amount[100] = {0};
     zxerr_t zxerr = bytesAmountToStringBalance(G_swap_state.amount, G_swap_state.amount_length, tmp_amount, sizeof(tmp_amount));
     if (zxerr != zxerr_ok) {
-        return parser_unexpected_error;
+        return parser_swap_wrap_amount_computation_error;
     }
     
     displayIdx += 1;
     CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
     if (strcmp(tmpKey, "Dest Coins") != 0 || strcmp(tmp_amount, tmpValue) != 0) {
         ZEMU_LOGF(200, "Wrong swap tx destination coins ('%s', should be : '%s').\n", tmpValue, tmp_amount);
-        return parser_unexpected_error;
+        return parser_swap_wrong_dest_coins;
     }
 
     // Check if memo is present
@@ -184,7 +317,7 @@ parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
         has_memo = 1;
         if(strcmp(tmpValue, G_swap_state.memo) != 0) {
             ZEMU_LOGF(200, "Wrong swap tx memo ('%s', should be : '%s').\n", tmpValue, G_swap_state.memo);
-            return parser_unexpected_error;
+            return parser_swap_wrong_memo;
         }
 
         // Prepare for fees
@@ -195,23 +328,23 @@ parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
     //Check fees
     zxerr = bytesAmountToStringBalance(G_swap_state.fees, G_swap_state.fees_length, tmp_amount, sizeof(tmp_amount));
     if (zxerr != zxerr_ok) {
-        return parser_unexpected_error;
+        return parser_swap_wrap_amount_computation_error;
     }
 
     if (strcmp(tmpKey, "Fee") != 0 || strcmp(tmp_amount, tmpValue) != 0) {
         ZEMU_LOGF(200, "Wrong swap tx fees ('%s', should be : '%s').\n",  tmpValue, tmp_amount);
-        return parser_unexpected_error;
+        return parser_swap_wrong_fee;
     }
 
     switch (has_memo){
         case 0:
             if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_MODE_ITEMS - 1) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_MODE_ITEMS - 1)) {
-                return parser_unexpected_error;
+                return parser_swap_unexpected_number_of_items;
             }
             break;
         case 1:
             if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_MODE_ITEMS) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_MODE_ITEMS)) {
-                return parser_unexpected_error;
+                return parser_swap_unexpected_number_of_items;
             }
             break;
         default:
@@ -219,6 +352,24 @@ parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
     }
 
     return parser_ok;
+}
+
+parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
+    if (ctx_parsed_tx == NULL) {
+        return parser_unexpected_error;
+    }
+
+    uint8_t displayIdx = 0;
+    uint8_t pageIdx = 0;
+    uint8_t pageCount = 0;
+
+    // Check if the transaction is a simple transfer or a msg_send
+    parser_error_t err = parser_simple_transfer(ctx_parsed_tx, displayIdx, pageIdx, pageCount);
+    if (err == parser_swap_unexpected_field) {
+        err = parser_msg_send(ctx_parsed_tx, displayIdx, pageIdx, pageCount);
+    }
+
+    return err;
 }
 
 void __attribute__((noreturn)) finalize_exchange_sign_transaction(bool is_success) {
