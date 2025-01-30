@@ -91,6 +91,7 @@ typedef enum {
     parser_swap_wrong_fee,
     parser_swap_unexpected_number_of_items,
     parser_swap_unexpected_field,
+    parser_swap_memo_not_present,
     parser_swap_wrap_amount_computation_error,
     parser_swap_wrong_type,
 } parser_error_t;
