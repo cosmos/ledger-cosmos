@@ -115,6 +115,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "Swap wrap amount computation error";
         case parser_swap_wrong_type:
             return "Swap wrong type";
+        case parser_swap_memo_not_present:
+            return "Swap memo not present";
 
         default:
             return "Unrecognized error code";
