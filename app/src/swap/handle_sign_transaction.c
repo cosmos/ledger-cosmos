@@ -179,17 +179,20 @@ parser_error_t parser_msg_send(parser_context_t *ctx_parsed_tx, uint8_t displayI
         return parser_swap_wrong_dest_address;
     }
 
-    // Check if memo is present
+    // Check if memo is present. If size of G_swap_state.memo is bigger than 0, then a memo should be present
     displayIdx += 1;
     uint8_t has_memo = 0;
     CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
-    if (strcmp(tmpKey, "Memo") == 0) {
-        has_memo = 1;
-        if(strcmp(tmpValue, G_swap_state.memo) != 0) {
-            ZEMU_LOGF(200, "Wrong swap tx memo ('%s', should be : '%s').\n", tmpValue, G_swap_state.memo);
-            return parser_swap_wrong_memo;
+    if (strlen(G_swap_state.memo) > 0) {
+        if (strcmp(tmpKey, "Memo") == 0) {
+            has_memo = 1;
+            if(strcmp(tmpValue, G_swap_state.memo) != 0) {
+                ZEMU_LOGF(200, "Wrong swap tx memo ('%s', should be : '%s').\n", tmpValue, G_swap_state.memo);
+                return parser_swap_wrong_memo;
+            }
+        } else {
+            return parser_swap_memo_not_present;
         }
-
         // Prepare for fees
         displayIdx += 1;   
         CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
@@ -309,17 +312,20 @@ parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx, uint8_t d
         return parser_swap_wrong_dest_coins;
     }
 
-    // Check if memo is present
+    // Check if memo is present. If size of G_swap_state.memo is bigger than 0, then a memo should be present
     displayIdx += 1;
     uint8_t has_memo = 0;
     CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
-    if (strcmp(tmpKey, "Memo") == 0) {
-        has_memo = 1;
-        if(strcmp(tmpValue, G_swap_state.memo) != 0) {
-            ZEMU_LOGF(200, "Wrong swap tx memo ('%s', should be : '%s').\n", tmpValue, G_swap_state.memo);
-            return parser_swap_wrong_memo;
+    if (strlen(G_swap_state.memo) > 0) {
+        if (strcmp(tmpKey, "Memo") == 0) {
+            has_memo = 1;
+            if(strcmp(tmpValue, G_swap_state.memo) != 0) {
+                ZEMU_LOGF(200, "Wrong swap tx memo ('%s', should be : '%s').\n", tmpValue, G_swap_state.memo);
+                return parser_swap_wrong_memo;
+            }
+        } else {
+            return parser_swap_memo_not_present;
         }
-
         // Prepare for fees
         displayIdx += 1;   
         CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
