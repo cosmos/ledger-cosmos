@@ -290,21 +290,29 @@ parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx, uint8_t d
         return parser_swap_unexpected_field;
     }
 
+    // Check source coins are equal to the amount and equal to destination coins
+    char tmp_amount[100] = {0};
+    zxerr_t zxerr = bytesAmountToStringBalance(G_swap_state.amount, G_swap_state.amount_length, tmp_amount, sizeof(tmp_amount));
+    if (zxerr != zxerr_ok) {
+        return parser_swap_wrap_amount_computation_error;
+    }
+
+    displayIdx += 1;
+    CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
+    if (strcmp(tmpKey, "Source Coins") != 0 || strcmp(tmpValue, tmp_amount) != 0) {
+        ZEMU_LOGF(200, "Wrong swap tx source coins ('%s', should be : '%s').\n", tmpValue, tmpKey);
+        return parser_swap_wrong_source_coins;
+    }
+
     // Check destination address
-    displayIdx += 2;
+    displayIdx += 1;
     CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
     if (strcmp(tmpKey, "Dest Address") != 0 || strcmp(tmpValue, G_swap_state.destination_address) != 0) {
         ZEMU_LOGF(200, "Wrong swap tx destination address ('%s', should be : '%s').\n", tmpValue, G_swap_state.destination_address);
         return parser_swap_wrong_dest_address;
     }
 
-    // Check destination coins
-    char tmp_amount[100] = {0};
-    zxerr_t zxerr = bytesAmountToStringBalance(G_swap_state.amount, G_swap_state.amount_length, tmp_amount, sizeof(tmp_amount));
-    if (zxerr != zxerr_ok) {
-        return parser_swap_wrap_amount_computation_error;
-    }
-    
+    // Check destination coins    
     displayIdx += 1;
     CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
     if (strcmp(tmpKey, "Dest Coins") != 0 || strcmp(tmp_amount, tmpValue) != 0) {
