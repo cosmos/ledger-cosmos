@@ -77,7 +77,7 @@ then run:
 - This project requires Ledger firmware 2.0
     - The current repository keeps track of Ledger's SDK but it is possible to override it by changing the git submodule.
 
-*Warning*: Some IDEs may not use the same python interpreter or virtual enviroment as the one you used when running `pip`.
+*Warning*: Some IDEs may not use the same python interpreter or virtual environment as the one you used when running `pip`.
 If you see conan is not found, check that you installed the package in the same interpreter as the one that launches `cmake`.
 
 ## How to build ?

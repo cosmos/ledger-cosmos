@@ -81,6 +81,20 @@ typedef enum {
     parser_context_unexpected_size,
     parser_context_invalid_chars,
     parser_context_unknown_prefix,
+
+    // swap
+    parser_swap_wrong_chain_id,
+    parser_swap_wrong_dest_address,
+    parser_swap_wrong_amount,
+    parser_swap_wrong_dest_coins,
+    parser_swap_wrong_source_coins,
+    parser_swap_wrong_memo,
+    parser_swap_wrong_fee,
+    parser_swap_unexpected_number_of_items,
+    parser_swap_unexpected_field,
+    parser_swap_memo_not_present,
+    parser_swap_wrap_amount_computation_error,
+    parser_swap_wrong_type,
 } parser_error_t;
 
 #ifdef __cplusplus

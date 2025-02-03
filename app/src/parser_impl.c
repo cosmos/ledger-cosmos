@@ -94,6 +94,31 @@ const char *parser_getErrorDescription(parser_error_t err) {
             return "context invalid chars";
         case parser_transaction_too_big:
             return "Transaction is too big";
+        // swap
+        case parser_swap_wrong_chain_id:
+            return "Swap wrong chain id";
+        case parser_swap_wrong_dest_address:
+            return "Swap wrong destination address";
+        case parser_swap_wrong_amount:
+            return "Swap wrong amount";
+        case parser_swap_wrong_dest_coins:
+            return "Swap wrong destination coins";
+        case parser_swap_wrong_memo:
+            return "Swap wrong memo";
+        case parser_swap_wrong_fee:
+            return "Swap wrong fee";
+        case parser_swap_unexpected_number_of_items:
+            return "Swap unexpected number of items";
+        case parser_swap_unexpected_field:
+            return "Swap unexpected field";
+        case parser_swap_wrap_amount_computation_error:
+            return "Swap wrap amount computation error";
+        case parser_swap_wrong_type:
+            return "Swap wrong type";
+        case parser_swap_memo_not_present:
+            return "Swap memo not present";
+        case parser_swap_wrong_source_coins:
+            return "Swap wrong source coins";
 
         default:
             return "Unrecognized error code";

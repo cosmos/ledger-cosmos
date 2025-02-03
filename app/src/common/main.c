@@ -19,25 +19,108 @@
 
 #include <os_io_seproxyhal.h>
 
-__attribute__((section(".boot"))) int
-main(void) {
+#ifdef HAVE_NBGL
+#include "nbgl_use_case.h"
+#endif
+
+#ifdef HAVE_SWAP
+#include "lib_standard_app/swap_lib_calls.h"
+#include "swap.h"
+#endif
+
+#ifdef HAVE_SWAP
+// Helper to quit the application in a limited THROW context
+static void app_exit(void) {
+    BEGIN_TRY_L(exit) {
+        TRY_L(exit) {
+            os_sched_exit(-1);
+        }
+        FINALLY_L(exit) {
+        }
+    }
+    END_TRY_L(exit);
+}
+
+// Helper to handle the different library commands
+static void library_main(libargs_t *args) {
+    BEGIN_TRY {
+        TRY {
+            switch (args->command) {
+                case SIGN_TRANSACTION: {
+                    // Backup up transaction parameters and wipe BSS to avoid collusion with
+                    // app-exchange BSS data.
+                    bool success = copy_transaction_parameters(args->create_transaction);
+                    if (success) {
+                        // BSS was wiped, we can now init these globals
+                        G_swap_state.called_from_swap = true;
+                        G_swap_state.should_exit = false;
+
+#ifdef HAVE_NBGL
+                        // On Stax, display a modal
+                        nbgl_useCaseSpinner("Signing");
+#endif  // HAVE_NBGL
+
+                        view_init();
+                        app_init();
+                        app_main();
+                    }
+                    break;
+                }
+                case CHECK_ADDRESS:
+                    handle_check_address(args->check_address);
+                    break;
+                case GET_PRINTABLE_AMOUNT:
+                    handle_get_printable_amount(args->get_printable_amount);
+                    break;
+                default:
+                    break;
+            }
+        }
+        CATCH_OTHER(e) {
+        }
+        FINALLY {
+            os_lib_end();
+        }
+    }
+    END_TRY;
+}
+#endif
+
+__attribute__((section(".boot"))) int main(int arg0) {
     // exit critical section
     __asm volatile("cpsie i");
 
-    view_init();
     os_boot();
 
-    BEGIN_TRY
-    {
-        TRY
-        {
-            app_init();
-            app_main();
+    if (arg0 != 0) {
+#ifdef HAVE_SWAP
+        // The app has been started in library mode
+        libargs_t *args = (libargs_t *)arg0;
+        if (args->id != 0x100) {
+            // Invalid mode ID
+            app_exit();
+        } else {
+            library_main(args);
         }
-        CATCH_OTHER(e)
-        {}
-        FINALLY
-        {}
+#endif
+    } else {
+#ifdef HAVE_SWAP
+        // The app has been launched from the dashboard
+        G_swap_state.called_from_swap = false;
+#endif
+        BEGIN_TRY
+        {
+            TRY
+            {
+                view_init();
+                app_init();
+                app_main();
+            }
+            CATCH_OTHER(e)
+            {}
+            FINALLY
+            {}
+        }
+        END_TRY;
     }
-    END_TRY;
 }

@@ -37,6 +37,13 @@ zxerr_t crypto_fillAddress(uint8_t *buffer, uint16_t bufferLen, uint16_t *addrRe
 
 zxerr_t crypto_sign(uint8_t *signature, uint16_t signatureMaxlen, uint16_t *signatureLen);
 
+zxerr_t crypto_swap_fillAddress(uint32_t *hdPath_swap,
+                                      uint8_t hdPathLen_swap,
+                                      char *hrp,
+                                      address_encoding_e encode_type,
+                                      char *buffer,
+                                      uint16_t bufferLen,
+                                      uint16_t *addrResponseLen);
 #ifdef __cplusplus
 }
 #endif

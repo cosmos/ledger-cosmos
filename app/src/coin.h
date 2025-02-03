@@ -55,6 +55,10 @@ typedef enum {
 #define APPVERSION_LINE2                   ("v" APPVERSION)
 
 #define COIN_DEFAULT_CHAINID                "cosmoshub-4"
+#define OSMOSIS_CHAINID                     "osmosis-1"
+#define DYDX_CHAINID                        "dydx-mainnet-1"
+#define MANTRA_CHAINID                      "mantra-1"
+#define XION_CHAINID                        "xion-mainnet-1"
 
 // In non-expert mode, the app will convert from uatom to ATOM
 #define COIN_DEFAULT_DENOM_BASE             "uatom"

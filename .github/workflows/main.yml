@@ -87,7 +87,7 @@ jobs:
         run: "cd tests_zemu; yarn test"
       - name: Upload Snapshots (only failure)
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: snapshots-tmp
           path: tests_zemu/snapshots-tmp/
