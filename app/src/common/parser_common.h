@@ -87,6 +87,7 @@ typedef enum {
     parser_swap_wrong_dest_address,
     parser_swap_wrong_amount,
     parser_swap_wrong_dest_coins,
+    parser_swap_wrong_source_coins,
     parser_swap_wrong_memo,
     parser_swap_wrong_fee,
     parser_swap_unexpected_number_of_items,
