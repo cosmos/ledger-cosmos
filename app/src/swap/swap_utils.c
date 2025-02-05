@@ -19,9 +19,11 @@
 #include "lib_standard_app/swap_lib_calls.h"
 #include "swap.h"
 #include "zxformat.h"
+#include "app_mode.h"
 
 #define COSMOS_COIN_AMOUNT_DECIMAL_PLACES 6
 #define COSMOS_COIN_TICKER                " ATOM"
+#define COSMOS_COIN_EXPERT_TICKER         " uatom"
 ////////////////////////////////////////////////////////////////
 
 zxerr_t bytesAmountToStringBalance(uint8_t *amount, uint8_t amount_len, char *out, uint8_t out_len) {
@@ -42,6 +44,29 @@ zxerr_t bytesAmountToStringBalance(uint8_t *amount, uint8_t amount_len, char *ou
     number_inplace_trimming(out, 1);
 
     return zxerr_ok;
+}
+
+zxerr_t bytesAmountToExpertStringBalance(uint8_t *amount, uint8_t amount_len, char *out, uint8_t out_len) {
+    uint8_t tmpBuf[COIN_AMOUNT_MAXSIZE] = {0};
+
+    bignumBigEndian_to_bcd(tmpBuf, sizeof(tmpBuf), amount, amount_len);
+    bignumBigEndian_bcdprint(out, out_len, tmpBuf, sizeof(tmpBuf));
+
+    // Add ticker prefix.
+    CHECK_ZXERR(z_str3join(out, out_len, "", COSMOS_COIN_EXPERT_TICKER))
+
+    // Trim trailing zeros
+    number_inplace_trimming(out, 1);
+
+    return zxerr_ok;
+}
+
+zxerr_t format_amount(uint8_t *amount, uint8_t amount_len, char *out, uint8_t out_len) {
+    if (app_mode_expert()) {
+        return bytesAmountToExpertStringBalance(amount, amount_len, out, out_len);
+    } else {
+        return bytesAmountToStringBalance(amount, amount_len, out, out_len);
+    }
 }
 
 zxerr_t readU32BE(uint8_t *input, uint32_t *output) {

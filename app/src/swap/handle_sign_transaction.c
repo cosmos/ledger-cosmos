@@ -32,7 +32,7 @@ static const char * chain_ids[] = {COIN_DEFAULT_CHAINID, OSMOSIS_CHAINID, DYDX_C
 
 bool is_allowed_chainid(const char *chainId) {
     for (uint32_t i = 0; i < array_length(chain_ids); i++) {
-        if (strcmp(chainId, chain_ids[i]) == 0) {
+        if (strcmp(chainId, PIC(chain_ids[i])) == 0) {
             return true;
         }
     }
@@ -160,7 +160,7 @@ parser_error_t parser_msg_send(parser_context_t *ctx_parsed_tx, uint8_t displayI
     // Check amount
     displayIdx += 1;
     char tmp_amount[100] = {0};
-    zxerr_t zxerr = bytesAmountToStringBalance(G_swap_state.amount, G_swap_state.amount_length, tmp_amount, sizeof(tmp_amount));
+    zxerr_t zxerr = format_amount(G_swap_state.amount, G_swap_state.amount_length, tmp_amount, sizeof(tmp_amount));
     if (zxerr != zxerr_ok) {
         return parser_swap_wrap_amount_computation_error;
     }
@@ -199,7 +199,7 @@ parser_error_t parser_msg_send(parser_context_t *ctx_parsed_tx, uint8_t displayI
     }
 
     //Check fees
-    zxerr = bytesAmountToStringBalance(G_swap_state.fees, G_swap_state.fees_length, tmp_amount, sizeof(tmp_amount));
+    zxerr = format_amount(G_swap_state.fees, G_swap_state.fees_length, tmp_amount, sizeof(tmp_amount));
     if (zxerr != zxerr_ok) {
         return parser_swap_wrap_amount_computation_error;
     }
@@ -292,7 +292,7 @@ parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx, uint8_t d
 
     // Check source coins are equal to the amount and equal to destination coins
     char tmp_amount[100] = {0};
-    zxerr_t zxerr = bytesAmountToStringBalance(G_swap_state.amount, G_swap_state.amount_length, tmp_amount, sizeof(tmp_amount));
+    zxerr_t zxerr = format_amount(G_swap_state.amount, G_swap_state.amount_length, tmp_amount, sizeof(tmp_amount));
     if (zxerr != zxerr_ok) {
         return parser_swap_wrap_amount_computation_error;
     }
@@ -300,7 +300,7 @@ parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx, uint8_t d
     displayIdx += 1;
     CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
     if (strcmp(tmpKey, "Source Coins") != 0 || strcmp(tmpValue, tmp_amount) != 0) {
-        ZEMU_LOGF(200, "Wrong swap tx source coins ('%s', should be : '%s').\n", tmpValue, tmpKey);
+        ZEMU_LOGF(200, "Wrong swap tx source coins ('%s', should be : '%s').\n", tmpValue, tmp_amount);
         return parser_swap_wrong_source_coins;
     }
 
@@ -340,7 +340,7 @@ parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx, uint8_t d
     }
 
     //Check fees
-    zxerr = bytesAmountToStringBalance(G_swap_state.fees, G_swap_state.fees_length, tmp_amount, sizeof(tmp_amount));
+    zxerr = format_amount(G_swap_state.fees, G_swap_state.fees_length, tmp_amount, sizeof(tmp_amount));
     if (zxerr != zxerr_ok) {
         return parser_swap_wrap_amount_computation_error;
     }
