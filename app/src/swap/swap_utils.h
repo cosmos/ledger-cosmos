@@ -21,4 +21,6 @@
 
 // Helper functions for swap handlers
 zxerr_t bytesAmountToStringBalance(uint8_t *amount, uint8_t amount_len, char *out, uint8_t out_len);
+zxerr_t bytesAmountToExpertStringBalance(uint8_t *amount, uint8_t amount_len, char *out, uint8_t out_len);
+zxerr_t format_amount(uint8_t *amount, uint8_t amount_len, char *out, uint8_t out_len);
 zxerr_t readU32BE(uint8_t *input, uint32_t *output);
