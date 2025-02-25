@@ -43,6 +43,16 @@ typedef struct {
     char memo[MEMO_MAXSIZE];
 } swap_globals_t;
 
+typedef struct {
+    const char *chain_id;
+    const char *ticker;
+    const char *expert_ticker;
+    uint8_t decimals;
+    const char * coin_config;
+} chains_t;
+
+extern const chains_t chains[];
+extern const uint32_t chains_len;
 extern swap_globals_t G_swap_state;
 
 // Handler for swap features
