@@ -21,24 +21,57 @@
 #include "zxformat.h"
 #include "app_mode.h"
 
-#define COSMOS_COIN_AMOUNT_DECIMAL_PLACES 6
-#define COSMOS_COIN_TICKER                " ATOM"
-#define COSMOS_COIN_EXPERT_TICKER         " uatom"
-////////////////////////////////////////////////////////////////
+const chains_t chains[] = {
+    {COIN_DEFAULT_CHAINID, " ATOM", " uatom", 6, "cosmos"},
+    {OSMOSIS_CHAINID, " OSMO", " uosmo", 6, "osmo"},
+    {DYDX_CHAINID, " DYDX", " adydx", 18, "dydx"},
+    {MANTRA_CHAINID, " OM", " uom", 18, "mantra"},
+    {XION_CHAINID, " XION", " uxion", 18, "xion"},
+};
 
-zxerr_t bytesAmountToStringBalance(uint8_t *amount, uint8_t amount_len, char *out, uint8_t out_len) {
+const uint32_t chains_len = sizeof(chains) / sizeof(chains[0]);
+
+int8_t find_chain_index_by_coin_config(const char *coin_config, uint8_t coin_config_len) {
+    if (coin_config == NULL) {
+        return -1;
+    }
+
+    for (uint8_t i = 0; i < chains_len; i++) {
+        if (strncmp(coin_config, PIC(chains[i].coin_config), coin_config_len) == 0) {
+            return i;
+        }
+    }
+    
+    return -1;
+}
+
+int8_t find_chain_index_by_chain_id(const char *chain_id) {
+    if (chain_id == NULL) {
+        return -1;
+    }
+
+    for (uint8_t i = 0; i < chains_len; i++) {
+        if (strncmp(chain_id, PIC(chains[i].chain_id), strlen(PIC(chains[i].chain_id))) == 0) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+zxerr_t bytesAmountToStringBalance(uint8_t *amount, uint8_t amount_len, char *out, uint8_t out_len, int8_t chain_index) {
     uint8_t tmpBuf[COIN_AMOUNT_MAXSIZE] = {0};
 
     bignumBigEndian_to_bcd(tmpBuf, sizeof(tmpBuf), amount, amount_len);
     bignumBigEndian_bcdprint(out, out_len, tmpBuf, sizeof(tmpBuf));
 
     // Format number.
-    if (!intstr_to_fpstr_inplace(out, out_len, COSMOS_COIN_AMOUNT_DECIMAL_PLACES)) {
+    if (!intstr_to_fpstr_inplace(out, out_len, chains[chain_index].decimals)) {
         return zxerr_encoding_failed;
     }
 
     // Add ticker prefix.
-    CHECK_ZXERR(z_str3join(out, out_len, "", COSMOS_COIN_TICKER))
+    CHECK_ZXERR(z_str3join(out, out_len, "", PIC(chains[chain_index].ticker)))
 
     // Trim trailing zeros
     number_inplace_trimming(out, 1);
@@ -46,26 +79,24 @@ zxerr_t bytesAmountToStringBalance(uint8_t *amount, uint8_t amount_len, char *ou
     return zxerr_ok;
 }
 
-zxerr_t bytesAmountToExpertStringBalance(uint8_t *amount, uint8_t amount_len, char *out, uint8_t out_len) {
+zxerr_t bytesAmountToExpertStringBalance(uint8_t *amount, uint8_t amount_len, char *out, uint8_t out_len, int8_t chain_index) {
     uint8_t tmpBuf[COIN_AMOUNT_MAXSIZE] = {0};
 
     bignumBigEndian_to_bcd(tmpBuf, sizeof(tmpBuf), amount, amount_len);
     bignumBigEndian_bcdprint(out, out_len, tmpBuf, sizeof(tmpBuf));
 
-    // Add ticker prefix.
-    CHECK_ZXERR(z_str3join(out, out_len, "", COSMOS_COIN_EXPERT_TICKER))
-
-    // Trim trailing zeros
-    number_inplace_trimming(out, 1);
+    // Add expert ticker prefix
+    CHECK_ZXERR(z_str3join(out, out_len, "", PIC(chains[chain_index].expert_ticker)))
 
     return zxerr_ok;
 }
 
-zxerr_t format_amount(uint8_t *amount, uint8_t amount_len, char *out, uint8_t out_len) {
-    if (app_mode_expert()) {
-        return bytesAmountToExpertStringBalance(amount, amount_len, out, out_len);
+zxerr_t format_amount(uint8_t *amount, uint8_t amount_len, char *out, uint8_t out_len, int8_t chain_index) {
+    // expert or not default chain
+    if (app_mode_expert() || chain_index != 0) {
+        return bytesAmountToExpertStringBalance(amount, amount_len, out, out_len, chain_index);
     } else {
-        return bytesAmountToStringBalance(amount, amount_len, out, out_len);
+        return bytesAmountToStringBalance(amount, amount_len, out, out_len, chain_index);
     }
 }
 
