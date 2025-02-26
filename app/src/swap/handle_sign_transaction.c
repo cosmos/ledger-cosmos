@@ -28,17 +28,6 @@ swap_globals_t G_swap_state;
 // Save the BSS address where we will write the return value when finished
 static uint8_t *G_swap_sign_return_value_address;
 
-static const char * chain_ids[] = {COIN_DEFAULT_CHAINID, OSMOSIS_CHAINID, DYDX_CHAINID, MANTRA_CHAINID, XION_CHAINID};
-
-bool is_allowed_chainid(const char *chainId) {
-    for (uint32_t i = 0; i < array_length(chain_ids); i++) {
-        if (strcmp(chainId, PIC(chain_ids[i])) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
 bool copy_transaction_parameters(create_transaction_parameters_t *sign_transaction_params) {
     if (sign_transaction_params == NULL) {
         return false;
@@ -91,7 +80,6 @@ bool copy_transaction_parameters(create_transaction_parameters_t *sign_transacti
     return true;
 }
 
-
 /*
  * This function verifies that a received transaction follows the expected format
  * based on the current application mode (expert or normal). The verification
@@ -138,11 +126,13 @@ parser_error_t parser_msg_send(parser_context_t *ctx_parsed_tx, uint8_t displayI
     }
     char tmpKey[20] = {0};
     char tmpValue[65] = {0};
+    int8_t chain_index = 0;
 
     // Check if app is in expert mode
     CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
     if (strcmp(tmpKey, "Chain ID") == 0) {
-        if (!is_allowed_chainid(tmpValue)) {
+        chain_index = find_chain_index_by_chain_id(tmpValue);
+        if (chain_index == -1) {
             ZEMU_LOGF(200, " Not supported Chain Id\n");
             return parser_swap_wrong_chain_id;
         }
@@ -153,14 +143,14 @@ parser_error_t parser_msg_send(parser_context_t *ctx_parsed_tx, uint8_t displayI
 
     // Check source address is present
     CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
-    if (strcmp(tmpKey, "Type") != 0 && strcmp(tmpValue, "Send") != 0) {
+    if (strcmp(tmpKey, "Type") != 0 || strcmp(tmpValue, "Send") != 0) {
         return parser_swap_unexpected_field;
     }
 
     // Check amount
     displayIdx += 1;
     char tmp_amount[100] = {0};
-    zxerr_t zxerr = format_amount(G_swap_state.amount, G_swap_state.amount_length, tmp_amount, sizeof(tmp_amount));
+    zxerr_t zxerr = format_amount(G_swap_state.amount, G_swap_state.amount_length, tmp_amount, sizeof(tmp_amount), chain_index);
     if (zxerr != zxerr_ok) {
         return parser_swap_wrap_amount_computation_error;
     }
@@ -199,7 +189,7 @@ parser_error_t parser_msg_send(parser_context_t *ctx_parsed_tx, uint8_t displayI
     }
 
     //Check fees
-    zxerr = format_amount(G_swap_state.fees, G_swap_state.fees_length, tmp_amount, sizeof(tmp_amount));
+    zxerr = format_amount(G_swap_state.fees, G_swap_state.fees_length, tmp_amount, sizeof(tmp_amount), chain_index);
     if (zxerr != zxerr_ok) {
         return parser_swap_wrap_amount_computation_error;
     }
@@ -209,17 +199,33 @@ parser_error_t parser_msg_send(parser_context_t *ctx_parsed_tx, uint8_t displayI
         return parser_swap_wrong_fee;
     }
 
-    switch (has_memo){
+    switch (has_memo) {
         case 0:
-            if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_SEND_MODE_ITEMS - 1) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_SEND_MODE_ITEMS - 1)) {
-                return parser_swap_unexpected_number_of_items;
+            // When there's no memo, expect one less item
+            if (chain_index != 0 || app_mode_expert()) {
+                if (ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_SEND_MODE_ITEMS - 1) {
+                    return parser_swap_unexpected_number_of_items;
+                }
+            } else {
+                if (ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_SEND_MODE_ITEMS - 1) {
+                    return parser_swap_unexpected_number_of_items;
+                }
             }
             break;
+            
         case 1:
-            if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_SEND_MODE_ITEMS) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_SEND_MODE_ITEMS)) {
-                return parser_swap_unexpected_number_of_items;
+            // When there is a memo, expect full number of items
+            if (chain_index != 0 || app_mode_expert()) {
+                if (ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_SEND_MODE_ITEMS) {
+                    return parser_swap_unexpected_number_of_items;
+                }
+            } else {
+                if (ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_SEND_MODE_ITEMS) {
+                    return parser_swap_unexpected_number_of_items;
+                }
             }
             break;
+            
         default:
             break;
     }
@@ -271,11 +277,12 @@ parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx, uint8_t d
 
     char tmpKey[20] = {0};
     char tmpValue[65] = {0};
-
+    int8_t chain_index = 0;
     // Check if app is in expert mode
     CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey, sizeof(tmpKey), tmpValue, sizeof(tmpValue), pageIdx, &pageCount))
     if (strcmp(tmpKey, "Chain ID") == 0) {
-        if (!is_allowed_chainid(tmpValue)) {
+        chain_index = find_chain_index_by_chain_id(tmpValue);
+        if (chain_index == -1) {
             ZEMU_LOGF(200, " Not supported Chain Id\n");
             return parser_swap_wrong_chain_id;
         }
@@ -292,7 +299,7 @@ parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx, uint8_t d
 
     // Check source coins are equal to the amount and equal to destination coins
     char tmp_amount[100] = {0};
-    zxerr_t zxerr = format_amount(G_swap_state.amount, G_swap_state.amount_length, tmp_amount, sizeof(tmp_amount));
+    zxerr_t zxerr = format_amount(G_swap_state.amount, G_swap_state.amount_length, tmp_amount, sizeof(tmp_amount), chain_index);
     if (zxerr != zxerr_ok) {
         return parser_swap_wrap_amount_computation_error;
     }
@@ -340,7 +347,7 @@ parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx, uint8_t d
     }
 
     //Check fees
-    zxerr = format_amount(G_swap_state.fees, G_swap_state.fees_length, tmp_amount, sizeof(tmp_amount));
+    zxerr = format_amount(G_swap_state.fees, G_swap_state.fees_length, tmp_amount, sizeof(tmp_amount), chain_index);
     if (zxerr != zxerr_ok) {
         return parser_swap_wrap_amount_computation_error;
     }
@@ -350,17 +357,33 @@ parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx, uint8_t d
         return parser_swap_wrong_fee;
     }
 
-    switch (has_memo){
+    switch (has_memo) {
         case 0:
-            if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_MODE_ITEMS - 1) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_MODE_ITEMS - 1)) {
-                return parser_swap_unexpected_number_of_items;
+            // When there's no memo, expect one less item
+            if (chain_index != 0 || app_mode_expert()) {
+                if (ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_SEND_MODE_ITEMS - 1) {
+                    return parser_swap_unexpected_number_of_items;
+                }
+            } else {
+                if (ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_SEND_MODE_ITEMS - 1) {
+                    return parser_swap_unexpected_number_of_items;
+                }
             }
             break;
+            
         case 1:
-            if ((app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_MODE_ITEMS) || (!app_mode_expert() && ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_MODE_ITEMS)) {
-                return parser_swap_unexpected_number_of_items;
+            // When there is a memo, expect full number of items
+            if (chain_index != 0 || app_mode_expert()) {
+                if (ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_SEND_MODE_ITEMS) {
+                    return parser_swap_unexpected_number_of_items;
+                }
+            } else {
+                if (ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_SEND_MODE_ITEMS) {
+                    return parser_swap_unexpected_number_of_items;
+                }
             }
             break;
+            
         default:
             break;
     }
