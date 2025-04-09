@@ -79,6 +79,7 @@ VARIANT_PARAM=COIN
 VARIANT_VALUES=$(COIN)
 
 INCLUDES_PATH += $(CURDIR)/src/common
+INCLUDES_PATH += $(CURDIR)/src/swap
 
 ########################################
 # Application communication interfaces #
@@ -123,6 +124,14 @@ endif
 
 # Add the PRODUCTION_BUILD definition to the compiler flags
 DEFINES += PRODUCTION_BUILD=$(PRODUCTION_BUILD)
+
+ifeq ($(COIN),ATOM)
+ifeq ($(TARGET_NAME),TARGET_NANOS)
+    HAVE_SWAP ?= 0
+else
+    HAVE_SWAP ?= 1
+endif
+endif
 
 ifeq ($(HAVE_SWAP), 1)
     $(info ************ HAVE_SWAP  = [ENABLED])
