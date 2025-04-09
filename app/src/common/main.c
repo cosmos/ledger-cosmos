@@ -116,8 +116,7 @@ __attribute__((section(".boot"))) int main(int arg0) {
                 app_init();
                 app_main();
             }
-            CATCH_OTHER(e)
-            {}
+            CATCH_OTHER(e) { UNUSED(e); }
             FINALLY
             {}
         }
