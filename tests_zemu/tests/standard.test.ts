@@ -15,7 +15,7 @@
  ******************************************************************************* */
 
 import Zemu, { zondaxMainmenuNavigation, ButtonKind, isTouchDevice } from '@zondax/zemu'
-import { CosmosApp } from '@zondax/ledger-cosmos-js'
+import  CosmosApp  from '@zondax/ledger-cosmos-js'
 import { defaultOptions, DEVICE_MODELS } from './common'
 
 // @ts-ignore
@@ -53,9 +53,6 @@ describe('Standard', function () {
 
       console.log(resp)
 
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
-      expect(resp).toHaveProperty('test_mode')
       expect(resp).toHaveProperty('major')
       expect(resp).toHaveProperty('minor')
       expect(resp).toHaveProperty('patch')
@@ -71,13 +68,10 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Derivation path. First 3 items are automatically hardened!
-      const path = [44, 118, 5, 0, 3]
+      const path = "m/44'/118'/5'/0/3"
       const resp = await app.getAddressAndPubKey(path, 'cosmos')
 
       console.log(resp)
-
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
 
       expect(resp).toHaveProperty('bech32_address')
       expect(resp).toHaveProperty('compressed_pk')
@@ -102,7 +96,7 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Derivation path. First 3 items are automatically hardened!
-      const path = [44, 118, 5, 0, 3]
+      const path = "m/44'/118'/5'/0/3"
       const respRequest = app.showAddressAndPubKey(path, 'cosmos')
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
@@ -110,9 +104,6 @@ describe('Standard', function () {
 
       const resp = await respRequest
       console.log(resp)
-
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
 
       expect(resp).toHaveProperty('bech32_address')
       expect(resp).toHaveProperty('compressed_pk')
@@ -137,13 +128,15 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Derivation path. First 3 items are automatically hardened!
-      const path = [44, 60, 0, 0, 1]
+      const path = "m/44'/60'/0'/0/1"
       const hrp = 'inj'
 
       // check with invalid HRP
-      const errorRespPk = await app.getAddressAndPubKey(path, 'cosmos')
-      expect(errorRespPk.return_code).toEqual(0x6986)
-      expect(errorRespPk.error_message).toEqual('Transaction rejected')
+      const errorRespPk = app.getAddressAndPubKey(path, 'cosmos')
+      await expect(errorRespPk).rejects.toMatchObject({
+        returnCode: 0x698C,
+        errorMessage: 'Chain config not supported'
+      })
 
       const respRequest = app.showAddressAndPubKey(path, hrp)
       // Wait until we are not in the main menu
@@ -152,9 +145,6 @@ describe('Standard', function () {
 
       const resp = await respRequest
       console.log(resp)
-
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
 
       expect(resp).toHaveProperty('bech32_address')
       expect(resp).toHaveProperty('compressed_pk')
@@ -190,12 +180,14 @@ describe('Standard', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Derivation path. First 3 items are automatically hardened!
-      const path = [44, 118, 2147483647, 0, 4294967295]
-      const resp = await app.showAddressAndPubKey(path, 'cosmos')
+      const path = "m/44'/118'/2147483647'/0/4294967295"
+      const resp = app.showAddressAndPubKey(path, 'cosmos')
       console.log(resp)
 
-      expect(resp.return_code).toEqual(0x6985)
-      expect(resp.error_message).toEqual('Conditions not satisfied')
+      await expect(resp).rejects.toMatchObject({
+        returnCode: 0x6989,
+        errorMessage: 'Invalid HD Path Value. Expert Mode required.'
+      })
     } finally {
       await sim.close()
     }
@@ -216,7 +208,7 @@ describe('Standard', function () {
       await sim.toggleExpertMode();
 
       // Derivation path. First 3 items are automatically hardened!
-      const path = [44, 118, 2147483647, 0, 4294967295]
+      const path = "m/44'/118'/2147483647'/0/4294967295"
       const respRequest = app.showAddressAndPubKey(path, 'cosmos')
 
       // Wait until we are not in the main menu
@@ -225,9 +217,6 @@ describe('Standard', function () {
 
       const resp = await respRequest
       console.log(resp)
-
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
 
       expect(resp).toHaveProperty('bech32_address')
       expect(resp).toHaveProperty('compressed_pk')

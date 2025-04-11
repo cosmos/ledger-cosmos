@@ -16,7 +16,7 @@
 
 import Zemu, { ClickNavigation, TouchNavigation, isTouchDevice } from '@zondax/zemu'
 // @ts-ignore
-import { CosmosApp } from '@zondax/ledger-cosmos-js'
+import CosmosApp from '@zondax/ledger-cosmos-js'
 import {
   defaultOptions,
   DEVICE_MODELS,
@@ -27,6 +27,7 @@ import {
   setWithdrawAddress,
   cliGovDeposit,
   example_tx_str_msgMultiSend,
+  big_transaction,
 } from './common'
 
 // @ts-ignore
@@ -54,14 +55,14 @@ describe('Amino', function () {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
-      const path = [44, 118, 0, 0, 0]
-      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
+      const path = "m/44'/118'/0'/0/0"
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), 'utf-8')
       const hrp = 'cosmos'
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, hrp)
-      expect(respPk.return_code).toEqual(0x9000)
-      expect(respPk.error_message).toEqual('No errors')
+      expect(respPk).toHaveProperty('compressed_pk')
+      expect(respPk).toHaveProperty('bech32_address')
       console.log(respPk)
 
       // do not wait here..
@@ -74,8 +75,6 @@ describe('Amino', function () {
       const resp = await signatureRequest
       console.log(resp)
 
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
@@ -100,14 +99,14 @@ describe('Amino', function () {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
-      const path = [44, 118, 0, 0, 0]
+      const path = "m/44'/118'/0'/0/0"
       const tx = Buffer.from(JSON.stringify(example_tx_str_basic2))
       const hrp = 'cosmos'
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, hrp)
-      expect(respPk.return_code).toEqual(0x9000)
-      expect(respPk.error_message).toEqual('No errors')
+      expect(respPk).toHaveProperty('compressed_pk')
+      expect(respPk).toHaveProperty('bech32_address')
       console.log(respPk)
 
       // do not wait here..
@@ -120,8 +119,7 @@ describe('Amino', function () {
       const resp = await signatureRequest
       console.log(resp)
 
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
+      expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
       const hash = crypto.createHash('sha256')
@@ -145,14 +143,14 @@ describe('Amino', function () {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
-      const path = [44, 118, 0, 0, 0]
+      const path = "m/44'/118'/0'/0/0"
       const tx = Buffer.from(JSON.stringify(example_tx_str_basic))
       const hrp = 'cosmos'
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, hrp)
-      expect(respPk.return_code).toEqual(0x9000)
-      expect(respPk.error_message).toEqual('No errors')
+      expect(respPk).toHaveProperty('compressed_pk')
+      expect(respPk).toHaveProperty('bech32_address')
       console.log(respPk)
 
       // do not wait here..
@@ -165,8 +163,6 @@ describe('Amino', function () {
       const resp = await signatureRequest
       console.log(resp)
 
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
@@ -191,14 +187,14 @@ describe('Amino', function () {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
-      const path = [44, 118, 0, 0, 0]
+      const path = "m/44'/118'/0'/0/0"
       const tx = Buffer.from(JSON.stringify(ibc_denoms))
       const hrp = 'cosmos'
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, hrp)
-      expect(respPk.return_code).toEqual(0x9000)
-      expect(respPk.error_message).toEqual('No errors')
+      expect(respPk).toHaveProperty('compressed_pk')
+      expect(respPk).toHaveProperty('bech32_address')
       console.log(respPk)
 
       // do not wait here..
@@ -211,8 +207,6 @@ describe('Amino', function () {
       const resp = await signatureRequest
       console.log(resp)
 
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
@@ -237,14 +231,14 @@ describe('Amino', function () {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
-      const path = [44, 118, 0, 0, 0]
+      const path = "m/44'/118'/0'/0/0"
       const tx = Buffer.from(JSON.stringify(setWithdrawAddress))
       const hrp = 'cosmos'
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, hrp)
-      expect(respPk.return_code).toEqual(0x9000)
-      expect(respPk.error_message).toEqual('No errors')
+      expect(respPk).toHaveProperty('compressed_pk')
+      expect(respPk).toHaveProperty('bech32_address')
       console.log(respPk)
 
       // do not wait here..
@@ -257,8 +251,6 @@ describe('Amino', function () {
       const resp = await signatureRequest
       console.log(resp)
 
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
@@ -283,14 +275,14 @@ describe('Amino', function () {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
-      const path = [44, 118, 0, 0, 0]
+      const path = "m/44'/118'/0'/0/0"
       const tx = Buffer.from(JSON.stringify(cliGovDeposit))
       const hrp = 'cosmos'
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, hrp)
-      expect(respPk.return_code).toEqual(0x9000)
-      expect(respPk.error_message).toEqual('No errors')
+      expect(respPk).toHaveProperty('compressed_pk')
+      expect(respPk).toHaveProperty('bech32_address')
       console.log(respPk)
 
       // do not wait here..
@@ -303,8 +295,6 @@ describe('Amino', function () {
       const resp = await signatureRequest
       console.log(resp)
 
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
@@ -330,16 +320,16 @@ describe('Amino', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Activate expert mode
-      await sim.toggleExpertMode();
+      await sim.toggleExpertMode()
 
-      const path = [44, 118, 0, 0, 0]
+      const path = "m/44'/118'/0'/0/0"
       const tx = Buffer.from(JSON.stringify(example_tx_str_msgMultiSend))
       const hrp = 'cosmos'
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, hrp)
-      expect(respPk.return_code).toEqual(0x9000)
-      expect(respPk.error_message).toEqual('No errors')
+      expect(respPk).toHaveProperty('compressed_pk')
+      expect(respPk).toHaveProperty('bech32_address')
       console.log(respPk)
 
       // do not wait here..
@@ -352,8 +342,6 @@ describe('Amino', function () {
       const resp = await signatureRequest
       console.log(resp)
 
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
@@ -379,16 +367,16 @@ describe('Amino', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Change to expert mode so we can skip fields
-      await sim.toggleExpertMode();
+      await sim.toggleExpertMode()
 
-      const path = [44, 60, 0, 0, 0]
+      const path = "m/44'/60'/0'/0/0"
       const tx = Buffer.from(JSON.stringify(setWithdrawAddress))
       const hrp = 'inj'
 
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, hrp)
-      expect(respPk.return_code).toEqual(0x9000)
-      expect(respPk.error_message).toEqual('No errors')
+      expect(respPk).toHaveProperty('compressed_pk')
+      expect(respPk).toHaveProperty('bech32_address')
       console.log(respPk)
 
       // do not wait here..
@@ -401,8 +389,6 @@ describe('Amino', function () {
       const resp = await signatureRequest
       console.log(resp)
 
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
@@ -428,16 +414,18 @@ describe('Amino', function () {
       const app = new CosmosApp(sim.getTransport())
 
       // Enable expert to allow sign with eth path
-      await sim.toggleExpertMode();
+      await sim.toggleExpertMode()
 
-      const path = [44, 60, 0, 0, 0]
-      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
+      const path = "m/44'/60'/0'/0/0"
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), 'utf-8')
       const hrp = 'inj'
 
       // check with invalid HRP
-      const errorRespPk = await app.getAddressAndPubKey(path, 'forbiddenHRP')
-      expect(errorRespPk.return_code).toEqual(0x6986)
-      expect(errorRespPk.error_message).toEqual('Transaction rejected')
+      const errorRespPk = app.getAddressAndPubKey(path, 'forbiddenHRP')
+      await expect(errorRespPk).rejects.toMatchObject({
+        returnCode: 0x698c,
+        errorMessage: 'Chain config not supported',
+      })
 
       // do not wait here..
       const signatureRequest = app.sign(path, tx, hrp)
@@ -449,14 +437,8 @@ describe('Amino', function () {
       const resp = await signatureRequest
       console.log(resp)
 
-      expect(resp.return_code).toEqual(0x9000)
-      expect(resp.error_message).toEqual('No errors')
-      expect(resp).toHaveProperty('signature')
-
       // get address / publickey
       const respPk = await app.getAddressAndPubKey(path, hrp)
-      expect(respPk.return_code).toEqual(0x9000)
-      expect(respPk.error_message).toEqual('No errors')
       console.log(respPk)
 
       // Now verify the signature
@@ -481,41 +463,83 @@ describe('Amino', function () {
       await sim.start({ ...defaultOptions, model: m.name })
       const app = new CosmosApp(sim.getTransport())
 
-      const path = [44, 60, 0, 0, 0]
-      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), "utf-8")
-
+      const path = "m/44'/60'/0'/0/0"
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), 'utf-8')
+      const hrp = 'inj'
       // get address / publickey
-      const respPk = await app.getAddressAndPubKey(path, 'inj')
-      expect(respPk.return_code).toEqual(0x9000)
-      expect(respPk.error_message).toEqual('No errors')
+      const respPk = await app.getAddressAndPubKey(path, hrp)
       console.log(respPk)
 
       // do not wait here..
-      const signatureRequest = app.sign(path, tx)
+      const signatureRequest = app.sign(path, tx, hrp)
 
       // Wait until we are not in the main menu
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
-      let nav = undefined;
+      let nav = undefined
       if (isTouchDevice(m.name)) {
         const okButton: IButton = {
           x: 200,
           y: 540,
           delay: 0.25,
           direction: SwipeDirection.NoSwipe,
-        };
-        nav = new TouchNavigation(m.name, [
-          ButtonKind.ConfirmYesButton,
-        ]);
-        nav.schedule[0].button = okButton;
+        }
+        nav = new TouchNavigation(m.name, [ButtonKind.ConfirmYesButton])
+        nav.schedule[0].button = okButton
       } else {
-        nav = new ClickNavigation([1, 0]);
+        nav = new ClickNavigation([1, 0])
       }
-      await sim.navigate('.', `${m.prefix.toLowerCase()}-sign_basic_eth_warning`, nav.schedule);
 
-      const resp = await signatureRequest
-      console.log(resp)
+      // Start navigation without await
+      sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-sign_basic_eth_warning`, nav.schedule)
 
-      expect(resp.return_code).toEqual(0x6984)
+      // Handle both errors
+      try {
+        await signatureRequest
+        throw new Error('Expected sign to fail')
+      } catch (error: any) {
+        // First error from ledger-js
+        expect(error.message).toBe('Data is invalid')
+
+        // Wait a bit to ensure the second error is caught
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        // Second error after navigation
+        try {
+          await signatureRequest
+          throw new Error('Expected second error')
+        } catch (error2: any) {
+          expect(error2.message).toBe('Data is invalid')
+        }
+      }
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(DEVICE_MODELS.slice(0, 1))('Teste with nanoS : error with bigger transaction', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      const path = "m/44'/118'/0'/0/0"
+      const tx = Buffer.from(big_transaction, 'utf-8')
+      const hrp = 'cosmos'
+
+      // get address / publickey
+      const respPk = await app.getAddressAndPubKey(path, hrp)
+      expect(respPk).toHaveProperty('compressed_pk')
+      expect(respPk).toHaveProperty('bech32_address')
+      console.log(respPk)
+
+      // do not wait here..
+      const signatureRequest = app.sign(path, tx, hrp, AMINO_JSON_TX)
+      console.log(signatureRequest)
+
+      await expect(signatureRequest).rejects.toMatchObject({
+        returnCode: 0x6988,
+        errorMessage: "Transaction data exceeds the device's internal buffer capacity",
+      })
     } finally {
       await sim.close()
     }
