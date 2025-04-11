@@ -237,7 +237,7 @@ describe('Textual', function () {
     }
   })
 
-  test.only.each(TEXTUAL_MODELS)('sign basic textual eth warning', async function (m) {
+  test.concurrent.each(TEXTUAL_MODELS)('sign basic textual eth warning', async function (m) {
     const sim = new Zemu(m.path)
     try {
       await sim.start({ ...defaultOptions, model: m.name })
@@ -298,7 +298,6 @@ describe('Textual', function () {
       await sim.close()
     }
   })
-})
 
   test.concurrent.each(TEXTUAL_MODELS)('sign basic textual eth warning', async function (m) {
     const sim = new Zemu(m.path)
