@@ -4,3 +4,6 @@
 [submodule "deps/ledger-secure-sdk"]
 	path = deps/ledger-secure-sdk
 	url = https://github.com/LedgerHQ/ledger-secure-sdk
+[submodule "js"]
+	path = js
+	url = https://github.com/Zondax/ledger-cosmos-js

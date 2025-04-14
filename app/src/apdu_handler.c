@@ -50,9 +50,9 @@ __Z_INLINE void handle_getversion(__Z_UNUSED volatile uint32_t *flags, volatile 
 #else
     G_io_apdu_buffer[0] = 0;
 #endif
-    G_io_apdu_buffer[1] = LEDGER_MAJOR_VERSION;
-    G_io_apdu_buffer[2] = LEDGER_MINOR_VERSION;
-    G_io_apdu_buffer[3] = LEDGER_PATCH_VERSION;
+    G_io_apdu_buffer[1] = MAJOR_VERSION;
+    G_io_apdu_buffer[2] = MINOR_VERSION;
+    G_io_apdu_buffer[3] = PATCH_VERSION;
     // SDK won't let the app reply an apdu message if screensaver is active
     // device_locked field --> Always false
     G_io_apdu_buffer[4] = 0;
@@ -76,7 +76,7 @@ __Z_INLINE uint8_t extractHRP(uint32_t rx, uint32_t offset) {
     bech32_hrp_len = G_io_apdu_buffer[offset];
 
     if (bech32_hrp_len == 0 || bech32_hrp_len > MAX_BECH32_HRP_LEN) {
-        THROW(APDU_CODE_DATA_INVALID);
+        THROW(APDU_CODE_HRP_WRONG_LENGTH);
     }
 
     memcpy(bech32_hrp, G_io_apdu_buffer + offset + 1, bech32_hrp_len);
@@ -101,14 +101,14 @@ __Z_INLINE void extractHDPath(uint32_t rx, uint32_t offset) {
     if (hdPath[0] != HDPATH_0_DEFAULT ||
         ((hdPath[1] != HDPATH_1_DEFAULT) && (hdPath[1] != HDPATH_ETH_1_DEFAULT)) ||
         hdPath[3] != HDPATH_3_DEFAULT) {
-        THROW(APDU_CODE_DATA_INVALID);
+        THROW(APDU_CODE_INVALID_HD_PATH_COIN_VALUE);
     }
 
     // Limit values unless the app is running in expert mode
     if (!app_mode_expert()) {
         for(int i=2; i < HDPATH_LEN_DEFAULT; i++) {
             // hardened or unhardened values should be below 20
-            if ( (hdPath[i] & 0x7FFFFFFF) > 100) THROW(APDU_CODE_CONDITIONS_NOT_SATISFIED);
+            if ( (hdPath[i] & 0x7FFFFFFF) > 100) THROW(APDU_CODE_INVALID_HD_PATH_VALUE);
         }
     }
 }
@@ -124,10 +124,10 @@ static void extractHDPath_HRP(uint32_t rx, uint32_t offset) {
         encoding = checkChainConfig(hdPath[1], bech32_hrp, hrp_bech32_len);
         if (encoding == UNSUPPORTED) {
             ZEMU_LOGF(50, "Chain config not supported for: %s\n", bech32_hrp)
-            THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+            THROW(APDU_CODE_CHAIN_CONFIG_NOT_SUPPORTED);
         }
     } else if (hdPath[1] == HDPATH_ETH_1_DEFAULT) {
-        THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+        THROW(APDU_CODE_INVALID_HD_PATH_COIN_VALUE);
     }
 }
 
@@ -150,13 +150,13 @@ static bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
         case P1_ADD:
             added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
             if (added != rx - OFFSET_DATA) {
-                THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
+                THROW(APDU_CODE_TRANSACTION_DATA_EXCEEDS_BUFFER_CAPACITY);
             }
             return false;
         case P1_LAST:
             added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
             if (added != rx - OFFSET_DATA) {
-                THROW(APDU_CODE_OUTPUT_BUFFER_TOO_SMALL);
+                THROW(APDU_CODE_TRANSACTION_DATA_EXCEEDS_BUFFER_CAPACITY);
             }
             return true;
     }
@@ -172,7 +172,7 @@ __Z_INLINE void handleGetAddrSecp256K1(volatile uint32_t *flags, volatile uint32
     encoding = checkChainConfig(hdPath[1], bech32_hrp, bech32_hrp_len);
     if (encoding == UNSUPPORTED) {
         ZEMU_LOGF(50, "Chain config not supported for: %s\n", bech32_hrp)
-        THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+        THROW(APDU_CODE_CHAIN_CONFIG_NOT_SUPPORTED);
     }
 
     uint8_t requireConfirmation = G_io_apdu_buffer[OFFSET_P1];
