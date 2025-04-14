@@ -18,7 +18,7 @@
     "test": "yarn clean && jest --maxConcurrency 2"
   },
   "dependencies": {
-    "@zondax/ledger-cosmos-js": "^3.0.3",
+    "@zondax/ledger-cosmos-js": "../js",
     "@zondax/zemu": "^0.55.3"
   },
   "devDependencies": {
