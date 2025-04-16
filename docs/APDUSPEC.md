@@ -23,16 +23,22 @@ The general structure of commands and responses is as follows:
 
 #### Return codes
 
-| Return code | Description             |
-| ----------- | ----------------------- |
-| 0x6400      | Execution Error         |
-| 0x6982      | Empty buffer            |
-| 0x6983      | Output buffer too small |
-| 0x6986      | Command not allowed     |
-| 0x6D00      | INS not supported       |
-| 0x6E00      | CLA not supported       |
-| 0x6F00      | Unknown                 |
-| 0x9000      | Success                 |
+| Return code | Description                               |
+| ----------- | ----------------------------------------- |
+| 0x6400      | Execution Error                           |
+| 0x6982      | Empty buffer                              |
+| 0x6983      | Output buffer too small                   |
+| 0x6986      | Command not allowed                       |
+| 0x6984      | Data Invalid (More info on error message) |
+| 0x6988      | Transaction data exceeds buffer capacity  |
+| 0x698A      | Wrong HRP Length                          |
+| 0x698B      | Invalid HD path coin value                |
+| 0x698C      | Chain Config not supported                |
+| 0x698D      | Expert Mode required for Eth chain        |
+| 0x6D00      | INS not supported                         |
+| 0x6E00      | CLA not supported                         |
+| 0x6F00      | Unknown                                   |
+| 0x9000      | Success                                   |
 
 ---------
 
