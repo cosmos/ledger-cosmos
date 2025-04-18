@@ -70,7 +70,7 @@ zxerr_t bytesAmountToStringBalance(uint8_t *amount, uint8_t amount_len, char *ou
         return zxerr_encoding_failed;
     }
 
-    // Add ticker prefix.
+    // Add ticker suffix.
     CHECK_ZXERR(z_str3join(out, out_len, "", PIC(chains[chain_index].ticker)))
 
     // Trim trailing zeros
@@ -85,7 +85,7 @@ zxerr_t bytesAmountToExpertStringBalance(uint8_t *amount, uint8_t amount_len, ch
     bignumBigEndian_to_bcd(tmpBuf, sizeof(tmpBuf), amount, amount_len);
     bignumBigEndian_bcdprint(out, out_len, tmpBuf, sizeof(tmpBuf));
 
-    // Add expert ticker prefix
+    // Add expert ticker suffix.
     CHECK_ZXERR(z_str3join(out, out_len, "", PIC(chains[chain_index].expert_ticker)))
 
     return zxerr_ok;
