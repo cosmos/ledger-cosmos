@@ -25,8 +25,8 @@ const chains_t chains[] = {
     {COIN_DEFAULT_CHAINID, " ATOM", " uatom", 6, "cosmos"},
     {OSMOSIS_CHAINID, " OSMO", " uosmo", 6, "osmo"},
     {DYDX_CHAINID, " DYDX", " adydx", 18, "dydx"},
-    {MANTRA_CHAINID, " OM", " uom", 18, "mantra"},
-    {XION_CHAINID, " XION", " uxion", 18, "xion"},
+    {MANTRA_CHAINID, " OM", " uom", 6, "mantra"},
+    {XION_CHAINID, " XION", " uxion", 6, "xion"},
     {CELESTIA_CHAINID, " TIA", " utia", 6, "celestia"}
 };
 
