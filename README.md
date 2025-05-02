@@ -198,9 +198,13 @@ The Makefile will build the firmware in a docker container and leave the binary 
    ```
 
 - Upload to a device
-   The following command will upload the application to the ledger. _Warning: The application will be deleted before uploading._
+   The following commands will upload the application to the ledger. _Warning: The application will be deleted before uploading._
+   Use the command appropriate for your device.
    ```
-   make load          # Builds and loads the app to the device
+   make loadS         # Builds and loads the app to the device (Nano S)
+   make loadS2        # Builds and loads the app to the device (Nano S+)
+   make loadST        # Builds and loads the app to the device (Nano Stax)
+   make loadFL        # Builds and loads the app to the device (Nano Flex)
    ```
 
 ## APDU Specifications
