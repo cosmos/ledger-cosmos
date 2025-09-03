@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
       - name: Install deps
@@ -47,7 +47,7 @@ jobs:
       size: ${{steps.build.outputs.size}}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
       - name: Build Standard app
@@ -76,12 +76,14 @@ jobs:
           echo $HOME
           echo $DISPLAY
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
       - run: sudo apt-get update -y && sudo apt-get install -y libusb-1.0.0 libudev-dev
       - name: Install node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Install yarn
         run: |
           npm install -g yarn
@@ -109,7 +111,7 @@ jobs:
         BOLOS_SDK: /opt/nanos-secure-sdk
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
       - name: Install deps
@@ -145,7 +147,7 @@ jobs:
         BOLOS_SDK: /opt/nanosplus-secure-sdk
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
       - name: Install deps
@@ -181,7 +183,7 @@ jobs:
         BOLOS_SDK: /opt/stax-secure-sdk
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
       - name: Install deps
@@ -217,7 +219,7 @@ jobs:
         BOLOS_SDK: /opt/flex-secure-sdk
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
       - name: Install deps

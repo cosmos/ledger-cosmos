@@ -15,7 +15,7 @@ You can also visit [Zondax Hub](https://hub.zondax.ch/cosmos) to test any of the
 
 This project contains the Cosmos app for Ledger Nano S, Nano S+, X and Stax.
 
-- Ledger Nano S/S+/X/Stax Cosmos app
+- Ledger Nano S/S+/X/Stax/Flex Cosmos app
 - Specs / Documentation
 - C++ unit tests
 - Zemu tests
@@ -200,7 +200,10 @@ The Makefile will build the firmware in a docker container and leave the binary 
 - Upload to a device
    The following command will upload the application to the ledger. _Warning: The application will be deleted before uploading._
    ```
-   make load          # Builds and loads the app to the device
+   make loadS         # Builds and loads the app to the device (Nano S)
+   make loadS2        # Builds and loads the app to the device (Nano S+)
+   make loadST        # Builds and loads the app to the device (Nano Stax)
+   make loadFL        # Builds and loads the app to the device (Nano Flex)
    ```
 
 ## APDU Specifications

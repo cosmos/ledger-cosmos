@@ -35,7 +35,8 @@ static const chain_config_t chainConfig[] = {
     {118, "osmos", BECH32_COSMOS},
     {118, "dydx", BECH32_COSMOS},
     {118, "mantra", BECH32_COSMOS},
-    {118, "xion", BECH32_COSMOS}
+    {118, "xion", BECH32_COSMOS},
+    {118, "celestia", BECH32_COSMOS}
 };
 
 static const uint32_t chainConfigLen = sizeof(chainConfig) / sizeof(chainConfig[0]);
