@@ -31,9 +31,6 @@
 #elif defined(TARGET_NANOX)
 #define RAM_BUFFER_SIZE 7168
 #define FLASH_BUFFER_SIZE 16384
-#elif defined(TARGET_NANOS)
-#define RAM_BUFFER_SIZE 0
-#define FLASH_BUFFER_SIZE 8192
 #endif
 
 // Ram

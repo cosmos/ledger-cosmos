@@ -33,13 +33,7 @@ extern "C" {
 /// Max number of accepted tokens in the JSON input
 #define MAX_NUMBER_OF_TOKENS   768
 
-// we must limit the number
-#if defined(TARGET_NANOS)
-#undef MAX_NUMBER_OF_TOKENS
-#define MAX_NUMBER_OF_TOKENS    96
-#endif
-
-#if defined(TARGET_STAX) || defined(TARGET_FLEX)
+#if defined(TARGET_STAX) || defined(TARGET_FLEX) || defined(TARGET_APEX_P)
 #undef MAX_NUMBER_OF_TOKENS
 #define MAX_NUMBER_OF_TOKENS    600
 #endif
