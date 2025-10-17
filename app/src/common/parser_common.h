@@ -22,7 +22,7 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#if defined(TARGET_NANOS2) || defined(TARGET_STAX) || defined(TARGET_FLEX)
+#if defined(TARGET_NANOS2) || defined(TARGET_STAX) || defined(TARGET_FLEX) || defined(TARGET_APEX_P)
 #define TX_BUFFER_SIZE 16384
 #elif defined(TARGET_NANOX)
 #define TX_BUFFER_SIZE 16384

@@ -24,7 +24,7 @@
 parser_error_t json_parse(parsed_json_t *parsed_json, const char *buffer, uint16_t bufferLen) {
     // This check was previously implemented to prevent, here we want to avoid false positives.
     // It is especially important in fuzzing environments where this check was omitted.
-#if defined(TARGET_NANOS) || defined(TARGET_NANOS2) || defined(TARGET_NANOX) || defined(TARGET_STAX) || defined(TARGET_FLEX)
+#if defined(LEDGER_SPECIFIC)
     if (bufferLen > TX_BUFFER_SIZE) {
         return parser_context_unexpected_size;
     }
