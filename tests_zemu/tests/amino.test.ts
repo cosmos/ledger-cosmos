@@ -35,6 +35,7 @@ import secp256k1 from 'secp256k1/elliptic'
 // @ts-ignore
 import crypto from 'crypto'
 import { ButtonKind, IButton, SwipeDirection } from '@zondax/zemu/dist/types'
+import { getTouchElement } from "@zondax/zemu/dist/buttons";
 
 jest.setTimeout(120000)
 
@@ -477,16 +478,11 @@ describe('Amino', function () {
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
       let nav = undefined
       if (isTouchDevice(m.name)) {
-        const okButton: IButton = {
-          x: 200,
-          y: 540,
-          delay: 0.25,
-          direction: SwipeDirection.NoSwipe,
-        }
-        nav = new TouchNavigation(m.name, [ButtonKind.ConfirmYesButton])
-        nav.schedule[0].button = okButton
+        const confirmButton: IButton = getTouchElement(m.name, ButtonKind.ConfirmYesButton)
+        nav = new TouchNavigation(m.name, [ButtonKind.ConfirmYesButton]);
+        nav.schedule[0].button = confirmButton;
       } else {
-        nav = new ClickNavigation([1, 0])
+        nav = new ClickNavigation([1, 0]);
       }
 
       // Start navigation without await

@@ -23,6 +23,9 @@ import secp256k1 from 'secp256k1/elliptic'
 // @ts-ignore
 import crypto from 'crypto'
 import { ButtonKind, IButton, SwipeDirection } from '@zondax/zemu/dist/types'
+import { getTouchElement } from "@zondax/zemu/dist/buttons"
+// @ts-ignore
+import { keccak256 } from 'js-sha3'
 
 jest.setTimeout(90000)
 
@@ -169,8 +172,7 @@ describe('Textual', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const sha3 = require('js-sha3')
-      const msgHash = Buffer.from(sha3.keccak256(tx), 'hex')
+      const msgHash = Buffer.from(keccak256(tx), 'hex')
 
       const signatureDER = resp.signature
       const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
@@ -222,8 +224,7 @@ describe('Textual', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const sha3 = require('js-sha3')
-      const msgHash = Buffer.from(sha3.keccak256(tx), 'hex')
+      const msgHash = Buffer.from(keccak256(tx), 'hex')
 
       const signatureDER = resp.signature
       const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
@@ -258,16 +259,9 @@ describe('Textual', function () {
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
       let nav = undefined;
       if (isTouchDevice(m.name)) {
-        const okButton: IButton = {
-          x: 200,
-          y: 540,
-          delay: 0.25,
-          direction: SwipeDirection.NoSwipe,
-        };
-        nav = new TouchNavigation(m.name, [
-          ButtonKind.ConfirmYesButton,
-        ]);
-        nav.schedule[0].button = okButton;
+        const confirmButton: IButton = getTouchElement(m.name, ButtonKind.ConfirmYesButton)
+        nav = new TouchNavigation(m.name, [ButtonKind.ConfirmYesButton]);
+        nav.schedule[0].button = confirmButton;
       } else {
         nav = new ClickNavigation([1, 0]);
       }
@@ -320,17 +314,13 @@ describe('Textual', function () {
       await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
       let nav = undefined
       if (isTouchDevice(m.name)) {
-        const okButton: IButton = {
-          x: 200,
-          y: 540,
-          delay: 0.25,
-          direction: SwipeDirection.NoSwipe,
-        }
-        nav = new TouchNavigation(m.name, [ButtonKind.ConfirmYesButton])
-        nav.schedule[0].button = okButton
+        const confirmButton: IButton = getTouchElement(m.name, ButtonKind.ConfirmYesButton)
+        nav = new TouchNavigation(m.name, [ButtonKind.ConfirmYesButton]);
+        nav.schedule[0].button = confirmButton;
       } else {
-        nav = new ClickNavigation([1, 0])
+        nav = new ClickNavigation([1, 0]);
       }
+
 
       // Start navigation without await
       sim.navigateAndCompareSnapshots('.', `${m.prefix.toLowerCase()}-textual-sign_basic_eth_warning`, nav.schedule)
@@ -391,8 +381,7 @@ describe('Textual', function () {
       expect(resp).toHaveProperty('signature')
 
       // Now verify the signature
-      const sha3 = require('js-sha3')
-      const msgHash = Buffer.from(sha3.keccak256(tx), 'hex')
+      const msgHash = Buffer.from(keccak256(tx), 'hex')
 
       const signatureDER = resp.signature
       const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
