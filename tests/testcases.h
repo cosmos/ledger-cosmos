@@ -15,7 +15,7 @@
  ********************************************************************************/
 #pragma once
 #include <fstream>
-#include <json/json.h>
+#include <nlohmann/json.hpp>
 
 typedef struct {
   uint64_t index; // textual mode
