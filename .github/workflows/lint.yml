@@ -1,4 +1,5 @@
-name: Build
+name: Lint and format 💅
+
 on:
   workflow_dispatch:
   push:
@@ -10,10 +11,7 @@ on:
       - dev
 
 jobs:
-  ledger-build:
-    uses: Zondax/_workflows/.github/workflows/_ledger_main.yml@v3
+  ledger-lint:
+    uses: Zondax/_workflows/.github/workflows/_ledger_lint.yml@v3
     with:
       runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
-      has-rust: false
-      has-nanos: false
-      node-version: '22'
