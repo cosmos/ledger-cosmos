@@ -16,6 +16,7 @@
 
 #pragma once
 #include "zxerror.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -168,6 +168,7 @@ static bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
   }
 
   THROW(APDU_CODE_INVALIDP1P2);
+  return false;
 }
 
 __Z_INLINE void handleGetAddrSecp256K1(volatile uint32_t *flags,

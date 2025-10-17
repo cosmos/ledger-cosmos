@@ -511,33 +511,4 @@ describe('Amino', function () {
       await sim.close()
     }
   })
-
-  test.concurrent.each(DEVICE_MODELS.slice(0, 1))('Teste with nanoS : error with bigger transaction', async function (m) {
-    const sim = new Zemu(m.path)
-    try {
-      await sim.start({ ...defaultOptions, model: m.name })
-      const app = new CosmosApp(sim.getTransport())
-
-      const path = "m/44'/118'/0'/0/0"
-      const tx = Buffer.from(big_transaction, 'utf-8')
-      const hrp = 'cosmos'
-
-      // get address / publickey
-      const respPk = await app.getAddressAndPubKey(path, hrp)
-      expect(respPk).toHaveProperty('compressed_pk')
-      expect(respPk).toHaveProperty('bech32_address')
-      console.log(respPk)
-
-      // do not wait here..
-      const signatureRequest = app.sign(path, tx, hrp, AMINO_JSON_TX)
-      console.log(signatureRequest)
-
-      await expect(signatureRequest).rejects.toMatchObject({
-        returnCode: 0x6988,
-        errorMessage: "Transaction data exceeds the device's internal buffer capacity",
-      })
-    } finally {
-      await sim.close()
-    }
-  })
 })

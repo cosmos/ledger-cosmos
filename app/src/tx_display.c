@@ -619,7 +619,7 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src,
         if (count > dstLen) {
           return parser_unexpected_value;
         }
-        snprintf(dst, 4, "\\x%.02X", tmp_codepoint);
+        snprintf(dst, 5, "\\x%.02X", tmp_codepoint);
         dst += 4;
       }
     } else if (tmp_codepoint >= 32 && tmp_codepoint <= ((int32_t)0x7F)) {
