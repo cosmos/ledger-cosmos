@@ -38,8 +38,10 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile) {
     auto v = obj[i];
 
     // Match jsoncpp format: no indentation, no spaces after colons
-    // ensure_ascii=true to escape non-ASCII characters (like emojis) to \uXXXX format
-    const std::string txStr = v["tx"].dump(-1, ' ', true, nlohmann::json::error_handler_t::replace);
+    // ensure_ascii=true to escape non-ASCII characters (like emojis) to \uXXXX
+    // format
+    const std::string txStr =
+        v["tx"].dump(-1, ' ', true, nlohmann::json::error_handler_t::replace);
 
     auto expected = std::vector<std::string>();
     for (const auto &j : v["expected"]) {
@@ -51,9 +53,10 @@ std::vector<testcase_t> GetJsonTestCases(const std::string &jsonFile) {
       expert = v["expert"].get<bool>();
     }
 
-    answer.push_back(
-        testcase_t{0, v["name"].get<std::string>(), txStr, v["parsingErr"].get<std::string>(),
-                   v["validationErr"].get<std::string>(), expected, expected, expert});
+    answer.push_back(testcase_t{0, v["name"].get<std::string>(), txStr,
+                                v["parsingErr"].get<std::string>(),
+                                v["validationErr"].get<std::string>(), expected,
+                                expected, expert});
   }
 
   return answer;
@@ -86,9 +89,10 @@ std::vector<testcase_t> GetJsonTextualTestCases(const std::string &jsonFile) {
       outputs_expert.push_back(s.get<std::string>());
     }
 
-    answer.push_back(testcase_t{
-        obj[i]["index"].get<uint64_t>(), obj[i]["name"].get<std::string>(),
-        obj[i]["blob"].get<std::string>(), "", "", outputs, outputs_expert, false});
+    answer.push_back(testcase_t{obj[i]["index"].get<uint64_t>(),
+                                obj[i]["name"].get<std::string>(),
+                                obj[i]["blob"].get<std::string>(), "", "",
+                                outputs, outputs_expert, false});
   }
   return answer;
 }

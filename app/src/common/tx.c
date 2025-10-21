@@ -51,7 +51,7 @@ parser_context_t ctx_parsed_tx;
 
 void tx_initialize() {
   buffering_init(ram_buffer, sizeof(ram_buffer), (uint8_t *)N_appdata.buffer,
-                 sizeof(N_appdata.buffer));
+                 sizeof(((storage_t *)0)->buffer));
 }
 
 void tx_reset() { buffering_reset(); }
