@@ -1,0 +1,17 @@
+name: Lint and format 💅
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+    branches:
+      - main
+      - develop
+      - master
+      - dev
+
+jobs:
+  ledger-lint:
+    uses: Zondax/_workflows/.github/workflows/_ledger_lint.yml@v3
+    with:
+      runs-on: ${{ github.repository_owner == 'zondax' && 'zondax-runners' || 'ubuntu-latest' }}
