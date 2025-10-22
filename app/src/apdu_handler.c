@@ -81,6 +81,11 @@ __Z_INLINE uint8_t extractHRP(uint32_t rx, uint32_t offset) {
     THROW(APDU_CODE_HRP_WRONG_LENGTH);
   }
 
+  // Verify buffer contains full HRP data to prevent buffer over-read
+  if (rx < offset + 1 + bech32_hrp_len) {
+    THROW(APDU_CODE_DATA_INVALID);
+  }
+
   memcpy(bech32_hrp, G_io_apdu_buffer + offset + 1, bech32_hrp_len);
   bech32_hrp[bech32_hrp_len] = 0; // zero terminate
 

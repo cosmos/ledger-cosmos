@@ -305,6 +305,11 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
                                            amountToken, i, &itemTokenIdx));
     CHECK_PARSER_ERR(parser_formatAmountItem(itemTokenIdx, outVal, outValLen, 0,
                                              &subpagesCount));
+
+    // Check for overflow before accumulating pages
+    if (totalPages > UINT8_MAX - subpagesCount) {
+      return parser_value_out_of_range;
+    }
     totalPages += subpagesCount;
 
     ZEMU_LOGF(
@@ -319,6 +324,9 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
         ZEMU_LOGF(200, "[formatAmount] [%d] [SET] TokenIdx %d - PageIdx: %d", i,
                   showItemTokenIdx, showPageIdx)
       } else {
+        if (showPageIdx < subpagesCount) {
+          return parser_unexpected_value;
+        }
         showPageIdx -= subpagesCount;
       }
     }
