@@ -17,12 +17,12 @@
 #pragma once
 
 #include "lib_standard_app/swap_lib_calls.h"
+#include "parser.h"
 #include "parser_common.h"
+#include "parser_txdef.h"
 #include "stdbool.h"
 #include "stdint.h"
 #include "zxerror.h"
-#include "parser_txdef.h"
-#include "parser.h"
 
 #define ADDRESS_MAXSIZE 50
 #define MEMO_MAXSIZE 50
@@ -32,23 +32,23 @@
 #define NORMAL_SEND_MODE_ITEMS 6
 
 typedef struct {
-    uint8_t amount[COIN_AMOUNT_MAXSIZE];
-    uint8_t amount_length;
-    uint8_t fees[COIN_AMOUNT_MAXSIZE];
-    uint8_t fees_length;
-    char destination_address[ADDRESS_MAXSIZE];
-    /* Is swap mode */
-    uint8_t called_from_swap;
-    uint8_t should_exit;
-    char memo[MEMO_MAXSIZE];
+  uint8_t amount[COIN_AMOUNT_MAXSIZE];
+  uint8_t amount_length;
+  uint8_t fees[COIN_AMOUNT_MAXSIZE];
+  uint8_t fees_length;
+  char destination_address[ADDRESS_MAXSIZE];
+  /* Is swap mode */
+  uint8_t called_from_swap;
+  uint8_t should_exit;
+  char memo[MEMO_MAXSIZE];
 } swap_globals_t;
 
 typedef struct {
-    const char *chain_id;
-    const char *ticker;
-    const char *expert_ticker;
-    uint8_t decimals;
-    const char * coin_config;
+  const char *chain_id;
+  const char *ticker;
+  const char *expert_ticker;
+  uint8_t decimals;
+  const char *coin_config;
 } chains_t;
 
 extern const chains_t chains[];
@@ -59,5 +59,7 @@ extern swap_globals_t G_swap_state;
 parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx);
 void handle_check_address(check_address_parameters_t *params);
 void handle_get_printable_amount(get_printable_amount_parameters_t *params);
-bool copy_transaction_parameters(create_transaction_parameters_t *sign_transaction_params);
-void __attribute__((noreturn)) finalize_exchange_sign_transaction(bool is_success);
+bool copy_transaction_parameters(
+    create_transaction_parameters_t *sign_transaction_params);
+void __attribute__((noreturn))
+finalize_exchange_sign_transaction(bool is_success);

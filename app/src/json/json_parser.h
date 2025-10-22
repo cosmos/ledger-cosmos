@@ -1,26 +1,26 @@
 /*******************************************************************************
-*   (c) 2018 - 2023 Zondax AG
-*
-*  Licensed under the Apache License, Version 2.0 (the "License");
-*  you may not use this file except in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*      http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing, software
-*  distributed under the License is distributed on an "AS IS" BASIS,
-*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-*  See the License for the specific language governing permissions and
-*  limitations under the License.
-********************************************************************************/
+ *   (c) 2018 - 2023 Zondax AG
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ ********************************************************************************/
 
 #pragma once
 
-#include <jsmn.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
 #include "common/parser_common.h"
+#include <jsmn.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,17 +31,11 @@ extern "C" {
 #endif
 
 /// Max number of accepted tokens in the JSON input
-#define MAX_NUMBER_OF_TOKENS   768
+#define MAX_NUMBER_OF_TOKENS 768
 
-// we must limit the number
-#if defined(TARGET_NANOS)
+#if defined(TARGET_STAX) || defined(TARGET_FLEX) || defined(TARGET_APEX_P)
 #undef MAX_NUMBER_OF_TOKENS
-#define MAX_NUMBER_OF_TOKENS    96
-#endif
-
-#if defined(TARGET_STAX) || defined(TARGET_FLEX)
-#undef MAX_NUMBER_OF_TOKENS
-#define MAX_NUMBER_OF_TOKENS    600
+#define MAX_NUMBER_OF_TOKENS 600
 #endif
 
 #define ROOT_TOKEN_INDEX 0
@@ -52,11 +46,11 @@ extern "C" {
 //  - parsed json tokens
 //  - re-created SendMsg struct with indices pointing to tokens in parsed json
 typedef struct {
-    uint8_t isValid;
-    uint32_t numberOfTokens;
-    jsmntok_t tokens[MAX_NUMBER_OF_TOKENS];
-    const char *buffer;
-    uint16_t bufferLen;
+  uint8_t isValid;
+  uint32_t numberOfTokens;
+  jsmntok_t tokens[MAX_NUMBER_OF_TOKENS];
+  const char *buffer;
+  uint16_t bufferLen;
 } parsed_json_t;
 
 //---------------------------------------------
@@ -67,8 +61,7 @@ typedef struct {
 /// \param transaction
 /// \param transaction_length
 /// \return Error message
-parser_error_t json_parse(parsed_json_t *parsed_json,
-                          const char *transaction,
+parser_error_t json_parse(parsed_json_t *parsed_json, const char *transaction,
                           uint16_t transaction_length);
 
 /// Get the number of elements in the array
@@ -129,8 +122,7 @@ parser_error_t object_get_nth_value(const parsed_json_t *json,
 /// \return Error message
 parser_error_t object_get_value(const parsed_json_t *json,
                                 uint16_t object_token_index,
-                                const char *key_name,
-                                uint16_t *token_index);
+                                const char *key_name, uint16_t *token_index);
 
 #ifdef __cplusplus
 }

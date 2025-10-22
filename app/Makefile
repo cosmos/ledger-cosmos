@@ -41,11 +41,11 @@ APP_SOURCE_PATH += ../deps/jsmn/src
 
 # Application icons following guidelines:
 # https://developers.ledger.com/docs/embedded-app/design-requirements/#device-icon
-ICON_NANOS = nanos_icon.gif
 ICON_NANOX = nanox_icon.gif
 ICON_NANOSP = nanox_icon.gif
 ICON_STAX = stax_icon.gif
 ICON_FLEX = flex_icon.gif
+ICON_APEX_P = apex_p_icon.png
 
 # Application allowed derivation curves.
 # Possibles curves are: secp256k1, secp256r1, ed25519 and bls12381g1
@@ -126,11 +126,7 @@ endif
 DEFINES += PRODUCTION_BUILD=$(PRODUCTION_BUILD)
 
 ifeq ($(COIN),ATOM)
-ifeq ($(TARGET_NAME),TARGET_NANOS)
-    HAVE_SWAP ?= 0
-else
     HAVE_SWAP ?= 1
-endif
 endif
 
 ifeq ($(HAVE_SWAP), 1)
@@ -159,16 +155,8 @@ endif
 # Compile textual mode for all devices excetpt Nano S,
 # and define a Min stack size for Nano S with some margin
 # to get an error if app grows too much
-ifneq ($(TARGET_NAME),TARGET_NANOS)
-    DEFINES += COMPILE_TEXTUAL
-endif
-
-ifeq ($(TARGET_NAME),TARGET_NANOS)
-	APP_STACK_MIN_SIZE := 1600
-else
-	APP_STACK_MIN_SIZE := 1850
-endif
-
+DEFINES += COMPILE_TEXTUAL
+APP_STACK_MIN_SIZE := 1850
 
 $(info TARGET_NAME  = [$(TARGET_NAME)])
 $(info ICONNAME  = [$(ICONNAME)])
