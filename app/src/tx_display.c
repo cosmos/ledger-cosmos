@@ -142,7 +142,18 @@ __Z_INLINE bool address_matches_own(char *addr) {
   if (parser_tx_obj.tx_json.own_addr == NULL) {
     return false;
   }
-  if (strcmp(parser_tx_obj.tx_json.own_addr, addr) != 0) {
+
+  size_t actual_len = 0;
+  while (actual_len < parser_tx_obj.tx_json.own_addr_len &&
+         parser_tx_obj.tx_json.own_addr[actual_len] != 0) {
+    actual_len++;
+  }
+
+  if (strlen(addr) != actual_len) {
+    return false;
+  }
+
+  if (strncmp(parser_tx_obj.tx_json.own_addr, addr, actual_len) != 0) {
     return false;
   }
   return true;

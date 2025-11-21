@@ -221,8 +221,12 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx,
     THROW(APDU_CODE_DATA_INVALID);
   }
 
+  if (rx < VIEW_ADDRESS_OFFSET_SECP256K1) {
+    THROW(APDU_CODE_DATA_INVALID);
+  }
   parser_tx_obj.tx_json.own_addr =
       (const char *)(G_io_apdu_buffer + VIEW_ADDRESS_OFFSET_SECP256K1);
+  parser_tx_obj.tx_json.own_addr_len = rx - VIEW_ADDRESS_OFFSET_SECP256K1;
   const char *error_msg = tx_parse(sign_type);
   if (error_msg != NULL) {
     const int error_msg_length = strnlen(error_msg, sizeof(G_io_apdu_buffer));
