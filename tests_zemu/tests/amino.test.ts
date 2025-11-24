@@ -28,6 +28,7 @@ import {
   cliGovDeposit,
   example_tx_str_msgMultiSend,
   big_transaction,
+  tx_bank_send_high_fee,
 } from './common'
 
 // @ts-ignore
@@ -507,6 +508,51 @@ describe('Amino', function () {
           expect(error2.message).toBe('Data is invalid')
         }
       }
+    } finally {
+      await sim.close()
+    }
+  })
+
+
+  test.only.each(DEVICE_MODELS)('BankSendHighFee', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      const path = "m/44'/118'/0'/0/0"
+      const tx = Buffer.from(JSON.stringify(tx_bank_send_high_fee))
+      const hrp = 'cosmos'
+
+      // get address / publickey
+      const respPk = await app.getAddressAndPubKey(path, hrp)
+      expect(respPk).toHaveProperty('compressed_pk')
+      expect(respPk).toHaveProperty('bech32_address')
+      console.log(respPk)
+
+      // do not wait here..
+      const signatureRequest = app.sign(path, tx, hrp, AMINO_JSON_TX)
+
+      // Wait until we are not in the main menu
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-bank_send_high_fee`)
+
+      const resp = await signatureRequest
+      console.log(resp)
+
+      expect(resp).toHaveProperty('signature')
+
+      // Now verify the signature
+      const hash = crypto.createHash('sha256')
+      const msgHash = Uint8Array.from(hash.update(tx).digest())
+
+      const signatureDER = resp.signature
+      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+
+      const pk = Uint8Array.from(respPk.compressed_pk)
+
+      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      expect(signatureOk).toEqual(true)
     } finally {
       await sim.close()
     }
