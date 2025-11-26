@@ -70,6 +70,9 @@ typedef enum {
 #define COIN_DENOM_MAXSIZE 129
 #define COIN_AMOUNT_MAXSIZE 50
 
+// Maximum bech32 address length for validation
+#define MAX_BECH32_ADDR_LEN 128u
+
 #define COIN_MAX_CHAINID_LEN 20u
 #define INDEXING_TMP_KEYSIZE 70u
 #define INDEXING_TMP_VALUESIZE 70u
