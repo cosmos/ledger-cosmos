@@ -35,6 +35,12 @@
     return parser_transaction_too_big;                                         \
   }
 
+#define ASSERT_PTR_BOUNDS_N(count, dstLen, n)                                  \
+  count += n;                                                                  \
+  if (count > dstLen) {                                                        \
+    return parser_transaction_too_big;                                         \
+  }
+
 const char *get_required_root_item(root_item_e i) {
   switch (i) {
   case root_item_chain_id:
@@ -142,7 +148,20 @@ __Z_INLINE bool address_matches_own(char *addr) {
   if (parser_tx_obj.tx_json.own_addr == NULL) {
     return false;
   }
-  if (strcmp(parser_tx_obj.tx_json.own_addr, addr) != 0) {
+
+  // Validate length to prevent buffer over-read
+  if (parser_tx_obj.tx_json.own_addr_len > MAX_BECH32_ADDR_LEN) {
+    return false;
+  }
+
+  // own_addr_len is the exact length of the address (may not be
+  // null-terminated)
+  if (strlen(addr) != parser_tx_obj.tx_json.own_addr_len) {
+    return false;
+  }
+
+  if (strncmp(parser_tx_obj.tx_json.own_addr, addr,
+              parser_tx_obj.tx_json.own_addr_len) != 0) {
     return false;
   }
   return true;
@@ -616,9 +635,7 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src,
       }
       if (!found) {
         // Write out the value as a hex escape, \xNN
-        if (count > dstLen) {
-          return parser_unexpected_value;
-        }
+        ASSERT_PTR_BOUNDS_N(count, dstLen, 4);
         snprintf(dst, 5, "\\x%.02X", tmp_codepoint);
         dst += 4;
       }

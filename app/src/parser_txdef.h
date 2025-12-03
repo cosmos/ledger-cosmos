@@ -93,6 +93,7 @@ typedef struct {
   uint8_t filter_msg_from_count;
   int32_t filter_msg_from_valid_idx;
   const char *own_addr;
+  size_t own_addr_len;
 
   // current tx query
   tx_query_t query;
