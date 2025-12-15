@@ -424,7 +424,13 @@ __Z_INLINE parser_error_t get_subitem_count(root_item_e root_item,
   default:
     break;
   }
-  *num_items = tmp_num_items;
+
+  // Validate bounds before casting to uint8_t
+  if (tmp_num_items < 0 || tmp_num_items > UINT8_MAX) {
+    return parser_unexpected_number_items;
+  }
+
+  *num_items = (uint8_t)tmp_num_items;
 
   return parser_ok;
 }
