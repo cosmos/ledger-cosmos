@@ -9,6 +9,11 @@ on:
     - main
     - develop
 
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+
 jobs:
   job_functional_tests:
     uses: LedgerHQ/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@develop
