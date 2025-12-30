@@ -424,7 +424,13 @@ __Z_INLINE parser_error_t get_subitem_count(root_item_e root_item,
   default:
     break;
   }
-  *num_items = tmp_num_items;
+
+  // Validate bounds before casting to uint8_t
+  if (tmp_num_items < 0 || tmp_num_items > UINT8_MAX) {
+    return parser_unexpected_number_items;
+  }
+
+  *num_items = (uint8_t)tmp_num_items;
 
   return parser_ok;
 }
@@ -473,14 +479,20 @@ parser_error_t tx_display_numItems(uint8_t *num_items) {
   *num_items = 0;
   CHECK_PARSER_ERR(tx_indexRootFields())
 
-  *num_items = 0;
+  uint16_t total = 0;
   uint8_t n_items = 0;
   for (root_item_e root_item = 0; root_item < NUM_REQUIRED_ROOT_PAGES;
        root_item++) {
     CHECK_PARSER_ERR(get_subitem_count(root_item, &n_items))
-    *num_items += n_items;
+    total += n_items;
   }
 
+  // Reject transactions with too many items to display safely
+  if (total > UINT8_MAX) {
+    return parser_unexpected_number_items;
+  }
+
+  *num_items = (uint8_t)total;
   return parser_ok;
 }
 
