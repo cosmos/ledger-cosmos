@@ -29,6 +29,10 @@
 
 parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer,
                                    uint16_t bufferSize) {
+  if (ctx == NULL) {
+    return parser_unexpected_value;
+  }
+
   ctx->offset = 0;
 
   if (bufferSize == 0 || buffer == NULL) {
@@ -46,6 +50,9 @@ parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer,
 
 parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data,
                             size_t dataLen, parser_tx_t *tx_obj) {
+  if (ctx == NULL || tx_obj == NULL) {
+    return parser_unexpected_value;
+  }
 
   CHECK_PARSER_ERR(parser_init_context(ctx, data, dataLen))
   ctx->tx_obj = tx_obj;
@@ -60,6 +67,10 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data,
 }
 
 parser_error_t parser_validate(const parser_context_t *ctx) {
+  if (ctx == NULL || ctx->tx_obj == NULL) {
+    return parser_unexpected_value;
+  }
+
   if (ctx->tx_obj->tx_type == tx_json) {
     CHECK_PARSER_ERR(tx_validate(&parser_tx_obj.tx_json.json))
   }
@@ -80,6 +91,10 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
 
 parser_error_t parser_getNumItems(const parser_context_t *ctx,
                                   uint8_t *num_items) {
+  if (ctx == NULL || ctx->tx_obj == NULL || num_items == NULL) {
+    return parser_unexpected_value;
+  }
+
   *num_items = 0;
   if (ctx->tx_obj->tx_type == tx_textual) {
     *num_items = app_mode_expert()
@@ -96,6 +111,10 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx,
 }
 
 __Z_INLINE bool parser_areEqual(uint16_t tokenIdx, const char *expected) {
+  if (expected == NULL) {
+    return false;
+  }
+
   if (parser_tx_obj.tx_json.json.tokens[tokenIdx].type != JSMN_STRING) {
     return false;
   }
@@ -122,6 +141,10 @@ __Z_INLINE bool parser_areEqual(uint16_t tokenIdx, const char *expected) {
 }
 
 __Z_INLINE bool parser_isAmount(char *key) {
+  if (key == NULL) {
+    return false;
+  }
+
   if (strcmp(key, "fee/amount") == 0) {
     return true;
   }
@@ -186,6 +209,10 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
                                                   uint16_t outValLen,
                                                   uint8_t pageIdx,
                                                   uint8_t *pageCount) {
+  if (pageCount == NULL) {
+    return parser_unexpected_value;
+  }
+
   *pageCount = 0;
 
   uint16_t numElements;
@@ -279,6 +306,10 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
                                               char *outVal, uint16_t outValLen,
                                               uint8_t pageIdx,
                                               uint8_t *pageCount) {
+  if (pageCount == NULL) {
+    return parser_unexpected_value;
+  }
+
   ZEMU_LOGF(200, "[formatAmount] ------- pageidx %d", pageIdx)
 
   *pageCount = 0;
@@ -354,6 +385,10 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
                                              char *outVal, uint16_t outValLen,
                                              uint8_t pageIdx,
                                              uint8_t *pageCount) {
+  if (ctx == NULL || ctx->tx_obj == NULL || container == NULL ||
+      pageCount == NULL) {
+    return parser_unexpected_value;
+  }
 
   // verification assures that content + title < size(tmp), to be used in string
   // manipulation
@@ -605,6 +640,9 @@ parser_error_t parser_getItem(const parser_context_t *ctx, uint8_t displayIdx,
                               char *outKey, uint16_t outKeyLen, char *outVal,
                               uint16_t outValLen, uint8_t pageIdx,
                               uint8_t *pageCount) {
+  if (ctx == NULL || ctx->tx_obj == NULL || pageCount == NULL) {
+    return parser_unexpected_value;
+  }
 
   if (ctx->tx_obj->tx_type == tx_textual) {
     CHECK_PARSER_ERR(parser_getTextualItem(ctx, displayIdx, outKey, outKeyLen,

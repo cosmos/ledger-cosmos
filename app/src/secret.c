@@ -30,6 +30,10 @@ void secret_accept() {
 }
 
 zxerr_t secret_getNumItems(uint8_t *num_items) {
+  if (num_items == NULL) {
+    return zxerr_unknown;
+  }
+
   *num_items = 0;
   return zxerr_no_data;
 }

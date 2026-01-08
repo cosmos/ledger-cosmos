@@ -438,6 +438,10 @@ __Z_INLINE parser_error_t get_subitem_count(root_item_e root_item,
 __Z_INLINE parser_error_t retrieve_tree_indexes(uint8_t display_index,
                                                 root_item_e *root_item,
                                                 uint8_t *subitem_index) {
+  if (root_item == NULL || subitem_index == NULL) {
+    return parser_unexpected_value;
+  }
+
   // Find root index | display_index idx -> item_index
   // consume indexed subpages until we get the item index in the subpage
   *root_item = 0;
@@ -625,6 +629,10 @@ static const ascii_subst_t ascii_substitutions[] = {
 
 parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src,
                                       uint16_t srcLen) {
+  if (dst == NULL || src == NULL) {
+    return parser_unexpected_value;
+  }
+
   MEMZERO(dst, dstLen);
   char *p = src;
   uint16_t count = 0;

@@ -31,6 +31,10 @@ bool extraDepthLevel = false;
 // NULL termination src_size does not include NULL termination
 __Z_INLINE void strcat_chunk_s(char *dst, uint16_t dst_max,
                                const char *src_chunk, size_t src_chunk_size) {
+  if (dst == NULL || dst_max == 0) {
+    return;
+  }
+
   *(dst + dst_max - 1) =
       0; // last character terminates with zero in case we go beyond bounds
   const size_t prev_size = strlen(dst);
@@ -75,6 +79,10 @@ static const key_subst_t value_substitutions[] = {
 parser_error_t tx_getToken(uint16_t token_index, char *out_val,
                            uint16_t out_val_len, uint8_t pageIdx,
                            uint8_t *pageCount) {
+  if (pageCount == NULL) {
+    return parser_unexpected_value;
+  }
+
   *pageCount = 0;
   MEMZERO(out_val, out_val_len);
 
