@@ -24,6 +24,10 @@
 
 parser_error_t json_parse(parsed_json_t *parsed_json, const char *buffer,
                           uint16_t bufferLen) {
+  if (parsed_json == NULL || buffer == NULL) {
+    return parser_unexpected_value;
+  }
+
   // This check was previously implemented to prevent, here we want to avoid
   // false positives. It is especially important in fuzzing environments where
   // this check was omitted.
@@ -85,6 +89,10 @@ parser_error_t json_parse(parsed_json_t *parsed_json, const char *buffer,
 parser_error_t array_get_element_count(const parsed_json_t *json,
                                        uint16_t array_token_index,
                                        uint16_t *number_elements) {
+  if (json == NULL || number_elements == NULL) {
+    return parser_unexpected_value;
+  }
+
   *number_elements = 0;
   if (array_token_index > json->numberOfTokens) {
     return parser_no_data;
@@ -116,6 +124,10 @@ parser_error_t array_get_nth_element(const parsed_json_t *json,
                                      uint16_t array_token_index,
                                      uint16_t element_index,
                                      uint16_t *token_index) {
+  if (json == NULL || token_index == NULL) {
+    return parser_unexpected_value;
+  }
+
   if (array_token_index > json->numberOfTokens) {
     return parser_no_data;
   }
@@ -150,6 +162,10 @@ parser_error_t array_get_nth_element(const parsed_json_t *json,
 parser_error_t object_get_element_count(const parsed_json_t *json,
                                         uint16_t object_token_index,
                                         uint16_t *element_count) {
+  if (json == NULL || element_count == NULL) {
+    return parser_unexpected_value;
+  }
+
   *element_count = 0;
   if (object_token_index > json->numberOfTokens) {
     return parser_no_data;
@@ -182,6 +198,10 @@ parser_error_t object_get_nth_key(const parsed_json_t *json,
                                   uint16_t object_token_index,
                                   uint16_t object_element_index,
                                   uint16_t *token_index) {
+  if (json == NULL || token_index == NULL) {
+    return parser_unexpected_value;
+  }
+
   *token_index = object_token_index;
   if (object_token_index > json->numberOfTokens) {
     return parser_no_data;
@@ -218,6 +238,10 @@ parser_error_t object_get_nth_value(const parsed_json_t *json,
                                     uint16_t object_token_index,
                                     uint16_t object_element_index,
                                     uint16_t *key_index) {
+  if (json == NULL || key_index == NULL) {
+    return parser_unexpected_value;
+  }
+
   if (object_token_index > json->numberOfTokens) {
     return parser_no_data;
   }
@@ -232,6 +256,10 @@ parser_error_t object_get_nth_value(const parsed_json_t *json,
 parser_error_t object_get_value(const parsed_json_t *json,
                                 uint16_t object_token_index,
                                 const char *key_name, uint16_t *token_index) {
+  if (json == NULL || key_name == NULL || token_index == NULL) {
+    return parser_unexpected_value;
+  }
+
   if (object_token_index > json->numberOfTokens) {
     return parser_no_data;
   }
