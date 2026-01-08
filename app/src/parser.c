@@ -249,23 +249,31 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
   MEMZERO(outVal, outValLen);
   MEMZERO(bufferUI, sizeof(bufferUI));
 
-  if (parser_tx_obj.tx_json.json.tokens[amountToken + AMOUNT_VALUE_TOKEN_OFFSET].start < 0 ||
-      parser_tx_obj.tx_json.json.tokens[amountToken + DENOM_VALUE_TOKEN_OFFSET].start < 0) {
+  if (parser_tx_obj.tx_json.json.tokens[amountToken + AMOUNT_VALUE_TOKEN_OFFSET]
+              .start < 0 ||
+      parser_tx_obj.tx_json.json.tokens[amountToken + DENOM_VALUE_TOKEN_OFFSET]
+              .start < 0) {
     return parser_unexpected_buffer_end;
   }
   const char *amountPtr =
       parser_tx_obj.tx_json.tx +
-      parser_tx_obj.tx_json.json.tokens[amountToken + AMOUNT_VALUE_TOKEN_OFFSET].start;
+      parser_tx_obj.tx_json.json.tokens[amountToken + AMOUNT_VALUE_TOKEN_OFFSET]
+          .start;
 
   const int32_t amountLen =
-      parser_tx_obj.tx_json.json.tokens[amountToken + AMOUNT_VALUE_TOKEN_OFFSET].end -
-      parser_tx_obj.tx_json.json.tokens[amountToken + AMOUNT_VALUE_TOKEN_OFFSET].start;
+      parser_tx_obj.tx_json.json.tokens[amountToken + AMOUNT_VALUE_TOKEN_OFFSET]
+          .end -
+      parser_tx_obj.tx_json.json.tokens[amountToken + AMOUNT_VALUE_TOKEN_OFFSET]
+          .start;
   const char *denomPtr =
       parser_tx_obj.tx_json.tx +
-      parser_tx_obj.tx_json.json.tokens[amountToken + DENOM_VALUE_TOKEN_OFFSET].start;
+      parser_tx_obj.tx_json.json.tokens[amountToken + DENOM_VALUE_TOKEN_OFFSET]
+          .start;
   const int32_t denomLen =
-      parser_tx_obj.tx_json.json.tokens[amountToken + DENOM_VALUE_TOKEN_OFFSET].end -
-      parser_tx_obj.tx_json.json.tokens[amountToken + DENOM_VALUE_TOKEN_OFFSET].start;
+      parser_tx_obj.tx_json.json.tokens[amountToken + DENOM_VALUE_TOKEN_OFFSET]
+          .end -
+      parser_tx_obj.tx_json.json.tokens[amountToken + DENOM_VALUE_TOKEN_OFFSET]
+          .start;
 
   if (denomLen <= 0 || denomLen >= COIN_DENOM_MAXSIZE) {
     return parser_unexpected_error;

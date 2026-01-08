@@ -33,7 +33,7 @@ extern "C" {
 
 // Ethereum address constants
 #define ETH_ADDRESS_LEN 20
-#define ETH_ADDRESS_HASH_OFFSET 12  // Keccak-256 hash offset (32 - 20)
+#define ETH_ADDRESS_HASH_OFFSET 12 // Keccak-256 hash offset (32 - 20)
 
 // Minimum buffer space needed for encoded address beyond public key
 #define MIN_ADDRESS_BUFFER_SPACE 50

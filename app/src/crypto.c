@@ -189,11 +189,11 @@ zxerr_t crypto_fillAddress_helper(uint8_t *buffer, uint16_t buffer_len,
         uncompressedPubkey + PK_UNCOMPRESSED_FORMAT_PREFIX_LEN,
         sizeof(uncompressedPubkey) - PK_UNCOMPRESSED_FORMAT_PREFIX_LEN,
         hashed1_pk));
-    CHECK_ZXERR(bech32EncodeFromBytes(
-        addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp,
-        hashed1_pk + ETH_ADDRESS_HASH_OFFSET,
-        sizeof(hashed1_pk) - ETH_ADDRESS_HASH_OFFSET, 1,
-        BECH32_ENCODING_BECH32));
+    CHECK_ZXERR(
+        bech32EncodeFromBytes(addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp,
+                              hashed1_pk + ETH_ADDRESS_HASH_OFFSET,
+                              sizeof(hashed1_pk) - ETH_ADDRESS_HASH_OFFSET, 1,
+                              BECH32_ENCODING_BECH32));
     break;
   }
 
