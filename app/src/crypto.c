@@ -153,7 +153,11 @@ zxerr_t crypto_fillAddress_helper(uint8_t *buffer, uint16_t buffer_len,
                                   uint16_t *addrResponseLen,
                                   uint32_t *hdPath_to_use,
                                   uint16_t hdPath_to_use_len) {
-  if (buffer_len < PK_LEN_SECP256K1 + 50) {
+  if (buffer == NULL || addrResponseLen == NULL || hdPath_to_use == NULL) {
+    return zxerr_unknown;
+  }
+
+  if (buffer_len < PK_LEN_SECP256K1 + MIN_ADDRESS_BUFFER_SPACE) {
     return zxerr_buffer_too_small;
   }
 
@@ -216,7 +220,7 @@ zxerr_t crypto_swap_fillAddress(uint32_t *hdPath_swap, uint8_t hdPathLen_swap,
                                 char *hrp, address_encoding_e encode_type,
                                 char *buffer, uint16_t bufferLen,
                                 uint16_t *addrResponseLen) {
-  if (bufferLen < 50) {
+  if (bufferLen < MIN_ADDRESS_BUFFER_SPACE) {
     return zxerr_buffer_too_small;
   }
 
