@@ -68,8 +68,8 @@ parser_error_t parser_validate(const parser_context_t *ctx) {
   uint8_t numItems = 0;
   CHECK_PARSER_ERR(parser_getNumItems(ctx, &numItems))
 
-  char tmpKey[40];
-  char tmpVal[40];
+  char tmpKey[MAX_TITLE_SIZE];
+  char tmpVal[MAX_TITLE_SIZE];
   uint8_t pageCount = 0;
   for (uint8_t idx = 0; idx < numItems; idx++) {
     CHECK_PARSER_ERR(parser_getItem(ctx, idx, tmpKey, sizeof(tmpKey), tmpVal,
@@ -198,7 +198,7 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
     return parser_ok;
   }
 
-  if (numElements != 4) {
+  if (numElements != AMOUNT_OBJECT_TOKEN_COUNT) {
     return parser_unexpected_field;
   }
 
@@ -206,15 +206,15 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
     return parser_unexpected_field;
   }
 
-  if (!parser_areEqual(amountToken + 1u, "amount")) {
+  if (!parser_areEqual(amountToken + AMOUNT_KEY_TOKEN_OFFSET, "amount")) {
     return parser_unexpected_field;
   }
 
-  if (!parser_areEqual(amountToken + 3u, "denom")) {
+  if (!parser_areEqual(amountToken + DENOM_KEY_TOKEN_OFFSET, "denom")) {
     return parser_unexpected_field;
   }
 
-  char bufferUI[160];
+  char bufferUI[FORMATTED_AMOUNT_BUFFER_SIZE];
   char tmpDenom[COIN_DENOM_MAXSIZE];
   char tmpAmount[COIN_AMOUNT_MAXSIZE];
   MEMZERO(tmpDenom, sizeof tmpDenom);
@@ -222,23 +222,23 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
   MEMZERO(outVal, outValLen);
   MEMZERO(bufferUI, sizeof(bufferUI));
 
-  if (parser_tx_obj.tx_json.json.tokens[amountToken + 2].start < 0 ||
-      parser_tx_obj.tx_json.json.tokens[amountToken + 4].start < 0) {
+  if (parser_tx_obj.tx_json.json.tokens[amountToken + AMOUNT_VALUE_TOKEN_OFFSET].start < 0 ||
+      parser_tx_obj.tx_json.json.tokens[amountToken + DENOM_VALUE_TOKEN_OFFSET].start < 0) {
     return parser_unexpected_buffer_end;
   }
   const char *amountPtr =
       parser_tx_obj.tx_json.tx +
-      parser_tx_obj.tx_json.json.tokens[amountToken + 2].start;
+      parser_tx_obj.tx_json.json.tokens[amountToken + AMOUNT_VALUE_TOKEN_OFFSET].start;
 
   const int32_t amountLen =
-      parser_tx_obj.tx_json.json.tokens[amountToken + 2].end -
-      parser_tx_obj.tx_json.json.tokens[amountToken + 2].start;
+      parser_tx_obj.tx_json.json.tokens[amountToken + AMOUNT_VALUE_TOKEN_OFFSET].end -
+      parser_tx_obj.tx_json.json.tokens[amountToken + AMOUNT_VALUE_TOKEN_OFFSET].start;
   const char *denomPtr =
       parser_tx_obj.tx_json.tx +
-      parser_tx_obj.tx_json.json.tokens[amountToken + 4].start;
+      parser_tx_obj.tx_json.json.tokens[amountToken + DENOM_VALUE_TOKEN_OFFSET].start;
   const int32_t denomLen =
-      parser_tx_obj.tx_json.json.tokens[amountToken + 4].end -
-      parser_tx_obj.tx_json.json.tokens[amountToken + 4].start;
+      parser_tx_obj.tx_json.json.tokens[amountToken + DENOM_VALUE_TOKEN_OFFSET].end -
+      parser_tx_obj.tx_json.json.tokens[amountToken + DENOM_VALUE_TOKEN_OFFSET].start;
 
   if (denomLen <= 0 || denomLen >= COIN_DENOM_MAXSIZE) {
     return parser_unexpected_error;
@@ -555,9 +555,12 @@ __Z_INLINE parser_error_t parser_getJsonItem(const parser_context_t *ctx,
                                              uint16_t outValLen,
                                              uint8_t pageIdx,
                                              uint8_t *pageCount) {
+  if (ctx == NULL || pageCount == NULL) {
+    return parser_unexpected_value;
+  }
 
   *pageCount = 0;
-  char tmpKey[35] = {0};
+  char tmpKey[QUERY_KEY_BUFFER_SIZE] = {0};
 
   MEMZERO(outKey, outKeyLen);
   MEMZERO(outVal, outValLen);

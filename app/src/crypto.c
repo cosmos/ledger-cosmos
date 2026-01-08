@@ -181,11 +181,15 @@ zxerr_t crypto_fillAddress_helper(uint8_t *buffer, uint16_t buffer_len,
   }
 
   case BECH32_ETH: {
-    CHECK_CX_OK(cx_keccak_256_hash(uncompressedPubkey + 1,
-                                   sizeof(uncompressedPubkey) - 1, hashed1_pk));
+    CHECK_CX_OK(cx_keccak_256_hash(
+        uncompressedPubkey + PK_UNCOMPRESSED_FORMAT_PREFIX_LEN,
+        sizeof(uncompressedPubkey) - PK_UNCOMPRESSED_FORMAT_PREFIX_LEN,
+        hashed1_pk));
     CHECK_ZXERR(bech32EncodeFromBytes(
-        addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp, hashed1_pk + 12,
-        sizeof(hashed1_pk) - 12, 1, BECH32_ENCODING_BECH32));
+        addr, buffer_len - PK_LEN_SECP256K1, bech32_hrp,
+        hashed1_pk + ETH_ADDRESS_HASH_OFFSET,
+        sizeof(hashed1_pk) - ETH_ADDRESS_HASH_OFFSET, 1,
+        BECH32_ENCODING_BECH32));
     break;
   }
 
@@ -240,11 +244,14 @@ zxerr_t crypto_swap_fillAddress(uint32_t *hdPath_swap, uint8_t hdPathLen_swap,
   }
 
   case BECH32_ETH: {
-    CHECK_CX_OK(cx_keccak_256_hash(uncompressedPubkey + 1,
-                                   sizeof(uncompressedPubkey) - 1, hashed1_pk));
-    CHECK_ZXERR(bech32EncodeFromBytes(buffer, bufferLen, hrp, hashed1_pk + 12,
-                                      sizeof(hashed1_pk) - 12, 1,
-                                      BECH32_ENCODING_BECH32));
+    CHECK_CX_OK(cx_keccak_256_hash(
+        uncompressedPubkey + PK_UNCOMPRESSED_FORMAT_PREFIX_LEN,
+        sizeof(uncompressedPubkey) - PK_UNCOMPRESSED_FORMAT_PREFIX_LEN,
+        hashed1_pk));
+    CHECK_ZXERR(bech32EncodeFromBytes(
+        buffer, bufferLen, hrp, hashed1_pk + ETH_ADDRESS_HASH_OFFSET,
+        sizeof(hashed1_pk) - ETH_ADDRESS_HASH_OFFSET, 1,
+        BECH32_ENCODING_BECH32));
     break;
   }
 
