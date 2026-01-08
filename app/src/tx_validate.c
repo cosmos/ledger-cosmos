@@ -38,14 +38,29 @@ int8_t is_space(char c) {
 }
 
 parser_error_t contains_whitespace(parsed_json_t *json) {
+  if (json == NULL) {
+    return parser_unexpected_value;
+  }
+
+  // Validate we have at least one token
+  if (json->numberOfTokens == 0) {
+    return parser_unexpected_value;
+  }
+
   int start = 0;
   const int last_element_index = json->tokens[0].end;
+
+  // Validate last_element_index is within buffer bounds
+  if (last_element_index < 0 || last_element_index > (int)json->bufferLen) {
+    return parser_unexpected_value;
+  }
 
   // Starting at token 1 because token 0 contains full tx
   for (uint32_t i = 1; i < json->numberOfTokens; i++) {
     if (json->tokens[i].type != JSMN_UNDEFINED) {
       const int end = json->tokens[i].start;
-      for (int j = start; j < end; j++) {
+      // Bounds check: ensure end is within buffer
+      for (int j = start; j < end && j < (int)json->bufferLen; j++) {
         if (is_space(json->buffer[j]) == 1) {
           return parser_json_contains_whitespace;
         }
@@ -59,7 +74,9 @@ parser_error_t contains_whitespace(parsed_json_t *json) {
     }
   }
 
-  while (start < last_element_index && json->buffer[start] != '\0') {
+  // Bounds check: ensure start is within buffer
+  while (start < last_element_index && start < (int)json->bufferLen &&
+         json->buffer[start] != '\0') {
     if (is_space(json->buffer[start])) {
       return parser_json_contains_whitespace;
     }
@@ -70,10 +87,28 @@ parser_error_t contains_whitespace(parsed_json_t *json) {
 
 int8_t is_sorted(uint16_t first_index, uint16_t second_index,
                  parsed_json_t *json) {
+  if (json == NULL) {
+    return 0;
+  }
+
+  // Validate token indices are within bounds
+  if (first_index >= json->numberOfTokens ||
+      second_index >= json->numberOfTokens) {
+    return 0;
+  }
+
   char first[256];
   char second[256];
   MEMZERO(first, sizeof first);
   MEMZERO(second, sizeof second);
+
+  // Validate first token buffer bounds
+  if (json->tokens[first_index].start < 0 ||
+      json->tokens[first_index].end < 0 ||
+      json->tokens[first_index].end > (int)json->bufferLen ||
+      json->tokens[first_index].start > json->tokens[first_index].end) {
+    return 0;
+  }
 
   size_t size = json->tokens[first_index].end - json->tokens[first_index].start;
   if (size >= sizeof(first)) {
@@ -82,6 +117,14 @@ int8_t is_sorted(uint16_t first_index, uint16_t second_index,
 
   strncpy(first, json->buffer + json->tokens[first_index].start, size);
   first[size] = '\0';
+
+  // Validate second token buffer bounds
+  if (json->tokens[second_index].start < 0 ||
+      json->tokens[second_index].end < 0 ||
+      json->tokens[second_index].end > (int)json->bufferLen ||
+      json->tokens[second_index].start > json->tokens[second_index].end) {
+    return 0;
+  }
 
   size = json->tokens[second_index].end - json->tokens[second_index].start;
   if (size >= sizeof(second))
@@ -98,6 +141,10 @@ int8_t is_sorted(uint16_t first_index, uint16_t second_index,
 }
 
 int8_t dictionaries_sorted(parsed_json_t *json) {
+  if (json == NULL) {
+    return 0;
+  }
+
   for (uint32_t i = 0; i < json->numberOfTokens; i++) {
     if (json->tokens[i].type == JSMN_OBJECT) {
 
