@@ -61,10 +61,16 @@ parser_error_t tx_getToken(uint16_t token_index, char *out_val,
                            uint8_t *pageCount);
 
 __Z_INLINE bool is_msg_type_field(char *field_name) {
+  if (field_name == NULL) {
+    return false;
+  }
   return strcmp(field_name, "msgs/type") == 0;
 }
 
 __Z_INLINE bool is_msg_from_field(char *field_name) {
+  if (field_name == NULL) {
+    return false;
+  }
   return strcmp(field_name, "msgs/value/delegator_address") == 0;
 }
 

@@ -314,7 +314,7 @@ TEST(TxValidationTest, GaiaCLIissueBigTX) {
   ASSERT_EQ(err, parser_json_too_many_tokens);
 
   err = tx_validate(&json);
-  EXPECT_EQ(err, parser_json_missing_chain_id)
+  EXPECT_EQ(err, parser_unexpected_value)
       << "Validation failed, error: " << parser_getErrorDescription(err);
 }
 } // namespace

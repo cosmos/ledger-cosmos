@@ -23,6 +23,10 @@
 #include <stdio.h>
 
 zxerr_t addr_getNumItems(uint8_t *num_items) {
+  if (num_items == NULL) {
+    return zxerr_unknown;
+  }
+
   zemu_log_stack("addr_getNumItems");
   *num_items = 1;
 
@@ -38,6 +42,10 @@ zxerr_t addr_getNumItems(uint8_t *num_items) {
 zxerr_t addr_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen,
                      char *outVal, uint16_t outValLen, uint8_t pageIdx,
                      uint8_t *pageCount) {
+  if (pageCount == NULL || outKey == NULL || outVal == NULL) {
+    return zxerr_unknown;
+  }
+
   ZEMU_LOGF(200, "[addr_getItem] %d/%d\n", displayIdx, pageIdx)
 
   switch (displayIdx) {

@@ -32,6 +32,18 @@ extern "C" {
 #define SCREEN_INDENT ">"
 #define TITLE_TRUNCATE_REPLACE "---"
 
+// Buffer sizes for parser operations
+#define FORMATTED_AMOUNT_BUFFER_SIZE 160
+#define QUERY_KEY_BUFFER_SIZE 35
+
+// JSON amount object token structure constants
+// Token structure: [object, key:"amount", value, key:"denom", value]
+#define AMOUNT_OBJECT_TOKEN_COUNT 4
+#define AMOUNT_KEY_TOKEN_OFFSET 1
+#define AMOUNT_VALUE_TOKEN_OFFSET 2
+#define DENOM_KEY_TOKEN_OFFSET 3
+#define DENOM_VALUE_TOKEN_OFFSET 4
+
 const char *parser_getErrorDescription(parser_error_t err);
 
 //// parses a tx buffer

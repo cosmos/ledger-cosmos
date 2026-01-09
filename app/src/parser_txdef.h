@@ -31,6 +31,9 @@ extern "C" {
 #define INDENT_KEY_ID 3
 #define EXPERT_KEY_ID 4
 
+// Textual transaction temporary buffer size
+#define TX_TEXTUAL_TMP_BUFFER_SIZE 625
+
 typedef struct screen_arg_t {
   char *titlePtr;
   size_t titleLen;
@@ -43,7 +46,7 @@ typedef struct screen_arg_t {
 typedef struct tx_textual_t {
   size_t n_containers;
   uint8_t n_expert;
-  uint8_t tmpBuffer[625];
+  uint8_t tmpBuffer[TX_TEXTUAL_TMP_BUFFER_SIZE];
 } tx_textual_t;
 
 typedef struct {

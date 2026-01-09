@@ -28,6 +28,16 @@ extern "C" {
 
 #define MAX_BECH32_HRP_LEN 83u
 
+// Uncompressed public key format prefix byte length (0x04 prefix)
+#define PK_UNCOMPRESSED_FORMAT_PREFIX_LEN 1
+
+// Ethereum address constants
+#define ETH_ADDRESS_LEN 20
+#define ETH_ADDRESS_HASH_OFFSET 12 // Keccak-256 hash offset (32 - 20)
+
+// Minimum buffer space needed for encoded address beyond public key
+#define MIN_ADDRESS_BUFFER_SPACE 50
+
 extern uint32_t hdPath[HDPATH_LEN_DEFAULT];
 extern char bech32_hrp[MAX_BECH32_HRP_LEN + 1];
 extern uint8_t bech32_hrp_len;
