@@ -17,3 +17,5 @@ jobs:
       has-rust: false
       has-nanos: false
       node-version: '22'
+    permissions:                                                            
+        contents: write  # Required for creating releases   
