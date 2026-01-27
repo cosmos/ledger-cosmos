@@ -694,7 +694,7 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src,
   }
 
   if (src[srcLen - 1] == ' ' || src[srcLen - 1] == '@') {
-    if (src[dstLen - 1] + 1 > dstLen) {
+    if (count >= dstLen) {
       return parser_unexpected_value;
     }
     ASSERT_PTR_BOUNDS(count, dstLen);
