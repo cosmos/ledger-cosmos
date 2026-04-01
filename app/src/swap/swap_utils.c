@@ -118,7 +118,7 @@ zxerr_t readU32BE(uint8_t *input, uint32_t *output) {
 
   *output = 0;
   for (uint8_t i = 0; i < 4; i++) {
-    *output += (uint32_t) * (input + i) << (32 - (8 * (i + 1)));
+    *output += (uint32_t)*(input + i) << (32 - (8 * (i + 1)));
   }
   return zxerr_ok;
 }
