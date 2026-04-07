@@ -38,8 +38,9 @@ int8_t find_chain_index_by_coin_config(const char *coin_config,
   }
 
   for (uint8_t i = 0; i < chains_len; i++) {
-    if (strncmp(coin_config, PIC(chains[i].coin_config), coin_config_len) ==
-        0) {
+    if (coin_config_len == strlen(PIC(chains[i].coin_config)) &&
+        strncmp(coin_config, PIC(chains[i].coin_config), coin_config_len) ==
+            0) {
       return i;
     }
   }
@@ -53,8 +54,7 @@ int8_t find_chain_index_by_chain_id(const char *chain_id) {
   }
 
   for (uint8_t i = 0; i < chains_len; i++) {
-    if (strncmp(chain_id, PIC(chains[i].chain_id),
-                strlen(PIC(chains[i].chain_id))) == 0) {
+    if (strcmp(chain_id, PIC(chains[i].chain_id)) == 0) {
       return i;
     }
   }
@@ -118,7 +118,7 @@ zxerr_t readU32BE(uint8_t *input, uint32_t *output) {
 
   *output = 0;
   for (uint8_t i = 0; i < 4; i++) {
-    *output += (uint32_t) * (input + i) << (32 - (8 * (i + 1)));
+    *output += (uint32_t)*(input + i) << (32 - (8 * (i + 1)));
   }
   return zxerr_ok;
 }
