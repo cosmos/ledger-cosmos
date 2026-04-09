@@ -409,6 +409,9 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
 
   // No Tittle screen
   if (container->screen.titleLen == 0) {
+    if (container->screen.contentPtr == NULL) {
+      return parser_unexpected_value;
+    }
     MEMCPY(tmp, container->screen.contentPtr, container->screen.contentLen);
     CHECK_PARSER_ERR(tx_display_translation(out, sizeof(out), tmp,
                                             container->screen.contentLen))
