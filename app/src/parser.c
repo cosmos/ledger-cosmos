@@ -97,10 +97,7 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx,
 
   *num_items = 0;
   if (ctx->tx_obj->tx_type == tx_textual) {
-    *num_items = app_mode_expert()
-                     ? (uint8_t)ctx->tx_obj->tx_text.n_containers
-                     : (uint8_t)(ctx->tx_obj->tx_text.n_containers -
-                                 ctx->tx_obj->tx_text.n_expert);
+    *num_items = (uint8_t)ctx->tx_obj->tx_text.n_containers;
     return parser_ok;
   }
 
@@ -504,29 +501,6 @@ __Z_INLINE parser_error_t parser_getScreenInfo(const parser_context_t *ctx,
   return parser_ok;
 }
 
-__Z_INLINE parser_error_t parser_getNextNonExpert(const parser_context_t *ctx,
-                                                  Cbor_container *container,
-                                                  uint8_t displayIdx) {
-
-  PARSER_ASSERT_OR_ERROR(displayIdx < ctx->tx_obj->tx_text.n_containers,
-                         parser_unexpected_value);
-
-  uint8_t non_expert = 0;
-  for (size_t containerIdx = 0;
-       containerIdx < ctx->tx_obj->tx_text.n_containers; containerIdx++) {
-    parser_getScreenInfo(ctx, container, containerIdx);
-    if (!container->screen.expert) {
-      non_expert++;
-    } else {
-      continue;
-    }
-    if (non_expert == displayIdx + 1) {
-      break;
-    }
-    PARSER_ASSERT_OR_ERROR(non_expert <= displayIdx, parser_unexpected_value);
-  }
-  return parser_ok;
-}
 #endif
 
 __Z_INLINE parser_error_t
@@ -579,10 +553,6 @@ parser_getTextualItem(const parser_context_t *ctx, uint8_t displayIdx,
         return parser_unexpected_chain;
       }
     }
-  }
-
-  if (!app_mode_expert()) {
-    CHECK_PARSER_ERR(parser_getNextNonExpert(ctx, &container, displayIdx))
   }
 
   CHECK_PARSER_ERR(parser_screenPrint(ctx, &container, outKey, outKeyLen,
