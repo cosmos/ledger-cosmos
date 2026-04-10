@@ -98,7 +98,7 @@ typedef struct {
   // total items
   uint16_t total_item_count;
   // number of items the root_item contains
-  uint8_t root_item_number_subitems[NUM_REQUIRED_ROOT_PAGES];
+  uint16_t root_item_number_subitems[NUM_REQUIRED_ROOT_PAGES];
 
   uint8_t is_default_chain;
 } display_cache_t;
