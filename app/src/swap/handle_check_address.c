@@ -29,16 +29,16 @@ Coin Configuration has the following structure;
     - hrp length (1 byte) | hrp (hrp length bytes)
 */
 void handle_check_address(check_address_parameters_t *params) {
-  if (params == NULL || params->address_to_check == NULL) {
+  if (params == NULL || params->address_to_check == NULL ||
+      params->coin_configuration == NULL || params->address_parameters == NULL) {
     return;
   }
 
   // Reset result
   params->result = 0;
 
-  // Get HRP
-  if (params->coin_configuration == NULL) {
-    ZEMU_LOGF(200, "Coin configuration is NULL\n");
+  // Validate coin_configuration_length before reading embedded fields
+  if (params->coin_configuration_length < 1) {
     return;
   }
 
@@ -46,13 +46,18 @@ void handle_check_address(check_address_parameters_t *params) {
   ZEMU_LOGF(200, "HRP length: %d\n", hrp_length);
   char hrp[MAX_BECH32_HRP_LEN + 1] = {0};
 
-  if (hrp_length == 0 || hrp_length > MAX_BECH32_HRP_LEN) {
+  if (hrp_length == 0 || hrp_length > MAX_BECH32_HRP_LEN ||
+      params->coin_configuration_length < 1 + hrp_length) {
     return;
   }
   memcpy(hrp, params->coin_configuration + 1, hrp_length);
   hrp[hrp_length] = 0;
 
-  // Get bip32 path
+  // Validate address_parameters_length before reading bip32 path
+  if (params->address_parameters_length < 1 + 4 * HDPATH_LEN_DEFAULT) {
+    return;
+  }
+
   uint8_t bip32_path_length = params->address_parameters[0];
   uint32_t bip32_path[HDPATH_LEN_DEFAULT] = {0};
 

@@ -22,7 +22,8 @@
 #include "zxformat.h"
 
 void handle_get_printable_amount(get_printable_amount_parameters_t *params) {
-  if (params == NULL) {
+  if (params == NULL || params->coin_configuration == NULL ||
+      params->amount == NULL) {
     return;
   }
 
@@ -30,7 +31,14 @@ void handle_get_printable_amount(get_printable_amount_parameters_t *params) {
   MEMZERO(amount, sizeof(amount));
   MEMZERO(params->printable_amount, sizeof(params->printable_amount));
 
-  if (params->amount_length > COIN_AMOUNT_MAXSIZE) {
+  if (params->amount_length > COIN_AMOUNT_MAXSIZE ||
+      params->coin_configuration_length < 2) {
+    return;
+  }
+
+  uint8_t coin_len = params->coin_configuration[0];
+  if (coin_len == 0 ||
+      params->coin_configuration_length < (uint8_t)(1 + coin_len)) {
     return;
   }
 
@@ -39,7 +47,7 @@ void handle_get_printable_amount(get_printable_amount_parameters_t *params) {
 
   char tmp_amount[110] = {0};
   int8_t chain_index = find_chain_index_by_coin_config(
-      (char *)&params->coin_configuration[1], params->coin_configuration[0]);
+      (char *)&params->coin_configuration[1], coin_len);
   if (chain_index == -1) {
     return;
   }
