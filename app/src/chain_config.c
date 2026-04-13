@@ -39,12 +39,10 @@ static const uint32_t chainConfigLen =
 
 address_encoding_e checkChainConfig(uint32_t path, const char *hrp,
                                     uint8_t hrpLen) {
-  // Always allowed for 118 (default Cosmos)
-  if (path == HDPATH_1_DEFAULT) {
-    return BECH32_COSMOS;
+  if (hrp == NULL || hrpLen == 0) {
+    return UNSUPPORTED;
   }
 
-  // Check special cases
   for (uint32_t i = 0; i < chainConfigLen; i++) {
     if (path == (0x80000000u | chainConfig[i].path)) {
       const char *hrpPtr = (const char *)PIC(chainConfig[i].hrp);
