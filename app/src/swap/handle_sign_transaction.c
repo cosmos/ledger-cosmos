@@ -30,7 +30,9 @@ static uint8_t *G_swap_sign_return_value_address;
 
 bool copy_transaction_parameters(
     create_transaction_parameters_t *sign_transaction_params) {
-  if (sign_transaction_params == NULL) {
+  if (sign_transaction_params == NULL ||
+      sign_transaction_params->destination_address == NULL ||
+      sign_transaction_params->destination_address_extra_id == NULL) {
     return false;
   }
 
@@ -43,22 +45,29 @@ bool copy_transaction_parameters(
   uint8_t fees_length = {0};
   char memo[MEMO_MAXSIZE] = {0};
 
-  // Check and copy destination address
-  if ((destination_address[sizeof(destination_address) - 1] != '\0') ||
-      (sign_transaction_params->amount_length > COIN_AMOUNT_MAXSIZE) ||
+  if ((sign_transaction_params->amount_length > COIN_AMOUNT_MAXSIZE) ||
       (sign_transaction_params->fee_amount_length > COIN_AMOUNT_MAXSIZE)) {
     return false;
   }
-  strncpy(destination_address, sign_transaction_params->destination_address,
-          sizeof(destination_address));
 
-  // Check and copy memo
-  if (strlen(sign_transaction_params->destination_address_extra_id) >=
-      sizeof(G_swap_state.memo)) {
+  // Check and copy destination address
+  size_t dest_len = strnlen(sign_transaction_params->destination_address,
+                            sizeof(destination_address));
+  if (dest_len >= sizeof(destination_address)) {
     return false;
   }
-  strncpy(memo, sign_transaction_params->destination_address_extra_id,
-          sizeof(G_swap_state.memo));
+  memcpy(destination_address, sign_transaction_params->destination_address,
+         dest_len);
+  destination_address[dest_len] = '\0';
+
+  // Check and copy memo
+  size_t memo_len = strnlen(sign_transaction_params->destination_address_extra_id,
+                            sizeof(memo));
+  if (memo_len >= sizeof(memo)) {
+    return false;
+  }
+  memcpy(memo, sign_transaction_params->destination_address_extra_id, memo_len);
+  memo[memo_len] = '\0';
 
   // Check and copy amount
   memcpy(amount, sign_transaction_params->amount,
