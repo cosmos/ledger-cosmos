@@ -37,8 +37,7 @@ void handle_get_printable_amount(get_printable_amount_parameters_t *params) {
   }
 
   uint8_t coin_len = params->coin_configuration[0];
-  if (coin_len == 0 ||
-      params->coin_configuration_length < (uint8_t)(1 + coin_len)) {
+  if (coin_len == 0 || params->coin_configuration_length < 1 + coin_len) {
     return;
   }
 
