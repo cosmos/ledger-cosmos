@@ -30,7 +30,8 @@ Coin Configuration has the following structure;
 */
 void handle_check_address(check_address_parameters_t *params) {
   if (params == NULL || params->address_to_check == NULL ||
-      params->coin_configuration == NULL || params->address_parameters == NULL) {
+      params->coin_configuration == NULL ||
+      params->address_parameters == NULL) {
     return;
   }
 
