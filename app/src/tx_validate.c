@@ -133,16 +133,20 @@ int8_t is_sorted(uint16_t first_index, uint16_t second_index,
   strncpy(second, json->buffer + json->tokens[second_index].start, size);
   second[size] = '\0';
 
-  if (strcmp(first, second) <= 0) {
+  int cmp = strcmp(first, second);
+  if (cmp < 0) {
     return 1;
+  }
+  if (cmp == 0) {
+    return -1;
   }
 
   return 0;
 }
 
-int8_t dictionaries_sorted(parsed_json_t *json) {
+parser_error_t dictionaries_sorted(parsed_json_t *json) {
   if (json == NULL) {
-    return 0;
+    return parser_unexpected_value;
   }
 
   for (uint32_t i = 0; i < json->numberOfTokens; i++) {
@@ -151,31 +155,35 @@ int8_t dictionaries_sorted(parsed_json_t *json) {
       uint16_t count;
 
       if (object_get_element_count(json, i, &count) != parser_ok) {
-        return 0;
+        return parser_unexpected_value;
       }
 
       if (count > 1) {
         uint16_t prev_token_index;
         if (object_get_nth_key(json, i, 0, &prev_token_index) != parser_ok) {
-          return 0;
+          return parser_unexpected_value;
         }
 
         for (int j = 1; j < count; j++) {
           uint16_t next_token_index;
 
           if (object_get_nth_key(json, i, j, &next_token_index) != parser_ok) {
-            return 0;
+            return parser_unexpected_value;
           }
 
-          if (!is_sorted(prev_token_index, next_token_index, json)) {
-            return 0;
+          int8_t order = is_sorted(prev_token_index, next_token_index, json);
+          if (order == -1) {
+            return parser_duplicated_field;
+          }
+          if (order != 1) {
+            return parser_json_is_not_sorted;
           }
           prev_token_index = next_token_index;
         }
       }
     }
   }
-  return 1;
+  return parser_ok;
 }
 
 parser_error_t tx_validate(parsed_json_t *json) {
@@ -184,8 +192,9 @@ parser_error_t tx_validate(parsed_json_t *json) {
     return err;
   }
 
-  if (dictionaries_sorted(json) != 1) {
-    return parser_json_is_not_sorted;
+  err = dictionaries_sorted(json);
+  if (err != parser_ok) {
+    return err;
   }
 
   uint16_t token_index;
