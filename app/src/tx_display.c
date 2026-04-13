@@ -632,10 +632,20 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src,
   }
 
   MEMZERO(dst, dstLen);
+
+  if (srcLen == 0) {
+    return parser_ok;
+  }
+
   char *p = src;
   uint16_t count = 0;
 
   while (p < src + srcLen) {
+    size_t remaining = (size_t)((src + srcLen) - p);
+    size_t cp_size = utf8codepointcalcsize((const utf8_int8_t *)p);
+    if (cp_size > remaining) {
+      return parser_unexpected_characters;
+    }
     utf8_int32_t tmp_codepoint = 0;
     p = utf8codepoint(p, &tmp_codepoint);
 
