@@ -241,38 +241,36 @@ parser_error_t parser_msg_send(parser_context_t *ctx_parsed_tx,
   }
 
   switch (has_memo) {
-    case 0:
-      // When there's no memo, expect one less item
-      if (chain_index != 0 || app_mode_expert()) {
-        if (ctx_parsed_tx->tx_obj->tx_json.num_items !=
-            EXPERT_SEND_MODE_ITEMS - 1) {
-          return parser_swap_unexpected_number_of_items;
-        }
-      } else {
-        if (ctx_parsed_tx->tx_obj->tx_json.num_items !=
-            NORMAL_SEND_MODE_ITEMS - 1) {
-          return parser_swap_unexpected_number_of_items;
-        }
+  case 0:
+    // When there's no memo, expect one less item
+    if (chain_index != 0 || app_mode_expert()) {
+      if (ctx_parsed_tx->tx_obj->tx_json.num_items !=
+          EXPERT_SEND_MODE_ITEMS - 1) {
+        return parser_swap_unexpected_number_of_items;
       }
-      break;
-
-    case 1:
-      // When there is a memo, expect full number of items
-      if (chain_index != 0 || app_mode_expert()) {
-        if (ctx_parsed_tx->tx_obj->tx_json.num_items !=
-            EXPERT_SEND_MODE_ITEMS) {
-          return parser_swap_unexpected_number_of_items;
-        }
-      } else {
-        if (ctx_parsed_tx->tx_obj->tx_json.num_items !=
-            NORMAL_SEND_MODE_ITEMS) {
-          return parser_swap_unexpected_number_of_items;
-        }
+    } else {
+      if (ctx_parsed_tx->tx_obj->tx_json.num_items !=
+          NORMAL_SEND_MODE_ITEMS - 1) {
+        return parser_swap_unexpected_number_of_items;
       }
-      break;
+    }
+    break;
 
-    default:
-      break;
+  case 1:
+    // When there is a memo, expect full number of items
+    if (chain_index != 0 || app_mode_expert()) {
+      if (ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_SEND_MODE_ITEMS) {
+        return parser_swap_unexpected_number_of_items;
+      }
+    } else {
+      if (ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_SEND_MODE_ITEMS) {
+        return parser_swap_unexpected_number_of_items;
+      }
+    }
+    break;
+
+  default:
+    break;
   }
 
   return parser_ok;
@@ -432,38 +430,36 @@ parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx,
   }
 
   switch (has_memo) {
-    case 0:
-      // When there's no memo, expect one less item
-      if (chain_index != 0 || app_mode_expert()) {
-        if (ctx_parsed_tx->tx_obj->tx_json.num_items !=
-            EXPERT_SEND_MODE_ITEMS - 1) {
-          return parser_swap_unexpected_number_of_items;
-        }
-      } else {
-        if (ctx_parsed_tx->tx_obj->tx_json.num_items !=
-            NORMAL_SEND_MODE_ITEMS - 1) {
-          return parser_swap_unexpected_number_of_items;
-        }
+  case 0:
+    // When there's no memo, expect one less item
+    if (chain_index != 0 || app_mode_expert()) {
+      if (ctx_parsed_tx->tx_obj->tx_json.num_items !=
+          EXPERT_SEND_MODE_ITEMS - 1) {
+        return parser_swap_unexpected_number_of_items;
       }
-      break;
-
-    case 1:
-      // When there is a memo, expect full number of items
-      if (chain_index != 0 || app_mode_expert()) {
-        if (ctx_parsed_tx->tx_obj->tx_json.num_items !=
-            EXPERT_SEND_MODE_ITEMS) {
-          return parser_swap_unexpected_number_of_items;
-        }
-      } else {
-        if (ctx_parsed_tx->tx_obj->tx_json.num_items !=
-            NORMAL_SEND_MODE_ITEMS) {
-          return parser_swap_unexpected_number_of_items;
-        }
+    } else {
+      if (ctx_parsed_tx->tx_obj->tx_json.num_items !=
+          NORMAL_SEND_MODE_ITEMS - 1) {
+        return parser_swap_unexpected_number_of_items;
       }
-      break;
+    }
+    break;
 
-    default:
-      break;
+  case 1:
+    // When there is a memo, expect full number of items
+    if (chain_index != 0 || app_mode_expert()) {
+      if (ctx_parsed_tx->tx_obj->tx_json.num_items != EXPERT_SEND_MODE_ITEMS) {
+        return parser_swap_unexpected_number_of_items;
+      }
+    } else {
+      if (ctx_parsed_tx->tx_obj->tx_json.num_items != NORMAL_SEND_MODE_ITEMS) {
+        return parser_swap_unexpected_number_of_items;
+      }
+    }
+    break;
+
+  default:
+    break;
   }
 
   return parser_ok;
@@ -488,8 +484,8 @@ parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
   return err;
 }
 
-void __attribute__((noreturn)) finalize_exchange_sign_transaction(
-    bool is_success) {
+void __attribute__((noreturn))
+finalize_exchange_sign_transaction(bool is_success) {
   *G_swap_sign_return_value_address = is_success;
   os_lib_end();
 }
