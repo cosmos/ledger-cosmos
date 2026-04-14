@@ -331,9 +331,11 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
         sw = 0x6800 | (e & 0x7FF);
         break;
       }
-      // Reset processing state on error, preserving it only when rejecting a
-      // concurrent command so the in-flight request can complete.
-      if (sw != APDU_CODE_COMMAND_NOT_ALLOWED) {
+      // Reset processing state on real errors. Preserve it on success (the
+      // handler advances the state itself) and on COMMAND_NOT_ALLOWED, where
+      // we are rejecting a concurrent command and the in-flight request must
+      // be allowed to complete.
+      if (sw != APDU_CODE_OK && sw != APDU_CODE_COMMAND_NOT_ALLOWED) {
         g_tx_state = TX_STATE_IDLE;
       }
       G_io_apdu_buffer[*tx] = sw >> 8;
