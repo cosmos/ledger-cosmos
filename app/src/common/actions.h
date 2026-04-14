@@ -23,6 +23,13 @@
 #include <os_io_seproxyhal.h>
 #include <stdint.h>
 
+typedef enum {
+  TX_STATE_IDLE = 0,
+  TX_STATE_RECEIVING,
+  TX_STATE_REVIEWING,
+} tx_state_e;
+
+extern tx_state_e g_tx_state;
 extern uint16_t action_addrResponseLen;
 
 __Z_INLINE void app_sign() {
@@ -31,6 +38,8 @@ __Z_INLINE void app_sign() {
   MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
   const zxerr_t err =
       crypto_sign(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 3, &replyLen);
+
+  g_tx_state = TX_STATE_IDLE;
 
   if (err != zxerr_ok || replyLen == 0) {
     set_code(G_io_apdu_buffer, 0, APDU_CODE_SIGN_VERIFY_ERROR);
@@ -57,17 +66,20 @@ __Z_INLINE zxerr_t app_fill_address() {
 }
 
 __Z_INLINE void app_reject() {
+  g_tx_state = TX_STATE_IDLE;
   MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
   set_code(G_io_apdu_buffer, 0, APDU_CODE_COMMAND_NOT_ALLOWED);
   io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
 }
 
 __Z_INLINE void app_reply_address() {
+  g_tx_state = TX_STATE_IDLE;
   set_code(G_io_apdu_buffer, action_addrResponseLen, APDU_CODE_OK);
   io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, action_addrResponseLen + 2);
 }
 
 __Z_INLINE void app_reply_error() {
+  g_tx_state = TX_STATE_IDLE;
   set_code(G_io_apdu_buffer, 0, APDU_CODE_DATA_INVALID);
   io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
 }

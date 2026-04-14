@@ -187,6 +187,20 @@ parser_error_t dictionaries_sorted(parsed_json_t *json) {
 }
 
 parser_error_t tx_validate(parsed_json_t *json) {
+  if (json == NULL) {
+    return parser_unexpected_value;
+  }
+
+  // When the top-level token is an object, require it to consume the entire
+  // input so hidden bytes after the parsed root cannot be signed unseen.
+  // Non-object roots fall through to the structural checks below, which
+  // report a clearer error (missing chain_id etc.).
+  if (json->numberOfTokens > 0 && json->tokens[0].type == JSMN_OBJECT &&
+      (json->tokens[0].start != 0 ||
+       json->tokens[0].end != (int)json->bufferLen)) {
+    return parser_unexpected_characters;
+  }
+
   parser_error_t err = contains_whitespace(json);
   if (err != parser_ok) {
     return err;
