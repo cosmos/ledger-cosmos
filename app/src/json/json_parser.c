@@ -37,6 +37,13 @@ parser_error_t json_parse(parsed_json_t *parsed_json, const char *buffer,
   }
 #endif
 
+  // Reject embedded NUL bytes so JSMN cannot stop early on a hidden suffix.
+  for (uint16_t i = 0; i < bufferLen; i++) {
+    if (buffer[i] == '\0') {
+      return parser_unexpected_characters;
+    }
+  }
+
   jsmn_parser parser;
   jsmn_init(&parser);
 

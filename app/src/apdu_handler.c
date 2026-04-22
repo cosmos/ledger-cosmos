@@ -41,6 +41,8 @@
 #include "swap.h"
 #endif
 
+tx_state_e g_tx_state = TX_STATE_IDLE;
+
 static const char *msg_error1 = "Expert Mode";
 static const char *msg_error2 = "Required";
 
@@ -154,17 +156,27 @@ static bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
   uint32_t added;
   switch (payloadType) {
   case P1_INIT:
+    if (g_tx_state != TX_STATE_IDLE) {
+      THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+    }
     tx_initialize();
     tx_reset();
     extractHDPath_HRP(rx, OFFSET_DATA);
+    g_tx_state = TX_STATE_RECEIVING;
     return false;
   case P1_ADD:
+    if (g_tx_state != TX_STATE_RECEIVING) {
+      THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+    }
     added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
     if (added != rx - OFFSET_DATA) {
       THROW(APDU_CODE_TRANSACTION_DATA_EXCEEDS_BUFFER_CAPACITY);
     }
     return false;
   case P1_LAST:
+    if (g_tx_state != TX_STATE_RECEIVING) {
+      THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+    }
     added = tx_append(&(G_io_apdu_buffer[OFFSET_DATA]), rx - OFFSET_DATA);
     if (added != rx - OFFSET_DATA) {
       THROW(APDU_CODE_TRANSACTION_DATA_EXCEEDS_BUFFER_CAPACITY);
@@ -178,6 +190,10 @@ static bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
 
 __Z_INLINE void handleGetAddrSecp256K1(volatile uint32_t *flags,
                                        volatile uint32_t *tx, uint32_t rx) {
+  if (g_tx_state != TX_STATE_IDLE) {
+    THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+  }
+
   uint8_t len = extractHRP(rx, OFFSET_DATA);
   extractHDPath(rx, OFFSET_DATA + 1 + len);
 
@@ -196,6 +212,7 @@ __Z_INLINE void handleGetAddrSecp256K1(volatile uint32_t *flags,
   }
 
   if (requireConfirmation) {
+    g_tx_state = TX_STATE_REVIEWING;
     view_review_init(addr_getItem, addr_getNumItems, app_reply_address);
     view_review_show(REVIEW_ADDRESS);
     *flags |= IO_ASYNCH_REPLY;
@@ -259,6 +276,7 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx,
 #endif
 
   CHECK_APP_CANARY()
+  g_tx_state = TX_STATE_REVIEWING;
   view_review_init(tx_getItem, tx_getNumItems, app_sign);
   view_review_show(REVIEW_TXN);
   *flags |= IO_ASYNCH_REPLY;
@@ -299,7 +317,10 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
         THROW(APDU_CODE_INS_NOT_SUPPORTED);
       }
     }
-    CATCH(EXCEPTION_IO_RESET) { THROW(EXCEPTION_IO_RESET); }
+    CATCH(EXCEPTION_IO_RESET) {
+      g_tx_state = TX_STATE_IDLE;
+      THROW(EXCEPTION_IO_RESET);
+    }
     CATCH_OTHER(e) {
       switch (e & 0xF000) {
       case 0x6000:
@@ -309,6 +330,13 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
       default:
         sw = 0x6800 | (e & 0x7FF);
         break;
+      }
+      // Reset processing state on real errors. Preserve it on success (the
+      // handler advances the state itself) and on COMMAND_NOT_ALLOWED, where
+      // we are rejecting a concurrent command and the in-flight request must
+      // be allowed to complete.
+      if (sw != APDU_CODE_OK && sw != APDU_CODE_COMMAND_NOT_ALLOWED) {
+        g_tx_state = TX_STATE_IDLE;
       }
       G_io_apdu_buffer[*tx] = sw >> 8;
       G_io_apdu_buffer[*tx + 1] = sw & 0xFF;

@@ -32,19 +32,18 @@ static const chain_config_t chainConfig[] = {
     {60, "bera", BECH32_ETH},         {60, "human", BECH32_ETH},
     {118, "osmos", BECH32_COSMOS},    {118, "dydx", BECH32_COSMOS},
     {118, "mantra", BECH32_COSMOS},   {118, "xion", BECH32_COSMOS},
-    {118, "celestia", BECH32_COSMOS}, {118, "core", BECH32_COSMOS}};
+    {118, "celestia", BECH32_COSMOS}, {118, "core", BECH32_COSMOS},
+    {118, "neutron", BECH32_COSMOS}};
 
 static const uint32_t chainConfigLen =
     sizeof(chainConfig) / sizeof(chainConfig[0]);
 
 address_encoding_e checkChainConfig(uint32_t path, const char *hrp,
                                     uint8_t hrpLen) {
-  // Always allowed for 118 (default Cosmos)
-  if (path == HDPATH_1_DEFAULT) {
-    return BECH32_COSMOS;
+  if (hrp == NULL || hrpLen == 0) {
+    return UNSUPPORTED;
   }
 
-  // Check special cases
   for (uint32_t i = 0; i < chainConfigLen; i++) {
     if (path == (0x80000000u | chainConfig[i].path)) {
       const char *hrpPtr = (const char *)PIC(chainConfig[i].hrp);
