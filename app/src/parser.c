@@ -551,8 +551,8 @@ parser_getTextualItem(const parser_context_t *ctx, uint8_t displayIdx,
     const size_t chain_id_title_len = sizeof(chain_id_title) - 1;
 
     if (container.screen.titleLen == chain_id_title_len &&
-        memcmp(container.screen.titlePtr, chain_id_title,
-               chain_id_title_len) == 0) {
+        memcmp(container.screen.titlePtr, chain_id_title, chain_id_title_len) ==
+            0) {
       if (container.screen.contentLen == 1 &&
           (container.screen.contentPtr[0] == '0' ||
            container.screen.contentPtr[0] == '1')) {
