@@ -272,6 +272,9 @@ parser_error_t object_get_value(const parsed_json_t *json,
   }
 
   const jsmntok_t object_token = json->tokens[object_token_index];
+  if (object_token.type != JSMN_OBJECT) {
+    return parser_no_data;
+  }
 
   *token_index = object_token_index;
   int prev_element_end = object_token.start;
@@ -280,6 +283,9 @@ parser_error_t object_get_value(const parsed_json_t *json,
   while (*token_index < json->numberOfTokens) {
     const jsmntok_t key_token = json->tokens[*token_index];
     (*token_index)++;
+    if (*token_index >= json->numberOfTokens) {
+      break;
+    }
     const jsmntok_t value_token = json->tokens[*token_index];
 
     if (key_token.start > object_token.end) {

@@ -53,7 +53,7 @@ void handle_get_printable_amount(get_printable_amount_parameters_t *params) {
   zxerr_t zxerr = bytesAmountToStringBalance(amount, sizeof(amount), tmp_amount,
                                              sizeof(tmp_amount), chain_index);
 
-  if (zxerr != zxerr_ok || strnlen(tmp_amount, sizeof(tmp_amount)) >
+  if (zxerr != zxerr_ok || strnlen(tmp_amount, sizeof(tmp_amount)) >=
                                sizeof(params->printable_amount)) {
     return;
   }
