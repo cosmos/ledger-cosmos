@@ -220,6 +220,10 @@ zxerr_t crypto_swap_fillAddress(uint32_t *hdPath_swap, uint8_t hdPathLen_swap,
                                 char *hrp, address_encoding_e encode_type,
                                 char *buffer, uint16_t bufferLen,
                                 uint16_t *addrResponseLen) {
+  if (hdPath_swap == NULL || hrp == NULL || buffer == NULL ||
+      addrResponseLen == NULL || hdPathLen_swap == 0) {
+    return zxerr_unknown;
+  }
   if (bufferLen < MIN_ADDRESS_BUFFER_SPACE) {
     return zxerr_buffer_too_small;
   }
