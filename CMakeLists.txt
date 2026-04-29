@@ -28,7 +28,7 @@ cmake_policy(SET CMP0025 NEW)
 set(CMAKE_CXX_STANDARD 11)
 
 set(HUNTER_STATUS_DEBUG ON)
-set(HUNTER_TLS_VERIFY OFF)
+set(HUNTER_TLS_VERIFY ON)
 
 option(ENABLE_FUZZING "Build with fuzzing instrumentation and build fuzz targets" OFF)
 option(ENABLE_COVERAGE "Build with source code coverage instrumentation" OFF)
