@@ -547,12 +547,15 @@ parser_getTextualItem(const parser_context_t *ctx, uint8_t displayIdx,
   // cant be null
   if (container.screen.titlePtr != NULL &&
       container.screen.contentPtr != NULL) {
-    if (!strncmp(container.screen.titlePtr, "Chain id",
-                 container.screen.titleLen)) {
-      if (!strncmp(container.screen.contentPtr, "0",
-                   container.screen.contentLen) ||
-          !strncmp(container.screen.contentPtr, "1",
-                   container.screen.contentLen)) {
+    static const char chain_id_title[] = "Chain id";
+    const size_t chain_id_title_len = sizeof(chain_id_title) - 1;
+
+    if (container.screen.titleLen == chain_id_title_len &&
+        memcmp(container.screen.titlePtr, chain_id_title, chain_id_title_len) ==
+            0) {
+      if (container.screen.contentLen == 1 &&
+          (container.screen.contentPtr[0] == '0' ||
+           container.screen.contentPtr[0] == '1')) {
         return parser_unexpected_chain;
       }
     }
