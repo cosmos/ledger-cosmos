@@ -453,6 +453,9 @@ __Z_INLINE parser_error_t retrieve_tree_indexes(uint8_t display_index,
   CHECK_PARSER_ERR(get_subitem_count(*root_item, &num_items));
   while (num_items == 0) {
     (*root_item)++;
+    if (*root_item >= NUM_REQUIRED_ROOT_PAGES) {
+      return parser_no_data;
+    }
     CHECK_PARSER_ERR(get_subitem_count(*root_item, &num_items));
   }
 
@@ -464,17 +467,23 @@ __Z_INLINE parser_error_t retrieve_tree_indexes(uint8_t display_index,
       // Advance root index and skip empty items
       *subitem_index = 0;
       (*root_item)++;
+      if (*root_item >= NUM_REQUIRED_ROOT_PAGES) {
+        return parser_no_data;
+      }
 
       uint8_t num_items_2 = 0;
       CHECK_PARSER_ERR(get_subitem_count(*root_item, &num_items_2));
       while (num_items_2 == 0) {
         (*root_item)++;
+        if (*root_item >= NUM_REQUIRED_ROOT_PAGES) {
+          return parser_no_data;
+        }
         CHECK_PARSER_ERR(get_subitem_count(*root_item, &num_items_2));
       }
     }
   }
 
-  if (*root_item > NUM_REQUIRED_ROOT_PAGES) {
+  if (*root_item >= NUM_REQUIRED_ROOT_PAGES) {
     return parser_no_data;
   }
 
@@ -562,7 +571,6 @@ static const key_subst_t key_substitutions[] = {
     {"memo", "Memo"},
     {"fee/amount", "Fee"},
     {"fee/gas", "Gas"},
-    {"fee/gas_limit", "Gas Limit"},
     {"fee/granter", "Granter"},
     {"fee/payer", "Payer"},
     {"msgs/type", "Type"},
