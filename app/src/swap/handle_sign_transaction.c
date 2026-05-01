@@ -32,7 +32,9 @@ bool copy_transaction_parameters(
     create_transaction_parameters_t *sign_transaction_params) {
   if (sign_transaction_params == NULL ||
       sign_transaction_params->destination_address == NULL ||
-      sign_transaction_params->destination_address_extra_id == NULL) {
+      sign_transaction_params->destination_address_extra_id == NULL ||
+      sign_transaction_params->amount == NULL ||
+      sign_transaction_params->fee_amount == NULL) {
     return false;
   }
 

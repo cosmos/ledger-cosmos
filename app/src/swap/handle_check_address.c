@@ -87,8 +87,13 @@ void handle_check_address(check_address_parameters_t *params) {
     return;
   }
 
-  // Exchange guarantees that the input string is '\0' terminated
-  uint8_t address_to_check_len = strlen(params->address_to_check);
+  // Exchange guarantees that the input string is '\0' terminated, but bound
+  // the scan and reject overlong values so the length cannot wrap below.
+  size_t address_to_check_len =
+      strnlen(params->address_to_check, sizeof(address_computed));
+  if (address_to_check_len >= sizeof(address_computed)) {
+    return;
+  }
 
   if (reply_len == address_to_check_len &&
       memcmp(address_computed, params->address_to_check, reply_len) == 0) {

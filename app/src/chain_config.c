@@ -30,7 +30,7 @@ static const chain_config_t chainConfig[] = {
     {60, "evmos", BECH32_ETH},        {60, "xpla", BECH32_ETH},
     {60, "dym", BECH32_ETH},          {60, "zeta", BECH32_ETH},
     {60, "bera", BECH32_ETH},         {60, "human", BECH32_ETH},
-    {118, "osmos", BECH32_COSMOS},    {118, "dydx", BECH32_COSMOS},
+    {118, "osmo", BECH32_COSMOS},     {118, "dydx", BECH32_COSMOS},
     {118, "mantra", BECH32_COSMOS},   {118, "xion", BECH32_COSMOS},
     {118, "celestia", BECH32_COSMOS}, {118, "core", BECH32_COSMOS},
     {118, "neutron", BECH32_COSMOS}};
