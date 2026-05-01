@@ -189,9 +189,10 @@ parser_error_t dictionaries_sorted(parsed_json_t *json) {
 // Closed-world key check: every key directly under the object at
 // object_token_index must appear in allowed_keys. Unknown keys would otherwise
 // be part of the signed bytes without ever being shown to the user.
-static parser_error_t
-validate_allowed_keys(parsed_json_t *json, uint16_t object_token_index,
-                      const char *const *allowed_keys, uint16_t allowed_count) {
+static parser_error_t validate_allowed_keys(parsed_json_t *json,
+                                            uint16_t object_token_index,
+                                            const char *const *allowed_keys,
+                                            uint16_t allowed_count) {
   uint16_t key_count = 0;
   parser_error_t err =
       object_get_element_count(json, object_token_index, &key_count);
@@ -291,8 +292,8 @@ parser_error_t tx_validate(parsed_json_t *json) {
   // root or inside StdFee is rejected so future host-side fields cannot be
   // signed without the device knowing how to display them.
   static const char *const allowed_root_keys[] = {
-      "account_number", "chain_id",       "fee", "memo",
-      "msgs",           "sequence",       "tip", "timeout_height",
+      "account_number", "chain_id", "fee", "memo",
+      "msgs",           "sequence", "tip", "timeout_height",
   };
   err = validate_allowed_keys(json, 0, allowed_root_keys,
                               sizeof(allowed_root_keys) /
