@@ -34,6 +34,7 @@ typedef enum {
   root_item_memo,
   root_item_fee,
   root_item_tip,
+  root_item_timeout_height,
 } root_item_e;
 
 parser_error_t
