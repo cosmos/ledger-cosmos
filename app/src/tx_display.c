@@ -27,7 +27,7 @@
 #include <zxformat.h>
 #include <zxmacros.h>
 
-#define NUM_REQUIRED_ROOT_PAGES 7
+#define NUM_REQUIRED_ROOT_PAGES 8
 
 // Hex escape "\xNN" requires 4 characters, but snprintf adds a null terminator
 #define HEX_ESCAPE_LEN 4
@@ -55,6 +55,8 @@ const char *get_required_root_item(root_item_e i) {
     return "msgs";
   case root_item_tip:
     return "tip";
+  case root_item_timeout_height:
+    return "timeout_height";
   default:
     return "?";
   }
@@ -81,6 +83,8 @@ __Z_INLINE uint8_t get_root_max_level(root_item_e i) {
     return extraDepthLevel ? 3 : 2;
   case root_item_tip:
     return 1;
+  case root_item_timeout_height:
+    return 2;
   default:
     return 0;
   }
@@ -563,6 +567,7 @@ static const key_subst_t key_substitutions[] = {
     {"chain_id", "Chain ID"},
     {"account_number", "Account"},
     {"sequence", "Sequence"},
+    {"timeout_height", "Timeout Height"},
     {"memo", "Memo"},
     {"fee/amount", "Fee"},
     {"fee/gas", "Gas"},
