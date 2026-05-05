@@ -186,6 +186,57 @@ parser_error_t dictionaries_sorted(parsed_json_t *json) {
   return parser_ok;
 }
 
+// Closed-world key check: every key directly under the object at
+// object_token_index must appear in allowed_keys. Unknown keys would otherwise
+// be part of the signed bytes without ever being shown to the user.
+static parser_error_t validate_allowed_keys(parsed_json_t *json,
+                                            uint16_t object_token_index,
+                                            const char *const *allowed_keys,
+                                            uint16_t allowed_count) {
+  uint16_t key_count = 0;
+  parser_error_t err =
+      object_get_element_count(json, object_token_index, &key_count);
+  if (err != parser_ok) {
+    return err;
+  }
+
+  for (uint16_t i = 0; i < key_count; i++) {
+    uint16_t key_token_idx = 0;
+    err = object_get_nth_key(json, object_token_index, i, &key_token_idx);
+    if (err != parser_ok) {
+      return err;
+    }
+
+    if (key_token_idx >= json->numberOfTokens) {
+      return parser_unexpected_field;
+    }
+
+    int start = json->tokens[key_token_idx].start;
+    int end = json->tokens[key_token_idx].end;
+    if (start < 0 || end < start || end > (int)json->bufferLen) {
+      return parser_unexpected_field;
+    }
+    int key_len = end - start;
+    const char *key_ptr = json->buffer + start;
+
+    bool found = false;
+    for (uint16_t j = 0; j < allowed_count; j++) {
+      const char *allowed_key = (const char *)PIC(allowed_keys[j]);
+      size_t allowed_len = strlen(allowed_key);
+      if ((int)allowed_len == key_len &&
+          MEMCMP(allowed_key, key_ptr, key_len) == 0) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      return parser_unexpected_field;
+    }
+  }
+
+  return parser_ok;
+}
+
 parser_error_t tx_validate(parsed_json_t *json) {
   if (json == NULL) {
     return parser_unexpected_value;
@@ -224,6 +275,7 @@ parser_error_t tx_validate(parsed_json_t *json) {
   err = object_get_value(json, 0, "fee", &token_index);
   if (err != parser_ok)
     return parser_json_missing_fee;
+  uint16_t fee_token_index = token_index;
 
   err = object_get_value(json, 0, "msgs", &token_index);
   if (err != parser_ok)
@@ -236,6 +288,40 @@ parser_error_t tx_validate(parsed_json_t *json) {
   err = object_get_value(json, 0, "memo", &token_index);
   if (err != parser_ok)
     return parser_json_missing_memo;
+
+  // Closed-world allowlist: anything not explicitly allowed at the SignDoc
+  // root or inside StdFee is rejected so future host-side fields cannot be
+  // signed without the device knowing how to display them.
+  static const char *const allowed_root_keys[] = {
+      "account_number",
+      "auth_info",
+      "chain_id",
+      "extension_options",
+      "fee",
+      "memo",
+      "msgs",
+      "non_critical_extension_options",
+      "sequence",
+      "signatures",
+      "tip",
+      "timeout_height",
+  };
+  err = validate_allowed_keys(json, 0, allowed_root_keys,
+                              sizeof(allowed_root_keys) /
+                                  sizeof(allowed_root_keys[0]));
+  if (err != parser_ok) {
+    return err;
+  }
+
+  static const char *const allowed_fee_keys[] = {
+      "amount", "gas", "gas_limit", "granter", "payer",
+  };
+  err = validate_allowed_keys(json, fee_token_index, allowed_fee_keys,
+                              sizeof(allowed_fee_keys) /
+                                  sizeof(allowed_fee_keys[0]));
+  if (err != parser_ok) {
+    return err;
+  }
 
   return parser_ok;
 }
