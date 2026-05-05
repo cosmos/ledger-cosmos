@@ -2028,7 +2028,8 @@
       "16 | Tip [1/2] : 20000 uatom",
       "16 | Tip [2/2] : 30000 uosmo",
       "17 | Tipper [1/2] : cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h",
-      "17 | Tipper [2/2] : 6pkh5t"
+      "17 | Tipper [2/2] : 6pkh5t",
+      "18 | Timeout Height : 20"
    ],
     "expert": true
 	},
@@ -2176,7 +2177,8 @@
       "7 | Fee : 54 uatom",
       "8 | Gas Limit : 106309",
       "9 | Granter : cosmosaccaddr1d9h8xxxGRANTER",
-      "10 | Payer : cosmosaccaddr1d9h8qatxxPAYER"
+      "10 | Payer : cosmosaccaddr1d9h8qatxxPAYER",
+      "11 | Timeout Height : 0"
     ],
     "expert": true
   },
