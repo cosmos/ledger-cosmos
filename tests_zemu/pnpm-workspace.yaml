@@ -1,0 +1,12 @@
+overrides:
+  axios: ^1.7.9
+
+allowBuilds:
+  cpu-features: false
+  keccak: true
+  node-hid: true
+  protobufjs: true
+  secp256k1: true
+  ssh2: false
+  unrs-resolver: false
+  usb: true
