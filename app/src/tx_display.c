@@ -571,7 +571,6 @@ static const key_subst_t key_substitutions[] = {
     {"memo", "Memo"},
     {"fee/amount", "Fee"},
     {"fee/gas", "Gas"},
-    {"fee/gas_limit", "Gas Limit"},
     {"fee/granter", "Granter"},
     {"fee/payer", "Payer"},
     {"msgs/type", "Type"},
