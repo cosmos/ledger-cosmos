@@ -221,9 +221,14 @@ static parser_error_t validate_allowed_keys(parsed_json_t *json,
 
     bool found = false;
     for (uint16_t j = 0; j < allowed_count; j++) {
-      size_t allowed_len = strlen(allowed_keys[j]);
+      // allowed_keys[j] points to a string literal whose address is fixed at
+      // link time; on a relocated Ledger app it must go through PIC() before it
+      // is dereferenced, otherwise strlen/MEMCMP read a wild pointer and the
+      // app crashes (SIGSEGV). PIC() is a no-op on the host build.
+      const char *allowed_key = (const char *)PIC(allowed_keys[j]);
+      size_t allowed_len = strlen(allowed_key);
       if ((int)allowed_len == key_len &&
-          MEMCMP(allowed_keys[j], key_ptr, key_len) == 0) {
+          MEMCMP(allowed_key, key_ptr, key_len) == 0) {
         found = true;
         break;
       }
