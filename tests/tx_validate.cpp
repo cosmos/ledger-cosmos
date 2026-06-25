@@ -333,6 +333,41 @@ TEST(TxValidationTest, AcceptsTimeoutHeight) {
       << "Validation failed, error: " << parser_getErrorDescription(err);
 }
 
+TEST(TxValidationTest, RejectsUnknownRootKey) {
+  // Extra "extra_field" key sorts after sequence and is not in the allowlist.
+  // Must be rejected so it cannot be silently signed.
+  auto transaction =
+      R"({"account_number":"0","chain_id":"test-chain-1","extra_field":"surprise","fee":{"amount":[{"amount":"5","denom":"photon"}],"gas":"10000"},"memo":"testmemo","msgs":[{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]}],"sequence":"1"})";
+
+  parsed_json_t json;
+  parser_error_t err;
+
+  err = JSON_PARSE(&json, transaction);
+  ASSERT_EQ(err, parser_ok);
+
+  err = tx_validate(&json);
+  EXPECT_EQ(err, parser_unexpected_field)
+      << "Validation should reject unknown root key, error: "
+      << parser_getErrorDescription(err);
+}
+
+TEST(TxValidationTest, RejectsUnknownFeeKey) {
+  // Fee object has an extra "extra" key not in the StdFee allowlist.
+  auto transaction =
+      R"({"account_number":"0","chain_id":"test-chain-1","fee":{"amount":[{"amount":"5","denom":"photon"}],"extra":"x","gas":"10000"},"memo":"testmemo","msgs":[{"inputs":[{"address":"cosmosaccaddr1d9h8qat5e4ehc5","coins":[{"amount":"10","denom":"atom"}]}],"outputs":[{"address":"cosmosaccaddr1da6hgur4wse3jx32","coins":[{"amount":"10","denom":"atom"}]}]}],"sequence":"1"})";
+
+  parsed_json_t json;
+  parser_error_t err;
+
+  err = JSON_PARSE(&json, transaction);
+  ASSERT_EQ(err, parser_ok);
+
+  err = tx_validate(&json);
+  EXPECT_EQ(err, parser_unexpected_field)
+      << "Validation should reject unknown fee key, error: "
+      << parser_getErrorDescription(err);
+}
+
 TEST(TxValidationTest, AcceptsFeeGranterAndPayer) {
   // granter and payer are valid optional StdFee keys.
   auto transaction =

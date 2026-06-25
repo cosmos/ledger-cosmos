@@ -2138,7 +2138,7 @@
           "denom":"uatom",
           "amount":"54"
         }],
-        "gas_limit":"106309",
+        "gas":"106309",
         "granter": "cosmosaccaddr1d9h8xxxGRANTER",
         "payer": "cosmosaccaddr1d9h8qatxxPAYER"
       },
@@ -2155,13 +2155,7 @@
         }
       }],
       "memo":"",
-      "timeout_height":"0",
-      "extension_options":[],
-      "non_critical_extension_options":[],
-      "auth_info":{
-        "signer_infos":[]
-      },
-      "signatures":[]
+      "timeout_height":"0"
     },
     "parsingErr": "No error",
     "validationErr": "No error",
@@ -2175,7 +2169,7 @@
       "5 | Sender [2/2] : wcgvqa",
       "6 | Proposal ID : 44",
       "7 | Fee : 54 uatom",
-      "8 | Gas Limit : 106309",
+      "8 | Gas : 106309",
       "9 | Granter : cosmosaccaddr1d9h8xxxGRANTER",
       "10 | Payer : cosmosaccaddr1d9h8qatxxPAYER",
       "11 | Timeout Height : 0"
