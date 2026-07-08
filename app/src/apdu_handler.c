@@ -141,6 +141,15 @@ static void extractHDPath_HRP(uint32_t rx, uint32_t offset) {
     }
   } else if (hdPath[1] == HDPATH_ETH_1_DEFAULT) {
     THROW(APDU_CODE_INVALID_HD_PATH_COIN_VALUE);
+  } else {
+    // No HRP was provided on the default Cosmos path. Restore the default
+    // "cosmos" HRP explicitly so the flow is self-contained and never reuses
+    // whatever HRP a previous (possibly rejected) request left in the global
+    // buffer.
+    const char default_hrp[] = "cosmos";
+    bech32_hrp_len = sizeof(default_hrp) - 1;
+    MEMZERO(bech32_hrp, sizeof(bech32_hrp));
+    MEMCPY(bech32_hrp, default_hrp, bech32_hrp_len);
   }
 }
 
