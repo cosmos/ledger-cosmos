@@ -190,12 +190,13 @@ parser_error_t parser_msg_send(parser_context_t *ctx_parsed_tx,
               tmp_amount);
     return parser_swap_wrong_amount;
   }
-  // A cosmos amount is a []Coin array rendered one coin per page; this gate only
-  // compares page 0 (coin[0]). Exchange approves a single coin, so require the
-  // item to be exactly one page: any extra coin (pageCount > 1) would otherwise
-  // be signed without being validated against the approved amount.
+  // A cosmos amount is a []Coin array rendered one coin per page; this gate
+  // only compares page 0 (coin[0]). Exchange approves a single coin, so require
+  // the item to be exactly one page: any extra coin (pageCount > 1) would
+  // otherwise be signed without being validated against the approved amount.
   if (pageCount != 1) {
-    ZEMU_LOGF(200, "Swap tx amount has multiple coins (pages=%d).\n", pageCount);
+    ZEMU_LOGF(200, "Swap tx amount has multiple coins (pages=%d).\n",
+              pageCount);
     return parser_swap_multiple_coins;
   }
 
