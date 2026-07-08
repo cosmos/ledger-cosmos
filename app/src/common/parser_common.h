@@ -94,6 +94,7 @@ typedef enum {
   parser_swap_memo_not_present,
   parser_swap_wrap_amount_computation_error,
   parser_swap_wrong_type,
+  parser_swap_multiple_coins,
 } parser_error_t;
 
 #ifdef __cplusplus

@@ -119,6 +119,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
     return "Swap memo not present";
   case parser_swap_wrong_source_coins:
     return "Swap wrong source coins";
+  case parser_swap_multiple_coins:
+    return "Swap multiple coins not allowed";
 
   default:
     return "Unrecognized error code";
