@@ -95,6 +95,47 @@ describe('Amino', function () {
     }
   })
 
+  test.concurrent.each(DEVICE_MODELS)('sign basic, omitted HRP after rejected get_addr', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      const path = "m/44'/118'/0'/0/0"
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), 'utf-8')
+
+      // Prime the global HRP with a rejected mixed-case GET_ADDR on the default
+      // Cosmos path. The device cannot bech32-encode an upper-case HRP, so the
+      // request is rejected - but it still writes the mixed-case HRP into the
+      // shared global buffer before failing.
+      const rejected = app.getAddressAndPubKey(path, 'CoSmOs')
+      await expect(rejected).rejects.toMatchObject({ returnCode: 0x6400 })
+
+      // A later SIGN that omits the HRP must still behave as a self-contained
+      // default-Cosmos flow and reach review, rather than reusing the leftover
+      // HRP and aborting before review.
+      const signatureRequest = app.sign(path, tx, undefined, AMINO_JSON_TX)
+
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign_basic_omitted_hrp`)
+
+      const resp = await signatureRequest
+      expect(resp).toHaveProperty('signature')
+
+      // Fetch the pubkey with a valid HRP and verify the produced signature.
+      const respPk = await app.getAddressAndPubKey(path, 'cosmos')
+      const hash = crypto.createHash('sha256')
+      const msgHash = Uint8Array.from(hash.update(tx).digest())
+      const signatureDER = resp.signature
+      const signature = secp256k1.signatureImport(Uint8Array.from(signatureDER))
+      const pk = Uint8Array.from(respPk.compressed_pk)
+      const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
+      expect(signatureOk).toEqual(true)
+    } finally {
+      await sim.close()
+    }
+  })
+
   test.concurrent.each(DEVICE_MODELS)('sign basic normal2', async function (m) {
     const sim = new Zemu(m.path)
     try {
