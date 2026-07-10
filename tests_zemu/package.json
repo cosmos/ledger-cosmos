@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "@zondax/ledger-cosmos-js": "^4.0.1",
-    "@zondax/zemu": "^0.67.4"
+    "@zondax/zemu": "^0.67.4",
+    "protobufjs": "7.6.1"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
@@ -39,5 +40,6 @@
     "ts-jest": "^29.4.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
-  }
+  },
+  "packageManager": "pnpm@10.33.4+sha512.1c67b3b359b2d408119ba1ed289f34b8fc3c6873412bec6fd264fbdc82489e510fcbecb9ce9d22dae7f3b76269d8441046014bdca53b9979cd7a561ad631b800"
 }
