@@ -1842,6 +1842,277 @@
     "expert": true
   },
   {
+    "name": "multisend_then_send",
+    "tx": {
+      "account_number": "8",
+      "chain_id": "cosmoshub-4",
+      "fee": {
+        "amount": [
+          {
+            "amount": "2000",
+            "denom": "uatom"
+          }
+        ],
+        "gas": "100000"
+      },
+      "memo": "",
+      "msgs": [
+        {
+          "type": "cosmos-sdk/MsgMultiSend",
+          "value": {
+            "inputs": [
+              {
+                "address": "cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv",
+                "coins": [
+                  {
+                    "amount": "1",
+                    "denom": "uatom"
+                  }
+                ]
+              }
+            ],
+            "outputs": [
+              {
+                "address": "cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv",
+                "coins": [
+                  {
+                    "amount": "1",
+                    "denom": "uatom"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "type": "cosmos-sdk/MsgSend",
+          "value": {
+            "amount": [
+              {
+                "amount": "500000000",
+                "denom": "uatom"
+              }
+            ],
+            "from_address": "cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv",
+            "to_address": "cosmos13dr26wdygna3s8fdl5tlc45m2le2ydydgjk8ek"
+          }
+        }
+      ],
+      "sequence": "1"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Type : Multi Send",
+      "1 | Source Address [1/2] : cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p",
+      "1 | Source Address [2/2] : 69d6cv",
+      "2 | Source Coins : 0.000001 ATOM",
+      "3 | Dest Address [1/2] : cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p",
+      "3 | Dest Address [2/2] : 69d6cv",
+      "4 | Dest Coins : 0.000001 ATOM",
+      "5 | Type : Send",
+      "6 | Amount : 500.000000 ATOM",
+      "7 | From [1/2] : cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p",
+      "7 | From [2/2] : 69d6cv",
+      "8 | To [1/2] : cosmos13dr26wdygna3s8fdl5tlc45m2le2ydyd",
+      "8 | To [2/2] : gjk8ek",
+      "9 | Fee : 0.002000 ATOM"
+    ],
+    "expert": false
+  },
+  {
+    "name": "send_then_multisend",
+    "tx": {
+      "account_number": "8",
+      "chain_id": "cosmoshub-4",
+      "fee": {
+        "amount": [
+          {
+            "amount": "2000",
+            "denom": "uatom"
+          }
+        ],
+        "gas": "100000"
+      },
+      "memo": "",
+      "msgs": [
+        {
+          "type": "cosmos-sdk/MsgSend",
+          "value": {
+            "amount": [
+              {
+                "amount": "500000000",
+                "denom": "uatom"
+              }
+            ],
+            "from_address": "cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv",
+            "to_address": "cosmos13dr26wdygna3s8fdl5tlc45m2le2ydydgjk8ek"
+          }
+        },
+        {
+          "type": "cosmos-sdk/MsgMultiSend",
+          "value": {
+            "inputs": [
+              {
+                "address": "cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv",
+                "coins": [
+                  {
+                    "amount": "1",
+                    "denom": "uatom"
+                  }
+                ]
+              }
+            ],
+            "outputs": [
+              {
+                "address": "cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv",
+                "coins": [
+                  {
+                    "amount": "1",
+                    "denom": "uatom"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "sequence": "1"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Type : Send",
+      "1 | Amount : 500.000000 ATOM",
+      "2 | From [1/2] : cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p",
+      "2 | From [2/2] : 69d6cv",
+      "3 | To [1/2] : cosmos13dr26wdygna3s8fdl5tlc45m2le2ydyd",
+      "3 | To [2/2] : gjk8ek",
+      "4 | Type : Multi Send",
+      "5 | Source Address [1/2] : cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p",
+      "5 | Source Address [2/2] : 69d6cv",
+      "6 | Source Coins : 0.000001 ATOM",
+      "7 | Dest Address [1/2] : cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p",
+      "7 | Dest Address [2/2] : 69d6cv",
+      "8 | Dest Coins : 0.000001 ATOM",
+      "9 | Fee : 0.002000 ATOM"
+    ],
+    "expert": false
+  },
+  {
+    "name": "multisend_x2_then_send",
+    "tx": {
+      "account_number": "8",
+      "chain_id": "cosmoshub-4",
+      "fee": {
+        "amount": [
+          {
+            "amount": "2000",
+            "denom": "uatom"
+          }
+        ],
+        "gas": "100000"
+      },
+      "memo": "",
+      "msgs": [
+        {
+          "type": "cosmos-sdk/MsgMultiSend",
+          "value": {
+            "inputs": [
+              {
+                "address": "cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv",
+                "coins": [
+                  {
+                    "amount": "1",
+                    "denom": "uatom"
+                  }
+                ]
+              }
+            ],
+            "outputs": [
+              {
+                "address": "cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv",
+                "coins": [
+                  {
+                    "amount": "1",
+                    "denom": "uatom"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "type": "cosmos-sdk/MsgMultiSend",
+          "value": {
+            "inputs": [
+              {
+                "address": "cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv",
+                "coins": [
+                  {
+                    "amount": "1",
+                    "denom": "uatom"
+                  }
+                ]
+              }
+            ],
+            "outputs": [
+              {
+                "address": "cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv",
+                "coins": [
+                  {
+                    "amount": "1",
+                    "denom": "uatom"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "type": "cosmos-sdk/MsgSend",
+          "value": {
+            "amount": [
+              {
+                "amount": "500000000",
+                "denom": "uatom"
+              }
+            ],
+            "from_address": "cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p69d6cv",
+            "to_address": "cosmos13dr26wdygna3s8fdl5tlc45m2le2ydydgjk8ek"
+          }
+        }
+      ],
+      "sequence": "1"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Type : Multi Send",
+      "1 | Source Address [1/2] : cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p",
+      "1 | Source Address [2/2] : 69d6cv",
+      "2 | Source Coins : 0.000001 ATOM",
+      "3 | Dest Address [1/2] : cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p",
+      "3 | Dest Address [2/2] : 69d6cv",
+      "4 | Dest Coins : 0.000001 ATOM",
+      "5 | Type : Multi Send",
+      "6 | Source Address [1/2] : cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p",
+      "6 | Source Address [2/2] : 69d6cv",
+      "7 | Source Coins : 0.000001 ATOM",
+      "8 | Dest Address [1/2] : cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p",
+      "8 | Dest Address [2/2] : 69d6cv",
+      "9 | Dest Coins : 0.000001 ATOM",
+      "10 | Type : Send",
+      "11 | Amount : 500.000000 ATOM",
+      "12 | From [1/2] : cosmos1hr9x0sjvel6z3vt9qny8sdd5gnnlgk0p",
+      "12 | From [2/2] : 69d6cv",
+      "13 | To [1/2] : cosmos13dr26wdygna3s8fdl5tlc45m2le2ydyd",
+      "13 | To [2/2] : gjk8ek",
+      "14 | Fee : 0.002000 ATOM"
+    ],
+    "expert": false
+  },
+  {
     "name": "minimal_extra_field",
     "tx": {
       "account_number": "V1",

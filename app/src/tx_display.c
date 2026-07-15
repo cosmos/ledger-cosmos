@@ -80,7 +80,10 @@ __Z_INLINE uint8_t get_root_max_level(root_item_e i) {
   case root_item_memo:
     return 2;
   case root_item_msgs:
-    return extraDepthLevel ? 3 : 2;
+    // Ceiling for entering the msgs array; the actual per-message depth is
+    // applied in tx_traverse_find (tx_msg_max_level), from each message's own
+    // type.
+    return MSG_MULTISEND_FLATTEN_LEVEL;
   case root_item_tip:
     return 1;
   case root_item_timeout_height:

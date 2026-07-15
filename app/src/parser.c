@@ -62,7 +62,6 @@ parser_error_t parser_parse(parser_context_t *ctx, const uint8_t *data,
     CHECK_PARSER_ERR(_read_json_tx(ctx, tx_obj))
   }
 
-  extraDepthLevel = false;
   return parser_ok;
 }
 
