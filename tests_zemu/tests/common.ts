@@ -102,6 +102,69 @@ export const example_tx_str_msgMultiSend = {
   "sequence": "16",
 }
 
+// A transaction batching a MsgMultiSend with a MsgSend. Exercises the
+// per-message display depth for mixed message types: the MultiSend shows its
+// inputs/outputs and the Send shows its amount, from and to. Keys are
+// pre-sorted so the JSON.stringify sent to the device is canonical and passes
+// tx_validate.
+export const example_tx_str_msgMultiSendAndSend = {
+  "account_number": "8",
+  "chain_id": "cosmoshub-4",
+  "fee": {
+    "amount": [
+      {
+        "amount": "2000",
+        "denom": "uatom"
+      }
+    ],
+    "gas": "100000"
+  },
+  "memo": "",
+  "msgs": [
+    {
+      "type": "cosmos-sdk/MsgMultiSend",
+      "value": {
+        "inputs": [
+          {
+            "address": "cosmos1w4efqfklkezgyt6lncjdwxncrzyzpr2efzcqal",
+            "coins": [
+              {
+                "amount": "1",
+                "denom": "uatom"
+              }
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "address": "cosmos1w4efqfklkezgyt6lncjdwxncrzyzpr2efzcqal",
+            "coins": [
+              {
+                "amount": "1",
+                "denom": "uatom"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "cosmos-sdk/MsgSend",
+      "value": {
+        "amount": [
+          {
+            "amount": "500000000",
+            "denom": "uatom"
+          }
+        ],
+        "from_address": "cosmos1w4efqfklkezgyt6lncjdwxncrzyzpr2efzcqal",
+        "to_address": "cosmos184hgxlzat3qhm7p28563w4jyw4aa3wcgnj6gtv"
+      }
+    }
+  ],
+  "sequence": "1",
+}
+
 export const example_tx_str_basic = {
   account_number: '108',
   chain_id: 'cosmoshub-4',

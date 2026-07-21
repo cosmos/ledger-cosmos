@@ -24,8 +24,6 @@
 #include "zxmacros.h"
 #include <jsmn.h>
 
-bool extraDepthLevel = false;
-
 // strcat but source does not need to be terminated (a chunk from a bigger
 // string is concatenated) dst_max is measured in bytes including the space for
 // NULL termination src_size does not include NULL termination
@@ -109,12 +107,6 @@ parser_error_t tx_getToken(uint16_t token_index, char *out_val,
       if (inLen == str1Len && strncmp(inValue, str1, str1Len) == 0) {
         inValue = str2;
         inLen = str2Len;
-
-        // Extra Depth level for Multisend type
-        extraDepthLevel = false;
-        if (strstr(inValue, "Multi") != NULL) {
-          extraDepthLevel = true;
-        }
         break;
       }
     }
@@ -151,6 +143,34 @@ __Z_INLINE void append_key_item(uint16_t token_index) {
 ///////////////////////////
 ///////////////////////////
 ///////////////////////////
+
+uint8_t tx_msg_max_level(uint16_t msg_token_index) {
+  // Return the flatten depth needed to display this single message, based on
+  // its own "type". Only MsgMultiSend (value-wrapped, nesting coins under
+  // inputs/outputs) needs the extra level; the legacy shape carries no "type"
+  // field and displays correctly at the base level.
+  uint16_t type_token_index = 0;
+  if (object_get_value(&parser_tx_obj.tx_json.json, msg_token_index, "type",
+                       &type_token_index) != parser_ok) {
+    return MSG_BASE_FLATTEN_LEVEL;
+  }
+
+  const int16_t start =
+      parser_tx_obj.tx_json.json.tokens[type_token_index].start;
+  const int16_t end = parser_tx_obj.tx_json.json.tokens[type_token_index].end;
+  if (start < 0 || end < start) {
+    return MSG_BASE_FLATTEN_LEVEL;
+  }
+
+  const char *type_str = parser_tx_obj.tx_json.tx + start;
+  const size_t type_len = (size_t)(end - start);
+  static const char multisend_type[] = "cosmos-sdk/MsgMultiSend";
+  if (type_len == sizeof(multisend_type) - 1 &&
+      strncmp(type_str, multisend_type, type_len) == 0) {
+    return MSG_MULTISEND_FLATTEN_LEVEL;
+  }
+  return MSG_BASE_FLATTEN_LEVEL;
+}
 
 parser_error_t tx_traverse_find(uint16_t root_token_index,
                                 uint16_t *ret_value_token_index) {
@@ -247,17 +267,37 @@ parser_error_t tx_traverse_find(uint16_t root_token_index,
     break;
   }
   case JSMN_ARRAY: {
+    // Detect the top-level `msgs` array (uniquely identified by out_key ==
+    // "msgs"; nested arrays are "msgs/value/inputs" etc.). Each element is a
+    // message whose required flatten depth depends on its own type, so set
+    // max_level per message from that type instead of using one depth for the
+    // whole array. This way a batch that mixes message types (for example a
+    // MsgMultiSend together with a MsgSend) enumerates the same set of fields
+    // when counting items as when rendering them. Nested arrays keep the
+    // inherited level unchanged.
+    const bool is_msgs_array =
+        strcmp(parser_tx_obj.tx_json.query.out_key, "msgs") == 0;
+    const uint8_t saved_max_level = parser_tx_obj.tx_json.query.max_level;
+
     for (uint16_t i = 0; i < el_count; ++i) {
       uint16_t element_index;
       CHECK_PARSER_ERR(array_get_nth_element(
           &parser_tx_obj.tx_json.json, root_token_index, i, &element_index))
       CHECK_APP_CANARY()
 
+      if (is_msgs_array) {
+        parser_tx_obj.tx_json.query.max_level = tx_msg_max_level(element_index);
+      }
+
       // When iterating along an array,
       // the level does not change but we need to count the recursion
       parser_tx_obj.tx_json.query.max_depth--;
       err = tx_traverse_find(element_index, ret_value_token_index);
       parser_tx_obj.tx_json.query.max_depth++;
+
+      if (is_msgs_array) {
+        parser_tx_obj.tx_json.query.max_level = saved_max_level;
+      }
 
       CHECK_APP_CANARY()
 
