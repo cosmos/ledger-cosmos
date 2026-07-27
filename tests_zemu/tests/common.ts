@@ -483,7 +483,7 @@ export const babylonWrappedDelegate = {
   memo: 'Zondax.ch',
   msgs: [
     {
-      type: 'epoching/WrappedDelegate',
+      type: '/babylon.epoching.v1.MsgWrappedDelegate',
       value: {
         msg: {
           amount: {
@@ -514,7 +514,7 @@ export const babylonWrappedUndelegate = {
   memo: 'Zondax.ch',
   msgs: [
     {
-      type: 'epoching/WrappedUndelegate',
+      type: '/babylon.epoching.v1.MsgWrappedUndelegate',
       value: {
         msg: {
           amount: {

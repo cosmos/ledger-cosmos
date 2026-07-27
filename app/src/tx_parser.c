@@ -74,7 +74,13 @@ static const key_subst_t value_substitutions[] = {
 
     // Babylon x/epoching wrapped staking messages. Each nests a standard Cosmos
     // staking message under a "msg" key (see tx_msg_max_level); the action
-    // shown is the wrapped staking action.
+    // shown is the wrapped staking action. Ledger Live emits the amino `type`
+    // as the proto type URL (/babylon.epoching.v1.MsgWrapped*); the chain's
+    // x/epoching amino codec also registers the short legacy names
+    // (epoching/Wrapped*). Accept both forms.
+    {"/babylon.epoching.v1.MsgWrappedDelegate", "Delegate"},
+    {"/babylon.epoching.v1.MsgWrappedUndelegate", "Undelegate"},
+    {"/babylon.epoching.v1.MsgWrappedBeginRedelegate", "Redelegate"},
     {"epoching/WrappedDelegate", "Delegate"},
     {"epoching/WrappedUndelegate", "Undelegate"},
     {"epoching/WrappedBeginRedelegate", "Redelegate"},
@@ -162,8 +168,10 @@ uint8_t tx_msg_max_level(uint16_t msg_token_index) {
   // need the extra level:
   //   - cosmos-sdk/MsgMultiSend (value-wrapped, nesting coins under
   //     inputs/outputs);
-  //   - Babylon x/epoching wrapped staking messages (epoching/Wrapped*), which
-  //     nest a standard staking message under a "msg" key.
+  //   - Babylon x/epoching wrapped staking messages, which nest a standard
+  //     staking message under a "msg" key. The amino `type` is either the proto
+  //     type URL (/babylon.epoching.v1.MsgWrapped*, as Ledger Live emits) or
+  //     the legacy codec name (epoching/Wrapped*).
   // The legacy shape carries no "type" field and displays correctly at the base
   // level.
   uint16_t type_token_index = 0;
@@ -184,7 +192,13 @@ uint8_t tx_msg_max_level(uint16_t msg_token_index) {
   if (msg_type_equals(type_str, type_len, "cosmos-sdk/MsgMultiSend")) {
     return MSG_MULTISEND_FLATTEN_LEVEL;
   }
-  if (msg_type_equals(type_str, type_len, "epoching/WrappedDelegate") ||
+  if (msg_type_equals(type_str, type_len,
+                      "/babylon.epoching.v1.MsgWrappedDelegate") ||
+      msg_type_equals(type_str, type_len,
+                      "/babylon.epoching.v1.MsgWrappedUndelegate") ||
+      msg_type_equals(type_str, type_len,
+                      "/babylon.epoching.v1.MsgWrappedBeginRedelegate") ||
+      msg_type_equals(type_str, type_len, "epoching/WrappedDelegate") ||
       msg_type_equals(type_str, type_len, "epoching/WrappedUndelegate") ||
       msg_type_equals(type_str, type_len, "epoching/WrappedBeginRedelegate")) {
     return MSG_EPOCHING_FLATTEN_LEVEL;
