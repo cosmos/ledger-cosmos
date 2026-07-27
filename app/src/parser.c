@@ -165,6 +165,12 @@ __Z_INLINE bool parser_isAmount(char *key) {
     return true;
   }
 
+  // Babylon x/epoching wrapped staking messages nest the coin one level deeper,
+  // under the "msg" key.
+  if (strcmp(key, "msgs/value/msg/amount") == 0) {
+    return true;
+  }
+
   if (strcmp(key, "tip/amount") == 0) {
     return true;
   }

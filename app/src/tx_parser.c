@@ -72,6 +72,13 @@ static const key_subst_t value_substitutions[] = {
     {"cosmos-sdk/MsgSetWithdrawAddress", "Withdraw Set Address"},
     {"cosmos-sdk/MsgMultiSend", "Multi Send"},
 
+    // Babylon x/epoching wrapped staking messages. Each nests a standard Cosmos
+    // staking message under a "msg" key (see tx_msg_max_level); the action shown
+    // is the wrapped staking action.
+    {"epoching/WrappedDelegate", "Delegate"},
+    {"epoching/WrappedUndelegate", "Undelegate"},
+    {"epoching/WrappedBeginRedelegate", "Redelegate"},
+
 };
 
 parser_error_t tx_getToken(uint16_t token_index, char *out_val,
@@ -144,11 +151,21 @@ __Z_INLINE void append_key_item(uint16_t token_index) {
 ///////////////////////////
 ///////////////////////////
 
+__Z_INLINE bool msg_type_equals(const char *type_str, size_t type_len,
+                                const char *name) {
+  return type_len == strlen(name) && strncmp(type_str, name, type_len) == 0;
+}
+
 uint8_t tx_msg_max_level(uint16_t msg_token_index) {
   // Return the flatten depth needed to display this single message, based on
-  // its own "type". Only MsgMultiSend (value-wrapped, nesting coins under
-  // inputs/outputs) needs the extra level; the legacy shape carries no "type"
-  // field and displays correctly at the base level.
+  // its own "type". Two shapes nest one object level deeper than the base and
+  // need the extra level:
+  //   - cosmos-sdk/MsgMultiSend (value-wrapped, nesting coins under
+  //     inputs/outputs);
+  //   - Babylon x/epoching wrapped staking messages (epoching/Wrapped*), which
+  //     nest a standard staking message under a "msg" key.
+  // The legacy shape carries no "type" field and displays correctly at the base
+  // level.
   uint16_t type_token_index = 0;
   if (object_get_value(&parser_tx_obj.tx_json.json, msg_token_index, "type",
                        &type_token_index) != parser_ok) {
@@ -164,10 +181,13 @@ uint8_t tx_msg_max_level(uint16_t msg_token_index) {
 
   const char *type_str = parser_tx_obj.tx_json.tx + start;
   const size_t type_len = (size_t)(end - start);
-  static const char multisend_type[] = "cosmos-sdk/MsgMultiSend";
-  if (type_len == sizeof(multisend_type) - 1 &&
-      strncmp(type_str, multisend_type, type_len) == 0) {
+  if (msg_type_equals(type_str, type_len, "cosmos-sdk/MsgMultiSend")) {
     return MSG_MULTISEND_FLATTEN_LEVEL;
+  }
+  if (msg_type_equals(type_str, type_len, "epoching/WrappedDelegate") ||
+      msg_type_equals(type_str, type_len, "epoching/WrappedUndelegate") ||
+      msg_type_equals(type_str, type_len, "epoching/WrappedBeginRedelegate")) {
+    return MSG_EPOCHING_FLATTEN_LEVEL;
   }
   return MSG_BASE_FLATTEN_LEVEL;
 }

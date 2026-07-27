@@ -2530,7 +2530,107 @@
     ],
     "expert": true
 
-}
+},
+  {
+    "name": "babylonWrappedDelegate",
+    "tx": {
+      "account_number": "6571",
+      "chain_id": "bbn-1",
+      "fee": {
+        "amount": [
+          {
+            "amount": "5000",
+            "denom": "ubbn"
+          }
+        ],
+        "gas": "200000"
+      },
+      "memo": "Zondax.ch",
+      "msgs": [
+        {
+          "type": "epoching/WrappedDelegate",
+          "value": {
+            "msg": {
+              "amount": {
+                "amount": "1000000",
+                "denom": "ubbn"
+              },
+              "delegator_address": "bbn102hty0jv2s29lyc4u0tv97z9v298e24t3vwtpl",
+              "validator_address": "bbnvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7"
+            }
+          }
+        }
+      ],
+      "sequence": "1"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : bbn-1",
+      "1 | Account : 6571",
+      "2 | Sequence : 1",
+      "3 | Type : Delegate",
+      "4 | Amount : 1000000 ubbn",
+      "5 | Delegator [1/2] : bbn102hty0jv2s29lyc4u0tv97z9v298e24t3vw",
+      "5 | Delegator [2/2] : tpl",
+      "6 | Validator [1/2] : bbnvaloper1grgelyng2v6v3t8z87wu3sxgt9m5",
+      "6 | Validator [2/2] : s03xfytvz7",
+      "7 | Memo : Zondax.ch",
+      "8 | Fee : 5000 ubbn",
+      "9 | Gas : 200000"
+    ],
+    "expert": false
+  },
+  {
+    "name": "babylonWrappedUndelegate",
+    "tx": {
+      "account_number": "6571",
+      "chain_id": "bbn-1",
+      "fee": {
+        "amount": [
+          {
+            "amount": "5000",
+            "denom": "ubbn"
+          }
+        ],
+        "gas": "200000"
+      },
+      "memo": "Zondax.ch",
+      "msgs": [
+        {
+          "type": "epoching/WrappedUndelegate",
+          "value": {
+            "msg": {
+              "amount": {
+                "amount": "1000000",
+                "denom": "ubbn"
+              },
+              "delegator_address": "bbn102hty0jv2s29lyc4u0tv97z9v298e24t3vwtpl",
+              "validator_address": "bbnvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7"
+            }
+          }
+        }
+      ],
+      "sequence": "1"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : bbn-1",
+      "1 | Account : 6571",
+      "2 | Sequence : 1",
+      "3 | Type : Undelegate",
+      "4 | Amount : 1000000 ubbn",
+      "5 | Delegator [1/2] : bbn102hty0jv2s29lyc4u0tv97z9v298e24t3vw",
+      "5 | Delegator [2/2] : tpl",
+      "6 | Validator [1/2] : bbnvaloper1grgelyng2v6v3t8z87wu3sxgt9m5",
+      "6 | Validator [2/2] : s03xfytvz7",
+      "7 | Memo : Zondax.ch",
+      "8 | Fee : 5000 ubbn",
+      "9 | Gas : 200000"
+    ],
+    "expert": false
+  }
 
 
 ]

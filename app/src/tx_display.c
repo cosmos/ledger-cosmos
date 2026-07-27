@@ -599,6 +599,14 @@ static const key_subst_t key_substitutions[] = {
     {"msgs/value/withdraw_address", "Withdraw Address"},
     {"msgs/value/validator_src_address", "Validator Source"},
     {"msgs/value/validator_dst_address", "Validator Dest"},
+
+    // Babylon x/epoching wrapped staking messages nest the staking fields one
+    // level deeper, under the "msg" key (see MSG_EPOCHING_FLATTEN_LEVEL).
+    {"msgs/value/msg/amount", "Amount"},
+    {"msgs/value/msg/delegator_address", "Delegator"},
+    {"msgs/value/msg/validator_address", "Validator"},
+    {"msgs/value/msg/validator_src_address", "Validator Source"},
+    {"msgs/value/msg/validator_dst_address", "Validator Dest"},
     {"msgs/value/description", "Description"},
     {"msgs/value/initial_deposit/amount", "Deposit Amount"},
     {"msgs/value/initial_deposit/denom", "Deposit Denom"},
