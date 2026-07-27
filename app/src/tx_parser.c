@@ -73,8 +73,8 @@ static const key_subst_t value_substitutions[] = {
     {"cosmos-sdk/MsgMultiSend", "Multi Send"},
 
     // Babylon x/epoching wrapped staking messages. Each nests a standard Cosmos
-    // staking message under a "msg" key (see tx_msg_max_level); the action shown
-    // is the wrapped staking action.
+    // staking message under a "msg" key (see tx_msg_max_level); the action
+    // shown is the wrapped staking action.
     {"epoching/WrappedDelegate", "Delegate"},
     {"epoching/WrappedUndelegate", "Undelegate"},
     {"epoching/WrappedBeginRedelegate", "Redelegate"},

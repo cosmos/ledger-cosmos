@@ -87,9 +87,9 @@ __Z_INLINE bool is_msg_from_field(char *field_name) {
   if (field_name == NULL) {
     return false;
   }
-  // The base staking shape carries the delegator at msgs/value/delegator_address;
-  // Babylon epoching/Wrapped* messages carry it one level deeper, under the
-  // nested "msg" object.
+  // The base staking shape carries the delegator at
+  // msgs/value/delegator_address; Babylon epoching/Wrapped* messages carry it
+  // one level deeper, under the nested "msg" object.
   return strcmp(field_name, "msgs/value/delegator_address") == 0 ||
          strcmp(field_name, "msgs/value/msg/delegator_address") == 0;
 }
