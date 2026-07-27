@@ -464,3 +464,68 @@ export const wasm_execute_contract_boundary_test = {
   ],
   sequence: '0',
 }
+
+// Babylon x/epoching wrapped staking messages. The staking message is nested
+// one level deeper, under a "msg" key. Signed with SIGN_MODE_LEGACY_AMINO_JSON
+// on the Babylon chain (chain_id != cosmoshub-4 -> full display).
+export const babylonWrappedDelegate = {
+  account_number: '6571',
+  chain_id: 'bbn-1',
+  fee: {
+    amount: [
+      {
+        amount: '5000',
+        denom: 'ubbn',
+      },
+    ],
+    gas: '200000',
+  },
+  memo: 'Zondax.ch',
+  msgs: [
+    {
+      type: 'epoching/WrappedDelegate',
+      value: {
+        msg: {
+          amount: {
+            amount: '1000000',
+            denom: 'ubbn',
+          },
+          delegator_address: 'bbn102hty0jv2s29lyc4u0tv97z9v298e24t3vwtpl',
+          validator_address: 'bbnvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7',
+        },
+      },
+    },
+  ],
+  sequence: '1',
+}
+
+export const babylonWrappedUndelegate = {
+  account_number: '6571',
+  chain_id: 'bbn-1',
+  fee: {
+    amount: [
+      {
+        amount: '5000',
+        denom: 'ubbn',
+      },
+    ],
+    gas: '200000',
+  },
+  memo: 'Zondax.ch',
+  msgs: [
+    {
+      type: 'epoching/WrappedUndelegate',
+      value: {
+        msg: {
+          amount: {
+            amount: '1000000',
+            denom: 'ubbn',
+          },
+          delegator_address: 'bbn102hty0jv2s29lyc4u0tv97z9v298e24t3vwtpl',
+          validator_address: 'bbnvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7',
+        },
+      },
+    },
+  ],
+  sequence: '1',
+}
