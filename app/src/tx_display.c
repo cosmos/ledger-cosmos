@@ -431,7 +431,7 @@ __Z_INLINE parser_error_t get_subitem_count(root_item_e root_item,
   }
 
   // Validate bounds before casting to uint8_t
-  if (tmp_num_items < 0 || tmp_num_items > UINT8_MAX) {
+  if (tmp_num_items < 0 || tmp_num_items > MAX_REVIEW_ITEMS) {
     return parser_unexpected_number_items;
   }
 
@@ -506,7 +506,7 @@ parser_error_t tx_display_numItems(uint8_t *num_items) {
   }
 
   // Reject transactions with too many items to display safely
-  if (total > UINT8_MAX) {
+  if (total > MAX_REVIEW_ITEMS) {
     return parser_unexpected_number_items;
   }
 
