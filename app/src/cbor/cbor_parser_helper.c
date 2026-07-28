@@ -47,6 +47,17 @@ static parser_error_t cbor_check_optFields(CborValue *data,
     CHECK_CBOR_MAP_ERR(cbor_value_advance(data))
 
     switch (key) {
+    case TITLE_KEY_ID:
+    case CONTENT_KEY_ID:
+      // Read for real by cbor_check_screen on the display pass; here we only
+      // step over them. Require the same definite-length text string it
+      // expects, so the advance below never has to walk into a container:
+      // cbor_value_advance() recurses once per nesting level.
+      PARSER_ASSERT_OR_ERROR(cbor_value_is_text_string(data) &&
+                                 cbor_value_is_length_known(data),
+                             parser_unexpected_type)
+      break;
+
     case INDENT_KEY_ID: {
       int tmpVal = 0;
       PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(data),
@@ -66,8 +77,10 @@ static parser_error_t cbor_check_optFields(CborValue *data,
       break;
 
     default:
-      container->screen.indent = 0;
-      container->screen.expert = false;
+      // Reject rather than skip: the value of an unrecognised key can be a
+      // container of any depth, and defaulting through it would also clear
+      // options that an earlier key in the same screen already set.
+      return parser_unexpected_field;
     }
     CHECK_CBOR_MAP_ERR(cbor_value_advance(data))
   }
