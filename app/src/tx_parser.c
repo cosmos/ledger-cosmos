@@ -111,16 +111,20 @@ parser_error_t tx_getToken(uint16_t token_index, char *out_val,
   // empty strings are considered the first page
   *pageCount = 1;
   if (inLen > 0) {
-    for (uint32_t i = 0; i < array_length(value_substitutions); i++) {
-      const char *str1 = (const char *)PIC(value_substitutions[i].str1);
-      const char *str2 = (const char *)PIC(value_substitutions[i].str2);
-      const uint16_t str1Len = strlen(str1);
-      const uint16_t str2Len = strlen(str2);
+    // Only msgs/N/type carries an amino type name. Substituting anywhere else
+    // lets an attacker-chosen memo or address render as an action word.
+    if (is_msg_type_field(parser_tx_obj.tx_json.query.out_key)) {
+      for (uint32_t i = 0; i < array_length(value_substitutions); i++) {
+        const char *str1 = (const char *)PIC(value_substitutions[i].str1);
+        const char *str2 = (const char *)PIC(value_substitutions[i].str2);
+        const uint16_t str1Len = strlen(str1);
+        const uint16_t str2Len = strlen(str2);
 
-      if (inLen == str1Len && strncmp(inValue, str1, str1Len) == 0) {
-        inValue = str2;
-        inLen = str2Len;
-        break;
+        if (inLen == str1Len && strncmp(inValue, str1, str1Len) == 0) {
+          inValue = str2;
+          inLen = str2Len;
+          break;
+        }
       }
     }
     pageStringExt(out_val, out_val_len, inValue, inLen, pageIdx, pageCount);
