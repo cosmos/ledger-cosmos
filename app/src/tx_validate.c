@@ -37,6 +37,44 @@ int8_t is_space(char c) {
   return 0;
 }
 
+// contains_whitespace only inspects the gaps between tokens, so a control byte
+// inside a value is invisible to it. Those bytes are rendered verbatim by the
+// JSON display path, and each consumes a whole line of a review page while
+// costing one character of the budget the page size is derived from, so later
+// bytes can be signed without ever reaching the screen. The canonical compact
+// encoding never emits one.
+//
+// Only string and primitive spans are scanned: an object or array token spans
+// its whole subtree, including the gaps that contains_whitespace owns.
+static parser_error_t contains_control_chars(parsed_json_t *json) {
+  if (json == NULL) {
+    return parser_unexpected_value;
+  }
+
+  for (uint32_t i = 0; i < json->numberOfTokens; i++) {
+    const jsmntok_t *token = &json->tokens[i];
+
+    if (token->type == JSMN_UNDEFINED) {
+      break;
+    }
+    if (token->type != JSMN_STRING && token->type != JSMN_PRIMITIVE) {
+      continue;
+    }
+    if (token->start < 0 || token->end < token->start ||
+        token->end > (int)json->bufferLen) {
+      return parser_unexpected_value;
+    }
+
+    for (int j = token->start; j < token->end; j++) {
+      if ((uint8_t)json->buffer[j] < 0x20) {
+        return parser_unexpected_characters;
+      }
+    }
+  }
+
+  return parser_ok;
+}
+
 parser_error_t contains_whitespace(parsed_json_t *json) {
   if (json == NULL) {
     return parser_unexpected_value;
@@ -256,7 +294,12 @@ parser_error_t tx_validate(parsed_json_t *json) {
     return parser_unexpected_characters;
   }
 
-  parser_error_t err = contains_whitespace(json);
+  parser_error_t err = contains_control_chars(json);
+  if (err != parser_ok) {
+    return err;
+  }
+
+  err = contains_whitespace(json);
   if (err != parser_ok) {
     return err;
   }

@@ -34,7 +34,10 @@ extern "C" {
 
 // Buffer sizes for parser operations
 #define FORMATTED_AMOUNT_BUFFER_SIZE 160
-#define QUERY_KEY_BUFFER_SIZE 35
+// Must hold the longest entry in key_substitutions plus its terminator, or the
+// key path is silently clamped and the friendly label can never match. Longest
+// today is "msgs/value/msg/validator_src_address" (36).
+#define QUERY_KEY_BUFFER_SIZE 48
 
 // JSON amount object token structure constants
 // Token structure: [object, key:"amount", value, key:"denom", value]

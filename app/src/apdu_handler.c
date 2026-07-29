@@ -221,9 +221,11 @@ __Z_INLINE void handleGetAddrSecp256K1(volatile uint32_t *flags,
   }
 
   if (requireConfirmation) {
-    g_tx_state = TX_STATE_REVIEWING;
     view_review_init(addr_getItem, addr_getNumItems, app_reply_address);
     view_review_show(REVIEW_ADDRESS);
+    // Claim the state only once the review is actually on screen, so a failure
+    // while bringing it up leaves the app idle instead of locked.
+    g_tx_state = TX_STATE_REVIEWING;
     *flags |= IO_ASYNCH_REPLY;
     return;
   }
@@ -285,9 +287,11 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx,
 #endif
 
   CHECK_APP_CANARY()
-  g_tx_state = TX_STATE_REVIEWING;
   view_review_init(tx_getItem, tx_getNumItems, app_sign);
   view_review_show(REVIEW_TXN);
+  // Claim the state only once the review is actually on screen, so a failure
+  // while bringing it up leaves the app idle instead of locked.
+  g_tx_state = TX_STATE_REVIEWING;
   *flags |= IO_ASYNCH_REPLY;
 }
 
@@ -341,10 +345,15 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
         break;
       }
       // Reset processing state on real errors. Preserve it on success (the
-      // handler advances the state itself) and on COMMAND_NOT_ALLOWED, where
-      // we are rejecting a concurrent command and the in-flight request must
-      // be allowed to complete.
-      if (sw != APDU_CODE_OK && sw != APDU_CODE_COMMAND_NOT_ALLOWED) {
+      // handler advances the state itself), on COMMAND_NOT_ALLOWED, where we
+      // are rejecting a concurrent command and the in-flight request must be
+      // allowed to complete, and while a review is on screen. In that last
+      // case the pending request still owns hdPath, the address encoding and
+      // the transaction buffer, all of which are read again when the user
+      // approves; only app_sign(), app_reject(), app_reply_address() and
+      // app_reply_error() may hand the state back.
+      if (sw != APDU_CODE_OK && sw != APDU_CODE_COMMAND_NOT_ALLOWED &&
+          g_tx_state != TX_STATE_REVIEWING) {
         g_tx_state = TX_STATE_IDLE;
       }
       G_io_apdu_buffer[*tx] = sw >> 8;

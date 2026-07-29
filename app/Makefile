@@ -36,6 +36,10 @@ APPVERSION = "$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)"
 # Application source files
 APP_SOURCE_PATH += src
 CFLAGS += -I../deps/tinycbor/src
+# cbor_value_advance() recurses once per container nesting level. The screen
+# schema never needs more than one, and the default of 1024 is far beyond what
+# APP_STACK_MIN_SIZE can absorb.
+CFLAGS += -DCBOR_PARSER_MAX_RECURSIONS=4
 APP_SOURCE_PATH += ../deps/tinycbor-ledger
 APP_SOURCE_PATH += ../deps/jsmn/src
 
