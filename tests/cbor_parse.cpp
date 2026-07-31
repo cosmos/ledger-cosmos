@@ -19,6 +19,7 @@
 #include "app_mode.h"
 #include "coin.h"
 #include "common/parser.h"
+#include <string>
 #include <vector>
 
 // A SIGN_MODE_TEXTUAL payload is a CBOR map { 1: [ screen, ... ] } where every
@@ -42,12 +43,75 @@ parser_error_t parse_textual(const std::vector<uint8_t> &blob) {
   return parser_parse(&ctx, blob.data(), blob.size(), &tx_obj);
 }
 
+parser_error_t validate_textual(const std::vector<uint8_t> &blob) {
+  parser_context_t ctx;
+  parser_tx_t tx_obj;
+  memset(&tx_obj, 0, sizeof(tx_obj));
+  tx_obj.tx_type = tx_textual;
+  const parser_error_t err = parser_parse(&ctx, blob.data(), blob.size(), &tx_obj);
+  if (err != parser_ok) {
+    return err;
+  }
+  return parser_validate(&ctx);
+}
+
+// A definite-length CBOR text string, the only string shape the parser takes.
+std::vector<uint8_t> text_string(const std::string &value) {
+  std::vector<uint8_t> out;
+  if (value.size() < 24) {
+    out.push_back(static_cast<uint8_t>(0x60 | value.size()));
+  } else {
+    out.push_back(0x78);
+    out.push_back(static_cast<uint8_t>(value.size()));
+  }
+  out.insert(out.end(), value.begin(), value.end());
+  return out;
+}
+
+std::vector<uint8_t> titled_screen(const std::string &title, const std::string &content) {
+  std::vector<uint8_t> out = {0xa2, 0x01};
+  const auto t = text_string(title);
+  out.insert(out.end(), t.begin(), t.end());
+  out.push_back(0x02);
+  const auto c = text_string(content);
+  out.insert(out.end(), c.begin(), c.end());
+  return out;
+}
+
+std::vector<uint8_t> untitled_screen(const std::string &content) {
+  std::vector<uint8_t> out = {0xa1, 0x02};
+  const auto c = text_string(content);
+  out.insert(out.end(), c.begin(), c.end());
+  return out;
+}
+
+std::vector<uint8_t> envelope(const std::vector<std::vector<uint8_t>> &screens) {
+  std::vector<uint8_t> out = {0xa1, 0x01};
+  if (screens.size() < 24) {
+    out.push_back(static_cast<uint8_t>(0x80 | screens.size()));
+  } else {
+    out.push_back(0x98);
+    out.push_back(static_cast<uint8_t>(screens.size()));
+  }
+  for (const auto &screen : screens) {
+    out.insert(out.end(), screen.begin(), screen.end());
+  }
+  return out;
+}
+
 }  // namespace
 
+// Textual deliberately leaves the screens to the host: the device renders what
+// it is given rather than deciding what a transaction ought to look like. The
+// wording has already moved -- the message count screen reads "Transaction: 1
+// Messages" in TXSPEC, "This transaction has 1 Message" in what ships, and
+// "This transaction has <int> Message(s)" in ADR-050 -- so a document is not
+// held to any particular envelope, only to the encoding.
 TEST(CborTextual, MinimalScreenIsAccepted) {
   // { 1: "t", 2: "c" }
   const auto blob = document({0xa2, 0x01, 0x61, 't', 0x02, 0x61, 'c'}, 1);
   EXPECT_EQ(parse_textual(blob), parser_ok);
+  EXPECT_EQ(validate_textual(blob), parser_ok);
 }
 
 TEST(CborTextual, EverySchemaFieldIsAccepted) {
@@ -105,4 +169,63 @@ TEST(CborTextual, TrailingBytesAreRejected) {
   auto blob = document({0xa2, 0x01, 0x61, 't', 0x02, 0x61, 'c'}, 1);
   blob.insert(blob.end(), {0xde, 0xad, 0xbe, 0xef});
   EXPECT_NE(parse_textual(blob), parser_ok);
+}
+
+// The review UI reaches screens through an int8_t index, so a document with
+// more screens than MAX_REVIEW_ITEMS would be reviewed only up to screen 127
+// while the signature still covers all of it. Refuse the whole document.
+TEST(CborTextual, ScreenCountAtTheCeilingIsAccepted) {
+  std::vector<std::vector<uint8_t>> screens;
+  for (size_t i = 0; i < 127; i++) {
+    screens.push_back(titled_screen("t", "c"));
+  }
+  EXPECT_EQ(parse_textual(envelope(screens)), parser_ok);
+}
+
+TEST(CborTextual, ScreenCountAboveTheCeilingIsRejected) {
+  for (const size_t count : {128u, 200u, 255u}) {
+    std::vector<std::vector<uint8_t>> screens;
+    for (size_t i = 0; i < count; i++) {
+      screens.push_back(titled_screen("t", "c"));
+    }
+    EXPECT_EQ(parse_textual(envelope(screens)), parser_unexpected_number_items)
+        << count << " screens were accepted";
+  }
+}
+
+// The one thing a host cannot ask for: a screen carrying nothing. TXSPEC has
+// empty entries omitted from the encoding, not sent, and a blank page shows
+// the user none of the document while still standing between them and the
+// approval.
+TEST(CborTextual, BlankScreenIsRejected) {
+  const auto blob = envelope({titled_screen("Chain id", "my-chain"),
+                              titled_screen("Memo", "")});
+  EXPECT_EQ(validate_textual(blob), parser_unexpected_value);
+}
+
+// The payload the Zemu textual tests sign, byte for byte: a real rendering has
+// to keep passing.
+TEST(CborTextual, ZemuFixtureIsAccepted) {
+  const std::string hex =
+      "a10192a20168436861696e20696402686d792d636861696ea2016e4163636f756e74206e756d626572026131a2016853"
+      "657175656e6365026132a301674164647265737302782d636f736d6f7331756c6176336873656e7570737771666b7732"
+      "7933737570356b677471776e767161386579687304f5a3016a5075626c6963206b657902781f2f636f736d6f732e6372"
+      "7970746f2e736563703235366b312e5075624b657904f5a3026d5075624b6579206f626a656374030104f5a401634b65"
+      "790278523032454220444437462045344644204542373620444338412032303545204636354420373930432044333045"
+      "2038413337203541354320323532382045423341203932334120463146422034443739203444030204f5a102781e5468"
+      "6973207472616e73616374696f6e206861732031204d657373616765a3016d4d6573736167652028312f312902781c2f"
+      "636f736d6f732e62616e6b2e763162657461312e4d736753656e640301a2026e4d736753656e64206f626a6563740302"
+      "a3016c46726f6d206164647265737302782d636f736d6f7331756c6176336873656e7570737771666b77327933737570"
+      "356b677471776e76716138657968730303a3016a546f206164647265737302782d636f736d6f7331656a726634637572"
+      "327779366b667572673966326a707070326833616665356836706b6835740303a30166416d6f756e7402673130204154"
+      "4f4d0303a1026e456e64206f66204d657373616765a201644d656d6f0278193e20e29a9befb88f5c7532363942e29a9b"
+      "efb88f2020202020a2016446656573026a302e3030322041544f4da30169476173206c696d6974026731303027303030"
+      "04f5a3017148617368206f66207261772062797465730278403963303433323930313039633237306232666661396633"
+      "633066613535613039306330313235656265663838316637646135333937386462663933663733383504f5";
+
+  std::vector<uint8_t> blob;
+  for (size_t i = 0; i + 1 < hex.size(); i += 2) {
+    blob.push_back(static_cast<uint8_t>(std::stoul(hex.substr(i, 2), nullptr, 16)));
+  }
+  EXPECT_EQ(validate_textual(blob), parser_ok);
 }
