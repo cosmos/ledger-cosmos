@@ -96,6 +96,12 @@ parser_error_t parser_getNumItems(const parser_context_t *ctx,
 
   *num_items = 0;
   if (ctx->tx_obj->tx_type == tx_textual) {
+    // Parsing already refuses anything above the ceiling; repeat the check
+    // here rather than truncating a size_t into the count the review UI walks.
+    if (ctx->tx_obj->tx_text.n_containers == 0 ||
+        ctx->tx_obj->tx_text.n_containers > MAX_REVIEW_ITEMS) {
+      return parser_unexpected_number_items;
+    }
     *num_items = (uint8_t)ctx->tx_obj->tx_text.n_containers;
     return parser_ok;
   }
@@ -404,6 +410,13 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
   // manipulation
   if (container->screen.titleLen > MAX_TITLE_SIZE ||
       container->screen.contentLen > MAX_CONTENT_SIZE) {
+    return parser_unexpected_value;
+  }
+
+  // Textual leaves the wording of the screens to the host, but a screen with
+  // no content at all shows the user nothing while still costing a page of
+  // their attention. TXSPEC has the host omit empty entries, not send them.
+  if (container->screen.contentLen == 0) {
     return parser_unexpected_value;
   }
   MEMZERO(ctx->tx_obj->tx_text.tmpBuffer,
