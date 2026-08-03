@@ -26,6 +26,12 @@
 extern "C" {
 #endif
 
+// The review UI reaches items through zxlib's viewfunc_getItem_t, whose
+// displayIdx is int8_t. An index above 127 arrives negative and is refused, so
+// items beyond this point cannot be shown even though the parser can render
+// them. Count no further than the screen can reach.
+#define MAX_REVIEW_ITEMS 127
+
 typedef enum {
   root_item_chain_id = 0,
   root_item_account_number,

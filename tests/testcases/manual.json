@@ -1004,8 +1004,7 @@
     },
     "parsingErr": "No error",
     "validationErr": "JSON Missing chain_id",
-    "expected": [
-    ],
+    "expected": [],
     "expert": true
   },
   {
@@ -2212,49 +2211,70 @@
     "expert": true
   },
   {
-		"name": "huge_test",
-		"tx": {
-			"account_number": "1",
-			"chain_id": "my-chain",
-			"fee": { "amount": [{ "amount": "2000", "denom": "uatom" }], "gas": "100000", "granter": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs", "payer": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs" },
-			"memo": "\\u003e ⚛️\\u269B⚛️     ",
-			"msgs": [
-				{
-					"type": "cosmos-sdk/MsgExec",
-					"value": {
-						"grantee": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
-						"msgs": [
-							{
-								"type": "cosmos-sdk/MsgSend",
-								"value": {
-									"amount": [{ "amount": "10000000", "denom": "uatom" }],
-									"from_address": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
-									"to_address": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t"
-								}
-							}
-						]
-					}
-				},
-				{
-					"type": "cosmos-sdk/v1/MsgVote",
-					"value": {
-						"metadata": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Also it ends in  a single ampersand @",
-						"option": 1,
-						"proposal_id": "1",
-						"voter": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs"
-					}
-				}
-			],
-			"sequence": "2",
-			"timeout_height": "20",
-			"tip": {
-				"amount": [
-					{ "amount": "20000", "denom": "uatom" },
-					{ "amount": "30000", "denom": "uosmo" }
-				],
-				"tipper": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t"
-			}
-		},
+    "name": "huge_test",
+    "tx": {
+      "account_number": "1",
+      "chain_id": "my-chain",
+      "fee": {
+        "amount": [
+          {
+            "amount": "2000",
+            "denom": "uatom"
+          }
+        ],
+        "gas": "100000",
+        "granter": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
+        "payer": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs"
+      },
+      "memo": "\\u003e ⚛️\\u269B⚛️     ",
+      "msgs": [
+        {
+          "type": "cosmos-sdk/MsgExec",
+          "value": {
+            "grantee": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
+            "msgs": [
+              {
+                "type": "cosmos-sdk/MsgSend",
+                "value": {
+                  "amount": [
+                    {
+                      "amount": "10000000",
+                      "denom": "uatom"
+                    }
+                  ],
+                  "from_address": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs",
+                  "to_address": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "cosmos-sdk/v1/MsgVote",
+          "value": {
+            "metadata": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Also it ends in  a single ampersand @",
+            "option": 1,
+            "proposal_id": "1",
+            "voter": "cosmos1ulav3hsenupswqfkw2y3sup5kgtqwnvqa8eyhs"
+          }
+        }
+      ],
+      "sequence": "2",
+      "timeout_height": "20",
+      "tip": {
+        "amount": [
+          {
+            "amount": "20000",
+            "denom": "uatom"
+          },
+          {
+            "amount": "30000",
+            "denom": "uosmo"
+          }
+        ],
+        "tipper": "cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h6pkh5t"
+      }
+    },
     "parsingErr": "No error",
     "validationErr": "No error",
     "expected": [
@@ -2301,12 +2321,12 @@
       "17 | Tipper [1/2] : cosmos1ejrf4cur2wy6kfurg9f2jppp2h3afe5h",
       "17 | Tipper [2/2] : 6pkh5t",
       "18 | Timeout Height : 20"
-   ],
+    ],
     "expert": true
-	},
+  },
   {
     "name": "MsgSetWithdrawAddress",
-    "tx":{
+    "tx": {
       "account_number": "8",
       "chain_id": "testing",
       "fee": {
@@ -2361,25 +2381,29 @@
   {
     "name": "Gaia_Sign_00",
     "tx": {
-      "account_number":"8",
-      "sequence":"2",
-      "chain_id":"my-chain",
-      "memo":"A B C",
-      "fee":{
-          "amount":[],
-          "gas":"200000"
+      "account_number": "8",
+      "sequence": "2",
+      "chain_id": "my-chain",
+      "memo": "A B C",
+      "fee": {
+        "amount": [],
+        "gas": "200000"
       },
-      "msgs":[{
-        "type":"cosmos-sdk/MsgDeposit",
-        "value":{
-          "amount":[{
-            "amount":"10",
-            "denom":"stake"
-            }],
-          "depositor":"cosmos1xl2256vdh0j68khz9wq88hnyqcq0f5f4za2480",
-          "proposal_id":"1"
+      "msgs": [
+        {
+          "type": "cosmos-sdk/MsgDeposit",
+          "value": {
+            "amount": [
+              {
+                "amount": "10",
+                "denom": "stake"
+              }
+            ],
+            "depositor": "cosmos1xl2256vdh0j68khz9wq88hnyqcq0f5f4za2480",
+            "proposal_id": "1"
+          }
         }
-      }]
+      ]
     },
     "parsingErr": "No error",
     "validationErr": "No error",
@@ -2401,32 +2425,37 @@
   {
     "name": "Gaia_Sign_01",
     "tx": {
-      "account_number":"123",
-      "sequence":"8",
-      "chain_id":"my-chain",
-      "fee":{
-        "amount":[{
-          "denom":"uatom",
-          "amount":"54"
-        }],
-        "gas":"106309",
+      "account_number": "123",
+      "sequence": "8",
+      "chain_id": "my-chain",
+      "fee": {
+        "amount": [
+          {
+            "denom": "uatom",
+            "amount": "54"
+          }
+        ],
+        "gas": "106309",
         "granter": "cosmosaccaddr1d9h8xxxGRANTER",
         "payer": "cosmosaccaddr1d9h8qatxxPAYER"
       },
-
-      "msgs":[{
-        "type":"cosmos-sdk/MsgDeposit",
-        "value":{
-          "amount":[{
-            "amount":"255000000",
-            "denom":"uatom"
-          }],
-          "depositor":"cosmos1849m9wncrqp6v4tkss6a3j8uzvuv0cp7wcgvqa",
-          "proposal_id":"44"
+      "msgs": [
+        {
+          "type": "cosmos-sdk/MsgDeposit",
+          "value": {
+            "amount": [
+              {
+                "amount": "255000000",
+                "denom": "uatom"
+              }
+            ],
+            "depositor": "cosmos1849m9wncrqp6v4tkss6a3j8uzvuv0cp7wcgvqa",
+            "proposal_id": "44"
+          }
         }
-      }],
-      "memo":"",
-      "timeout_height":"0"
+      ],
+      "memo": "",
+      "timeout_height": "0"
     },
     "parsingErr": "No error",
     "validationErr": "No error",
@@ -2453,56 +2482,56 @@
       "account_number": "10",
       "chain_id": "chain-WiONzW",
       "fee": {
-          "amount": [],
-          "gas": "200000"
+        "amount": [],
+        "gas": "200000"
       },
       "memo": "",
       "msgs": [
-          {
-              "type": "cosmos-sdk/MsgMultiSend",
-              "value": {
-                  "inputs": [
-                      {
-                          "address": "cosmos1w4efqfklkezgyt6lncjdwxncrzyzpr2efzcqal",
-                          "coins": [
-                              {
-                                  "amount": "30",
-                                  "denom": "stake"
-                              }
-                          ]
-                      }
-                  ],
-                  "outputs": [
-                      {
-                          "address": "cosmos184hgxlzat3qhm7p28563w4jyw4aa3wcgnj6gtv",
-                          "coins": [
-                              {
-                                  "amount": "10",
-                                  "denom": "stake"
-                              }
-                          ]
-                      },
-                      {
-                          "address": "cosmos1pfyz36qx8z8dm8ktd75mwx5j5vsmkzfn7wrgp9",
-                          "coins": [
-                              {
-                                  "amount": "10",
-                                  "denom": "stake"
-                              }
-                          ]
-                      },
-                      {
-                          "address": "cosmos1xu388ml6krya3ysmlrup2ylxjtzhl4hlaem3ng",
-                          "coins": [
-                              {
-                                  "amount": "10",
-                                  "denom": "stake"
-                              }
-                          ]
-                      }
-                  ]
+        {
+          "type": "cosmos-sdk/MsgMultiSend",
+          "value": {
+            "inputs": [
+              {
+                "address": "cosmos1w4efqfklkezgyt6lncjdwxncrzyzpr2efzcqal",
+                "coins": [
+                  {
+                    "amount": "30",
+                    "denom": "stake"
+                  }
+                ]
               }
+            ],
+            "outputs": [
+              {
+                "address": "cosmos184hgxlzat3qhm7p28563w4jyw4aa3wcgnj6gtv",
+                "coins": [
+                  {
+                    "amount": "10",
+                    "denom": "stake"
+                  }
+                ]
+              },
+              {
+                "address": "cosmos1pfyz36qx8z8dm8ktd75mwx5j5vsmkzfn7wrgp9",
+                "coins": [
+                  {
+                    "amount": "10",
+                    "denom": "stake"
+                  }
+                ]
+              },
+              {
+                "address": "cosmos1xu388ml6krya3ysmlrup2ylxjtzhl4hlaem3ng",
+                "coins": [
+                  {
+                    "amount": "10",
+                    "denom": "stake"
+                  }
+                ]
+              }
+            ]
           }
+        }
       ],
       "sequence": "16"
     },
@@ -2529,8 +2558,158 @@
       "13 | Gas : 200000"
     ],
     "expert": true
-
-}
-
-
+  },
+  {
+    "name": "babylonWrappedDelegate",
+    "tx": {
+      "account_number": "6571",
+      "chain_id": "bbn-1",
+      "fee": {
+        "amount": [
+          {
+            "amount": "5000",
+            "denom": "ubbn"
+          }
+        ],
+        "gas": "200000"
+      },
+      "memo": "Zondax.ch",
+      "msgs": [
+        {
+          "type": "/babylon.epoching.v1.MsgWrappedDelegate",
+          "value": {
+            "msg": {
+              "amount": {
+                "amount": "1000000",
+                "denom": "ubbn"
+              },
+              "delegator_address": "bbn102hty0jv2s29lyc4u0tv97z9v298e24t3vwtpl",
+              "validator_address": "bbnvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7"
+            }
+          }
+        }
+      ],
+      "sequence": "1"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : bbn-1",
+      "1 | Account : 6571",
+      "2 | Sequence : 1",
+      "3 | Type : Delegate",
+      "4 | Amount : 1000000 ubbn",
+      "5 | Delegator [1/2] : bbn102hty0jv2s29lyc4u0tv97z9v298e24t3vw",
+      "5 | Delegator [2/2] : tpl",
+      "6 | Validator [1/2] : bbnvaloper1grgelyng2v6v3t8z87wu3sxgt9m5",
+      "6 | Validator [2/2] : s03xfytvz7",
+      "7 | Memo : Zondax.ch",
+      "8 | Fee : 5000 ubbn",
+      "9 | Gas : 200000"
+    ],
+    "expert": false
+  },
+  {
+    "name": "babylonWrappedUndelegate",
+    "tx": {
+      "account_number": "6571",
+      "chain_id": "bbn-1",
+      "fee": {
+        "amount": [
+          {
+            "amount": "5000",
+            "denom": "ubbn"
+          }
+        ],
+        "gas": "200000"
+      },
+      "memo": "Zondax.ch",
+      "msgs": [
+        {
+          "type": "/babylon.epoching.v1.MsgWrappedUndelegate",
+          "value": {
+            "msg": {
+              "amount": {
+                "amount": "1000000",
+                "denom": "ubbn"
+              },
+              "delegator_address": "bbn102hty0jv2s29lyc4u0tv97z9v298e24t3vwtpl",
+              "validator_address": "bbnvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7"
+            }
+          }
+        }
+      ],
+      "sequence": "1"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : bbn-1",
+      "1 | Account : 6571",
+      "2 | Sequence : 1",
+      "3 | Type : Undelegate",
+      "4 | Amount : 1000000 ubbn",
+      "5 | Delegator [1/2] : bbn102hty0jv2s29lyc4u0tv97z9v298e24t3vw",
+      "5 | Delegator [2/2] : tpl",
+      "6 | Validator [1/2] : bbnvaloper1grgelyng2v6v3t8z87wu3sxgt9m5",
+      "6 | Validator [2/2] : s03xfytvz7",
+      "7 | Memo : Zondax.ch",
+      "8 | Fee : 5000 ubbn",
+      "9 | Gas : 200000"
+    ],
+    "expert": false
+  },
+  {
+    "name": "babylonWrappedBeginRedelegate",
+    "tx": {
+      "account_number": "6571",
+      "chain_id": "bbn-1",
+      "fee": {
+        "amount": [
+          {
+            "amount": "5000",
+            "denom": "ubbn"
+          }
+        ],
+        "gas": "200000"
+      },
+      "memo": "Zondax.ch",
+      "msgs": [
+        {
+          "type": "/babylon.epoching.v1.MsgWrappedBeginRedelegate",
+          "value": {
+            "msg": {
+              "amount": {
+                "amount": "1000000",
+                "denom": "ubbn"
+              },
+              "delegator_address": "bbn102hty0jv2s29lyc4u0tv97z9v298e24t3vwtpl",
+              "validator_dst_address": "bbnvaloper1dst7wu3sxgt9m5s03xfytvz7aaaaaaaaaa",
+              "validator_src_address": "bbnvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7"
+            }
+          }
+        }
+      ],
+      "sequence": "1"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : bbn-1",
+      "1 | Account : 6571",
+      "2 | Sequence : 1",
+      "3 | Type : Redelegate",
+      "4 | Amount : 1000000 ubbn",
+      "5 | Delegator [1/2] : bbn102hty0jv2s29lyc4u0tv97z9v298e24t3vw",
+      "5 | Delegator [2/2] : tpl",
+      "6 | Validator Dest [1/2] : bbnvaloper1dst7wu3sxgt9m5s03xfytvz7aaaa",
+      "6 | Validator Dest [2/2] : aaaaaa",
+      "7 | Validator Source [1/2] : bbnvaloper1grgelyng2v6v3t8z87wu3sxgt9m5",
+      "7 | Validator Source [2/2] : s03xfytvz7",
+      "8 | Memo : Zondax.ch",
+      "9 | Fee : 5000 ubbn",
+      "10 | Gas : 200000"
+    ],
+    "expert": false
+  }
 ]

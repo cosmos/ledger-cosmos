@@ -172,6 +172,38 @@ __Z_INLINE bool address_matches_own(char *addr) {
   return true;
 }
 
+// Copies a token's bytes as they appear in the signed transaction. Decisions
+// that hide a screen must be made on these, not on the rendered value:
+// tx_getToken applies value_substitutions and returns only the first page, so
+// distinct amino types that share a friendly label ("cosmos-sdk/MsgDelegate"
+// and "/babylon.epoching.v1.MsgWrappedDelegate" both render as "Delegate")
+// would otherwise compare equal, as would two long values sharing a prefix.
+static parser_error_t get_raw_token(uint16_t token_index, char *out,
+                                    uint16_t out_len) {
+  if (out == NULL || out_len == 0 ||
+      token_index >= parser_tx_obj.tx_json.json.numberOfTokens) {
+    return parser_unexpected_value;
+  }
+
+  const int16_t start = parser_tx_obj.tx_json.json.tokens[token_index].start;
+  const int16_t end = parser_tx_obj.tx_json.json.tokens[token_index].end;
+
+  if (start < 0 || end < start) {
+    return parser_unexpected_value;
+  }
+
+  const uint16_t len = (uint16_t)(end - start);
+  if (len >= out_len) {
+    return parser_unexpected_type;
+  }
+
+  MEMZERO(out, out_len);
+  MEMCPY(out, parser_tx_obj.tx_json.tx + start, len);
+  out[len] = '\0';
+
+  return parser_ok;
+}
+
 parser_error_t tx_indexRootFields() {
   if (parser_tx_obj.tx_json.flags.cache_valid) {
     return parser_ok;
@@ -266,44 +298,60 @@ parser_error_t tx_indexRootFields() {
         // GROUPING: Message Type
         if (parser_tx_obj.tx_json.flags.msg_type_grouping &&
             is_msg_type_field(tmp_key)) {
-          // First message, initialize expected type
-          if (parser_tx_obj.tx_json.filter_msg_type_count == 0) {
+          char raw_val[INDEXING_GROUPING_REF_TYPE_SIZE];
 
-            if (strlen(tmp_val) >= sizeof(reference_msg_type)) {
-              return parser_unexpected_type;
-            }
-
-            snprintf(reference_msg_type, sizeof(reference_msg_type), "%s",
-                     tmp_val);
-            parser_tx_obj.tx_json.filter_msg_type_valid_idx = current_item_idx;
-          }
-
-          if (strcmp(reference_msg_type, tmp_val) != 0) {
-            // different values, so disable grouping
+          if (get_raw_token(ret_value_token_index, raw_val, sizeof(raw_val)) !=
+              parser_ok) {
+            // Cannot compare the signed bytes, so collapse nothing: showing a
+            // screen that could have been grouped is harmless, hiding one that
+            // differs is not.
             parser_tx_obj.tx_json.flags.msg_type_grouping = 0;
             parser_tx_obj.tx_json.filter_msg_type_count = 0;
-          }
+          } else {
+            // First message, initialize expected type
+            if (parser_tx_obj.tx_json.filter_msg_type_count == 0) {
+              snprintf(reference_msg_type, sizeof(reference_msg_type), "%s",
+                       raw_val);
+              parser_tx_obj.tx_json.filter_msg_type_valid_idx =
+                  current_item_idx;
+            }
 
-          parser_tx_obj.tx_json.filter_msg_type_count++;
+            if (strcmp(reference_msg_type, raw_val) != 0) {
+              // different values, so disable grouping
+              parser_tx_obj.tx_json.flags.msg_type_grouping = 0;
+              parser_tx_obj.tx_json.filter_msg_type_count = 0;
+            }
+
+            parser_tx_obj.tx_json.filter_msg_type_count++;
+          }
         }
 
         // GROUPING: Message From
         if (parser_tx_obj.tx_json.flags.msg_from_grouping &&
             is_msg_from_field(tmp_key)) {
-          // First message, initialize expected from
-          if (parser_tx_obj.tx_json.filter_msg_from_count == 0) {
-            snprintf(reference_msg_from, sizeof(reference_msg_from), "%s",
-                     tmp_val);
-            parser_tx_obj.tx_json.filter_msg_from_valid_idx = current_item_idx;
-          }
+          char raw_val[INDEXING_GROUPING_REF_FROM_SIZE];
 
-          if (strcmp(reference_msg_from, tmp_val) != 0) {
-            // different values, so disable grouping
+          if (get_raw_token(ret_value_token_index, raw_val, sizeof(raw_val)) !=
+              parser_ok) {
             parser_tx_obj.tx_json.flags.msg_from_grouping = 0;
             parser_tx_obj.tx_json.filter_msg_from_count = 0;
-          }
+          } else {
+            // First message, initialize expected from
+            if (parser_tx_obj.tx_json.filter_msg_from_count == 0) {
+              snprintf(reference_msg_from, sizeof(reference_msg_from), "%s",
+                       raw_val);
+              parser_tx_obj.tx_json.filter_msg_from_valid_idx =
+                  current_item_idx;
+            }
 
-          parser_tx_obj.tx_json.filter_msg_from_count++;
+            if (strcmp(reference_msg_from, raw_val) != 0) {
+              // different values, so disable grouping
+              parser_tx_obj.tx_json.flags.msg_from_grouping = 0;
+              parser_tx_obj.tx_json.filter_msg_from_count = 0;
+            }
+
+            parser_tx_obj.tx_json.filter_msg_from_count++;
+          }
         }
 
         ZEMU_LOGF(200, "[ZEMU] %s [%d/%d]", tmp_key,
@@ -431,7 +479,7 @@ __Z_INLINE parser_error_t get_subitem_count(root_item_e root_item,
   }
 
   // Validate bounds before casting to uint8_t
-  if (tmp_num_items < 0 || tmp_num_items > UINT8_MAX) {
+  if (tmp_num_items < 0 || tmp_num_items > MAX_REVIEW_ITEMS) {
     return parser_unexpected_number_items;
   }
 
@@ -506,7 +554,7 @@ parser_error_t tx_display_numItems(uint8_t *num_items) {
   }
 
   // Reject transactions with too many items to display safely
-  if (total > UINT8_MAX) {
+  if (total > MAX_REVIEW_ITEMS) {
     return parser_unexpected_number_items;
   }
 
@@ -599,6 +647,14 @@ static const key_subst_t key_substitutions[] = {
     {"msgs/value/withdraw_address", "Withdraw Address"},
     {"msgs/value/validator_src_address", "Validator Source"},
     {"msgs/value/validator_dst_address", "Validator Dest"},
+
+    // Babylon x/epoching wrapped staking messages nest the staking fields one
+    // level deeper, under the "msg" key (see MSG_EPOCHING_FLATTEN_LEVEL).
+    {"msgs/value/msg/amount", "Amount"},
+    {"msgs/value/msg/delegator_address", "Delegator"},
+    {"msgs/value/msg/validator_address", "Validator"},
+    {"msgs/value/msg/validator_src_address", "Validator Source"},
+    {"msgs/value/msg/validator_dst_address", "Validator Dest"},
     {"msgs/value/description", "Description"},
     {"msgs/value/initial_deposit/amount", "Deposit Amount"},
     {"msgs/value/initial_deposit/denom", "Deposit Denom"},

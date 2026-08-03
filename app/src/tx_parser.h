@@ -40,6 +40,10 @@ extern "C" {
 // uses the larger value only as a safe ceiling for entering the array.
 #define MSG_BASE_FLATTEN_LEVEL 2
 #define MSG_MULTISEND_FLATTEN_LEVEL 3
+// Babylon x/epoching wrapped staking messages (epoching/Wrapped*) nest a
+// standard staking message under a "msg" key, one object level deeper than the
+// base shape, so they need the same extra flatten level as MsgMultiSend.
+#define MSG_EPOCHING_FLATTEN_LEVEL 3
 
 // Returns the flatten depth a single `msgs` element needs, from its own type.
 uint8_t tx_msg_max_level(uint16_t msg_token_index);
@@ -83,7 +87,11 @@ __Z_INLINE bool is_msg_from_field(char *field_name) {
   if (field_name == NULL) {
     return false;
   }
-  return strcmp(field_name, "msgs/value/delegator_address") == 0;
+  // The base staking shape carries the delegator at
+  // msgs/value/delegator_address; Babylon epoching/Wrapped* messages carry it
+  // one level deeper, under the nested "msg" object.
+  return strcmp(field_name, "msgs/value/delegator_address") == 0 ||
+         strcmp(field_name, "msgs/value/msg/delegator_address") == 0;
 }
 
 #ifdef __cplusplus
