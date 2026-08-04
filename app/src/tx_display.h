@@ -30,6 +30,11 @@ extern "C" {
 // displayIdx is int8_t. An index above 127 arrives negative and is refused, so
 // items beyond this point cannot be shown even though the parser can render
 // them. Count no further than the screen can reach.
+//
+// 127 is exact, not a round number. The Nano review calls getItem once more at
+// index == numItems as its end-of-list sentinel, so the largest index the
+// callback ever sees is 127, which is INT8_MAX. Raising this to 128 makes that
+// sentinel arrive as -128 and puts the narrowing straight back.
 #define MAX_REVIEW_ITEMS 127
 
 typedef enum {
