@@ -223,6 +223,18 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
 
   *pageCount = 0;
 
+  // Every element of a Coin list must itself be a Coin object. Check that
+  // before counting children, because a scalar leaf reports zero of them just
+  // as an empty container does, and the "Empty" answer below would then
+  // describe a value that is actually there.
+  //
+  // A non-object here is a malformed Coin list, not a shape the app does not
+  // model, so it is refused like the wrong-member-count case below. Callers
+  // send scalars to the generic renderer before reaching this point.
+  if (parser_tx_obj.tx_json.json.tokens[amountToken].type != JSMN_OBJECT) {
+    return parser_unexpected_field;
+  }
+
   uint16_t numElements;
   CHECK_PARSER_ERR(array_get_element_count(&parser_tx_obj.tx_json.json,
                                            amountToken, &numElements))
@@ -234,10 +246,6 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
   }
 
   if (numElements != AMOUNT_OBJECT_TOKEN_COUNT) {
-    return parser_unexpected_field;
-  }
-
-  if (parser_tx_obj.tx_json.json.tokens[amountToken].type != JSMN_OBJECT) {
     return parser_unexpected_field;
   }
 
@@ -329,7 +337,31 @@ __Z_INLINE parser_error_t parser_formatAmount(uint16_t amountToken,
   ZEMU_LOGF(200, "[formatAmount] ------- pageidx %d", pageIdx)
 
   *pageCount = 0;
-  if (parser_tx_obj.tx_json.json.tokens[amountToken].type != JSMN_ARRAY) {
+
+  const jsmntype_t amountType =
+      parser_tx_obj.tx_json.json.tokens[amountToken].type;
+
+  // A Coin is an object, and a Coin list is an array. Anything else is not a
+  // Coin at all, and must not go through the Coin formatter: a scalar leaf
+  // reports zero children exactly as an empty container does, so it came back
+  // as "Empty" while the real value was signed.
+  //
+  // Amounts are recognised by their flattened path alone (parser_isAmount), and
+  // a scalar here is a normal encoding rather than a malformed one. Several
+  // released message types outside cosmos-sdk core carry math.Int at
+  // msgs/value/amount, which amino writes as a bare quoted integer: cosmos/evm
+  // and canto MsgConvertERC20, Kava's MsgConvertERC20ToCoin, Stride's stakeibc
+  // messages and Injective's peggy claims among them.
+  //
+  // Show it the way every other field the app has no special handling for is
+  // shown. Refusing would make amount the one field name whose type can render
+  // a whole message unsignable, and the value the signer sees is the value the
+  // signature covers either way.
+  if (amountType != JSMN_ARRAY && amountType != JSMN_OBJECT) {
+    return tx_getToken(amountToken, outVal, outValLen, pageIdx, pageCount);
+  }
+
+  if (amountType != JSMN_ARRAY) {
     return parser_formatAmountItem(amountToken, outVal, outValLen, pageIdx,
                                    pageCount);
   }
