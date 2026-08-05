@@ -18,9 +18,13 @@ on:
       - master
       - dev
 
+# These must cover every scope the called workflow declares, otherwise the run is
+# rejected at startup. reusable_guidelines_enforcer.yml asks for pull-requests: write
+# since it started calling reusable_build.yml.
 permissions:
   actions: write
   contents: read
+  pull-requests: write
 
 jobs:
   guidelines_enforcer:
