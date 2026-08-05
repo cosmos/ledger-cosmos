@@ -13,9 +13,13 @@ on:
       - '.github/workflows/*.yml'
       - 'tests/*'
 
+# These must cover every scope the called workflow declares, otherwise the run is
+# rejected at startup. github/codeql-action queries the workflow run, so
+# reusable_codeql_checks.yml asks for actions: read.
 permissions:
   security-events: write
   contents: read
+  actions: read
 
 jobs:
   analyse:
