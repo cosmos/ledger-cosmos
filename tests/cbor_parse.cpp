@@ -229,3 +229,54 @@ TEST(CborTextual, ZemuFixtureIsAccepted) {
   }
   EXPECT_EQ(validate_textual(blob), parser_ok);
 }
+// A screen key wide enough to overflow an int used to be read with the
+// truncating getter, so 2^32 + 1 arrived as 1 and was dispatched as TITLE. The
+// device would then render a screen a standards-compliant reader would not,
+// while the signature still covered the original document.
+TEST(CborTextual, OversizedScreenKeyIsRejected) {
+  // { 1: [ { 0x100000001: "t", 2: "c" } ] }
+  const auto blob =
+      document({0xa2, 0x1b, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x61, 't', 0x02, 0x61, 'c'}, 1);
+  EXPECT_NE(parse_textual(blob), parser_ok);
+}
+
+// Same truncation on the outer envelope key: 2^32 + 1 must not pass for the 1
+// the document is required to carry.
+TEST(CborTextual, OversizedEnvelopeKeyIsRejected) {
+  std::vector<uint8_t> blob = {0xa1, 0x1b, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x81};
+  const std::vector<uint8_t> screen = {0xa2, 0x01, 0x61, 't', 0x02, 0x61, 'c'};
+  blob.insert(blob.end(), screen.begin(), screen.end());
+  EXPECT_NE(parse_textual(blob), parser_ok);
+}
+
+// An oversized optional key has the same problem one level down: 2^32 + 3 must
+// not be taken for INDENT.
+TEST(CborTextual, OversizedOptionalKeyIsRejected) {
+  // { 1: [ { 1: "t", 2: "c", 0x100000003: 2 } ] }
+  const auto blob = document({0xa3, 0x01, 0x61, 't', 0x02, 0x61, 'c', 0x1b, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+                              0x03, 0x02},
+                             1);
+  EXPECT_NE(parse_textual(blob), parser_ok);
+}
+
+// Every element of the screen array is read with cbor_value_get_map_length,
+// which only asserts that it was handed a map -- and asserts are compiled out
+// of production builds. An element of any other type has to be a clean parsing
+// error rather than a length read off a value that has none.
+TEST(CborTextual, NonMapScreenIsRejected) {
+  // { 1: [ 5 ] }
+  const auto blob = document({0x05}, 1);
+  EXPECT_EQ(parse_textual(blob), parser_unexpected_type);
+}
+
+TEST(CborTextual, ArrayScreenIsRejected) {
+  // { 1: [ [ "t" ] ] }
+  const auto blob = document({0x81, 0x61, 't'}, 1);
+  EXPECT_EQ(parse_textual(blob), parser_unexpected_type);
+}
+
+TEST(CborTextual, TextScreenIsRejected) {
+  // { 1: [ "screen" ] }
+  const auto blob = document({0x66, 's', 'c', 'r', 'e', 'e', 'n'}, 1);
+  EXPECT_EQ(parse_textual(blob), parser_unexpected_type);
+}
