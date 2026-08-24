@@ -557,6 +557,12 @@ __Z_INLINE parser_error_t parser_getScreenInfo(const parser_context_t *ctx,
   }
 
   CborValue data;
+  // Same precondition as in _read_text_tx: cbor_value_get_map_length only
+  // asserts that it was handed a map, and production builds drop that assert.
+  // _read_text_tx has already walked this array, but this runs on the display
+  // path off a freshly initialised parser, so do not lean on that.
+  PARSER_ASSERT_OR_ERROR(cbor_value_is_map(&containerArray_ptr),
+                         parser_unexpected_type)
   CHECK_CBOR_MAP_ERR(
       cbor_value_get_map_length(&containerArray_ptr, &container->n_field))
   CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&containerArray_ptr, &data))
