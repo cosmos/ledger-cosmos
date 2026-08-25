@@ -168,6 +168,41 @@ describe('Standard', function () {
     }
   })
 
+  test.concurrent.each(DEVICE_MODELS)('chain config mismatch on the generic Cosmos path', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      // 'inj' is pinned to the Ethereum-style 60' derivation. Asking for it on
+      // the generic 118' path used to take the "always allowed for 118" branch
+      // and hand back a secp256k1 Cosmos address wearing an inj1... prefix --
+      // an address the user cannot receive on, from a request the device
+      // accepted without ever showing that it had substituted the chain.
+      const path = "m/44'/118'/0'/0/0"
+
+      await expect(app.getAddressAndPubKey(path, 'inj')).rejects.toMatchObject({
+        returnCode: 0x698C,
+        errorMessage: 'Chain config not supported'
+      })
+
+      // Same guard on the confirm-on-device entry point: it has to fail before
+      // anything reaches the screen.
+      await expect(app.showAddressAndPubKey(path, 'inj')).rejects.toMatchObject({
+        returnCode: 0x698C,
+        errorMessage: 'Chain config not supported'
+      })
+
+      // The chains the 118' path is actually for keep working.
+      const resp = await app.getAddressAndPubKey(path, 'osmo')
+      expect(resp).toHaveProperty('bech32_address')
+      expect(resp.bech32_address.startsWith('osmo1')).toBe(true)
+      expect(resp.compressed_pk.length).toEqual(33)
+    } finally {
+      await sim.close()
+    }
+  })
+
   test.concurrent.each(DEVICE_MODELS)('show address HUGE', async function (m) {
     const sim = new Zemu(m.path)
     try {

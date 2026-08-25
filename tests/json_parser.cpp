@@ -18,6 +18,7 @@
 #include "gtest/gtest.h"
 #include <jsmn.h>
 #include <json/json_parser.h>
+#include <string>
 
 namespace {
 TEST(JsonParserTest, Empty) {
@@ -413,5 +414,62 @@ TEST(TxValidationTest, ObjectGetValueCorrectFormat) {
   EXPECT_EQ(object_get_value(&parsed_json, 0, "sequence", &token_index),
             parser_ok);
   EXPECT_EQ(token_index, 46) << "Wrong token index";
+}
+
+// JSMN_STRICT is not defined in this build, so jsmn happily tokenises an
+// object whose last entry is a bare key with no value. Both walkers read the
+// successor of every key they take, and the bound they checked first only
+// covered the key -- on a table filled to MAX_NUMBER_OF_TOKENS the successor
+// is one element past json->tokens, which is the `buffer` pointer that
+// follows the array in parsed_json_t reinterpreted as a token.
+TEST(TxValidationTest, ObjectElementCount_dangling_key) {
+  auto transaction = R"({"a":1,"b"})";
+
+  parsed_json_t parsed_json;
+  EXPECT_EQ(JSON_PARSE(&parsed_json, transaction), parser_ok);
+  EXPECT_EQ(parsed_json.numberOfTokens, 4)
+      << "jsmn is expected to accept the dangling key here";
+
+  uint16_t count;
+  EXPECT_EQ(object_get_element_count(&parsed_json, 0, &count), parser_ok);
+  EXPECT_EQ(count, 1) << "The valueless trailing key is not an element";
+}
+
+TEST(TxValidationTest, ObjectNthKey_dangling_key) {
+  auto transaction = R"({"a":1,"b"})";
+
+  parsed_json_t parsed_json;
+  EXPECT_EQ(JSON_PARSE(&parsed_json, transaction), parser_ok);
+
+  uint16_t token_index = 0;
+  EXPECT_EQ(object_get_nth_key(&parsed_json, 0, 0, &token_index), parser_ok);
+  EXPECT_EQ(token_index, 1);
+
+  // Element 1 does not exist: the only other key has no value behind it.
+  EXPECT_NE(object_get_nth_key(&parsed_json, 0, 1, &token_index), parser_ok);
+}
+
+// The same shape, sized so the dangling key is the very last token the table
+// can hold. This is the case the bound exists for: without it the walk reads
+// json->tokens[MAX_NUMBER_OF_TOKENS].
+TEST(TxValidationTest, ObjectElementCount_dangling_key_fills_the_token_table) {
+  // 1 object token + 2 per complete pair + 1 for the trailing bare key.
+  const uint16_t pairs = (MAX_NUMBER_OF_TOKENS - 2) / 2;
+
+  std::string transaction = "{";
+  for (uint16_t i = 0; i < pairs; i++) {
+    transaction += "\"k" + std::to_string(i) + "\":" + std::to_string(i) + ",";
+  }
+  transaction += "\"dangling\"}";
+
+  parsed_json_t parsed_json;
+  EXPECT_EQ(json_parse(&parsed_json, transaction.c_str(), transaction.size()),
+            parser_ok);
+  EXPECT_EQ(parsed_json.numberOfTokens, MAX_NUMBER_OF_TOKENS)
+      << "The table has to be full for this to be the case under test";
+
+  uint16_t count;
+  EXPECT_EQ(object_get_element_count(&parsed_json, 0, &count), parser_ok);
+  EXPECT_EQ(count, pairs) << "The valueless trailing key is not an element";
 }
 } // namespace
