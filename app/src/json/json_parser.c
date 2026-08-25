@@ -187,6 +187,12 @@ parser_error_t object_get_element_count(const parsed_json_t *json,
       break;
     }
     jsmntok_t key_token = json->tokens[token_index++];
+    // The bound above covered the key only. A token table filled to
+    // MAX_NUMBER_OF_TOKENS can end on a key whose value never made it in, and
+    // reading the successor would step one element past json->tokens.
+    if (token_index >= json->numberOfTokens) {
+      break;
+    }
     jsmntok_t value_token = json->tokens[token_index];
     if (key_token.start > object_token.end) {
       break;
@@ -223,6 +229,11 @@ parser_error_t object_get_nth_key(const parsed_json_t *json,
       break;
     }
     jsmntok_t key_token = json->tokens[(*token_index)++];
+    // Same one-past-the-end read as in object_get_element_count: re-check the
+    // index the increment just moved before dereferencing it.
+    if (*token_index >= json->numberOfTokens) {
+      break;
+    }
     jsmntok_t value_token = json->tokens[*token_index];
     if (key_token.start > object_token.end) {
       break;

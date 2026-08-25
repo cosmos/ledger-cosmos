@@ -60,9 +60,13 @@ std::vector<uint8_t> text_string(const std::string &value) {
   std::vector<uint8_t> out;
   if (value.size() < 24) {
     out.push_back(static_cast<uint8_t>(0x60 | value.size()));
-  } else {
+  } else if (value.size() <= 0xff) {
     out.push_back(0x78);
     out.push_back(static_cast<uint8_t>(value.size()));
+  } else {
+    out.push_back(0x79);
+    out.push_back(static_cast<uint8_t>(value.size() >> 8));
+    out.push_back(static_cast<uint8_t>(value.size() & 0xff));
   }
   out.insert(out.end(), value.begin(), value.end());
   return out;
@@ -85,6 +89,43 @@ std::vector<uint8_t> untitled_screen(const std::string &content) {
   return out;
 }
 
+// { 1: title, 2: content, 3: indent } -- the indent the renderer turns into a
+// run of SCREEN_INDENT characters in front of the key.
+std::vector<uint8_t> indented_screen(const std::string &title, const std::string &content, uint16_t indent) {
+  std::vector<uint8_t> out = {0xa3, 0x01};
+  const auto t = text_string(title);
+  out.insert(out.end(), t.begin(), t.end());
+  out.push_back(0x02);
+  const auto c = text_string(content);
+  out.insert(out.end(), c.begin(), c.end());
+  out.push_back(0x03);
+  if (indent < 24) {
+    out.push_back(static_cast<uint8_t>(indent));
+  } else {
+    out.push_back(0x18);
+    out.push_back(static_cast<uint8_t>(indent));
+  }
+  return out;
+}
+
+// { 2: content, 3: indent, 4: expert } -- an untitled screen carrying an
+// indent. The expert flag is what makes the field count exceed the two the
+// screen walk subtracts, so the optional-field pass reaches the indent at all.
+std::vector<uint8_t> indented_untitled_screen(const std::string &content, uint16_t indent) {
+  std::vector<uint8_t> out = {0xa3, 0x02};
+  const auto c = text_string(content);
+  out.insert(out.end(), c.begin(), c.end());
+  out.push_back(0x03);
+  if (indent < 24) {
+    out.push_back(static_cast<uint8_t>(indent));
+  } else {
+    out.push_back(0x18);
+    out.push_back(static_cast<uint8_t>(indent));
+  }
+  out.insert(out.end(), {0x04, 0xf5});
+  return out;
+}
+
 std::vector<uint8_t> envelope(const std::vector<std::vector<uint8_t>> &screens) {
   std::vector<uint8_t> out = {0xa1, 0x01};
   if (screens.size() < 24) {
@@ -97,6 +138,35 @@ std::vector<uint8_t> envelope(const std::vector<std::vector<uint8_t>> &screens) 
     out.insert(out.end(), screen.begin(), screen.end());
   }
   return out;
+}
+
+struct Rendered {
+  parser_error_t err;
+  std::string key;
+  std::string value;
+};
+
+// Parses a document and renders one screen the way the review UI does. The
+// blob has to outlive the call: textual screens are pointers into it.
+Rendered render_textual(const std::vector<uint8_t> &blob, uint8_t displayIdx) {
+  parser_context_t ctx;
+  parser_tx_t tx_obj;
+  memset(&tx_obj, 0, sizeof(tx_obj));
+  tx_obj.tx_type = tx_textual;
+
+  Rendered rendered{};
+  rendered.err = parser_parse(&ctx, blob.data(), blob.size(), &tx_obj);
+  if (rendered.err != parser_ok) {
+    return rendered;
+  }
+
+  char outKey[64] = {0};
+  char outVal[64] = {0};
+  uint8_t pageCount = 0;
+  rendered.err = parser_getItem(&ctx, displayIdx, outKey, sizeof(outKey), outVal, sizeof(outVal), 0, &pageCount);
+  rendered.key = outKey;
+  rendered.value = outVal;
+  return rendered;
 }
 
 }  // namespace
@@ -228,4 +298,114 @@ TEST(CborTextual, ZemuFixtureIsAccepted) {
     blob.push_back(static_cast<uint8_t>(std::stoul(hex.substr(i, 2), nullptr, 16)));
   }
   EXPECT_EQ(validate_textual(blob), parser_ok);
+}
+// A screen key wide enough to overflow an int used to be read with the
+// truncating getter, so 2^32 + 1 arrived as 1 and was dispatched as TITLE. The
+// device would then render a screen a standards-compliant reader would not,
+// while the signature still covered the original document.
+TEST(CborTextual, OversizedScreenKeyIsRejected) {
+  // { 1: [ { 0x100000001: "t", 2: "c" } ] }
+  const auto blob =
+      document({0xa2, 0x1b, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x61, 't', 0x02, 0x61, 'c'}, 1);
+  EXPECT_NE(parse_textual(blob), parser_ok);
+}
+
+// Same truncation on the outer envelope key: 2^32 + 1 must not pass for the 1
+// the document is required to carry.
+TEST(CborTextual, OversizedEnvelopeKeyIsRejected) {
+  std::vector<uint8_t> blob = {0xa1, 0x1b, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x81};
+  const std::vector<uint8_t> screen = {0xa2, 0x01, 0x61, 't', 0x02, 0x61, 'c'};
+  blob.insert(blob.end(), screen.begin(), screen.end());
+  EXPECT_NE(parse_textual(blob), parser_ok);
+}
+
+// An oversized optional key has the same problem one level down: 2^32 + 3 must
+// not be taken for INDENT.
+TEST(CborTextual, OversizedOptionalKeyIsRejected) {
+  // { 1: [ { 1: "t", 2: "c", 0x100000003: 2 } ] }
+  const auto blob = document({0xa3, 0x01, 0x61, 't', 0x02, 0x61, 'c', 0x1b, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+                              0x03, 0x02},
+                             1);
+  EXPECT_NE(parse_textual(blob), parser_ok);
+}
+
+// Every element of the screen array is read with cbor_value_get_map_length,
+// which only asserts that it was handed a map -- and asserts are compiled out
+// of production builds. An element of any other type has to be a clean parsing
+// error rather than a length read off a value that has none.
+TEST(CborTextual, NonMapScreenIsRejected) {
+  // { 1: [ 5 ] }
+  const auto blob = document({0x05}, 1);
+  EXPECT_EQ(parse_textual(blob), parser_unexpected_type);
+}
+
+TEST(CborTextual, ArrayScreenIsRejected) {
+  // { 1: [ [ "t" ] ] }
+  const auto blob = document({0x81, 0x61, 't'}, 1);
+  EXPECT_EQ(parse_textual(blob), parser_unexpected_type);
+}
+
+TEST(CborTextual, TextScreenIsRejected) {
+  // { 1: [ "screen" ] }
+  const auto blob = document({0x66, 's', 'c', 'r', 'e', 'e', 'n'}, 1);
+  EXPECT_EQ(parse_textual(blob), parser_unexpected_type);
+}
+
+// A screen's indent is host-controlled and only bounded by UINT8_MAX, while
+// the key it prefixes is assembled in a MAX_TITLE_SIZE + 2 buffer. When
+// z_str3join runs out of room it does not simply stop: it overwrites what it
+// was given with the literal "ERR???" and reports the failure. Dropping that
+// return value put the marker on the review screen in place of the title,
+// while the content it belonged to -- and the bytes being signed -- stayed
+// exactly as the host sent them. There is no title a user can check against
+// "ERR???", so the request has to end instead.
+TEST(CborTextualRender, IndentThatOverflowsTheTruncatedKeyEndsTheRequest) {
+  // titleLen 1 + indent 39 clears PRINTABLE_TITLE_SIZE, so the key is the
+  // "---" truncation marker plus one '>' per indent level: 3 + 39 leaves no
+  // room for the terminator in a 42-byte buffer.
+  const auto blob = envelope({indented_screen("t", "content", 39)});
+  const auto rendered = render_textual(blob, 0);
+
+  EXPECT_EQ(rendered.err, parser_unexpected_buffer_end);
+  EXPECT_THAT(rendered.key, testing::Not(testing::HasSubstr("ERR")));
+}
+
+TEST(CborTextualRender, IndentJustBelowTheTruncatedKeyLimitStillRenders) {
+  const auto blob = envelope({indented_screen("t", "content", 38)});
+  const auto rendered = render_textual(blob, 0);
+
+  EXPECT_EQ(rendered.err, parser_ok);
+  EXPECT_EQ(rendered.key, std::string(38, '>') + "---");
+}
+
+// The same buffer, reached the other way: parser_screenPrint adds titleLen and
+// indent into a uint8_t to pick between the truncated and the normal key. A
+// title at MAX_TITLE_SIZE with indent 216 sums to 256, which wraps to 0 and
+// takes the normal branch -- where the full 40-character title is already in
+// the buffer before the first '>' is prepended.
+TEST(CborTextualRender, IndentThatWrapsIntoTheNormalKeyEndsTheRequest) {
+  const auto blob = envelope({indented_screen(std::string(40, 'T'), "content", 216)});
+  const auto rendered = render_textual(blob, 0);
+
+  EXPECT_EQ(rendered.err, parser_unexpected_buffer_end);
+  EXPECT_THAT(rendered.key, testing::Not(testing::HasSubstr("ERR")));
+}
+
+// An untitled screen indents the value instead of the key, in the
+// OUTPUT_HANDLER_SIZE buffer the translated content already occupies.
+TEST(CborTextualRender, IndentThatOverflowsAnUntitledValueEndsTheRequest) {
+  const auto blob = envelope({indented_untitled_screen(std::string(MAX_CONTENT_SIZE, 'c'), 60)});
+  const auto rendered = render_textual(blob, 0);
+
+  EXPECT_EQ(rendered.err, parser_unexpected_buffer_end);
+  EXPECT_THAT(rendered.value, testing::Not(testing::HasSubstr("ERR")));
+}
+
+TEST(CborTextualRender, ModestIndentRendersNormally) {
+  const auto blob = envelope({indented_screen("Amount", "10 ATOM", 2)});
+  const auto rendered = render_textual(blob, 0);
+
+  EXPECT_EQ(rendered.err, parser_ok);
+  EXPECT_EQ(rendered.key, ">>Amount");
+  EXPECT_EQ(rendered.value, "10 ATOM");
 }

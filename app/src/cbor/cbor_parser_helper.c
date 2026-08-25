@@ -43,7 +43,10 @@ static parser_error_t cbor_check_optFields(CborValue *data,
   for (size_t i = 0; i < container->n_field; i++) {
 
     PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(data), parser_unexpected_type)
-    CHECK_CBOR_MAP_ERR(cbor_value_get_int(data, &key))
+    // Checked variant: the plain getter truncates anything wider than an int
+    // instead of failing, so an oversized encoded value could land on one of
+    // the key ids below and be dispatched as that field.
+    CHECK_CBOR_MAP_ERR(cbor_value_get_int_checked(data, &key))
     CHECK_CBOR_MAP_ERR(cbor_value_advance(data))
 
     switch (key) {
@@ -62,7 +65,7 @@ static parser_error_t cbor_check_optFields(CborValue *data,
       int tmpVal = 0;
       PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(data),
                              parser_unexpected_type)
-      CHECK_CBOR_MAP_ERR(cbor_value_get_int(data, &tmpVal))
+      CHECK_CBOR_MAP_ERR(cbor_value_get_int_checked(data, &tmpVal))
       PARSER_ASSERT_OR_ERROR((tmpVal >= 0 && tmpVal <= UINT8_MAX),
                              parser_unexpected_value)
       container->screen.indent = (uint8_t)tmpVal;
@@ -96,7 +99,7 @@ static parser_error_t cbor_check_screen(CborValue *data,
   int screen_key;
   // check title Key
   PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(data), parser_unexpected_type)
-  CHECK_CBOR_MAP_ERR(cbor_value_get_int(data, &screen_key))
+  CHECK_CBOR_MAP_ERR(cbor_value_get_int_checked(data, &screen_key))
   if (screen_key != TITLE_KEY_ID) {
     PARSER_ASSERT_OR_ERROR(screen_key == CONTENT_KEY_ID, parser_unexpected_type)
 
@@ -125,7 +128,7 @@ static parser_error_t cbor_check_screen(CborValue *data,
 
   // check content Key
   PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(data), parser_unexpected_type)
-  CHECK_CBOR_MAP_ERR(cbor_value_get_int(data, &screen_key))
+  CHECK_CBOR_MAP_ERR(cbor_value_get_int_checked(data, &screen_key))
   PARSER_ASSERT_OR_ERROR(screen_key == CONTENT_KEY_ID, parser_unexpected_type)
 
   CHECK_CBOR_MAP_ERR(cbor_value_advance(data))

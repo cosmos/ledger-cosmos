@@ -320,7 +320,12 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
     snprintf(tmpDenom, sizeof(tmpDenom), " %s", COIN_DEFAULT_DENOM_REPR);
   }
 
-  z_str3join(bufferUI, sizeof(bufferUI), "", tmpDenom);
+  // On overflow z_str3join overwrites the buffer with "ERR???" and reports it.
+  // Ignoring that would page the marker onto the review screen while the amount
+  // it replaced stays in what gets signed.
+  if (z_str3join(bufferUI, sizeof(bufferUI), "", tmpDenom) != zxerr_ok) {
+    return parser_unexpected_buffer_end;
+  }
   pageString(outVal, outValLen, bufferUI, pageIdx, pageCount);
 
   return parser_ok;
@@ -467,7 +472,9 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
                                             container->screen.contentLen))
 
     for (uint8_t i = 0; i < container->screen.indent; i++) {
-      z_str3join(out, sizeof(out), SCREEN_INDENT, "");
+      if (z_str3join(out, sizeof(out), SCREEN_INDENT, "") != zxerr_ok) {
+        return parser_unexpected_buffer_end;
+      }
     }
 
     snprintf(outKey, outKeyLen, " ");
@@ -493,7 +500,9 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
     char key[MAX_TITLE_SIZE + 2] = {0};
     MEMCPY(key, TITLE_TRUNCATE_REPLACE, strlen(TITLE_TRUNCATE_REPLACE));
     for (uint8_t i = 0; i < container->screen.indent; i++) {
-      z_str3join(key, sizeof(key), SCREEN_INDENT, "");
+      if (z_str3join(key, sizeof(key), SCREEN_INDENT, "") != zxerr_ok) {
+        return parser_unexpected_buffer_end;
+      }
     }
 
     MEMZERO(ctx->tx_obj->tx_text.tmpBuffer,
@@ -517,7 +526,9 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
   }
   MEMCPY(key, container->screen.titlePtr, container->screen.titleLen);
   for (uint8_t i = 0; i < container->screen.indent; i++) {
-    z_str3join(key, sizeof(key), SCREEN_INDENT, "");
+    if (z_str3join(key, sizeof(key), SCREEN_INDENT, "") != zxerr_ok) {
+      return parser_unexpected_buffer_end;
+    }
   }
   snprintf(outKey, outKeyLen, "%s", key);
   pageString(outVal, outValLen, out, pageIdx, pageCount);
@@ -546,6 +557,12 @@ __Z_INLINE parser_error_t parser_getScreenInfo(const parser_context_t *ctx,
   }
 
   CborValue data;
+  // Same precondition as in _read_text_tx: cbor_value_get_map_length only
+  // asserts that it was handed a map, and production builds drop that assert.
+  // _read_text_tx has already walked this array, but this runs on the display
+  // path off a freshly initialised parser, so do not lean on that.
+  PARSER_ASSERT_OR_ERROR(cbor_value_is_map(&containerArray_ptr),
+                         parser_unexpected_type)
   CHECK_CBOR_MAP_ERR(
       cbor_value_get_map_length(&containerArray_ptr, &container->n_field))
   CHECK_CBOR_MAP_ERR(cbor_value_enter_container(&containerArray_ptr, &data))
