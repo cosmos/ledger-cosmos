@@ -16,6 +16,7 @@
 
 #include <gmock/gmock.h>
 
+#include "bech32.h"
 #include "chain_config.h"
 #include <cstring>
 
@@ -107,4 +108,89 @@ TEST(ChainConfig, NonHardenedPathIsRefused) {
   EXPECT_EQ(checkChainConfig(118, "cosmos", 6), UNSUPPORTED);
   EXPECT_EQ(checkChainConfig(60, "inj", 3), UNSUPPORTED);
   EXPECT_EQ(checkChainConfig(118, "akash", 5), UNSUPPORTED);
+}
+
+// ---------------------------------------------------------------------------
+// HRP well-formedness
+//
+// The caller declares the HRP length out of band (an APDU byte, or the swap
+// coin_configuration), so the bytes in between are attacker-chosen and are not
+// necessarily a C string. Everything downstream of this function measures the
+// HRP with strlen(): bech32EncodeFromBytes() does, and so does the table match
+// below. That mismatch is the whole problem, so the bytes are validated here,
+// at the single decision point, before either consumer sees them.
+// ---------------------------------------------------------------------------
+
+// The load-bearing case. "inj\0X" declared as 5 bytes is not the "inj" table
+// entry (strlen("inj") != 5), so before this check it fell through to the
+// generic 118' fallback and was accepted -- and the encoder then truncated it
+// straight back to "inj". Net effect: an inj1... address derived on the Cosmos
+// 118' path with secp256k1/ripemd160 instead of Injective's keccak/60' path,
+// which is exactly what KnownHrpOnTheGenericCosmosPathIsRefused exists to stop.
+TEST(ChainConfig, EmbeddedNulCannotSmuggleAKnownHrpOntoTheCosmosPath) {
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, "inj\0X", 5), UNSUPPORTED);
+  EXPECT_EQ(checkChainConfig(0x80000000u | 60u, "cosmos\0X", 8), UNSUPPORTED);
+}
+
+// A trailing NUL inside the declared length is the same bypass with the same
+// payload, and is refused for the same reason.
+TEST(ChainConfig, TrailingNulInsideTheDeclaredLengthIsRefused) {
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, "cosmos\0", 7), UNSUPPORTED);
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, "akash\0", 6), UNSUPPORTED);
+}
+
+// Pins the downstream behaviour the check above compensates for. If zxlib ever
+// grows a length-aware encoder this test is what says the gate can be revisited.
+TEST(ChainConfig, Bech32EncoderMeasuresTheHrpWithStrlen) {
+  const uint8_t payload[20] = {0};
+  char truncated[128] = {0};
+  char plain[128] = {0};
+
+  ASSERT_EQ(bech32EncodeFromBytes(truncated, sizeof(truncated), "inj\0X", payload,
+                                  sizeof(payload), 1, BECH32_ENCODING_BECH32),
+            zxerr_ok);
+  ASSERT_EQ(bech32EncodeFromBytes(plain, sizeof(plain), "inj", payload,
+                                  sizeof(payload), 1, BECH32_ENCODING_BECH32),
+            zxerr_ok);
+
+  EXPECT_STREQ(truncated, plain);
+}
+
+// bech32 HRPs are lowercase. Uppercase was already refused by bech32_encode(),
+// but only after the request had been declared supported -- so the device
+// reported "invalid data" instead of "chain config not supported", and the
+// rejection depended on a library two layers down.
+TEST(ChainConfig, UppercaseHrpIsRefused) {
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, "INJ", 3), UNSUPPORTED);
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, "COSMOS", 6), UNSUPPORTED);
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, "Cosmos", 6), UNSUPPORTED);
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, "AKASH", 5), UNSUPPORTED);
+  EXPECT_EQ(checkChainConfig(0x80000000u | 60u, "INJ", 3), UNSUPPORTED);
+}
+
+// bech32 restricts the HRP to printable ASCII, [33, 126]. Space and DEL sit
+// just outside it on either side; 0x80 and 0xFF cover the high half.
+TEST(ChainConfig, NonPrintableOrNonAsciiHrpIsRefused) {
+  for (const char *hrp : {"in\x01j", "in j", "in\x7fj", "in\x80j", "in\xffj",
+                          "in\tj", "in\nj"}) {
+    EXPECT_EQ(checkChainConfig(0x80000000u | 118u, hrp, 4), UNSUPPORTED) << hrp;
+  }
+}
+
+TEST(ChainConfig, NullOrEmptyHrpIsRefused) {
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, nullptr, 0), UNSUPPORTED);
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, nullptr, 6), UNSUPPORTED);
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, "cosmos", 0), UNSUPPORTED);
+}
+
+// The gate must not cost the long tail of valid HRPs anything: digits and the
+// separators that appear in real chain prefixes are printable lowercase ASCII
+// and still reach the generic 118' fallback.
+TEST(ChainConfig, ValidPrintableLowercaseHrpsAreUnaffected) {
+  for (const char *hrp : {"akash", "c4e", "0g", "e-money", "likecoin"}) {
+    EXPECT_EQ(checkChainConfig(0x80000000u | 118u, hrp,
+                               static_cast<uint8_t>(strlen(hrp))),
+              BECH32_COSMOS)
+        << hrp;
+  }
 }
