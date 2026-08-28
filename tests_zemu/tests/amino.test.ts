@@ -108,11 +108,12 @@ describe('Amino', function () {
       const tx = Buffer.from(JSON.stringify(example_tx_str_basic), 'utf-8')
 
       // Prime the global HRP with a rejected mixed-case GET_ADDR on the default
-      // Cosmos path. The device cannot bech32-encode an upper-case HRP, so the
-      // request is rejected - but it still writes the mixed-case HRP into the
-      // shared global buffer before failing.
+      // Cosmos path. An upper-case HRP is not a valid bech32 prefix, so
+      // checkChainConfig() refuses it outright - but extractHRP() runs first,
+      // so the mixed-case HRP is still written into the shared global buffer
+      // before the request fails.
       const rejected = app.getAddressAndPubKey(path, 'CoSmOs')
-      await expect(rejected).rejects.toMatchObject({ returnCode: 0x6400 })
+      await expect(rejected).rejects.toMatchObject({ returnCode: 0x698c })
 
       // A later SIGN that omits the HRP must still behave as a self-contained
       // default-Cosmos flow and reach review, rather than reusing the leftover
