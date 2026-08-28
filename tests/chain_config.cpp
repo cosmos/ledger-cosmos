@@ -216,3 +216,78 @@ TEST(ChainConfig, ValidPrintableLowercaseHrpsAreUnaffected) {
         << hrp;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Coin types outside the two built-in defaults, of which Gonka (1200') is the
+// first. isSupportedCoinType() lets the APDU layer accept the path;
+// checkChainConfig() then decides the pair, exactly as for 118' and 60'.
+// ---------------------------------------------------------------------------
+
+TEST(ChainConfig, DeclaredCoinTypeResolvesOnItsOwnHrp) {
+  EXPECT_EQ(check(1200, "gonka"), BECH32_COSMOS);
+}
+
+// A deliberate narrowing: before the entry existed, "gonka" was an unknown HRP
+// and took the generic 118' fallback, handing back a gonka1... address derived
+// on the wrong path. Same rule the reordering introduced for "inj".
+TEST(ChainConfig, DeclaredHrpIsRefusedOnTheGenericCosmosPath) {
+  EXPECT_EQ(check(118, "gonka"), UNSUPPORTED);
+  EXPECT_EQ(check(60, "gonka"), UNSUPPORTED);
+}
+
+TEST(ChainConfig, DeclaredCoinTypeIsRefusedUnderAnotherHrp) {
+  EXPECT_EQ(check(1200, "cosmos"), UNSUPPORTED);
+  EXPECT_EQ(check(1200, "inj"), UNSUPPORTED);
+  EXPECT_EQ(check(1200, "osmo"), UNSUPPORTED);
+}
+
+// The generic fallback is scoped to 118' and does not extend to a declared
+// coin type.
+TEST(ChainConfig, UnknownHrpDoesNotFallBackOnADeclaredCoinType) {
+  for (const char *hrp : {"akash", "juno", "gonk", "gonkavaloper"}) {
+    EXPECT_EQ(check(1200, hrp), UNSUPPORTED) << hrp << " was accepted on 1200'";
+    EXPECT_EQ(check(118, hrp), BECH32_COSMOS) << hrp << " was refused on 118'";
+  }
+}
+
+TEST(ChainConfig, BuiltInCoinTypesAreSupported) {
+  EXPECT_TRUE(isSupportedCoinType(0x80000000u | 118u));
+  EXPECT_TRUE(isSupportedCoinType(0x80000000u | 60u));
+}
+
+TEST(ChainConfig, DeclaredCoinTypeIsSupported) {
+  EXPECT_TRUE(isSupportedCoinType(0x80000000u | 1200u));
+}
+
+// Accepting a path the table cannot resolve would let the device derive a key
+// it can never encode into an address.
+TEST(ChainConfig, UndeclaredCoinTypeIsNotSupported) {
+  for (const uint32_t coinType : {0u, 1u, 119u, 529u, 1199u, 1201u}) {
+    EXPECT_FALSE(isSupportedCoinType(0x80000000u | coinType)) << coinType;
+  }
+}
+
+// hdPath[1] always arrives hardened; an unhardened value must not slip through.
+TEST(ChainConfig, NonHardenedCoinTypeIsNotSupported) {
+  EXPECT_FALSE(isSupportedCoinType(118));
+  EXPECT_FALSE(isSupportedCoinType(60));
+  EXPECT_FALSE(isSupportedCoinType(1200));
+}
+
+// A pair the table resolves must sit on a coin type the APDU layer accepts, or
+// the chain is declared and unreachable.
+TEST(ChainConfig, EveryResolvablePairSitsOnASupportedCoinType) {
+  const struct {
+    uint32_t coinType;
+    const char *hrp;
+  } pairs[] = {
+      {118, "cosmos"}, {118, "osmo"},     {118, "dydx"}, {118, "mantra"},
+      {118, "xion"},   {118, "celestia"}, {118, "core"}, {118, "neutron"},
+      {60, "inj"},     {60, "evmos"},     {60, "xpla"},  {60, "dym"},
+      {60, "zeta"},    {60, "bera"},      {60, "human"}, {1200, "gonka"}};
+
+  for (const auto &pair : pairs) {
+    EXPECT_NE(check(pair.coinType, pair.hrp), UNSUPPORTED) << pair.hrp;
+    EXPECT_TRUE(isSupportedCoinType(0x80000000u | pair.coinType)) << pair.hrp;
+  }
+}

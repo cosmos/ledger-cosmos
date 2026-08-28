@@ -165,6 +165,36 @@ export const example_tx_str_msgMultiSendAndSend = {
   "sequence": "1",
 }
 
+// Gonka derives on its own coin type (1200'). Parameters come from its entry in
+// the Keplr chain registry: denom ngonka at 9 decimals, and a zero gas price in
+// all three steps, hence the empty fee. The app only converts uatom, so ngonka
+// reaches the review screen as-is -- which is what this fixture pins.
+export const example_tx_str_gonka = {
+  account_number: '8',
+  chain_id: 'gonka-mainnet',
+  fee: {
+    amount: [],
+    gas: '200000',
+  },
+  memo: '',
+  msgs: [
+    {
+      type: 'cosmos-sdk/MsgSend',
+      value: {
+        amount: [
+          {
+            amount: '2500000000',
+            denom: 'ngonka',
+          },
+        ],
+        from_address: 'gonka1j0pzd70wr9muhpdp5ahladpzznq95lr3xwkrsg',
+        to_address: 'gonka1lp47qxf7gg6p9e76mhqm3qxwtj79luvdz3ssle',
+      },
+    },
+  ],
+  sequence: '3',
+}
+
 export const example_tx_str_basic = {
   account_number: '108',
   chain_id: 'cosmoshub-4',

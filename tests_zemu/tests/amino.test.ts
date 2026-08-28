@@ -22,6 +22,7 @@ import {
   DEVICE_MODELS,
   example_tx_str_basic,
   example_tx_str_basic2,
+  example_tx_str_gonka,
   ibc_denoms,
   AMINO_JSON_TX,
   setWithdrawAddress,
@@ -171,6 +172,42 @@ describe('Amino', function () {
       // COMMAND_NOT_ALLOWED.
       const resp = await app.getAddressAndPubKey(path, 'akash')
       expect(resp.bech32_address.startsWith('akash1')).toBe(true)
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(DEVICE_MODELS)('sign on a declared coin type requires the HRP', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      const path = "m/44'/1200'/0'/0/0"
+      const tx = Buffer.from(JSON.stringify(example_tx_str_gonka), 'utf-8')
+
+      // Only the generic 118' path has a meaningful default HRP. Falling back
+      // to "cosmos" here would show a cosmos1... address on the review screen
+      // for a key derived on this chain's path.
+      await expect(app.sign(path, tx, undefined, AMINO_JSON_TX)).rejects.toMatchObject({
+        returnCode: 0x698b,
+        errorMessage: 'Invalid HD Path Coin Value',
+      })
+
+      // The same request naming its HRP reaches review.
+      const signatureRequest = app.sign(path, tx, 'gonka', AMINO_JSON_TX)
+      await sim.waitUntilScreenIsNot(sim.getMainMenuSnapshot())
+      await sim.compareSnapshotsAndApprove('.', `${m.prefix.toLowerCase()}-sign_declared_coin_type`)
+
+      const resp = await signatureRequest
+      expect(resp).toHaveProperty('signature')
+
+      const respPk = await app.getAddressAndPubKey(path, 'gonka')
+      const hash = crypto.createHash('sha256')
+      const msgHash = Uint8Array.from(hash.update(tx).digest())
+      const signature = secp256k1.signatureImport(Uint8Array.from(resp.signature))
+      const pk = Uint8Array.from(respPk.compressed_pk)
+      expect(secp256k1.ecdsaVerify(signature, msgHash, pk)).toEqual(true)
     } finally {
       await sim.close()
     }

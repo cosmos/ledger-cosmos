@@ -108,9 +108,7 @@ __Z_INLINE void extractHDPath(uint32_t rx, uint32_t offset) {
          sizeof(uint32_t) * HDPATH_LEN_DEFAULT);
 
   // Check values
-  if (hdPath[0] != HDPATH_0_DEFAULT ||
-      ((hdPath[1] != HDPATH_1_DEFAULT) &&
-       (hdPath[1] != HDPATH_ETH_1_DEFAULT)) ||
+  if (hdPath[0] != HDPATH_0_DEFAULT || !isSupportedCoinType(hdPath[1]) ||
       hdPath[3] != HDPATH_3_DEFAULT) {
     THROW(APDU_CODE_INVALID_HD_PATH_COIN_VALUE);
   }
@@ -139,7 +137,10 @@ static void extractHDPath_HRP(uint32_t rx, uint32_t offset) {
       ZEMU_LOGF(50, "Chain config not supported for: %s\n", bech32_hrp)
       THROW(APDU_CODE_CHAIN_CONFIG_NOT_SUPPORTED);
     }
-  } else if (hdPath[1] == HDPATH_ETH_1_DEFAULT) {
+  } else if (hdPath[1] != HDPATH_1_DEFAULT) {
+    // Only the generic Cosmos path has a meaningful default HRP. Falling
+    // through to "cosmos" on any other coin type would put a cosmos1... address
+    // on the review screen for a key derived on another chain's path.
     THROW(APDU_CODE_INVALID_HD_PATH_COIN_VALUE);
   } else {
     // No HRP was provided on the default Cosmos path. Restore the default

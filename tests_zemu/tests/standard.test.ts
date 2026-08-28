@@ -255,6 +255,76 @@ describe('Standard', function () {
     }
   })
 
+  test.concurrent.each(DEVICE_MODELS)('get address on a declared coin type', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      const path = "m/44'/1200'/0'/0/0"
+      const resp = await app.getAddressAndPubKey(path, 'gonka')
+
+      expect(resp).toHaveProperty('bech32_address')
+      expect(resp).toHaveProperty('compressed_pk')
+
+      // Cross-checked against the reference Cosmos SDK derivation for the same
+      // mnemonic and path, so this pins interoperability with the chain's own
+      // tooling rather than the app against itself.
+      expect(resp.bech32_address).toEqual('gonka1j0pzd70wr9muhpdp5ahladpzznq95lr3xwkrsg')
+      expect(resp.compressed_pk.length).toEqual(33)
+      expect(resp.compressed_pk.toString('hex')).toEqual(
+        '03a817a68f61b9ad3fb34e45a48f1dbb957b2bf81211cf61b2818bddc5550492a0'
+      )
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(DEVICE_MODELS)('declared coin type and hrp are bound to each other', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      // A table entry pins both halves, so neither is usable without the other.
+      await expect(app.getAddressAndPubKey("m/44'/118'/0'/0/0", 'gonka')).rejects.toMatchObject({
+        returnCode: 0x698c,
+        errorMessage: 'Chain config not supported',
+      })
+
+      await expect(app.getAddressAndPubKey("m/44'/1200'/0'/0/0", 'cosmos')).rejects.toMatchObject({
+        returnCode: 0x698c,
+        errorMessage: 'Chain config not supported',
+      })
+
+      // The 118' fallback for unknown HRPs does not extend to a declared coin
+      // type.
+      await expect(app.getAddressAndPubKey("m/44'/1200'/0'/0/0", 'akash')).rejects.toMatchObject({
+        returnCode: 0x698c,
+        errorMessage: 'Chain config not supported',
+      })
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(DEVICE_MODELS)('reject an undeclared coin type', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      // 529 has no entry here, so it is refused at the path check, before any
+      // HRP is looked at.
+      await expect(app.getAddressAndPubKey("m/44'/529'/0'/0/0", 'secret')).rejects.toMatchObject({
+        returnCode: 0x698b,
+        errorMessage: 'Invalid HD Path Coin Value',
+      })
+    } finally {
+      await sim.close()
+    }
+  })
+
   test.concurrent.each(DEVICE_MODELS)('show address HUGE', async function (m) {
     const sim = new Zemu(m.path)
     try {
