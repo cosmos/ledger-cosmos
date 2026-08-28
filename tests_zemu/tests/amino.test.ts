@@ -108,11 +108,12 @@ describe('Amino', function () {
       const tx = Buffer.from(JSON.stringify(example_tx_str_basic), 'utf-8')
 
       // Prime the global HRP with a rejected mixed-case GET_ADDR on the default
-      // Cosmos path. The device cannot bech32-encode an upper-case HRP, so the
-      // request is rejected - but it still writes the mixed-case HRP into the
-      // shared global buffer before failing.
+      // Cosmos path. An upper-case HRP is not a valid bech32 prefix, so
+      // checkChainConfig() refuses it outright - but extractHRP() runs first,
+      // so the mixed-case HRP is still written into the shared global buffer
+      // before the request fails.
       const rejected = app.getAddressAndPubKey(path, 'CoSmOs')
-      await expect(rejected).rejects.toMatchObject({ returnCode: 0x6400 })
+      await expect(rejected).rejects.toMatchObject({ returnCode: 0x698c })
 
       // A later SIGN that omits the HRP must still behave as a self-contained
       // default-Cosmos flow and reach review, rather than reusing the leftover
@@ -134,6 +135,42 @@ describe('Amino', function () {
       const pk = Uint8Array.from(respPk.compressed_pk)
       const signatureOk = secp256k1.ecdsaVerify(signature, msgHash, pk)
       expect(signatureOk).toEqual(true)
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(DEVICE_MODELS)('sign rejects a malformed HRP on the generic Cosmos path', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      const path = "m/44'/118'/0'/0/0"
+      const tx = Buffer.from(JSON.stringify(example_tx_str_basic), 'utf-8')
+
+      // SIGN declares its HRP in the first chunk (extractHDPath_HRP), the second
+      // call site of the same chain-config check. A NUL-smuggled 'inj' has to be
+      // refused here as well, before any of the transaction reaches review --
+      // otherwise the device signs for the Cosmos 118' key while the host
+      // believes it is talking to Injective.
+      await expect(app.sign(path, tx, 'inj\u0000X', AMINO_JSON_TX)).rejects.toMatchObject({
+        returnCode: 0x698c,
+        errorMessage: 'Chain config not supported',
+      })
+
+      // Uppercase is refused on the same call site, and now with the
+      // chain-config status word rather than a generic execution error.
+      await expect(app.sign(path, tx, 'COSMOS', AMINO_JSON_TX)).rejects.toMatchObject({
+        returnCode: 0x698c,
+        errorMessage: 'Chain config not supported',
+      })
+
+      // The device is left idle by both rejections, not stuck mid-transaction:
+      // a following well-formed request is accepted rather than answered with
+      // COMMAND_NOT_ALLOWED.
+      const resp = await app.getAddressAndPubKey(path, 'akash')
+      expect(resp.bech32_address.startsWith('akash1')).toBe(true)
     } finally {
       await sim.close()
     }
