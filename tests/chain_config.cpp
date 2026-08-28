@@ -19,6 +19,7 @@
 #include "bech32.h"
 #include "chain_config.h"
 #include <cstring>
+#include <string>
 
 // checkChainConfig() is the single decision point behind both address paths:
 // GET_ADDR_SECP256K1 (apdu_handler.c) turns UNSUPPORTED into
@@ -175,6 +176,27 @@ TEST(ChainConfig, NonPrintableOrNonAsciiHrpIsRefused) {
                           "in\tj", "in\nj"}) {
     EXPECT_EQ(checkChainConfig(0x80000000u | 118u, hrp, 4), UNSUPPORTED) << hrp;
   }
+}
+
+// The NUL does not have to sit after a table entry to be a problem: whatever
+// the encoder finds before it is what the user is shown.
+TEST(ChainConfig, LeadingNulIsRefused) {
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, "\0cosmos", 7), UNSUPPORTED);
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, "\0", 1), UNSUPPORTED);
+}
+
+// hrpLen is a uint8_t and so is the scan index. The callers cap the length at
+// MAX_BECH32_HRP_LEN (83), but the function has to terminate on any value a
+// uint8_t can hold, including 255.
+TEST(ChainConfig, ScanTerminatesAtTheMaximumDeclaredLength) {
+  const std::string longHrp(255, 'a');
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, longHrp.c_str(), 255),
+            BECH32_COSMOS);
+
+  std::string longHrpWithNul(255, 'a');
+  longHrpWithNul[254] = '\0';
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, longHrpWithNul.c_str(), 255),
+            UNSUPPORTED);
 }
 
 TEST(ChainConfig, NullOrEmptyHrpIsRefused) {
