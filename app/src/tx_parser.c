@@ -87,6 +87,212 @@ static const key_subst_t value_substitutions[] = {
 
 };
 
+// A signed document carries JSON escapes; the chain sees what they decode to.
+// The review used to page the raw span, so "cosmos1abcAdef" was read out
+// with a literal backslash-u while the chain executed "cosmos1abcAdef", and
+// "SAFE\rDRAINED" passed the control-byte check -- whose subject is the raw
+// bytes, all printable here -- while decoding to a carriage return.
+//
+// Decode while paging so the screen shows the value the chain will act on.
+// Decoding never grows a string (\uXXXX is six bytes in and at most four out),
+// so a page still fits the buffer it always did, and the value stays paged in
+// decoded bytes exactly as it was paged in raw ones.
+//
+// Anything a decoder could disagree about is refused rather than guessed: an
+// unknown escape, a truncated one, a lone surrogate, or a decoded byte below
+// 0x20 -- the same bound the raw check applies, now reaching the escaped form
+// that used to slip under it.
+
+__Z_INLINE parser_error_t hex_nibble(char c, uint8_t *out) {
+  if (c >= '0' && c <= '9') {
+    *out = (uint8_t)(c - '0');
+  } else if (c >= 'a' && c <= 'f') {
+    *out = (uint8_t)(c - 'a' + 10);
+  } else if (c >= 'A' && c <= 'F') {
+    *out = (uint8_t)(c - 'A' + 10);
+  } else {
+    return parser_unexpected_characters;
+  }
+  return parser_ok;
+}
+
+__Z_INLINE parser_error_t read_u16_escape(const char *in, uint16_t inLen,
+                                          uint16_t at, uint16_t *codeUnit) {
+  // at points just past the "u"; four hex digits have to follow.
+  if ((uint32_t)at + 4 > inLen) {
+    return parser_unexpected_characters;
+  }
+  uint16_t value = 0;
+  for (uint8_t i = 0; i < 4; i++) {
+    uint8_t nibble = 0;
+    CHECK_PARSER_ERR(hex_nibble(in[at + i], &nibble))
+    value = (uint16_t)((value << 4) | nibble);
+  }
+  *codeUnit = value;
+  return parser_ok;
+}
+
+// Decodes one element of the string. Reports how many input bytes it consumed
+// and writes its UTF-8 form into utf8/utf8Len (at most 4 bytes).
+__Z_INLINE parser_error_t json_decode_one(const char *in, uint16_t inLen,
+                                          uint16_t at, uint16_t *consumed,
+                                          uint8_t *utf8, uint8_t *utf8Len) {
+  const uint8_t c = (uint8_t)in[at];
+
+  if (c < 0x20) {
+    return parser_unexpected_characters;
+  }
+
+  if (c != '\\') {
+    utf8[0] = c;
+    *utf8Len = 1;
+    *consumed = 1;
+    return parser_ok;
+  }
+
+  if ((uint32_t)at + 1 >= inLen) {
+    return parser_unexpected_characters;
+  }
+
+  const char esc = in[at + 1];
+  switch (esc) {
+  case '"':
+  case '\\':
+  case '/':
+    utf8[0] = (uint8_t)esc;
+    *utf8Len = 1;
+    *consumed = 2;
+    return parser_ok;
+  // \b \f \n \r \t all decode below 0x20, which the document is not allowed
+  // to contain however it is spelled.
+  case 'b':
+  case 'f':
+  case 'n':
+  case 'r':
+  case 't':
+    return parser_unexpected_characters;
+  case 'u':
+    break;
+  default:
+    return parser_unexpected_characters;
+  }
+
+  uint16_t unit = 0;
+  CHECK_PARSER_ERR(read_u16_escape(in, inLen, (uint16_t)(at + 2), &unit))
+  uint16_t used = 6;
+  uint32_t cp = unit;
+
+  if (unit >= 0xD800 && unit <= 0xDBFF) {
+    // High surrogate: a low surrogate must follow, spelled as its own escape.
+    if ((uint32_t)at + 8 > inLen || in[at + 6] != '\\' || in[at + 7] != 'u') {
+      return parser_unexpected_characters;
+    }
+    uint16_t low = 0;
+    CHECK_PARSER_ERR(read_u16_escape(in, inLen, (uint16_t)(at + 8), &low))
+    if (low < 0xDC00 || low > 0xDFFF) {
+      return parser_unexpected_characters;
+    }
+    cp = 0x10000u + (((uint32_t)(unit - 0xD800u)) << 10) + (low - 0xDC00u);
+    used = 12;
+  } else if (unit >= 0xDC00 && unit <= 0xDFFF) {
+    // Low surrogate with no high surrogate before it.
+    return parser_unexpected_characters;
+  }
+
+  if (cp < 0x20) {
+    return parser_unexpected_characters;
+  }
+
+  if (cp < 0x80) {
+    utf8[0] = (uint8_t)cp;
+    *utf8Len = 1;
+  } else if (cp < 0x800) {
+    utf8[0] = (uint8_t)(0xC0 | (cp >> 6));
+    utf8[1] = (uint8_t)(0x80 | (cp & 0x3F));
+    *utf8Len = 2;
+  } else if (cp < 0x10000) {
+    utf8[0] = (uint8_t)(0xE0 | (cp >> 12));
+    utf8[1] = (uint8_t)(0x80 | ((cp >> 6) & 0x3F));
+    utf8[2] = (uint8_t)(0x80 | (cp & 0x3F));
+    *utf8Len = 3;
+  } else {
+    utf8[0] = (uint8_t)(0xF0 | (cp >> 18));
+    utf8[1] = (uint8_t)(0x80 | ((cp >> 12) & 0x3F));
+    utf8[2] = (uint8_t)(0x80 | ((cp >> 6) & 0x3F));
+    utf8[3] = (uint8_t)(0x80 | (cp & 0x3F));
+    *utf8Len = 4;
+  }
+
+  *consumed = used;
+  return parser_ok;
+}
+
+// pageStringExt for a value that is still in its JSON escaped form: same
+// pagination, over the decoded bytes.
+__Z_INLINE parser_error_t page_json_string(char *outValue, uint16_t outValueLen,
+                                           const char *inValue, uint16_t inLen,
+                                           uint8_t pageIdx,
+                                           uint8_t *pageCount) {
+  MEMZERO(outValue, outValueLen);
+  *pageCount = 0;
+
+  if (outValueLen == 0) {
+    return parser_unexpected_buffer_end;
+  }
+  const uint16_t chunkLen = (uint16_t)(outValueLen - 1);
+  if (chunkLen == 0) {
+    return parser_unexpected_buffer_end;
+  }
+  if (inLen == 0) {
+    *pageCount = 1;
+    return parser_ok;
+  }
+
+  uint8_t utf8[4] = {0};
+  uint8_t utf8Len = 0;
+  uint16_t consumed = 0;
+
+  // First pass: the decoded length, which is what the value is paged by.
+  uint32_t decodedLen = 0;
+  for (uint16_t at = 0; at < inLen;) {
+    CHECK_PARSER_ERR(
+        json_decode_one(inValue, inLen, at, &consumed, utf8, &utf8Len))
+    decodedLen += utf8Len;
+    at = (uint16_t)(at + consumed);
+  }
+
+  const uint32_t totalPages =
+      (decodedLen + chunkLen - 1) / chunkLen + (decodedLen == 0 ? 1 : 0);
+  if (totalPages > UINT8_MAX) {
+    // Same refusal pageStringExt makes: a value that cannot be paged whole is
+    // not shown at all.
+    return parser_unexpected_value;
+  }
+  *pageCount = (uint8_t)totalPages;
+
+  if (pageIdx >= *pageCount) {
+    return parser_ok;
+  }
+
+  // Second pass: skip the pages before this one, then fill this one.
+  const uint32_t skip = (uint32_t)pageIdx * chunkLen;
+  uint32_t seen = 0;
+  uint16_t written = 0;
+  for (uint16_t at = 0; at < inLen && written < chunkLen;) {
+    CHECK_PARSER_ERR(
+        json_decode_one(inValue, inLen, at, &consumed, utf8, &utf8Len))
+    at = (uint16_t)(at + consumed);
+    for (uint8_t i = 0; i < utf8Len && written < chunkLen; i++) {
+      if (seen >= skip) {
+        outValue[written++] = (char)utf8[i];
+      }
+      seen++;
+    }
+  }
+  outValue[written] = '\0';
+  return parser_ok;
+}
+
 parser_error_t tx_getToken(uint16_t token_index, char *out_val,
                            uint16_t out_val_len, uint8_t pageIdx,
                            uint8_t *pageCount) {
@@ -127,7 +333,8 @@ parser_error_t tx_getToken(uint16_t token_index, char *out_val,
         }
       }
     }
-    pageStringExt(out_val, out_val_len, inValue, inLen, pageIdx, pageCount);
+    CHECK_PARSER_ERR(page_json_string(out_val, out_val_len, inValue, inLen,
+                                      pageIdx, pageCount))
   }
 
   if (pageIdx >= *pageCount) {
@@ -193,6 +400,9 @@ uint8_t tx_msg_max_level(uint16_t msg_token_index) {
 
   const char *type_str = parser_tx_obj.tx_json.tx + start;
   const size_t type_len = (size_t)(end - start);
+  if (msg_type_equals(type_str, type_len, "cosmos-sdk/MsgExec")) {
+    return MSG_EXEC_FLATTEN_LEVEL;
+  }
   if (msg_type_equals(type_str, type_len, "cosmos-sdk/MsgMultiSend")) {
     return MSG_MULTISEND_FLATTEN_LEVEL;
   }
@@ -208,6 +418,33 @@ uint8_t tx_msg_max_level(uint16_t msg_token_index) {
     return MSG_EPOCHING_FLATTEN_LEVEL;
   }
   return MSG_BASE_FLATTEN_LEVEL;
+}
+
+uint8_t tx_msg_max_depth(uint16_t msg_token_index) {
+  // Same dispatch as tx_msg_max_level, on the same "type" field. A message that
+  // carries other messages is the only shape that needs a deeper budget, and it
+  // gets it only while its own subtree is being walked -- every other document
+  // recurses exactly as far as it did before.
+  uint16_t type_token_index = 0;
+  if (object_get_value(&parser_tx_obj.tx_json.json, msg_token_index, "type",
+                       &type_token_index) != parser_ok) {
+    return MAX_RECURSION_DEPTH;
+  }
+
+  const int16_t start =
+      parser_tx_obj.tx_json.json.tokens[type_token_index].start;
+  const int16_t end = parser_tx_obj.tx_json.json.tokens[type_token_index].end;
+  if (start < 0 || end < start) {
+    return MAX_RECURSION_DEPTH;
+  }
+
+  const char *type_str = parser_tx_obj.tx_json.tx + start;
+  const size_t type_len = (size_t)(end - start);
+  if (msg_type_equals(type_str, type_len, "cosmos-sdk/MsgExec")) {
+    return MSG_EXEC_RECURSION_DEPTH;
+  }
+
+  return MAX_RECURSION_DEPTH;
 }
 
 parser_error_t tx_traverse_find(uint16_t root_token_index,
@@ -316,6 +553,7 @@ parser_error_t tx_traverse_find(uint16_t root_token_index,
     const bool is_msgs_array =
         strcmp(parser_tx_obj.tx_json.query.out_key, "msgs") == 0;
     const uint8_t saved_max_level = parser_tx_obj.tx_json.query.max_level;
+    const uint8_t saved_max_depth = parser_tx_obj.tx_json.query.max_depth;
 
     for (uint16_t i = 0; i < el_count; ++i) {
       uint16_t element_index;
@@ -325,6 +563,13 @@ parser_error_t tx_traverse_find(uint16_t root_token_index,
 
       if (is_msgs_array) {
         parser_tx_obj.tx_json.query.max_level = tx_msg_max_level(element_index);
+        // Raise the budget only for the message that needs it, never for the
+        // document as a whole: a deeper global limit would put every other
+        // transaction two frames further down the stack for nothing.
+        const uint8_t msg_depth = tx_msg_max_depth(element_index);
+        if (msg_depth > parser_tx_obj.tx_json.query.max_depth) {
+          parser_tx_obj.tx_json.query.max_depth = msg_depth;
+        }
       }
 
       // When iterating along an array,
@@ -335,6 +580,7 @@ parser_error_t tx_traverse_find(uint16_t root_token_index,
 
       if (is_msgs_array) {
         parser_tx_obj.tx_json.query.max_level = saved_max_level;
+        parser_tx_obj.tx_json.query.max_depth = saved_max_depth;
       }
 
       CHECK_APP_CANARY()

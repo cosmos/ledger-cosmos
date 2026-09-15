@@ -44,9 +44,21 @@ extern "C" {
 // standard staking message under a "msg" key, one object level deeper than the
 // base shape, so they need the same extra flatten level as MsgMultiSend.
 #define MSG_EPOCHING_FLATTEN_LEVEL 3
+// cosmos-sdk/MsgExec carries whole messages of its own under value/msgs, two
+// object levels below where a plain message keeps its fields. Reaching them
+// needs both a deeper flatten level and a deeper recursion budget: at the base
+// budget the walk runs out at the inner "value" and renders the message the
+// grantee is about to execute as one JSON blob.
+#define MSG_EXEC_FLATTEN_LEVEL 4
+#define MSG_EXEC_RECURSION_DEPTH 8
 
 // Returns the flatten depth a single `msgs` element needs, from its own type.
 uint8_t tx_msg_max_level(uint16_t msg_token_index);
+
+// Returns the recursion budget a single `msgs` element needs, from its own
+// type. Only the shapes that nest messages inside messages need more than
+// MAX_RECURSION_DEPTH, and only for their own subtree.
+uint8_t tx_msg_max_depth(uint16_t msg_token_index);
 
 #define INIT_QUERY_CONTEXT(_KEY, _KEY_LEN, _VAL, _VAL_LEN, _PAGE_IDX,          \
                            _MAX_LEVEL)                                         \
