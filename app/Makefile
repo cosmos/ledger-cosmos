@@ -65,7 +65,7 @@ CURVE_APP_LOAD_PARAMS = secp256k1
 # If your app needs it, you can specify multiple path by using:
 # `PATH_APP_LOAD_PARAMS = "44'/1'" "45'/1'"`
 
-APPPATH =  "44'/118'" "44'/60'"
+APPPATH =  "44'/118'" "44'/60'" "44'/1200'"
 $(info PATHS LIST = $(APPPATH))
 PATH_APP_LOAD_PARAMS = $(APPPATH)
 
