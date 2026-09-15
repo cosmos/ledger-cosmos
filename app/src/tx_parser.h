@@ -23,6 +23,7 @@
 #include "zxmacros.h"
 #include "json/json_parser.h"
 #include <common/parser_common.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -59,6 +60,21 @@ uint8_t tx_msg_max_level(uint16_t msg_token_index);
 // type. Only the shapes that nest messages inside messages need more than
 // MAX_RECURSION_DEPTH, and only for their own subtree.
 uint8_t tx_msg_max_depth(uint16_t msg_token_index);
+
+// Chooses whether the messages a MsgExec carries get screens of their own, and
+// resets the observation tx_msg_saw_exec reports. Itemising them is what makes
+// a grantee batch legible, but each executed message costs several review
+// items and the review index stops at MAX_REVIEW_ITEMS; a batch too large to
+// itemise is rendered at MSG_BASE_FLATTEN_LEVEL instead -- the executed
+// messages as one paged JSON value, which is what the app showed before they
+// were given screens -- so a document that could be reviewed and signed before
+// still can be. tx_display owns the choice: it is taken once per document while
+// indexing, so counting the items and rendering them enumerate the same set.
+void tx_msg_itemize_exec(bool enabled);
+
+// True if the walk since the last tx_msg_itemize_exec call met a MsgExec, so
+// the choice is only reconsidered for documents it can change.
+bool tx_msg_saw_exec(void);
 
 #define INIT_QUERY_CONTEXT(_KEY, _KEY_LEN, _VAL, _VAL_LEN, _PAGE_IDX,          \
                            _MAX_LEVEL)                                         \

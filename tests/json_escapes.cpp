@@ -124,18 +124,70 @@ TEST(JsonEscapes, GoStyleHtmlEscapesAreShownDecoded) {
   EXPECT_EQ(item.value, ">hello<");
 }
 
-TEST(JsonEscapes, NonAsciiEscapeBecomesUtf8) {
-  // U+269B, three bytes once decoded.
-  const auto item = render_field(signdoc_memo(R"(\u269b)"), "Memo");
+// --- forms that are shown as written, because decoding them shows less ---
+//
+// Decoding stops at printable ASCII. Above it the decoded character is worth
+// less on a review screen than the escape that produced it: it draws as
+// nothing, or as a direction change, or as a glyph the device has no font for.
+// Copying the escape through is what the review showed before it decoded
+// anything, and it names the code point instead of hiding it.
+
+TEST(JsonEscapes, LineSeparatorKeepsItsEscape) {
+  // Go's encoder escapes U+2028 and U+2029 by default, so this is how they
+  // reach the device in an ordinary document. Decoded they are invisible, and
+  // "12345<LS>6789" reads as one number that was never signed.
+  const auto item = render_field(signdoc_memo(R"(12345\u20286789)"), "Memo");
   ASSERT_EQ(item.err, parser_ok);
-  EXPECT_EQ(item.value, "\xE2\x9A\x9B");
+  EXPECT_EQ(item.value, R"(12345\u20286789)");
 }
 
-TEST(JsonEscapes, SurrogatePairBecomesUtf8) {
-  // U+1F600, four bytes once decoded.
+TEST(JsonEscapes, BidiOverrideKeepsItsEscape) {
+  // U+202E reverses everything drawn after it.
+  const auto item = render_field(signdoc_memo(R"(a\u202eb)"), "Memo");
+  ASSERT_EQ(item.err, parser_ok);
+  EXPECT_EQ(item.value, R"(a\u202eb)");
+}
+
+TEST(JsonEscapes, ZeroWidthCharactersKeepTheirEscape) {
+  for (const char *memo : {R"(a\u200bb)", R"(a\ufeffb)"}) {
+    const auto item = render_field(signdoc_memo(memo), "Memo");
+    ASSERT_EQ(item.err, parser_ok) << memo;
+    EXPECT_EQ(item.value, memo);
+  }
+}
+
+TEST(JsonEscapes, DeleteAndC1ControlsKeepTheirEscape) {
+  // Below 0x20 is refused outright; 0x7F and the C1 range are not control
+  // bytes by that rule but draw as nothing either.
+  for (const char *memo : {R"(a\u007fb)", R"(a\u0085b)", R"(a\u009fb)"}) {
+    const auto item = render_field(signdoc_memo(memo), "Memo");
+    ASSERT_EQ(item.err, parser_ok) << memo;
+    EXPECT_EQ(item.value, memo);
+  }
+}
+
+TEST(JsonEscapes, NonAsciiEscapeKeepsItsEscape) {
+  // U+269B has no glyph on the device; the escape at least says which code
+  // point was signed.
+  const auto item = render_field(signdoc_memo(R"(\u269b)"), "Memo");
+  ASSERT_EQ(item.err, parser_ok);
+  EXPECT_EQ(item.value, R"(\u269b)");
+}
+
+TEST(JsonEscapes, SurrogatePairKeepsItsEscape) {
+  // U+1F600, still spelled as the pair the document carries.
   const auto item = render_field(signdoc_memo(R"(\ud83d\ude00)"), "Memo");
   ASSERT_EQ(item.err, parser_ok);
-  EXPECT_EQ(item.value, "\xF0\x9F\x98\x80");
+  EXPECT_EQ(item.value, R"(\ud83d\ude00)");
+}
+
+// Copying an escape through must not push a value onto more pages than the raw
+// span filled, or the chunking the review depends on changes under it.
+TEST(JsonEscapes, KeptEscapesNeverGrowTheValue) {
+  const std::string memo = R"(\u2028\u202e\ud83d\ude00abc)";
+  const auto item = render_field(signdoc_memo(memo), "Memo");
+  ASSERT_EQ(item.err, parser_ok);
+  EXPECT_LE(item.value.size(), memo.size());
 }
 
 // --- forms that must not reach the screen ---

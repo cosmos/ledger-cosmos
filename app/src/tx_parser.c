@@ -102,6 +102,15 @@ static const key_subst_t value_substitutions[] = {
 // unknown escape, a truncated one, a lone surrogate, or a decoded byte below
 // 0x20 -- the same bound the raw check applies, now reaching the escaped form
 // that used to slip under it.
+//
+// Decoding is only worth doing while it produces a character the screen can
+// show. Above printable ASCII it does not: U+2028 and U+2029 draw as nothing,
+// U+200B and U+FEFF as nothing, U+202E as a change of direction, the C1 range
+// as nothing at all -- and U+2028/U+2029 are exactly the code points Go's
+// encoder escapes, so they arrive this way in ordinary documents. There the
+// escape is copied through as it was written, which is what the review drew
+// before it decoded anything. Raw non-ASCII bytes are a separate, older gap
+// (see the look-alike case in tests/control_bytes.cpp) and are untouched here.
 
 __Z_INLINE parser_error_t hex_nibble(char c, uint8_t *out) {
   if (c >= '0' && c <= '9') {
@@ -133,10 +142,14 @@ __Z_INLINE parser_error_t read_u16_escape(const char *in, uint16_t inLen,
 }
 
 // Decodes one element of the string. Reports how many input bytes it consumed
-// and writes its UTF-8 form into utf8/utf8Len (at most 4 bytes).
+// and writes what the screen should show into out/outLen. Never more bytes out
+// than in, so a page still fits the buffer it always did: a decoded escape
+// shrinks, and one copied through verbatim is the same length.
+#define JSON_DECODE_MAX_OUT 12
+
 __Z_INLINE parser_error_t json_decode_one(const char *in, uint16_t inLen,
                                           uint16_t at, uint16_t *consumed,
-                                          uint8_t *utf8, uint8_t *utf8Len) {
+                                          uint8_t *out, uint8_t *outLen) {
   const uint8_t c = (uint8_t)in[at];
 
   if (c < 0x20) {
@@ -144,8 +157,8 @@ __Z_INLINE parser_error_t json_decode_one(const char *in, uint16_t inLen,
   }
 
   if (c != '\\') {
-    utf8[0] = c;
-    *utf8Len = 1;
+    out[0] = c;
+    *outLen = 1;
     *consumed = 1;
     return parser_ok;
   }
@@ -159,8 +172,8 @@ __Z_INLINE parser_error_t json_decode_one(const char *in, uint16_t inLen,
   case '"':
   case '\\':
   case '/':
-    utf8[0] = (uint8_t)esc;
-    *utf8Len = 1;
+    out[0] = (uint8_t)esc;
+    *outLen = 1;
     *consumed = 2;
     return parser_ok;
   // \b \f \n \r \t all decode below 0x20, which the document is not allowed
@@ -203,26 +216,21 @@ __Z_INLINE parser_error_t json_decode_one(const char *in, uint16_t inLen,
     return parser_unexpected_characters;
   }
 
-  if (cp < 0x80) {
-    utf8[0] = (uint8_t)cp;
-    *utf8Len = 1;
-  } else if (cp < 0x800) {
-    utf8[0] = (uint8_t)(0xC0 | (cp >> 6));
-    utf8[1] = (uint8_t)(0x80 | (cp & 0x3F));
-    *utf8Len = 2;
-  } else if (cp < 0x10000) {
-    utf8[0] = (uint8_t)(0xE0 | (cp >> 12));
-    utf8[1] = (uint8_t)(0x80 | ((cp >> 6) & 0x3F));
-    utf8[2] = (uint8_t)(0x80 | (cp & 0x3F));
-    *utf8Len = 3;
-  } else {
-    utf8[0] = (uint8_t)(0xF0 | (cp >> 18));
-    utf8[1] = (uint8_t)(0x80 | ((cp >> 12) & 0x3F));
-    utf8[2] = (uint8_t)(0x80 | ((cp >> 6) & 0x3F));
-    utf8[3] = (uint8_t)(0x80 | (cp & 0x3F));
-    *utf8Len = 4;
+  if (cp > 0x7E) {
+    // Nothing legible to decode to: copy the escape through exactly as the
+    // document spells it, so the screen names the code point instead of
+    // drawing an invisible one. `used` is 6 or 12, both within
+    // JSON_DECODE_MAX_OUT, and equal to what was consumed.
+    for (uint16_t i = 0; i < used; i++) {
+      out[i] = (uint8_t)in[at + i];
+    }
+    *outLen = (uint8_t)used;
+    *consumed = used;
+    return parser_ok;
   }
 
+  out[0] = (uint8_t)cp;
+  *outLen = 1;
   *consumed = used;
   return parser_ok;
 }
@@ -248,16 +256,16 @@ __Z_INLINE parser_error_t page_json_string(char *outValue, uint16_t outValueLen,
     return parser_ok;
   }
 
-  uint8_t utf8[4] = {0};
-  uint8_t utf8Len = 0;
+  uint8_t out[JSON_DECODE_MAX_OUT] = {0};
+  uint8_t outLen = 0;
   uint16_t consumed = 0;
 
-  // First pass: the decoded length, which is what the value is paged by.
+  // First pass: the displayed length, which is what the value is paged by.
   uint32_t decodedLen = 0;
   for (uint16_t at = 0; at < inLen;) {
     CHECK_PARSER_ERR(
-        json_decode_one(inValue, inLen, at, &consumed, utf8, &utf8Len))
-    decodedLen += utf8Len;
+        json_decode_one(inValue, inLen, at, &consumed, out, &outLen))
+    decodedLen += outLen;
     at = (uint16_t)(at + consumed);
   }
 
@@ -280,11 +288,11 @@ __Z_INLINE parser_error_t page_json_string(char *outValue, uint16_t outValueLen,
   uint16_t written = 0;
   for (uint16_t at = 0; at < inLen && written < chunkLen;) {
     CHECK_PARSER_ERR(
-        json_decode_one(inValue, inLen, at, &consumed, utf8, &utf8Len))
+        json_decode_one(inValue, inLen, at, &consumed, out, &outLen))
     at = (uint16_t)(at + consumed);
-    for (uint8_t i = 0; i < utf8Len && written < chunkLen; i++) {
+    for (uint8_t i = 0; i < outLen && written < chunkLen; i++) {
       if (seen >= skip) {
-        outValue[written++] = (char)utf8[i];
+        outValue[written++] = (char)out[i];
       }
       seen++;
     }
@@ -373,6 +381,22 @@ __Z_INLINE bool msg_type_equals(const char *type_str, size_t type_len,
   return type_len == strlen(name) && strncmp(type_str, name, type_len) == 0;
 }
 
+// The choice tx_display takes once per document (see tx_msg_itemize_exec), read
+// back here by both walks so the item count and the rendering agree.
+//
+// Held as the fallback rather than as the choice because a Ledger app links
+// with an empty .data section: zero-initialised has to mean the ordinary case,
+// which is that the executed messages get their own screens.
+static bool exec_blob_fallback;
+static bool saw_exec;
+
+void tx_msg_itemize_exec(bool enabled) {
+  exec_blob_fallback = !enabled;
+  saw_exec = false;
+}
+
+bool tx_msg_saw_exec(void) { return saw_exec; }
+
 uint8_t tx_msg_max_level(uint16_t msg_token_index) {
   // Return the flatten depth needed to display this single message, based on
   // its own "type". Two shapes nest one object level deeper than the base and
@@ -401,7 +425,8 @@ uint8_t tx_msg_max_level(uint16_t msg_token_index) {
   const char *type_str = parser_tx_obj.tx_json.tx + start;
   const size_t type_len = (size_t)(end - start);
   if (msg_type_equals(type_str, type_len, "cosmos-sdk/MsgExec")) {
-    return MSG_EXEC_FLATTEN_LEVEL;
+    saw_exec = true;
+    return exec_blob_fallback ? MSG_BASE_FLATTEN_LEVEL : MSG_EXEC_FLATTEN_LEVEL;
   }
   if (msg_type_equals(type_str, type_len, "cosmos-sdk/MsgMultiSend")) {
     return MSG_MULTISEND_FLATTEN_LEVEL;
@@ -441,7 +466,7 @@ uint8_t tx_msg_max_depth(uint16_t msg_token_index) {
   const char *type_str = parser_tx_obj.tx_json.tx + start;
   const size_t type_len = (size_t)(end - start);
   if (msg_type_equals(type_str, type_len, "cosmos-sdk/MsgExec")) {
-    return MSG_EXEC_RECURSION_DEPTH;
+    return exec_blob_fallback ? MAX_RECURSION_DEPTH : MSG_EXEC_RECURSION_DEPTH;
   }
 
   return MAX_RECURSION_DEPTH;
