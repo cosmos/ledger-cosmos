@@ -266,8 +266,17 @@ parser_error_t tx_traverse_find(uint16_t root_token_index,
   uint16_t el_count;
   parser_error_t err;
 
-  CHECK_PARSER_ERR(object_get_element_count(&parser_tx_obj.tx_json.json,
-                                            root_token_index, &el_count))
+  // Count with the helper that matches the token. object_get_element_count
+  // walks key/value pairs, so on an array it returns half the elements
+  // (rounded up): the walk below then never reached the second half of an
+  // array of strings, and those values were missing from the review.
+  if (token_type == JSMN_ARRAY) {
+    CHECK_PARSER_ERR(array_get_element_count(&parser_tx_obj.tx_json.json,
+                                             root_token_index, &el_count))
+  } else {
+    CHECK_PARSER_ERR(object_get_element_count(&parser_tx_obj.tx_json.json,
+                                              root_token_index, &el_count))
+  }
 
   switch (token_type) {
   case JSMN_OBJECT: {
