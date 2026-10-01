@@ -24,7 +24,8 @@ typedef struct {
 } chain_config_t;
 
 // To enable custom config for a new chain, just add a new entry in this array
-// with path, hrp and encoding
+// with path, hrp and encoding. Declaring a coin type here also makes it
+// derivable -- see isSupportedCoinType.
 static const chain_config_t chainConfig[] = {
     {118, "cosmos", BECH32_COSMOS},   {60, "inj", BECH32_ETH},
     {60, "evmos", BECH32_ETH},        {60, "xpla", BECH32_ETH},
@@ -33,10 +34,24 @@ static const chain_config_t chainConfig[] = {
     {118, "osmo", BECH32_COSMOS},     {118, "dydx", BECH32_COSMOS},
     {118, "mantra", BECH32_COSMOS},   {118, "xion", BECH32_COSMOS},
     {118, "celestia", BECH32_COSMOS}, {118, "core", BECH32_COSMOS},
-    {118, "neutron", BECH32_COSMOS}};
+    {118, "neutron", BECH32_COSMOS},  {1200, "gonka", BECH32_COSMOS}};
 
 static const uint32_t chainConfigLen =
     sizeof(chainConfig) / sizeof(chainConfig[0]);
+
+bool isSupportedCoinType(uint32_t path) {
+  if (path == HDPATH_1_DEFAULT || path == HDPATH_ETH_1_DEFAULT) {
+    return true;
+  }
+
+  for (uint32_t i = 0; i < chainConfigLen; i++) {
+    if (path == (0x80000000u | chainConfig[i].path)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 address_encoding_e checkChainConfig(uint32_t path, const char *hrp,
                                     uint8_t hrpLen) {

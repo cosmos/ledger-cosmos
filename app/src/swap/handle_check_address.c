@@ -77,6 +77,15 @@ void handle_check_address(check_address_parameters_t *params) {
     return;
   }
 
+  // Being able to derive the address is not enough: the swap can only be
+  // carried through on a chain this app also knows how to price and to verify
+  // at signing time (chains[] in swap_utils.c). Claiming the address here for
+  // any other chain lets Exchange commit the user to a swap that can only be
+  // refused later, at the signing step.
+  if (find_chain_index_by_coin_config(hrp, hrp_length) < 0) {
+    return;
+  }
+
   char address_computed[100] = {0};
   uint16_t reply_len = 0;
   zxerr_t err = crypto_swap_fillAddress(bip32_path, bip32_path_length, hrp,

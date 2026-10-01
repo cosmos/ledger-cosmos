@@ -85,12 +85,27 @@ The general structure of commands and responses is as follows:
 | HRP_LEN    | byte(1)        | Bech32 HRP Length              | 1<=HRP_LEN<=83 |
 | HRP        | byte (HRP_LEN) | Bech32 HRP                     |                |
 | Path[0]    | byte (4)       | Derivation Path Data           | 44             |
-| Path[1]    | byte (4)       | Derivation Path Data           | 118 / 60       |
+| Path[1]    | byte (4)       | Derivation Path Data           | 118 / 60 / declared |
 | Path[2]    | byte (4)       | Derivation Path Data           | ?              |
 | Path[3]    | byte (4)       | Derivation Path Data           | ?              |
 | Path[4]    | byte (4)       | Derivation Path Data           | ?              |
 
 First three items in the derivation path will be hardened automatically hardened
+
+##### Accepted coin types and HRPs
+
+`Path[1]` accepts 118 (the generic Cosmos path), 60 (the Ethereum-style family) and any coin type
+declared in the app's chain configuration — currently 1200 (Gonka). Any other value is rejected with
+`APDU_CODE_INVALID_HD_PATH_COIN_VALUE`.
+
+The HRP is then resolved against that same configuration:
+
+- 118 accepts any HRP, except one declared for a coin type of its own — a chain that owns a coin
+  type is reachable only through it, so it has a single account rather than one per path.
+- Every other coin type — 60 and any coin type the chain configuration declares — accepts only the
+  HRP declared for it.
+
+Any other pair is rejected with `APDU_CODE_CHAIN_CONFIG_NOT_SUPPORTED`.
 
 #### Response
 
@@ -116,7 +131,10 @@ First three items in the derivation path will be hardened automatically hardened
 | L     | byte (1) | Bytes in payload       | (depends) |
 
 The first packet/chunk includes only the derivation path and HRP.
-At the moment, seding HRP is optional but it will be mandatory in a future version.
+Sending the HRP is optional on the generic Cosmos path (118) only, where it defaults to `cosmos`; it
+will be mandatory in a future version. On every other coin type — 60 and any coin type the chain
+configuration declares — the HRP names the chain being signed for, so omitting it is rejected with
+`APDU_CODE_INVALID_HD_PATH_COIN_VALUE`.
 
 All other packets/chunks should contain message to sign
 
@@ -125,7 +143,7 @@ All other packets/chunks should contain message to sign
 | Field      | Type     | Content                | Expected  |
 | ---------- | -------- | ---------------------- | --------- |
 | Path[0]    | byte (4)       | Derivation Path Data           | 44             |
-| Path[1]    | byte (4)       | Derivation Path Data           | 118 / 60       |
+| Path[1]    | byte (4)       | Derivation Path Data           | 118 / 60 / declared |
 | Path[2]    | byte (4)       | Derivation Path Data           | ?              |
 | Path[3]    | byte (4)       | Derivation Path Data           | ?              |
 | Path[4]    | byte (4)       | Derivation Path Data           | ?              |
