@@ -204,6 +204,30 @@ TEST(CborTextual, IndefiniteLengthTitleIsRejected) {
   EXPECT_EQ(parse_textual(blob), parser_unexpected_type);
 }
 
+// Canonical-encoding rules the screen walk depends on.
+
+TEST(CborTextual, DuplicateKeyIsRejected) {
+  // { 1: "Safe", 2: "Safe", 1: "Evil" } -- three pairs, key 1 repeated.
+  const auto blob = document({0xa3, 0x01, 0x64, 'S', 'a', 'f', 'e',
+                              0x02, 0x64, 'S', 'a', 'f', 'e',
+                              0x01, 0x64, 'E', 'v', 'i', 'l'}, 1);
+  EXPECT_NE(parse_textual(blob), parser_ok);
+}
+
+TEST(CborTextual, UnsortedKeysAreRejected) {
+  // { 2: "c", 1: "t" } -- schema order reversed.
+  const auto blob = document({0xa2, 0x02, 0x61, 'c', 0x01, 0x61, 't'}, 1);
+  EXPECT_NE(parse_textual(blob), parser_ok);
+}
+
+TEST(CborTextual, IndefiniteLengthContentIsRejected) {
+  // { 1: "t", 2: (_ "Benign", " Evil") } -- indefinite string in content.
+  const auto blob = document({0xa2, 0x01, 0x61, 't', 0x02, 0x7f,
+                              0x66, 'B', 'e', 'n', 'i', 'g', 'n',
+                              0x65, ' ', 'E', 'v', 'i', 'l', 0xff}, 1);
+  EXPECT_NE(parse_textual(blob), parser_ok);
+}
+
 TEST(CborTextual, ContainerAsTitleIsRejected) {
   // { 1: ["t"], 2: "c" } -- a title that is an array rather than a string.
   const auto blob = document({0xa2, 0x01, 0x81, 0x61, 't', 0x02, 0x61, 'c'}, 1);

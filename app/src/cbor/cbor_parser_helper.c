@@ -34,12 +34,23 @@ parser_error_t parser_mapCborError(CborError err) {
   }
 }
 
-static parser_error_t cbor_check_optFields(CborValue *data,
-                                           Cbor_container *container) {
+// prevKey is the last key already consumed from this screen's map, or 0 when
+// the walk starts at the first key. Callers differ: the parse pass walks the
+// whole map from the beginning, the display pass resumes after the content key.
+static parser_error_t
+cbor_check_optFields(CborValue *data, Cbor_container *container, int prevKey) {
   if (data == NULL || container == NULL) {
     return parser_unexpected_value;
   }
   int key;
+  // Every key has to be greater than the one before it. Requiring the increase
+  // is what makes a key single-valued: without it,
+  // { 1: "Safe", 2: "Safe", 1: "Evil" } was accepted, the review took the title
+  // and content from the first two pairs and stepped over the repeat, and the
+  // screen read "Safe" while the signature also covered "Evil". A map whose
+  // keys ascend cannot say two things about one field. ADR-050 requires that
+  // ordering anyway, so a document that breaks it is refused rather than
+  // resolved by whichever value the walk happened to reach first.
   for (size_t i = 0; i < container->n_field; i++) {
 
     PARSER_ASSERT_OR_ERROR(cbor_value_is_integer(data), parser_unexpected_type)
@@ -47,6 +58,8 @@ static parser_error_t cbor_check_optFields(CborValue *data,
     // instead of failing, so an oversized encoded value could land on one of
     // the key ids below and be dispatched as that field.
     CHECK_CBOR_MAP_ERR(cbor_value_get_int_checked(data, &key))
+    PARSER_ASSERT_OR_ERROR(key > prevKey, parser_unexpected_field)
+    prevKey = key;
     CHECK_CBOR_MAP_ERR(cbor_value_advance(data))
 
     switch (key) {
@@ -154,7 +167,7 @@ parser_error_t cbor_get_containerInfo(CborValue *data,
 
   if (container->n_field > 2) {
     container->n_field -= 2;
-    CHECK_PARSER_ERR(cbor_check_optFields(data, container))
+    CHECK_PARSER_ERR(cbor_check_optFields(data, container, CONTENT_KEY_ID))
   } else {
     container->screen.indent = 0;
     container->screen.expert = false;
@@ -169,7 +182,7 @@ parser_error_t cbor_check_expert(CborValue *data, Cbor_container *container) {
   }
 
   if (container->n_field > 1) {
-    CHECK_PARSER_ERR(cbor_check_optFields(data, container))
+    CHECK_PARSER_ERR(cbor_check_optFields(data, container, 0))
   } else {
     container->screen.indent = 0;
     container->screen.expert = false;

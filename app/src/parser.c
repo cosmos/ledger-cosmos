@@ -184,6 +184,56 @@ __Z_INLINE bool parser_isAmount(char *key) {
   return false;
 }
 
+// An sdk.Int in its JSON form: decimal digits only. No sign, no separator, no
+// exponent, no leading or trailing space. A single leading zero is only valid
+// when the amount is exactly "0".
+__Z_INLINE parser_error_t coin_amount_is_valid(const char *amount,
+                                               uint16_t amountLen) {
+  if (amount == NULL || amountLen == 0) {
+    return parser_unexpected_value;
+  }
+
+  for (uint16_t i = 0; i < amountLen; i++) {
+    if (amount[i] < '0' || amount[i] > '9') {
+      return parser_unexpected_characters;
+    }
+  }
+
+  if (amountLen > 1 && amount[0] == '0') {
+    return parser_unexpected_value;
+  }
+
+  return parser_ok;
+}
+
+// The Cosmos SDK denom regex: [a-zA-Z][a-zA-Z0-9/:._-]{2,127}. Enforcing it
+// here keeps a denom that the chain would reject from reaching the screen as if
+// it were spendable, and refuses the near-misses of the unit the app shifts by
+// six decimals -- "uatom " with a trailing space, or a padded look-alike.
+__Z_INLINE parser_error_t coin_denom_is_valid(const char *denom,
+                                              uint16_t denomLen) {
+  if (denom == NULL || denomLen < 3 || denomLen > 128) {
+    return parser_unexpected_value;
+  }
+
+  const char first = denom[0];
+  if (!((first >= 'a' && first <= 'z') || (first >= 'A' && first <= 'Z'))) {
+    return parser_unexpected_characters;
+  }
+
+  for (uint16_t i = 1; i < denomLen; i++) {
+    const char c = denom[i];
+    const bool allowed = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                         (c >= '0' && c <= '9') || c == '/' || c == ':' ||
+                         c == '.' || c == '_' || c == '-';
+    if (!allowed) {
+      return parser_unexpected_characters;
+    }
+  }
+
+  return parser_ok;
+}
+
 __Z_INLINE parser_error_t is_default_denom_base(const char *denom,
                                                 uint8_t denom_len,
                                                 bool *is_default) {
@@ -297,6 +347,15 @@ __Z_INLINE parser_error_t parser_formatAmountItem(uint16_t amountToken,
   if (amountLen <= 0 || amountLen >= COIN_AMOUNT_MAXSIZE) {
     return parser_unexpected_error;
   }
+
+  // Length was the only thing checked here, so anything that fit was rendered
+  // as if it were a coin. A Coin's Amount is an sdk.Int in decimal digits and
+  // its Denom matches [a-zA-Z][a-zA-Z0-9/:._-]{2,127}; a value outside either
+  // is not a coin the chain will accept, so showing it as one only invents a
+  // reading the signer can act on. "1.5", "-1", "0x10" and a trailing space all
+  // reached the screen looking like amounts.
+  CHECK_PARSER_ERR(coin_amount_is_valid(amountPtr, (uint16_t)amountLen))
+  CHECK_PARSER_ERR(coin_denom_is_valid(denomPtr, (uint16_t)denomLen))
 
   const size_t totalLen = amountLen + denomLen + 2;
   if (sizeof(bufferUI) < totalLen) {

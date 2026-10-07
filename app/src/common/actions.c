@@ -16,4 +16,5 @@
 
 #include "actions.h"
 
+uint8_t action_addrResponse[ACTION_ADDR_RESPONSE_SIZE];
 uint16_t action_addrResponseLen;

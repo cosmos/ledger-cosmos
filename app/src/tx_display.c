@@ -108,6 +108,11 @@ typedef struct {
   uint16_t root_item_number_subitems[NUM_REQUIRED_ROOT_PAGES];
 
   uint8_t is_default_chain;
+
+  // Expert mode this index was taken under. get_subitem_count hides items
+  // outside expert mode, so the item total -- and with it the choice of
+  // whether a MsgExec is itemised -- belongs to one setting of the flag.
+  bool indexed_expert;
 } display_cache_t;
 
 display_cache_t display_cache;
@@ -204,13 +209,11 @@ static parser_error_t get_raw_token(uint16_t token_index, char *out,
   return parser_ok;
 }
 
-parser_error_t tx_indexRootFields() {
-  if (parser_tx_obj.tx_json.flags.cache_valid) {
-    return parser_ok;
-  }
+parser_error_t tx_indexRootFields();
 
+static parser_error_t index_root_fields() {
 #ifdef APP_TESTING
-  zemu_log("tx_indexRootFields");
+  zemu_log("index_root_fields");
 #endif
 
   // Clear cache
@@ -376,6 +379,7 @@ parser_error_t tx_indexRootFields() {
   }
 
   parser_tx_obj.tx_json.flags.cache_valid = 1;
+  display_cache.indexed_expert = app_mode_expert();
 
   CHECK_PARSER_ERR(calculate_is_default_chainid())
 
@@ -541,17 +545,67 @@ __Z_INLINE parser_error_t retrieve_tree_indexes(uint8_t display_index,
   return parser_ok;
 }
 
+// The item count the review will walk, after grouping and the expert-mode
+// filters have been applied.
+__Z_INLINE parser_error_t display_item_total(uint16_t *total) {
+  *total = 0;
+  uint8_t n_items = 0;
+  for (root_item_e root_item = 0; root_item < NUM_REQUIRED_ROOT_PAGES;
+       root_item++) {
+    CHECK_PARSER_ERR(get_subitem_count(root_item, &n_items))
+    *total = (uint16_t)(*total + n_items);
+  }
+  return parser_ok;
+}
+
+parser_error_t tx_indexRootFields() {
+  if (parser_tx_obj.tx_json.flags.cache_valid &&
+      display_cache.indexed_expert == app_mode_expert()) {
+    return parser_ok;
+  }
+  parser_tx_obj.tx_json.flags.cache_valid = 0;
+
+  // Index once with the messages a MsgExec carries given screens of their own.
+  tx_msg_itemize_exec(true);
+  CHECK_PARSER_ERR(index_root_fields())
+
+  // Each executed message costs several review items, and the review index
+  // stops at MAX_REVIEW_ITEMS: an authz batch of about thirty runs past it, and
+  // a batch the device reviewed and signed before this level of detail existed
+  // would now be refused outright. Where the detail does not fit, fall back to
+  // the rendering it replaced -- the executed messages as one paged JSON value,
+  // every byte of which is still on screen -- rather than refuse the document.
+  //
+  // Taken here, before any item is rendered, so tx_display_numItems and
+  // tx_display_query enumerate the same items. A larger document is still
+  // refused by tx_display_numItems below: falling back is not truncating, and
+  // an item the review cannot reach must never be counted.
+  uint16_t total = 0;
+  const parser_error_t err = display_item_total(&total);
+  if (err == parser_ok && total <= MAX_REVIEW_ITEMS) {
+    return parser_ok;
+  }
+  // A single root over the limit reports it as an error rather than a count;
+  // anything else that went wrong is the caller's to see.
+  if (err != parser_ok && err != parser_unexpected_number_items) {
+    return err;
+  }
+
+  if (tx_msg_saw_exec()) {
+    tx_msg_itemize_exec(false);
+    parser_tx_obj.tx_json.flags.cache_valid = 0;
+    CHECK_PARSER_ERR(index_root_fields())
+  }
+
+  return parser_ok;
+}
+
 parser_error_t tx_display_numItems(uint8_t *num_items) {
   *num_items = 0;
   CHECK_PARSER_ERR(tx_indexRootFields())
 
   uint16_t total = 0;
-  uint8_t n_items = 0;
-  for (root_item_e root_item = 0; root_item < NUM_REQUIRED_ROOT_PAGES;
-       root_item++) {
-    CHECK_PARSER_ERR(get_subitem_count(root_item, &n_items))
-    total += n_items;
-  }
+  CHECK_PARSER_ERR(display_item_total(&total))
 
   // Reject transactions with too many items to display safely
   if (total > MAX_REVIEW_ITEMS) {

@@ -37,6 +37,16 @@ const char *parser_getErrorDescription(parser_error_t err) {
     return "Unexpected characters";
   case parser_unexpected_field:
     return "Unexpected field";
+  case parser_unexpected_error:
+    return "Unexpected error";
+  case parser_unexpected_method:
+    return "Unexpected method";
+  case parser_unexpected_value:
+    return "Unexpected value";
+  case parser_unexpected_number_items:
+    return "Unexpected number of items";
+  case parser_invalid_address:
+    return "Invalid address";
   case parser_duplicated_field:
     return "Unexpected duplicated field";
   case parser_value_out_of_range:
@@ -93,6 +103,8 @@ const char *parser_getErrorDescription(parser_error_t err) {
     return "context unexpected size";
   case parser_context_invalid_chars:
     return "context invalid chars";
+  case parser_context_unknown_prefix:
+    return "context unknown prefix";
   case parser_transaction_too_big:
     return "Transaction is too big";
   // swap
