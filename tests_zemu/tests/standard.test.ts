@@ -84,6 +84,80 @@ describe('Standard', function () {
     }
   })
 
+  test.concurrent.each(DEVICE_MODELS)('get address on a declared coin type (Gonka)', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      // Derivation path. First 3 items are automatically hardened!
+      const path = "m/44'/1200'/0'/0/0"
+      const resp = await app.getAddressAndPubKey(path, 'gonka')
+
+      console.log(resp)
+
+      expect(resp).toHaveProperty('bech32_address')
+      expect(resp).toHaveProperty('compressed_pk')
+
+      expect(resp.bech32_address).toEqual('gonka1j0pzd70wr9muhpdp5ahladpzznq95lr3xwkrsg')
+      expect(resp.compressed_pk.length).toEqual(33)
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(DEVICE_MODELS)('a declared coin type refuses a prefix declared for another one', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      const path = "m/44'/1200'/0'/0/0"
+      const errorRespPk = app.getAddressAndPubKey(path, 'cosmos')
+      await expect(errorRespPk).rejects.toMatchObject({
+        returnCode: 0x698C,
+        errorMessage: 'Chain config not supported'
+      })
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(DEVICE_MODELS)('the generic Cosmos path refuses a prefix owned by its own coin type', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      // Gonka owns 1200', so it has one account -- not a second one reachable
+      // through the generic 118' path under the same gonka1... shape.
+      const path = "m/44'/118'/0'/0/0"
+      const errorRespPk = app.getAddressAndPubKey(path, 'gonka')
+      await expect(errorRespPk).rejects.toMatchObject({
+        returnCode: 0x698C,
+        errorMessage: 'Chain config not supported'
+      })
+    } finally {
+      await sim.close()
+    }
+  })
+
+  test.concurrent.each(DEVICE_MODELS)('a coin type that is neither built-in nor declared is refused', async function (m) {
+    const sim = new Zemu(m.path)
+    try {
+      await sim.start({ ...defaultOptions, model: m.name })
+      const app = new CosmosApp(sim.getTransport())
+
+      const path = "m/44'/529'/0'/0/0"
+      const errorRespPk = app.getAddressAndPubKey(path, 'secret')
+      await expect(errorRespPk).rejects.toMatchObject({
+        returnCode: 0x698B,
+      })
+    } finally {
+      await sim.close()
+    }
+  })
+
   test.concurrent.each(DEVICE_MODELS)('show address', async function (m) {
     const sim = new Zemu(m.path)
     try {

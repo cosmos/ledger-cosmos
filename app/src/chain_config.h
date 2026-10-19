@@ -26,6 +26,10 @@ extern "C" {
 address_encoding_e checkChainConfig(uint32_t path, const char *hrp,
                                     uint8_t hrpLen);
 
+// `path` is the hardened coin type element of the derivation path (hdPath[1]),
+// as taken by checkChainConfig.
+bool isSupportedCoinType(uint32_t path);
+
 #ifdef __cplusplus
 }
 #endif

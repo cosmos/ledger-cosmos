@@ -16,6 +16,7 @@
 
 #include "app_mode.h"
 #include "coin.h"
+#include "common/actions.h"
 #include "crypto.h"
 #include "zxerror.h"
 #include "zxformat.h"
@@ -51,8 +52,10 @@ zxerr_t addr_getItem(int8_t displayIdx, char *outKey, uint16_t outKeyLen,
   switch (displayIdx) {
   case 0:
     snprintf(outKey, outKeyLen, "Address");
+    // From app RAM, not G_io_apdu_buffer: the buffer holds whatever APDU
+    // arrived last, and one can arrive while this review is on screen.
     pageString(outVal, outValLen,
-               (char *)(G_io_apdu_buffer + VIEW_ADDRESS_OFFSET_SECP256K1),
+               (char *)(action_addrResponse + VIEW_ADDRESS_OFFSET_SECP256K1),
                pageIdx, pageCount);
     ZEMU_LOGF(200, "[addr_getItem] pageCount %d\n", *pageCount)
     return zxerr_ok;
