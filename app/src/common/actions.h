@@ -30,6 +30,24 @@ typedef enum {
 } tx_state_e;
 
 extern tx_state_e g_tx_state;
+
+// The answer to a GetAddr request, kept in app RAM rather than in
+// G_io_apdu_buffer.
+//
+// G_io_apdu_buffer is where the next incoming APDU lands, and app_main's
+// io_exchange hands one over as soon as it arrives -- which, once a review is
+// on screen and the handler has returned IO_ASYNCH_REPLY, is while the user is
+// still reading. An address paged out of that buffer at draw time, or replied
+// out of it at approve time, is then whatever the host sent last instead of
+// what the user was shown and agreed to.
+//
+// Sized for the longest response crypto_fillAddress can produce: the
+// compressed public key, then the address text -- bech32 with the longest HRP
+// the app accepts, or the hex form the ETH encoding uses -- and a terminator.
+#define ACTION_ADDR_RESPONSE_SIZE                                              \
+  (PK_LEN_SECP256K1 + MAX_BECH32_HRP_LEN + MIN_ADDRESS_BUFFER_SPACE)
+
+extern uint8_t action_addrResponse[ACTION_ADDR_RESPONSE_SIZE];
 extern uint16_t action_addrResponseLen;
 
 __Z_INLINE void app_sign() {
@@ -51,18 +69,29 @@ __Z_INLINE void app_sign() {
 }
 
 __Z_INLINE zxerr_t app_fill_address() {
-  // Put data directly in the apdu buffer
-  MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+  // Into app RAM, so the address the review draws and the address the reply
+  // carries are the ones this request derived (see action_addrResponse).
+  MEMZERO(action_addrResponse, sizeof(action_addrResponse));
 
   action_addrResponseLen = 0;
-  const zxerr_t err = crypto_fillAddress(
-      G_io_apdu_buffer, IO_APDU_BUFFER_SIZE - 2, &action_addrResponseLen);
+  const zxerr_t err =
+      crypto_fillAddress(action_addrResponse, sizeof(action_addrResponse),
+                         &action_addrResponseLen);
 
   if (err != zxerr_ok || action_addrResponseLen == 0) {
+    MEMZERO(action_addrResponse, sizeof(action_addrResponse));
+    action_addrResponseLen = 0;
     THROW(APDU_CODE_EXECUTION_ERROR);
   }
 
   return zxerr_ok;
+}
+
+// Copies the held answer into the APDU buffer, which by now may hold an
+// unrelated request the host sent while the review was up.
+__Z_INLINE void app_load_address_response() {
+  MEMZERO(G_io_apdu_buffer, IO_APDU_BUFFER_SIZE);
+  MEMCPY(G_io_apdu_buffer, action_addrResponse, action_addrResponseLen);
 }
 
 __Z_INLINE void app_reject() {
@@ -74,6 +103,7 @@ __Z_INLINE void app_reject() {
 
 __Z_INLINE void app_reply_address() {
   g_tx_state = TX_STATE_IDLE;
+  app_load_address_response();
   set_code(G_io_apdu_buffer, action_addrResponseLen, APDU_CODE_OK);
   io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, action_addrResponseLen + 2);
 }

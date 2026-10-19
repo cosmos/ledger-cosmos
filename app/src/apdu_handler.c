@@ -108,9 +108,7 @@ __Z_INLINE void extractHDPath(uint32_t rx, uint32_t offset) {
          sizeof(uint32_t) * HDPATH_LEN_DEFAULT);
 
   // Check values
-  if (hdPath[0] != HDPATH_0_DEFAULT ||
-      ((hdPath[1] != HDPATH_1_DEFAULT) &&
-       (hdPath[1] != HDPATH_ETH_1_DEFAULT)) ||
+  if (hdPath[0] != HDPATH_0_DEFAULT || !isSupportedCoinType(hdPath[1]) ||
       hdPath[3] != HDPATH_3_DEFAULT) {
     THROW(APDU_CODE_INVALID_HD_PATH_COIN_VALUE);
   }
@@ -139,7 +137,11 @@ static void extractHDPath_HRP(uint32_t rx, uint32_t offset) {
       ZEMU_LOGF(50, "Chain config not supported for: %s\n", bech32_hrp)
       THROW(APDU_CODE_CHAIN_CONFIG_NOT_SUPPORTED);
     }
-  } else if (hdPath[1] == HDPATH_ETH_1_DEFAULT) {
+  } else if (hdPath[1] != HDPATH_1_DEFAULT) {
+    // Only the generic Cosmos path (118) has a meaningful default HRP.
+    // Falling through on any other coin type would derive a key on that
+    // chain's path while defaulting the review screen to a cosmos1...
+    // address -- a silent mismatch on the one screen the user checks.
     THROW(APDU_CODE_INVALID_HD_PATH_COIN_VALUE);
   } else {
     // No HRP was provided on the default Cosmos path. Restore the default
@@ -230,6 +232,7 @@ __Z_INLINE void handleGetAddrSecp256K1(volatile uint32_t *flags,
     return;
   }
 
+  app_load_address_response();
   *tx = action_addrResponseLen;
   THROW(APDU_CODE_OK);
 }
@@ -262,8 +265,9 @@ __Z_INLINE void handleSign(volatile uint32_t *flags, volatile uint32_t *tx,
     THROW(APDU_CODE_DATA_INVALID);
   }
 
+  // Held for the whole review, so it has to outlive the APDU buffer.
   parser_tx_obj.tx_json.own_addr =
-      (const char *)(G_io_apdu_buffer + VIEW_ADDRESS_OFFSET_SECP256K1);
+      (const char *)(action_addrResponse + VIEW_ADDRESS_OFFSET_SECP256K1);
   parser_tx_obj.tx_json.own_addr_len =
       action_addrResponseLen - PK_LEN_SECP256K1;
   const char *error_msg = tx_parse(sign_type);
@@ -300,6 +304,21 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
 
   BEGIN_TRY {
     TRY {
+      // A screen owns the device: a review the user is reading, or an error
+      // modal that still owes the host a reply. io_exchange hands over the
+      // next APDU as soon as it arrives, which for a handler that returned
+      // IO_ASYNCH_REPLY is while the user is still deciding -- so a request
+      // answered here would replace the derivation path, the address encoding
+      // or the parsed transaction behind what is on screen, or draw a second
+      // review over the first and take the press meant to dismiss one as
+      // approval of the other. Refuse until the screen has been answered.
+      //
+      // COMMAND_NOT_ALLOWED on purpose: the CATCH_OTHER below leaves the
+      // in-flight request's state alone for exactly this status word.
+      if (view_review_is_pending()) {
+        THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+      }
+
       if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
         THROW(APDU_CODE_CLA_NOT_SUPPORTED);
       }
