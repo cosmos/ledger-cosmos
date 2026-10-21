@@ -2711,5 +2711,227 @@
       "10 | Gas : 200000"
     ],
     "expert": false
+  },
+  {
+    "name": "generic_msg_string_array_two",
+    "tx": {
+      "account_number": "7",
+      "chain_id": "test-chain",
+      "fee": {
+        "amount": [
+          {
+            "amount": "12000",
+            "denom": "ugnot"
+          }
+        ],
+        "gas": "12000000"
+      },
+      "memo": "",
+      "msgs": [
+        {
+          "@type": "/vm.m_call",
+          "args": [
+            "g1leu8d2vsplhehcfkjg50mwgdpxdkt8tztu95wr",
+            "1000000"
+          ],
+          "caller": "g1ecsuj0q572jr0dhu29q9njtnmw03hyu7tyyvv6",
+          "func": "Transfer",
+          "pkg_path": "gno.land/r/demo/token",
+          "send": ""
+        }
+      ],
+      "sequence": "3"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : test-chain",
+      "1 | Account : 7",
+      "2 | Sequence : 3",
+      "3 | msgs/@type : /vm.m_call",
+      "4 | msgs/args [1/2] : g1leu8d2vsplhehcfkjg50mwgdpxdkt8tztu95w",
+      "4 | msgs/args [2/2] : r",
+      "5 | msgs/args : 1000000",
+      "6 | msgs/caller [1/2] : g1ecsuj0q572jr0dhu29q9njtnmw03hyu7tyyvv",
+      "6 | msgs/caller [2/2] : 6",
+      "7 | msgs/func : Transfer",
+      "8 | msgs/pkg_path : gno.land/r/demo/token",
+      "9 | msgs/send :",
+      "10 | Fee : 12000 ugnot",
+      "11 | Gas : 12000000"
+    ],
+    "expert": false
+  },
+  {
+    "name": "generic_msg_string_array_three",
+    "tx": {
+      "account_number": "7",
+      "chain_id": "test-chain",
+      "fee": {
+        "amount": [
+          {
+            "amount": "12000",
+            "denom": "ugnot"
+          }
+        ],
+        "gas": "12000000"
+      },
+      "memo": "",
+      "msgs": [
+        {
+          "@type": "/vm.m_call",
+          "args": [
+            "g1leu8d2vsplhehcfkjg50mwgdpxdkt8tztu95wr",
+            "1000000",
+            "third"
+          ],
+          "caller": "g1ecsuj0q572jr0dhu29q9njtnmw03hyu7tyyvv6",
+          "func": "Transfer",
+          "pkg_path": "gno.land/r/demo/token",
+          "send": ""
+        }
+      ],
+      "sequence": "3"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : test-chain",
+      "1 | Account : 7",
+      "2 | Sequence : 3",
+      "3 | msgs/@type : /vm.m_call",
+      "4 | msgs/args [1/2] : g1leu8d2vsplhehcfkjg50mwgdpxdkt8tztu95w",
+      "4 | msgs/args [2/2] : r",
+      "5 | msgs/args : 1000000",
+      "6 | msgs/args : third",
+      "7 | msgs/caller [1/2] : g1ecsuj0q572jr0dhu29q9njtnmw03hyu7tyyvv",
+      "7 | msgs/caller [2/2] : 6",
+      "8 | msgs/func : Transfer",
+      "9 | msgs/pkg_path : gno.land/r/demo/token",
+      "10 | msgs/send :",
+      "11 | Fee : 12000 ugnot",
+      "12 | Gas : 12000000"
+    ],
+    "expert": true
+  },
+  {
+    "name": "generic_msg_string_array_two_msgs",
+    "tx": {
+      "account_number": "7",
+      "chain_id": "test-chain",
+      "fee": {
+        "amount": [
+          {
+            "amount": "12000",
+            "denom": "ugnot"
+          }
+        ],
+        "gas": "12000000"
+      },
+      "memo": "",
+      "msgs": [
+        {
+          "@type": "/vm.m_call",
+          "args": [
+            "a1",
+            "a2"
+          ],
+          "caller": "g1ecsuj0q572jr0dhu29q9njtnmw03hyu7tyyvv6",
+          "func": "Transfer",
+          "pkg_path": "gno.land/r/demo/token",
+          "send": ""
+        },
+        {
+          "@type": "/vm.m_call",
+          "args": [
+            "b1",
+            "b2",
+            "b3",
+            "b4"
+          ],
+          "caller": "g1ecsuj0q572jr0dhu29q9njtnmw03hyu7tyyvv6",
+          "func": "Transfer",
+          "pkg_path": "gno.land/r/demo/token",
+          "send": ""
+        }
+      ],
+      "sequence": "3"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : test-chain",
+      "1 | Account : 7",
+      "2 | Sequence : 3",
+      "3 | msgs/@type : /vm.m_call",
+      "4 | msgs/args : a1",
+      "5 | msgs/args : a2",
+      "6 | msgs/caller [1/2] : g1ecsuj0q572jr0dhu29q9njtnmw03hyu7tyyvv",
+      "6 | msgs/caller [2/2] : 6",
+      "7 | msgs/func : Transfer",
+      "8 | msgs/pkg_path : gno.land/r/demo/token",
+      "9 | msgs/send :",
+      "10 | msgs/@type : /vm.m_call",
+      "11 | msgs/args : b1",
+      "12 | msgs/args : b2",
+      "13 | msgs/args : b3",
+      "14 | msgs/args : b4",
+      "15 | msgs/caller [1/2] : g1ecsuj0q572jr0dhu29q9njtnmw03hyu7tyyvv",
+      "15 | msgs/caller [2/2] : 6",
+      "16 | msgs/func : Transfer",
+      "17 | msgs/pkg_path : gno.land/r/demo/token",
+      "18 | msgs/send :",
+      "19 | Fee : 12000 ugnot",
+      "20 | Gas : 12000000"
+    ],
+    "expert": false
+  },
+  {
+    "name": "generic_msg_primitive_array",
+    "tx": {
+      "account_number": "7",
+      "chain_id": "test-chain",
+      "fee": {
+        "amount": [
+          {
+            "amount": "12000",
+            "denom": "ugnot"
+          }
+        ],
+        "gas": "12000000"
+      },
+      "memo": "",
+      "msgs": [
+        {
+          "@type": "/x.m_generic",
+          "values": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "who": "someone"
+        }
+      ],
+      "sequence": "3"
+    },
+    "parsingErr": "No error",
+    "validationErr": "No error",
+    "expected": [
+      "0 | Chain ID : test-chain",
+      "1 | Account : 7",
+      "2 | Sequence : 3",
+      "3 | msgs/@type : /x.m_generic",
+      "4 | msgs/values : 1",
+      "5 | msgs/values : 2",
+      "6 | msgs/values : 3",
+      "7 | msgs/values : 4",
+      "8 | msgs/values : 5",
+      "9 | msgs/who : someone",
+      "10 | Fee : 12000 ugnot",
+      "11 | Gas : 12000000"
+    ],
+    "expert": false
   }
 ]
