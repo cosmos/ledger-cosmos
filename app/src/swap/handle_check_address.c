@@ -70,6 +70,13 @@ void handle_check_address(check_address_parameters_t *params) {
     readU32BE(params->address_parameters + 1 + (i * 4), &bip32_path[i]);
   }
 
+  // The payout or refund path comes from the host, unsigned. Hold it to the
+  // policy signing applies, with the normal-mode limits: an address on a path
+  // the app refuses to sign from would receive funds no Ledger flow can move.
+  if (checkHDPath(bip32_path, false) != HD_PATH_OK) {
+    return;
+  }
+
   // Check if the chain is supported with the HRP and path
   address_encoding_e encode_type =
       checkChainConfig(bip32_path[1], hrp, hrp_length);

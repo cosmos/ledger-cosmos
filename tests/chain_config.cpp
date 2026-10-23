@@ -313,3 +313,35 @@ TEST(ChainConfig, EveryResolvablePairSitsOnASupportedCoinType) {
     EXPECT_TRUE(isSupportedCoinType(0x80000000u | pair.coinType)) << pair.hrp;
   }
 }
+
+// The derivation path policy is shared by signing, the address APDU and the
+// swap address check, so an address handed out is always one the app signs
+// from.
+TEST(ChainConfig, HDPathPolicy) {
+  const uint32_t H = 0x80000000u;
+  const uint32_t ok[HDPATH_LEN_DEFAULT] = {H | 44, H | 118, H | 0, 0, 0};
+  EXPECT_EQ(checkHDPath(ok, false), HD_PATH_OK);
+  EXPECT_EQ(checkHDPath(ok, true), HD_PATH_OK);
+
+  const uint32_t change[HDPATH_LEN_DEFAULT] = {H | 44, H | 118, H | 0, 1, 0};
+  EXPECT_EQ(checkHDPath(change, false), HD_PATH_INVALID);
+  EXPECT_EQ(checkHDPath(change, true), HD_PATH_INVALID);
+
+  const uint32_t purpose[HDPATH_LEN_DEFAULT] = {H | 49, H | 118, H | 0, 0, 0};
+  EXPECT_EQ(checkHDPath(purpose, true), HD_PATH_INVALID);
+
+  const uint32_t coin[HDPATH_LEN_DEFAULT] = {H | 44, H | 529, H | 0, 0, 0};
+  EXPECT_EQ(checkHDPath(coin, true), HD_PATH_INVALID);
+
+  const uint32_t unhardenedCoin[HDPATH_LEN_DEFAULT] = {H | 44, 118, H | 0, 0, 0};
+  EXPECT_EQ(checkHDPath(unhardenedCoin, true), HD_PATH_INVALID);
+
+  const uint32_t index101[HDPATH_LEN_DEFAULT] = {H | 44, H | 118, H | 0, 0, 101};
+  EXPECT_EQ(checkHDPath(index101, false), HD_PATH_NEEDS_EXPERT);
+  EXPECT_EQ(checkHDPath(index101, true), HD_PATH_OK);
+
+  const uint32_t account[HDPATH_LEN_DEFAULT] = {H | 44, H | 118, H | 0x7FFFFFFF, 0, 0};
+  EXPECT_EQ(checkHDPath(account, false), HD_PATH_NEEDS_EXPERT);
+
+  EXPECT_EQ(checkHDPath(nullptr, true), HD_PATH_INVALID);
+}

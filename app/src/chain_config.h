@@ -35,6 +35,18 @@ address_encoding_e checkChainConfig(uint32_t path, const char *hrp,
 // as taken by checkChainConfig.
 bool isSupportedCoinType(uint32_t path);
 
+typedef enum {
+  HD_PATH_OK,
+  HD_PATH_INVALID,      // not 44'/<supported coin>'/x/0/y
+  HD_PATH_NEEDS_EXPERT, // an account, change or index element above 100
+} hd_path_check_e;
+
+// The derivation path policy every flow that derives a key applies, so that an
+// address the app hands out (to the host or to Exchange) is always one it will
+// also sign from.
+hd_path_check_e checkHDPath(const uint32_t path[HDPATH_LEN_DEFAULT],
+                            bool expert);
+
 #ifdef __cplusplus
 }
 #endif

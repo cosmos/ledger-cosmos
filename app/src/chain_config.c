@@ -53,6 +53,27 @@ bool isSupportedCoinType(uint32_t path) {
   return false;
 }
 
+hd_path_check_e checkHDPath(const uint32_t path[HDPATH_LEN_DEFAULT],
+                            bool expert) {
+  if (path == NULL) {
+    return HD_PATH_INVALID;
+  }
+  if (path[0] != HDPATH_0_DEFAULT || !isSupportedCoinType(path[1]) ||
+      path[3] != HDPATH_3_DEFAULT) {
+    return HD_PATH_INVALID;
+  }
+  // Limit values unless the app is running in expert mode
+  if (!expert) {
+    for (int i = 2; i < HDPATH_LEN_DEFAULT; i++) {
+      // hardened or unhardened values should be at most 100
+      if ((path[i] & 0x7FFFFFFF) > 100) {
+        return HD_PATH_NEEDS_EXPERT;
+      }
+    }
+  }
+  return HD_PATH_OK;
+}
+
 address_encoding_e checkChainConfig(uint32_t path, const char *hrp,
                                     uint8_t hrpLen) {
   if (hrp == NULL || hrpLen == 0 || hrpLen > MAX_ACCOUNT_HRP_LEN) {

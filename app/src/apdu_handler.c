@@ -107,19 +107,12 @@ __Z_INLINE void extractHDPath(uint32_t rx, uint32_t offset) {
   MEMCPY(hdPath, G_io_apdu_buffer + offset,
          sizeof(uint32_t) * HDPATH_LEN_DEFAULT);
 
-  // Check values
-  if (hdPath[0] != HDPATH_0_DEFAULT || !isSupportedCoinType(hdPath[1]) ||
-      hdPath[3] != HDPATH_3_DEFAULT) {
+  const hd_path_check_e path_check = checkHDPath(hdPath, app_mode_expert());
+  if (path_check == HD_PATH_INVALID) {
     THROW(APDU_CODE_INVALID_HD_PATH_COIN_VALUE);
   }
-
-  // Limit values unless the app is running in expert mode
-  if (!app_mode_expert()) {
-    for (int i = 2; i < HDPATH_LEN_DEFAULT; i++) {
-      // hardened or unhardened values should be below 20
-      if ((hdPath[i] & 0x7FFFFFFF) > 100)
-        THROW(APDU_CODE_INVALID_HD_PATH_VALUE);
-    }
+  if (path_check == HD_PATH_NEEDS_EXPERT) {
+    THROW(APDU_CODE_INVALID_HD_PATH_VALUE);
   }
 }
 
