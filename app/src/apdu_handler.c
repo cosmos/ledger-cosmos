@@ -160,7 +160,11 @@ static bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
   uint32_t added;
   switch (payloadType) {
   case P1_INIT:
-    if (g_tx_state != TX_STATE_IDLE) {
+    // INIT also restarts a transfer still in RECEIVING: that state owns no
+    // screen, and a host that went away mid-transfer (wallet closed, cable or
+    // BLE dropped) would otherwise leave every later request refused until the
+    // app is restarted.
+    if (g_tx_state != TX_STATE_IDLE && g_tx_state != TX_STATE_RECEIVING) {
       THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
     }
     tx_initialize();
@@ -194,9 +198,13 @@ static bool process_chunk(volatile uint32_t *tx, uint32_t rx) {
 
 __Z_INLINE void handleGetAddrSecp256K1(volatile uint32_t *flags,
                                        volatile uint32_t *tx, uint32_t rx) {
-  if (g_tx_state != TX_STATE_IDLE) {
+  if (g_tx_state != TX_STATE_IDLE && g_tx_state != TX_STATE_RECEIVING) {
     THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
   }
+  // An unfinished transfer is abandoned rather than left to block the request.
+  // It cannot be resumed afterwards: the hdPath and HRP it was started under
+  // are about to be replaced, and its next ADD or LAST is refused.
+  g_tx_state = TX_STATE_IDLE;
 
   uint8_t len = extractHRP(rx, OFFSET_DATA);
   extractHDPath(rx, OFFSET_DATA + 1 + len);
@@ -310,6 +318,14 @@ void handleApdu(volatile uint32_t *flags, volatile uint32_t *tx, uint32_t rx) {
       // in-flight request's state alone for exactly this status word.
       if (view_review_is_pending()) {
         THROW(APDU_CODE_COMMAND_NOT_ALLOWED);
+      }
+
+      // A review that is no longer on screen owns nothing. The reply callbacks
+      // hand the state back, but an IO reset taken outside handleApdu returns
+      // to the main menu through app_init without them, and REVIEWING would
+      // then refuse every request until the app is restarted.
+      if (g_tx_state == TX_STATE_REVIEWING) {
+        g_tx_state = TX_STATE_IDLE;
       }
 
       if (G_io_apdu_buffer[OFFSET_CLA] != CLA) {
