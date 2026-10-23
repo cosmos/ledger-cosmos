@@ -309,6 +309,23 @@ TEST(SwapGateFee, GranterIsAcceptedOnlyInNormalModeOnDefaultChain) {
 INSTANTIATE_TEST_SUITE_P(NormalAndExpert, SwapGate, ::testing::Values(false, true));
 
 // ---------------------------------------------------------------------------
+// The transaction has to be on the chain Exchange approved and priced the swap
+// in, not on any listed chain whose amount, fee and recipient render the same.
+// ---------------------------------------------------------------------------
+TEST(SwapGateChain, TransactionOnAnotherListedChainIsRefused) {
+  ASSERT_TRUE(set_swap(6000000, 5000, kDest, "12345", "osmo"));
+  EXPECT_EQ(run_swap(base_tx().json(), false), parser_swap_wrong_chain_id);
+  EXPECT_EQ(run_swap(base_tx().json(), true), parser_swap_wrong_chain_id);
+  app_mode_set_expert(0);
+}
+
+TEST(SwapGateChain, UnknownOrMissingCoinConfigurationIsRefused) {
+  EXPECT_FALSE(set_swap(6000000, 5000, kDest, "12345", "inj"));
+  EXPECT_FALSE(set_swap(6000000, 5000, kDest, "12345", ""));
+  EXPECT_FALSE(set_swap(6000000, 5000, kDest, "12345", std::string("cosmos\0", 7)));
+}
+
+// ---------------------------------------------------------------------------
 // check_address only vouches for addresses on paths the app signs from.
 // ---------------------------------------------------------------------------
 namespace {

@@ -41,6 +41,8 @@ typedef struct {
   uint8_t called_from_swap;
   uint8_t should_exit;
   char memo[MEMO_MAXSIZE];
+  /* chains[] entry of the coin Exchange approved */
+  int8_t chain_index;
 } swap_globals_t;
 
 typedef struct {
