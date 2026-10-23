@@ -22,15 +22,7 @@
 **
 ****************************************************************************/
 
-#ifndef _BSD_SOURCE
-#define _BSD_SOURCE 1
-#endif
-#ifndef _DEFAULT_SOURCE
-#define _DEFAULT_SOURCE 1
-#endif
-#ifndef __STDC_LIMIT_MACROS
-#  define __STDC_LIMIT_MACROS 1
-#endif
+#include "cborinternalmacros_p.h"
 
 #include "cbor.h"
 #include "cborinternal_p.h"
@@ -101,7 +93,7 @@
  * complete the encoding. At the end, you can obtain that count by calling
  * cbor_encoder_get_extra_bytes_needed().
  *
- * \section1 Finalizing the encoding
+ * \section Finalizing the encoding
  *
  * Once all items have been appended and the containers have all been properly
  * closed, the user-supplied buffer will contain the CBOR stream and may be
@@ -212,6 +204,7 @@ void cbor_encoder_init_writer(CborEncoder *encoder, CborEncoderWriteFunction wri
 {
 #ifdef CBOR_ENCODER_WRITE_FUNCTION
     (void) writer;
+    encoder->data.writer = CBOR_NULLPTR;
 #else
     encoder->data.writer = writer;
 #endif
@@ -484,6 +477,20 @@ CborError cbor_encode_text_string(CborEncoder *encoder, const char *string, size
     return encode_string(encoder, length, TextStringType << MajorTypeShift, string);
 }
 
+/**
+ * Puts the data of length \a length in \a raw into to the encoding buffer of \a
+ * encoder. This function can be used if you have stored CBOR encoded data and
+ * want to push it to your current encoding buffer. Be aware, you are
+ * responsible for the data in \a raw is valid and that the validity of the
+ * resulting stream after this operation remains valid.
+ *
+ * \sa CborError cbor_encode_byte_string
+ */
+CborError cbor_encode_raw(CborEncoder *encoder, const uint8_t *raw, size_t length)
+{
+    return append_to_buffer(encoder, raw, length, CborEncoderAppendRawData);
+}
+
 #ifdef __GNUC__
 __attribute__((noinline))
 #endif
@@ -544,7 +551,7 @@ CborError cbor_encoder_create_array(CborEncoder *parentEncoder, CborEncoder *arr
  * when creating the map, the constant \ref CborIndefiniteLength may be passed as
  * length instead, and an indefinite length map is created.
  *
- * \b{Implementation limitation:} TinyCBOR cannot encode more than SIZE_MAX/2
+ * <b>Implementation limitation:</b> TinyCBOR cannot encode more than SIZE_MAX/2
  * key-value pairs in the stream. If the length \a length is larger than this
  * value (and is not \ref CborIndefiniteLength), this function returns error
  * CborErrorDataTooLarge.
