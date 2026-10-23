@@ -149,3 +149,20 @@ TEST(TextualDisplay, DelIsEscaped) {
   ASSERT_EQ(r.err, parser_ok);
   EXPECT_EQ(r.value, R"(12\u007F34)");
 }
+
+// An untitled screen keeps its indent whether or not it also carries the
+// expert key: {2: content, 3: indent} used to lose it.
+TEST(TextualDisplay, UntitledScreenKeepsItsIndent) {
+  const auto r = render(envelope({screen("", "MsgSend object", 2)}), 0, 4096, false);
+  ASSERT_EQ(r.err, parser_ok);
+  EXPECT_EQ(r.value, ">>MsgSend object");
+
+  // Same screen with {4: false} after the indent.
+  std::vector<uint8_t> withExpert = screen("", "MsgSend object", 2);
+  withExpert[0] += 1;
+  withExpert.push_back(4);
+  withExpert.push_back(0xf4);
+  const auto r2 = render(envelope({withExpert}), 0, 4096, false);
+  ASSERT_EQ(r2.err, parser_ok);
+  EXPECT_EQ(r2.value, r.value);
+}

@@ -165,8 +165,12 @@ parser_error_t cbor_get_containerInfo(CborValue *data,
   CHECK_PARSER_ERR(cbor_check_screen(data, container))
   CHECK_CBOR_MAP_ERR(cbor_value_advance(data))
 
-  if (container->n_field > 2) {
-    container->n_field -= 2;
+  // cbor_check_screen read the content and, if there is one, the title: one
+  // key for an untitled screen, two otherwise. Taking two off an untitled
+  // {2: content, 3: indent} left nothing to read and dropped its indent.
+  const size_t consumed = (container->screen.titlePtr == NULL) ? 1 : 2;
+  if (container->n_field > consumed) {
+    container->n_field -= consumed;
     CHECK_PARSER_ERR(cbor_check_optFields(data, container, CONTENT_KEY_ID))
   } else {
     container->screen.indent = 0;
