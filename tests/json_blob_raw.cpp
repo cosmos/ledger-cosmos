@@ -163,3 +163,37 @@ TEST(JsonBlobRaw, MsgExecFallbackKeepsTheIbcReceiverWhereItIs) {
             std::string::npos);
   EXPECT_EQ(it->value.find(R"("receiver":"osmo1friend"},)"), std::string::npos);
 }
+
+namespace {
+
+std::string doc_with_msgs(const std::string &msgs) {
+  return R"({"account_number":"8","chain_id":"test-1",)"
+         R"("fee":{"amount":[{"amount":"1","denom":"ustake"}],"gas":"1"},)"
+         R"("memo":"","msgs":)" + msgs + R"(,"sequence":"1"})";
+}
+
+bool shows(const Rendered &r, const std::string &needle) {
+  for (const auto &it : r.items) {
+    if (it.value.find(needle) != std::string::npos) return true;
+  }
+  return false;
+}
+
+}  // namespace
+
+// Array elements are counted as elements: a message after an empty or scalar
+// element is walked and shown like any other.
+TEST(JsonArrayWalk, ElementAfterAnEmptyOrScalarElementIsShown) {
+  const std::string send =
+      R"({"type":"cosmos-sdk/MsgSend","value":{"to_address":"cosmos1hidden"}})";
+  for (const std::string &first : {std::string("{}"), std::string("[]"),
+                                   std::string("1"), std::string(R"("x")")}) {
+    for (const bool expert : {false, true}) {
+      const auto r = render_all(doc_with_msgs("[" + first + "," + send + "]"),
+                                expert, 64);
+      if (r.err != parser_ok) continue;  // refusing the document is fine too
+      EXPECT_TRUE(shows(r, "cosmos1hidden"))
+          << "first=" << first << " expert=" << expert;
+    }
+  }
+}

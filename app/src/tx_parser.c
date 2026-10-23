@@ -536,8 +536,16 @@ parser_error_t tx_traverse_find(uint16_t root_token_index,
   uint16_t el_count;
   parser_error_t err;
 
-  CHECK_PARSER_ERR(object_get_element_count(&parser_tx_obj.tx_json.json,
-                                            root_token_index, &el_count))
+  // An array's children are elements, not key/value pairs: counted as pairs,
+  // an empty or scalar element undercounts the array and the elements after
+  // it are never walked, so never shown.
+  if (token_type == JSMN_ARRAY) {
+    CHECK_PARSER_ERR(array_get_element_count(&parser_tx_obj.tx_json.json,
+                                             root_token_index, &el_count))
+  } else {
+    CHECK_PARSER_ERR(object_get_element_count(&parser_tx_obj.tx_json.json,
+                                              root_token_index, &el_count))
+  }
 
   switch (token_type) {
   case JSMN_OBJECT: {
