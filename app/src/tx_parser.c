@@ -341,8 +341,16 @@ parser_error_t tx_getToken(uint16_t token_index, char *out_val,
         }
       }
     }
-    CHECK_PARSER_ERR(page_json_string(out_val, out_val_len, inValue, inLen,
-                                      pageIdx, pageCount))
+    if (parser_tx_obj.tx_json.json.tokens[token_index].type == JSMN_STRING) {
+      CHECK_PARSER_ERR(page_json_string(out_val, out_val_len, inValue, inLen,
+                                        pageIdx, pageCount))
+    } else {
+      // An object or array shown as one value keeps its escapes: decoded, a
+      // quote inside one of its strings reads the same as a quote that is
+      // JSON structure, and a string field can then fake a closing brace and
+      // move the keys after it into an object of its own on screen.
+      pageStringExt(out_val, out_val_len, inValue, inLen, pageIdx, pageCount);
+    }
   }
 
   if (pageIdx >= *pageCount) {
