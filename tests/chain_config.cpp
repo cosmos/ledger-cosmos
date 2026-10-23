@@ -186,17 +186,41 @@ TEST(ChainConfig, LeadingNulIsRefused) {
 }
 
 // hrpLen is a uint8_t and so is the scan index. The callers cap the length at
-// MAX_BECH32_HRP_LEN (83), but the function has to terminate on any value a
-// uint8_t can hold, including 255.
+// MAX_BECH32_HRP_LEN (83); the function refuses anything past
+// MAX_ACCOUNT_HRP_LEN before scanning, up to the largest value a uint8_t holds.
 TEST(ChainConfig, ScanTerminatesAtTheMaximumDeclaredLength) {
   const std::string longHrp(255, 'a');
   EXPECT_EQ(checkChainConfig(0x80000000u | 118u, longHrp.c_str(), 255),
-            BECH32_COSMOS);
+            UNSUPPORTED);
 
   std::string longHrpWithNul(255, 'a');
   longHrpWithNul[254] = '\0';
   EXPECT_EQ(checkChainConfig(0x80000000u | 118u, longHrpWithNul.c_str(), 255),
             UNSUPPORTED);
+}
+
+// An HRP long enough to hold a whole address would put that address at the
+// start of the one the device shows; real account prefixes are far shorter.
+TEST(ChainConfig, HrpLongerThanAnAccountPrefixIsRefused) {
+  const std::string atCap(MAX_ACCOUNT_HRP_LEN, 'a');
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, atCap.c_str(), atCap.size()),
+            BECH32_COSMOS);
+  const std::string pastCap(MAX_ACCOUNT_HRP_LEN + 1, 'a');
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, pastCap.c_str(), pastCap.size()),
+            UNSUPPORTED);
+  // A cosmos address with its separator swapped for a lookalike 'l'.
+  const std::string embedded = "cosmosl5zs69gay5kn2029f4246etdw47ctrv4njhcy02";
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, embedded.c_str(), embedded.size()),
+            UNSUPPORTED);
+}
+
+// '1' is the bech32 separator. An HRP holding one makes the address the device
+// shows start with what reads as a complete, different address.
+TEST(ChainConfig, HrpWithTheBech32SeparatorIsRefused) {
+  for (const char *hrp : {"cosmos1", "1", "osmo1abc", "a1b"}) {
+    EXPECT_EQ(checkChainConfig(0x80000000u | 118u, hrp, strlen(hrp)), UNSUPPORTED)
+        << hrp;
+  }
 }
 
 TEST(ChainConfig, NullOrEmptyHrpIsRefused) {

@@ -23,6 +23,11 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
+// Longest HRP accepted for an account address. Real account prefixes are a
+// dozen characters at most; a longer one leaves room to embed a whole foreign
+// address at the start of the one the device shows.
+#define MAX_ACCOUNT_HRP_LEN 20u
+
 address_encoding_e checkChainConfig(uint32_t path, const char *hrp,
                                     uint8_t hrpLen);
 
