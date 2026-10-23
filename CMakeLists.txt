@@ -169,6 +169,24 @@ target_link_libraries(unittests PRIVATE
         fmt::fmt
         nlohmann_json::nlohmann_json)
 
+# The swap handlers, built on the host against the real parser library. Only
+# the device-only calls they make are stubbed (tests/swap_stubs).
+add_library(swap_lib STATIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/swap/handle_sign_transaction.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/swap/handle_check_address.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/swap/handle_get_printable_amount.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/swap/swap_utils.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/swap_stubs/swap_host_stubs.c
+        )
+target_include_directories(swap_lib PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/swap_stubs
+        ${CMAKE_CURRENT_SOURCE_DIR}/app/src/swap
+        )
+target_compile_options(swap_lib PRIVATE
+        -include ${CMAKE_CURRENT_SOURCE_DIR}/tests/swap_stubs/swap_host_stubs.h)
+target_link_libraries(swap_lib PUBLIC app_lib)
+target_link_libraries(unittests PRIVATE swap_lib)
+
 add_compile_definitions(TESTVECTORS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/")
 add_compile_definitions(APP_TESTING=1)
 add_compile_definitions(COMPILE_TEXTUAL=1)
