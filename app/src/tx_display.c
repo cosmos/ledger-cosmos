@@ -797,7 +797,9 @@ parser_error_t tx_display_translation(char *dst, uint16_t dstLen, char *src,
         dst += HEX_ESCAPE_LEN;
         count += HEX_ESCAPE_LEN;
       }
-    } else if (tmp_codepoint >= 32 && tmp_codepoint <= ((int32_t)0x7F)) {
+    } else if (tmp_codepoint >= 32 && tmp_codepoint <= ((int32_t)0x7E)) {
+      // DEL (0x7F) is a control character with no glyph: it takes the \u
+      // branch below rather than drawing nothing inside a value.
       ASSERT_PTR_BOUNDS(count, dstLen);
       *dst++ = (char)tmp_codepoint;
     } else {

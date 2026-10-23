@@ -140,3 +140,12 @@ TEST(TextualDisplay, LongestTitleAndContentFitTogether) {
     EXPECT_EQ(r.value.substr(r.value.size() - 5), "ZZZZZ");
   }
 }
+
+// ADR-050 Annex 2: control characters other than the named escapes are shown
+// as \uXXXX. DEL has no glyph, so drawn raw it would vanish from the value.
+TEST(TextualDisplay, DelIsEscaped) {
+  const auto r = render(envelope({screen("Memo", std::string("12\x7f" "34"), 0)}),
+                        0, 4096, false);
+  ASSERT_EQ(r.err, parser_ok);
+  EXPECT_EQ(r.value, R"(12\u007F34)");
+}
