@@ -306,6 +306,24 @@ TEST(SwapGateFee, GranterIsAcceptedOnlyInNormalModeOnDefaultChain) {
   app_mode_set_expert(0);
 }
 
+// SIGN_MODE_TEXTUAL screens are written by the host. A document whose screens
+// copy the JSON review layout item for item is refused for its sign mode.
+TEST_P(SwapGate, TextualIsRefusedForItsSignMode) {
+  ASSERT_TRUE(set_swap(6000000, 5000, kDest, "12345"));
+  const bool expert = GetParam();
+  std::vector<std::pair<std::string, std::string>> s;
+  if (expert) {
+    s = {{"Chain ID", "cosmoshub-4"}, {"Account", "8"}, {"Sequence", "1"},
+         {"Type", "Send"}, {"Amount", "6000000 uatom"}, {"From", kFrom},
+         {"To", kDest}, {"Memo", "12345"}, {"Fee", "5000 uatom"},
+         {"Gas", "200000"}};
+  } else {
+    s = {{"Type", "Send"}, {"Amount", "6.000000 ATOM"}, {"From", kFrom},
+         {"To", kDest}, {"Memo", "12345"}, {"Fee", "0.005000 ATOM"}};
+  }
+  EXPECT_EQ(run_swap(textual(s), expert, tx_textual), parser_swap_wrong_type);
+}
+
 INSTANTIATE_TEST_SUITE_P(NormalAndExpert, SwapGate, ::testing::Values(false, true));
 
 // ---------------------------------------------------------------------------

@@ -534,8 +534,15 @@ parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx,
 }
 
 parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
-  if (ctx_parsed_tx == NULL) {
+  if (ctx_parsed_tx == NULL || ctx_parsed_tx->tx_obj == NULL) {
     return parser_unexpected_error;
+  }
+
+  // The checks below compare Amino JSON review items. Textual screens are
+  // written by the host, and only an item count read from the inactive
+  // tx_json side of the union used to keep them out.
+  if (ctx_parsed_tx->tx_obj->tx_type != tx_json) {
+    return parser_swap_wrong_type;
   }
 
   uint8_t displayIdx = 0;
