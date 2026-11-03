@@ -13,6 +13,7 @@ permissions:
   actions: write
   contents: write
   pull-requests: write
+  packages: read
 
 jobs:
   job_functional_tests:
