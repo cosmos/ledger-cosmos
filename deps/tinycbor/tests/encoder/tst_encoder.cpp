@@ -29,6 +29,19 @@
 #include <qfloat16.h>
 #endif
 
+#include <utility>
+namespace t17 {
+#ifdef __cpp_lib_as_const
+    using std::as_const;
+#else
+    template <typename T>
+    constexpr typename std::add_const<T>::type &as_const(T &t) noexcept { return t; }
+    // prevent rvalue arguments:
+    template <typename T>
+    void as_const(const T &&) = delete;
+#endif // __cpp_lib_as_const
+} // namespace t17
+
 Q_DECLARE_METATYPE(CborError)
 namespace QTest {
 template<> char *toString<CborError>(const CborError &err)
@@ -77,6 +90,9 @@ private slots:
     void tooBigMaps();
     void illegalSimpleType_data();
     void illegalSimpleType();
+
+    void encodeRaw_data() { tags_data(); }
+    void encodeRaw();
 };
 
 #include "tst_encoder.moc"
@@ -91,35 +107,35 @@ CborError encodeVariant(CborEncoder *encoder, const QVariant &v)
 {
     int type = v.userType();
     switch (type) {
-    case QVariant::Int:
-    case QVariant::LongLong:
+    case QMetaType::Int:
+    case QMetaType::LongLong:
         return cbor_encode_int(encoder, v.toLongLong());
 
-    case QVariant::UInt:
-    case QVariant::ULongLong:
+    case QMetaType::UInt:
+    case QMetaType::ULongLong:
         return cbor_encode_uint(encoder, v.toULongLong());
 
-    case QVariant::Bool:
+    case QMetaType::Bool:
         return cbor_encode_boolean(encoder, v.toBool());
 
-    case QVariant::Invalid:
+    case QMetaType::UnknownType:
         return cbor_encode_undefined(encoder);
 
     case QMetaType::VoidStar:
         return cbor_encode_null(encoder);
 
-    case QVariant::Double:
+    case QMetaType::Double:
         return cbor_encode_double(encoder, v.toDouble());
 
     case QMetaType::Float:
         return cbor_encode_float(encoder, v.toFloat());
 
-    case QVariant::String: {
+    case QMetaType::QString: {
         QByteArray string = v.toString().toUtf8();
         return cbor_encode_text_string(encoder, string.constData(), string.length());
     }
 
-    case QVariant::ByteArray: {
+    case QMetaType::QByteArray: {
         QByteArray string = v.toByteArray();
         return cbor_encode_byte_string(encoder, reinterpret_cast<const quint8 *>(string.constData()), string.length());
     }
@@ -142,7 +158,7 @@ CborError encodeVariant(CborEncoder *encoder, const QVariant &v)
                 return err;
             return static_cast<CborError>(err | encodeVariant(encoder, v.value<Tag>().tagged));
         }
-        if (type == QVariant::List || type == qMetaTypeId<IndeterminateLengthArray>()) {
+        if (type == QMetaType::QVariantList || type == qMetaTypeId<IndeterminateLengthArray>()) {
             CborEncoder sub;
             QVariantList list = v.toList();
             size_t len = list.length();
@@ -153,7 +169,7 @@ CborError encodeVariant(CborEncoder *encoder, const QVariant &v)
             CborError err = cbor_encoder_create_array(encoder, &sub, len);
             if (err && !isOomError(err))
                 return err;
-            foreach (const QVariant &v2, list) {
+            for (const QVariant &v2 : t17::as_const(list)) {
                 err = static_cast<CborError>(err | encodeVariant(&sub, v2));
                 if (err && !isOomError(err))
                     return err;
@@ -604,6 +620,24 @@ void tst_Encoder::illegalSimpleType()
     CborEncoder encoder;
     cbor_encoder_init(&encoder, buf, sizeof(buf), 0);
     QCOMPARE(cbor_encode_simple_value(&encoder, type), CborErrorIllegalSimpleType);
+}
+
+void tst_Encoder::encodeRaw()
+{
+    QFETCH(QVariant, input);
+    QFETCH(QByteArray, output);
+
+    // just confirm it copies the data
+    QByteArray buffer(output.length(), Qt::Uninitialized);
+
+    uint8_t *bufptr = reinterpret_cast<quint8 *>(buffer.data());
+    CborEncoder encoder;
+    cbor_encoder_init(&encoder, bufptr, buffer.length(), 0);
+
+    CborError error = cbor_encode_raw(&encoder, reinterpret_cast<quint8 *>(output.data()),
+                                      output.size());
+    QCOMPARE(error, CborNoError);
+    QCOMPARE(buffer, output);
 }
 
 QTEST_MAIN(tst_Encoder)

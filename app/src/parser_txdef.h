@@ -31,8 +31,10 @@ extern "C" {
 #define INDENT_KEY_ID 3
 #define EXPERT_KEY_ID 4
 
-// Textual transaction temporary buffer size
-#define TX_TEXTUAL_TMP_BUFFER_SIZE 625
+// Textual transaction temporary buffer size. The long-title layout writes
+// "<title>: <translated content>" here, so it must hold MAX_TITLE_SIZE + 2 +
+// OUTPUT_HANDLER_SIZE (checked in parser.c).
+#define TX_TEXTUAL_TMP_BUFFER_SIZE 642
 
 typedef struct screen_arg_t {
   char *titlePtr;

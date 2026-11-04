@@ -319,6 +319,19 @@ describe('Standard', function () {
         })
       }
 
+      // An HRP that holds the bech32 separator, or is long enough to hold a
+      // whole address, would make the shown address start with a foreign one.
+      for (const hrp of [
+        'cosmos15zs69gay5kn2029f4246etdw47ctrv4njhcy02',
+        'cosmosl5zs69gay5kn2029f4246etdw47ctrv4njhcy02',
+        'osmo1',
+      ]) {
+        await expect(app.showAddressAndPubKey(path, hrp)).rejects.toMatchObject({
+          returnCode: 0x698C,
+          errorMessage: 'Chain config not supported'
+        })
+      }
+
       // The long tail of valid 118' chains is untouched by any of the above.
       const resp = await app.getAddressAndPubKey(path, 'akash')
       expect(resp).toHaveProperty('bech32_address')

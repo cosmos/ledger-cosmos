@@ -29,8 +29,8 @@ import { keccak256 } from 'js-sha3'
 
 jest.setTimeout(90000)
 
-// Textual mode is not available for NanoS
-const TEXTUAL_MODELS = DEVICE_MODELS.filter(m => m.name !== 'nanos')
+// Nano S is not built any more, so every device model supports textual mode
+const TEXTUAL_MODELS = DEVICE_MODELS
 
 describe('Textual', function () {
   // eslint-disable-next-line jest/expect-expect
