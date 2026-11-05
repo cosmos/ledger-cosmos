@@ -13,11 +13,13 @@ permissions:
   actions: write
   contents: write
   pull-requests: write
+  packages: read
 
 jobs:
   job_functional_tests:
-    uses: LedgerHQ/app-exchange/.github/workflows/reusable_swap_functional_tests.yml@develop
+    uses: LedgerHQ/app-exchange-dev/.github/workflows/reusable_swap_functional_tests.yml@develop
     with:
       branch_for_cosmos: ${{ github.ref }}
-      repo_for_cosmos: ${{ github.repository }}
       test_filter: '"ATOM or atom or Cosmos or cosmos"'
+    secrets:
+      token: ${{ secrets.CI_BOT_TOKEN }}

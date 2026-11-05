@@ -14,6 +14,7 @@ permissions:
   actions: write
   contents: read
   pull-requests: write
+  packages: read
 
 jobs:
   build_application:

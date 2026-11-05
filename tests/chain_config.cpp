@@ -186,17 +186,41 @@ TEST(ChainConfig, LeadingNulIsRefused) {
 }
 
 // hrpLen is a uint8_t and so is the scan index. The callers cap the length at
-// MAX_BECH32_HRP_LEN (83), but the function has to terminate on any value a
-// uint8_t can hold, including 255.
+// MAX_BECH32_HRP_LEN (83); the function refuses anything past
+// MAX_ACCOUNT_HRP_LEN before scanning, up to the largest value a uint8_t holds.
 TEST(ChainConfig, ScanTerminatesAtTheMaximumDeclaredLength) {
   const std::string longHrp(255, 'a');
   EXPECT_EQ(checkChainConfig(0x80000000u | 118u, longHrp.c_str(), 255),
-            BECH32_COSMOS);
+            UNSUPPORTED);
 
   std::string longHrpWithNul(255, 'a');
   longHrpWithNul[254] = '\0';
   EXPECT_EQ(checkChainConfig(0x80000000u | 118u, longHrpWithNul.c_str(), 255),
             UNSUPPORTED);
+}
+
+// An HRP long enough to hold a whole address would put that address at the
+// start of the one the device shows; real account prefixes are far shorter.
+TEST(ChainConfig, HrpLongerThanAnAccountPrefixIsRefused) {
+  const std::string atCap(MAX_ACCOUNT_HRP_LEN, 'a');
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, atCap.c_str(), atCap.size()),
+            BECH32_COSMOS);
+  const std::string pastCap(MAX_ACCOUNT_HRP_LEN + 1, 'a');
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, pastCap.c_str(), pastCap.size()),
+            UNSUPPORTED);
+  // A cosmos address with its separator swapped for a lookalike 'l'.
+  const std::string embedded = "cosmosl5zs69gay5kn2029f4246etdw47ctrv4njhcy02";
+  EXPECT_EQ(checkChainConfig(0x80000000u | 118u, embedded.c_str(), embedded.size()),
+            UNSUPPORTED);
+}
+
+// '1' is the bech32 separator. An HRP holding one makes the address the device
+// shows start with what reads as a complete, different address.
+TEST(ChainConfig, HrpWithTheBech32SeparatorIsRefused) {
+  for (const char *hrp : {"cosmos1", "1", "osmo1abc", "a1b"}) {
+    EXPECT_EQ(checkChainConfig(0x80000000u | 118u, hrp, strlen(hrp)), UNSUPPORTED)
+        << hrp;
+  }
 }
 
 TEST(ChainConfig, NullOrEmptyHrpIsRefused) {
@@ -288,4 +312,36 @@ TEST(ChainConfig, EveryResolvablePairSitsOnASupportedCoinType) {
     EXPECT_NE(check(pair.coinType, pair.hrp), UNSUPPORTED) << pair.hrp;
     EXPECT_TRUE(isSupportedCoinType(0x80000000u | pair.coinType)) << pair.hrp;
   }
+}
+
+// The derivation path policy is shared by signing, the address APDU and the
+// swap address check, so an address handed out is always one the app signs
+// from.
+TEST(ChainConfig, HDPathPolicy) {
+  const uint32_t H = 0x80000000u;
+  const uint32_t ok[HDPATH_LEN_DEFAULT] = {H | 44, H | 118, H | 0, 0, 0};
+  EXPECT_EQ(checkHDPath(ok, false), HD_PATH_OK);
+  EXPECT_EQ(checkHDPath(ok, true), HD_PATH_OK);
+
+  const uint32_t change[HDPATH_LEN_DEFAULT] = {H | 44, H | 118, H | 0, 1, 0};
+  EXPECT_EQ(checkHDPath(change, false), HD_PATH_INVALID);
+  EXPECT_EQ(checkHDPath(change, true), HD_PATH_INVALID);
+
+  const uint32_t purpose[HDPATH_LEN_DEFAULT] = {H | 49, H | 118, H | 0, 0, 0};
+  EXPECT_EQ(checkHDPath(purpose, true), HD_PATH_INVALID);
+
+  const uint32_t coin[HDPATH_LEN_DEFAULT] = {H | 44, H | 529, H | 0, 0, 0};
+  EXPECT_EQ(checkHDPath(coin, true), HD_PATH_INVALID);
+
+  const uint32_t unhardenedCoin[HDPATH_LEN_DEFAULT] = {H | 44, 118, H | 0, 0, 0};
+  EXPECT_EQ(checkHDPath(unhardenedCoin, true), HD_PATH_INVALID);
+
+  const uint32_t index101[HDPATH_LEN_DEFAULT] = {H | 44, H | 118, H | 0, 0, 101};
+  EXPECT_EQ(checkHDPath(index101, false), HD_PATH_NEEDS_EXPERT);
+  EXPECT_EQ(checkHDPath(index101, true), HD_PATH_OK);
+
+  const uint32_t account[HDPATH_LEN_DEFAULT] = {H | 44, H | 118, H | 0x7FFFFFFF, 0, 0};
+  EXPECT_EQ(checkHDPath(account, false), HD_PATH_NEEDS_EXPERT);
+
+  EXPECT_EQ(checkHDPath(nullptr, true), HD_PATH_INVALID);
 }

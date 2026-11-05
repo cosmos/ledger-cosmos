@@ -341,8 +341,16 @@ parser_error_t tx_getToken(uint16_t token_index, char *out_val,
         }
       }
     }
-    CHECK_PARSER_ERR(page_json_string(out_val, out_val_len, inValue, inLen,
-                                      pageIdx, pageCount))
+    if (parser_tx_obj.tx_json.json.tokens[token_index].type == JSMN_STRING) {
+      CHECK_PARSER_ERR(page_json_string(out_val, out_val_len, inValue, inLen,
+                                        pageIdx, pageCount))
+    } else {
+      // An object or array shown as one value keeps its escapes: decoded, a
+      // quote inside one of its strings reads the same as a quote that is
+      // JSON structure, and a string field can then fake a closing brace and
+      // move the keys after it into an object of its own on screen.
+      pageStringExt(out_val, out_val_len, inValue, inLen, pageIdx, pageCount);
+    }
   }
 
   if (pageIdx >= *pageCount) {
@@ -528,8 +536,16 @@ parser_error_t tx_traverse_find(uint16_t root_token_index,
   uint16_t el_count;
   parser_error_t err;
 
-  CHECK_PARSER_ERR(object_get_element_count(&parser_tx_obj.tx_json.json,
-                                            root_token_index, &el_count))
+  // An array's children are elements, not key/value pairs: counted as pairs,
+  // an empty or scalar element undercounts the array and the elements after
+  // it are never walked, so never shown.
+  if (token_type == JSMN_ARRAY) {
+    CHECK_PARSER_ERR(array_get_element_count(&parser_tx_obj.tx_json.json,
+                                             root_token_index, &el_count))
+  } else {
+    CHECK_PARSER_ERR(object_get_element_count(&parser_tx_obj.tx_json.json,
+                                              root_token_index, &el_count))
+  }
 
   switch (token_type) {
   case JSMN_OBJECT: {

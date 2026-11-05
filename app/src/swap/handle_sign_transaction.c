@@ -71,6 +71,24 @@ bool copy_transaction_parameters(
   memcpy(memo, sign_transaction_params->destination_address_extra_id, memo_len);
   memo[memo_len] = '\0';
 
+  // The coin Exchange approved and priced the swap in: [length][HRP]. The
+  // transaction signed later has to be on that chain, not merely on one whose
+  // amount, fee and recipient happen to render the same.
+  if (sign_transaction_params->coin_configuration == NULL ||
+      sign_transaction_params->coin_configuration_length < 2) {
+    return false;
+  }
+  const uint8_t coin_len = sign_transaction_params->coin_configuration[0];
+  if (coin_len == 0 ||
+      sign_transaction_params->coin_configuration_length < 1 + coin_len) {
+    return false;
+  }
+  const int8_t chain_index = find_chain_index_by_coin_config(
+      (const char *)&sign_transaction_params->coin_configuration[1], coin_len);
+  if (chain_index < 0) {
+    return false;
+  }
+
   // Check and copy amount
   memcpy(amount, sign_transaction_params->amount,
          sign_transaction_params->amount_length);
@@ -95,6 +113,7 @@ bool copy_transaction_parameters(
   memcpy(G_swap_state.destination_address, destination_address,
          sizeof(G_swap_state.destination_address));
   memcpy(G_swap_state.memo, memo, sizeof(G_swap_state.memo));
+  G_swap_state.chain_index = chain_index;
 
   return true;
 }
@@ -163,6 +182,12 @@ parser_error_t parser_msg_send(parser_context_t *ctx_parsed_tx,
 
     // If in expert mode check idx 3 for source address
     displayIdx += 3;
+  }
+
+  // Chain ID is only hidden for the default chain, so chain_index is the
+  // chain the transaction is on either way.
+  if (chain_index != G_swap_state.chain_index) {
+    return parser_swap_wrong_chain_id;
   }
 
   // Check source address is present
@@ -356,6 +381,12 @@ parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx,
     displayIdx += 3;
   }
 
+  // Chain ID is only hidden for the default chain, so chain_index is the
+  // chain the transaction is on either way.
+  if (chain_index != G_swap_state.chain_index) {
+    return parser_swap_wrong_chain_id;
+  }
+
   // Check source address is present
   CHECK_PARSER_ERR(parser_getItem(ctx_parsed_tx, displayIdx, tmpKey,
                                   sizeof(tmpKey), tmpValue, sizeof(tmpValue),
@@ -503,8 +534,15 @@ parser_error_t parser_simple_transfer(parser_context_t *ctx_parsed_tx,
 }
 
 parser_error_t check_swap_conditions(parser_context_t *ctx_parsed_tx) {
-  if (ctx_parsed_tx == NULL) {
+  if (ctx_parsed_tx == NULL || ctx_parsed_tx->tx_obj == NULL) {
     return parser_unexpected_error;
+  }
+
+  // The checks below compare Amino JSON review items. Textual screens are
+  // written by the host, and only an item count read from the inactive
+  // tx_json side of the union used to keep them out.
+  if (ctx_parsed_tx->tx_obj->tx_type != tx_json) {
+    return parser_swap_wrong_type;
   }
 
   uint8_t displayIdx = 0;
