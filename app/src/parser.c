@@ -27,6 +27,10 @@
 #include <zxmacros.h>
 #include <zxtypes.h>
 
+#if TX_TEXTUAL_TMP_BUFFER_SIZE < MAX_TITLE_SIZE + 2 + OUTPUT_HANDLER_SIZE
+#error "tmpBuffer must hold a title, \": \" and a whole translated content"
+#endif
+
 parser_error_t parser_init_context(parser_context_t *ctx, const uint8_t *buffer,
                                    uint16_t bufferSize) {
   if (ctx == NULL) {
@@ -550,7 +554,7 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
   CHECK_PARSER_ERR(tx_display_translation(out, sizeof(out), tmp,
                                           container->screen.contentLen))
 
-  uint8_t titleLen = container->screen.titleLen + container->screen.indent;
+  const size_t titleLen = container->screen.titleLen + container->screen.indent;
   // Title needs to be truncated, so we concat title witn content
   if ((titleLen > PRINTABLE_TITLE_SIZE) ||
       (outValLen > 0 && ((strlen(out) / outValLen) >= 1 &&
@@ -571,8 +575,14 @@ __Z_INLINE parser_error_t parser_screenPrint(const parser_context_t *ctx,
     }
     MEMCPY(tmp, container->screen.titlePtr, container->screen.titleLen);
     MEMCPY(tmp + container->screen.titleLen, ": ", 2);
-    MEMCPY(tmp + container->screen.titleLen + 2, out,
-           sizeof(out) - container->screen.titleLen - 2);
+    // The whole translated content, terminator included. Copying only what
+    // fits in sizeof(out) after the title cut the end of an escape-heavy
+    // content off every page without a mark.
+    const size_t outLen = strnlen(out, sizeof(out) - 1);
+    if (container->screen.titleLen + 2 + outLen + 1 > tmp_len) {
+      return parser_unexpected_buffer_end;
+    }
+    MEMCPY(tmp + container->screen.titleLen + 2, out, outLen + 1);
     snprintf(outKey, outKeyLen, "%s", key);
     pageString(outVal, outValLen, tmp, pageIdx, pageCount);
     return parser_ok;
