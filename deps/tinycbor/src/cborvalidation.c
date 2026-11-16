@@ -22,11 +22,7 @@
 **
 ****************************************************************************/
 
-#define _BSD_SOURCE 1
-#define _DEFAULT_SOURCE 1
-#ifndef __STDC_LIMIT_MACROS
-#  define __STDC_LIMIT_MACROS 1
-#endif
+#include "cborinternalmacros_p.h"
 
 #include "cbor.h"
 #include "cborinternal_p.h"
@@ -377,7 +373,7 @@ static inline CborError validate_floating_point(CborValue *it, CborType type, ui
     CborError err;
     int r;
     double val;
-    float valf = 0.0f;
+    float valf;
     uint16_t valf16 = 0x7c01;       /* dummy value, an infinity */
 
     if (type != CborDoubleType) {

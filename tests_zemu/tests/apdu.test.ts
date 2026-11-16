@@ -118,18 +118,31 @@ describe('APDU state machine', function () {
         'empty init payload',
       )
 
-      // --- a flow is now in progress and owns the device ---
+      // --- a transfer the host abandoned must not lock the app ---
+      // A wallet that closes, or a cable or BLE link that drops, leaves the
+      // transfer in RECEIVING with nothing on screen. The next host starts with
+      // INIT or GET_ADDR, and both have to work.
       check(await sw(t, CLA, INS_SIGN_SECP256K1, P1_INIT, AMINO_JSON_TX, HDPATH), SW_OK, 'init')
+      check(await sw(t, CLA, INS_SIGN_SECP256K1, P1_ADD, AMINO_JSON_TX, CHUNK), SW_OK, 'add, then the host goes away')
       check(
         await sw(t, CLA, INS_SIGN_SECP256K1, P1_INIT, AMINO_JSON_TX, HDPATH),
-        SW_COMMAND_NOT_ALLOWED,
-        'second init cannot restart a flow in progress',
+        SW_OK,
+        'a fresh init restarts an abandoned transfer',
       )
       check(
         await sw(t, CLA, INS_GET_ADDR_SECP256K1, 0x00, 0x00, GET_ADDR_ARGS),
-        SW_COMMAND_NOT_ALLOWED,
-        'get address while receiving',
+        SW_OK,
+        'get address abandons a transfer in progress',
       )
+      // The abandoned transfer was started under an HD path and HRP that the
+      // address request has since replaced, so it cannot be resumed.
+      check(
+        await sw(t, CLA, INS_SIGN_SECP256K1, P1_ADD, AMINO_JSON_TX, CHUNK),
+        SW_COMMAND_NOT_ALLOWED,
+        'add after the transfer was abandoned',
+      )
+
+      check(await sw(t, CLA, INS_SIGN_SECP256K1, P1_INIT, AMINO_JSON_TX, HDPATH), SW_OK, 'init again')
       check(await sw(t, CLA, INS_SIGN_SECP256K1, P1_ADD, AMINO_JSON_TX, CHUNK), SW_OK, 'add after init')
 
       // --- an unrelated error must abort a half-received transaction ---
